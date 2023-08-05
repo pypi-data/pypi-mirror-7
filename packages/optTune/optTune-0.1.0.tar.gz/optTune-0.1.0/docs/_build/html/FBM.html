@@ -1,0 +1,221 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>FBM &mdash; optTune 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="optTune 0.1.0 documentation" href="index.html" />
+    <link rel="next" title="MOTA" href="MOTA.html" />
+    <link rel="prev" title="tPSO" href="tPSO.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="MOTA.html" title="MOTA"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="tPSO.html" title="tPSO"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">optTune 0.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-optTune.FBA_code">
+<span id="fbm"></span><h1>FBM<a class="headerlink" href="#module-optTune.FBA_code" title="Permalink to this headline">¶</a></h1>
+<p>Flexible budget algorithm used to demonstrate the Flexible budget method, based upon 
+Branke, J. and Elomari, J. (2012). Meta-optimization for parameter tuning with a flexible computing budget. In Proceedings of the 14th International Conference on Genetic and Evolutionary Computation Conference, pages 1245&#8211;1252. ACM.</p>
+<dl class="docutils">
+<dt>Changes made</dt>
+<dd><ul class="first last simple">
+<li>focuses specified OFE budgets</li>
+<li>gaussian_mutation std control parameter added</li>
+</ul>
+</dd>
+</dl>
+<p>Branke, J. and Elomari, J. (2012) says the rank-tie breakers of AUC (area under the curve), and AL (area lost) are essientially the same, so only implemented AUC.</p>
+<dl class="class">
+<dt id="optTune.FBA_code.FBA">
+<em class="property">class </em><tt class="descclassname">optTune.FBA_code.</tt><tt class="descname">FBA</tt><big>(</big><em>optAlg</em>, <em>CPV_lb</em>, <em>CPV_ub</em>, <em>CPV_validity_checks</em>, <em>OFE_budgets</em>, <em>repeats</em>, <em>gammaBudget</em>, <em>N</em>, <em>crossover_rate=0.5</em>, <em>mutation_strength=0.1</em>, <em>tiebreaking_method='AUC'</em>, <em>printFunction=&lt;function to_stdout at 0x2b1de8149c08&gt;</em>, <em>printLevel=2</em>, <em>saveTo=None</em>, <em>addtoBatch=&lt;function _passfunction at 0x2b1de8149578&gt;</em>, <em>processBatch=&lt;function _passfunction at 0x2b1de8149578&gt;</em><big>)</big><a class="headerlink" href="#optTune.FBA_code.FBA" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parameters
+* optAlg - algorithm being tuned, where optAlg(CPV_tuple, OFE_budgets, randomSeed) returns F,E curve or history
+* CPV_lb - control parameter value lower bounds
+* CPV_ub - control parameter values upper bounds
+* CPV_validity_checks  - CPV_validity_checks( CPV_array, OFE_budget ) return (Valid,msg)
+* gammaBudget - gamma = optAlg_eval made, i.e. running the optAlg 3 times, using OFE budget of 40, results in a gamma of 120.</p>
+</dd></dl>
+
+<div class="section" id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">optimize</span>
+<span class="kn">from</span> <span class="nn">optTune</span> <span class="kn">import</span> <span class="n">FBA</span><span class="p">,</span> <span class="n">evaluation_history_recording_wrapper</span>
+
+<span class="k">def</span> <span class="nf">Ros_ND</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="p">:</span>
+    <span class="s">&quot;gerneralised Rossenbroch function&quot;</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">([</span><span class="mi">100</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">ii</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="n">ii</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span> <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)])</span>
+
+<span class="k">def</span> <span class="nf">solution_valid</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span> <span class="o">-</span><span class="mf">2.048</span> <span class="o">&lt;=</span> <span class="n">x</span> <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">and</span> <span class="p">(</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="mf">2.048</span> <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">run_simulated_annealing</span><span class="p">(</span><span class="n">CPVs</span><span class="p">,</span> <span class="n">OFE_budgets</span><span class="p">,</span> <span class="n">randomSeed</span><span class="p">):</span>
+    <span class="n">dwell</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">CPVs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="c">#equibavent to population size in evolutionary algorithms</span>
+    <span class="n">func</span> <span class="o">=</span> <span class="n">evaluation_history_recording_wrapper</span><span class="p">(</span> <span class="n">Ros_ND</span><span class="p">,</span> <span class="n">dwell</span><span class="p">,</span> <span class="n">solution_valid</span> <span class="p">)</span>
+    <span class="n">optimize</span><span class="o">.</span><span class="n">anneal</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> 
+                    <span class="n">x0</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span>
+                    <span class="c">#x0 = -2.048 + 2*2.048*numpy.random.rand(10), #if used make sure tMOPSO sample size greater than 100</span>
+                    <span class="n">m</span> <span class="o">=</span> <span class="n">CPVs</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                    <span class="n">T0</span> <span class="o">=</span> <span class="mf">500.0</span><span class="p">,</span>
+                    <span class="n">lower</span><span class="o">=</span> <span class="o">-</span><span class="mf">2.048</span><span class="p">,</span>
+                    <span class="n">upper</span><span class="o">=</span>  <span class="mf">2.048</span><span class="p">,</span>
+                    <span class="n">dwell</span><span class="o">=</span><span class="n">dwell</span><span class="p">,</span> 
+                    <span class="n">maxeval</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span> <span class="n">OFE_budgets</span> <span class="p">),</span> <span class="c">#termination criteria</span>
+                    <span class="n">feps</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> 
+                    <span class="n">Tf</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">func</span><span class="o">.</span><span class="n">f_hist</span><span class="p">,</span> <span class="n">func</span><span class="o">.</span><span class="n">OFE_hist</span>
+
+<span class="k">def</span> <span class="nf">CPV_valid</span><span class="p">(</span><span class="n">CPVs</span><span class="p">,</span> <span class="n">OFE_budget</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">CPVs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span><span class="p">,</span><span class="s">&#39;dwell,CPVs[0] &lt; 5&#39;</span>
+    <span class="k">if</span> <span class="n">CPVs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.0001</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span><span class="p">,</span><span class="s">&#39;CPVs[1] &lt; 0.0001&#39;</span>
+    <span class="k">return</span> <span class="bp">True</span><span class="p">,</span><span class="s">&#39;&#39;</span>
+
+<span class="n">tuningOpt</span> <span class="o">=</span> <span class="n">FBA</span><span class="p">(</span> 
+    <span class="n">optAlg</span> <span class="o">=</span> <span class="n">run_simulated_annealing</span><span class="p">,</span> 
+    <span class="n">CPV_lb</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">10</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]),</span> 
+    <span class="n">CPV_ub</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">50</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">]),</span>
+    <span class="n">CPV_validity_checks</span> <span class="o">=</span> <span class="n">CPV_valid</span><span class="p">,</span>
+    <span class="n">OFE_budgets</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">30</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span>
+    <span class="n">repeats</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span>
+    <span class="n">gammaBudget</span> <span class="o">=</span> <span class="mi">30</span><span class="o">*</span><span class="mi">1000</span><span class="o">*</span><span class="mi">50</span><span class="p">,</span> <span class="c">#increase to get a smoother result ...</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">tuningOpt</span><span class="p">)</span>
+
+<span class="n">Fmin_values</span> <span class="o">=</span> <span class="n">tuningOpt</span><span class="o">.</span><span class="n">combined_curves</span>
+<span class="n">OFE_budgets</span> <span class="o">=</span> <span class="n">tuningOpt</span><span class="o">.</span><span class="n">OFE_budgets</span>
+<span class="n">X_opt</span> <span class="o">=</span> <span class="n">tuningOpt</span><span class="o">.</span><span class="n">get_optimal_X</span><span class="p">()</span>
+<span class="n">dwell_values</span> <span class="o">=</span>  <span class="n">X_opt</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">m_values</span> <span class="o">=</span>      <span class="n">X_opt</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span>
+
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;OFE budget     Fmin      dwell       m     &#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">c</span><span class="p">,</span><span class="n">d</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">OFE_budgets</span><span class="p">,</span> <span class="n">Fmin_values</span><span class="p">,</span> <span class="n">dwell_values</span><span class="p">,</span> <span class="n">m_values</span><span class="p">):</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;  </span><span class="si">%i</span><span class="s">       </span><span class="si">%6.4f</span><span class="s">      </span><span class="si">%i</span><span class="s">       </span><span class="si">%4.2f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">c</span><span class="p">,</span><span class="n">d</span><span class="p">))</span>
+
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span>
+<span class="n">p1</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">OFE_budgets</span><span class="p">,</span> <span class="n">dwell_values</span><span class="p">,</span> <span class="s">&#39;g.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;dwell&#39;</span><span class="p">)</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span> <span class="nb">min</span><span class="p">(</span><span class="n">dwell_values</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span> <span class="n">dwell_values</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">twinx</span><span class="p">()</span>
+<span class="n">p2</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">OFE_budgets</span><span class="p">,</span> <span class="n">m_values</span><span class="p">,</span> <span class="s">&#39;bx&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">m_values</span><span class="p">)</span><span class="o">*</span><span class="mf">1.1</span><span class="p">)</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;m (rate of cool)&#39;</span><span class="p">)</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="n">p1</span><span class="p">,</span><span class="n">p2</span><span class="p">],[</span><span class="s">&#39;dwell&#39;</span><span class="p">,</span><span class="s">&#39;m&#39;</span><span class="p">],</span> <span class="n">loc</span><span class="o">=</span><span class="s">&#39;upper center&#39;</span><span class="p">)</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;OFE budget&#39;</span><span class="p">)</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">OFE_budgets</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="nb">max</span><span class="p">(</span><span class="n">OFE_budgets</span><span class="p">)</span><span class="o">+</span><span class="mi">60</span><span class="p">)</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&#39;Optimal CPVs for different OFE budgets&#39;</span><span class="p">)</span>
+
+<span class="n">pyplot</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">FBM</a><ul>
+<li><a class="reference internal" href="#example">Example</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="tPSO.html"
+                        title="previous chapter">tPSO</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="MOTA.html"
+                        title="next chapter">MOTA</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/FBM.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="MOTA.html" title="MOTA"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="tPSO.html" title="tPSO"
+             >previous</a> |</li>
+        <li><a href="index.html">optTune 0.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Antoine Dymond.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

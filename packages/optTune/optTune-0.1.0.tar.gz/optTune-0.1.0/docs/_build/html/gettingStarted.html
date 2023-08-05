@@ -1,0 +1,255 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Getting Started &mdash; optTune 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="optTune 0.1.0 documentation" href="index.html" />
+    <link rel="next" title="tMOPSO" href="tMOPSO.html" />
+    <link rel="prev" title="Welcome to optTune’s documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tMOPSO.html" title="tMOPSO"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to optTune’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">optTune 0.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="getting-started">
+<h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
+<p>Tuning an optimization algorithm under multiple OFE budgets using optTune consists of three parts:</p>
+<ol class="arabic simple">
+<li>setting up the tuning problem</li>
+<li>applying the tuning algorithm</li>
+<li>analysing the results</li>
+</ol>
+<div class="section" id="setting-up-the-tuning-problem">
+<h2>Setting up the tuning problem<a class="headerlink" href="#setting-up-the-tuning-problem" title="Permalink to this headline">¶</a></h2>
+<p>optTune runs the optimization algorithm using the CPV tuple being assessed as to gauge performance at multiple OFE budgets.
+The assessment function for tMOPSO is in the form of</p>
+<dl class="function">
+<dt>
+<tt class="descname">optAlg(CPV_tuple, OFE_budgets, randomSeed):</tt></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>CPV_tuple</strong> (<em>numpy.array</em>) &#8211; CPV_tuple</li>
+<li><strong>OFE_budgets</strong> (<em>numpy.array</em>) &#8211; OFE_budgets at which to record utility (i.e. solution error)</li>
+<li><strong>randomSeed</strong> (<em>int</em>) &#8211; seed to be used for optimization run</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Two lists : [ Utility_values, OFE_eval_made ]</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<p>Other factors such as the tuning bounds, OFE budgets to tune under, resampling size, also need to be decided upon.</p>
+<p>Example setup for tuning Differential Evolution ( DE ; see <a class="reference internal" href="DE_code.html#de-code"><em>DE Code</em></a> ) to the gerneralised Rossenbrock function.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">DE_code</span> <span class="kn">import</span> <span class="n">DE_opt</span><span class="p">,</span> <span class="n">numpy</span>
+<span class="kn">from</span> <span class="nn">optTune</span> <span class="kn">import</span> <span class="n">get_F_vals_at_specified_OFE_budgets</span>
+
+<span class="k">def</span> <span class="nf">Ros_ND</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="p">:</span>
+    <span class="s">&quot;gerneralised Rossenbrock function&quot;</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">([</span><span class="mi">100</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">ii</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="n">ii</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span> <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)])</span>
+<span class="n">prob_d</span> <span class="o">=</span> <span class="mi">6</span>
+
+<span class="k">def</span> <span class="nf">run_DE_on_Ros_ND</span><span class="p">(</span><span class="n">CPV_tuple</span><span class="p">,</span> <span class="n">OFE_budgets</span><span class="p">,</span> <span class="n">randomSeed</span><span class="p">):</span>
+    <span class="n">X_min</span><span class="p">,</span> <span class="n">f_best_hist</span><span class="p">,</span> <span class="n">X_hist</span><span class="p">,</span> <span class="n">F_hist</span> <span class="o">=</span> <span class="n">DE_opt</span><span class="p">(</span>
+        <span class="n">objfun</span> <span class="o">=</span> <span class="n">Ros_ND</span><span class="p">,</span>
+        <span class="n">x_lb</span> <span class="o">=</span> <span class="o">-</span><span class="mf">5.0</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">prob_d</span><span class="p">),</span>
+        <span class="n">x_ub</span> <span class="o">=</span>  <span class="mf">5.0</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">prob_d</span><span class="p">),</span>
+        <span class="n">Np</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">CPV_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+        <span class="n">Cr</span> <span class="o">=</span> <span class="n">CPV_tuple</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">F</span> <span class="o">=</span> <span class="n">CPV_tuple</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+        <span class="n">evals</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">OFE_budgets</span><span class="p">),</span>
+        <span class="n">printLevel</span><span class="o">=</span><span class="mi">0</span>
+        <span class="p">)</span>
+    <span class="n">F</span> <span class="o">=</span>  <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">f_best_hist</span><span class="p">)</span>
+    <span class="n">OFEs_made</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">CPV_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">X_hist</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span>  <span class="n">get_F_vals_at_specified_OFE_budgets</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">OFEs_made</span><span class="p">,</span> <span class="n">OFE_budgets</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">CPV_validity_checks</span><span class="p">(</span><span class="n">CPV_array</span><span class="p">,</span> <span class="n">OFE_budget</span><span class="p">):</span>
+    <span class="s">&#39;check tuning constraints&#39;</span>
+    <span class="n">N</span><span class="p">,</span> <span class="n">Cr</span><span class="p">,</span> <span class="n">F</span> <span class="o">=</span> <span class="n">CPV_array</span>
+    <span class="k">if</span> <span class="n">OFE_budget</span> <span class="o">&lt;</span> <span class="n">N</span> <span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span><span class="p">,</span> <span class="s">&#39;OFE_budget &lt; N&#39;</span>
+    <span class="k">if</span> <span class="n">N</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span><span class="p">,</span> <span class="s">&#39;N &lt; 5&#39;</span>
+    <span class="k">if</span> <span class="n">Cr</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">Cr</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span><span class="p">,</span> <span class="s">&#39;Cr not in [0,1]&#39;</span>
+    <span class="k">if</span> <span class="n">F</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span><span class="p">,</span> <span class="s">&#39;F &lt; 0&#39;</span>
+    <span class="k">return</span> <span class="bp">True</span><span class="p">,</span> <span class="s">&quot;&quot;</span>
+
+<span class="c">#initilization bounds</span>
+<span class="n">CPV_lb</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>  <span class="mi">5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span> <span class="p">])</span> 
+<span class="n">CPV_ub</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="mi">50</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span> <span class="p">])</span> 
+
+<span class="n">OFE_budgets_to_tune_under</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">30</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+<span class="n">sampleSizes</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">20</span><span class="p">]</span>
+
+<span class="n">tuningBudget</span> <span class="o">=</span> <span class="mi">50</span><span class="o">*</span><span class="mi">1000</span><span class="o">*</span><span class="mi">30</span> <span class="c"># tuning budget is equvialent of assessing 50 CPV tuples upto 1000 OFEs using 30 resampling runs each</span>
+</pre></div>
+</div>
+<p>Refer to the <a class="reference internal" href="quirks.html#quirks"><em>Quirks</em></a> section as to why the <em>get_F_vals_at_specified_OFE_budgets</em> function is nessary.</p>
+</div>
+<div class="section" id="applying-the-tuning-algorithm">
+<h2>Applying the tuning algorithm<a class="headerlink" href="#applying-the-tuning-algorithm" title="Permalink to this headline">¶</a></h2>
+<p>After the tuning problem has been defined, then tuning algorithm can applied. Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">DE_tuning_setup</span> 
+<span class="kn">from</span> <span class="nn">optTune</span> <span class="kn">import</span> <span class="n">tMOPSO</span><span class="p">,</span> <span class="n">linearFunction</span>
+
+<span class="n">tuningOpt</span> <span class="o">=</span> <span class="n">tMOPSO</span><span class="p">(</span> 
+    <span class="n">optAlg</span> <span class="o">=</span> <span class="n">DE_tuning_setup</span><span class="o">.</span><span class="n">run_DE_on_Ros_ND</span><span class="p">,</span> 
+    <span class="n">CPV_lb</span> <span class="o">=</span> <span class="n">DE_tuning_setup</span><span class="o">.</span><span class="n">CPV_lb</span><span class="p">,</span> 
+    <span class="n">CPV_ub</span> <span class="o">=</span> <span class="n">DE_tuning_setup</span><span class="o">.</span><span class="n">CPV_ub</span><span class="p">,</span>
+    <span class="n">CPV_validity_checks</span> <span class="o">=</span> <span class="n">DE_tuning_setup</span><span class="o">.</span><span class="n">CPV_validity_checks</span><span class="p">,</span>
+    <span class="n">OFE_budgets</span><span class="o">=</span> <span class="n">DE_tuning_setup</span><span class="o">.</span><span class="n">OFE_budgets_to_tune_under</span><span class="p">,</span>
+    <span class="n">sampleSizes</span> <span class="o">=</span>  <span class="n">DE_tuning_setup</span><span class="o">.</span><span class="n">sampleSizes</span><span class="p">,</span>
+    <span class="n">gammaBudget</span> <span class="o">=</span> <span class="n">DE_tuning_setup</span><span class="o">.</span><span class="n">tuningBudget</span><span class="p">,</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="analysing-the-results">
+<h2>Analysing the results<a class="headerlink" href="#analysing-the-results" title="Permalink to this headline">¶</a></h2>
+<p>continuing with the tMOPSO tuning DE example</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span>
+
+<span class="n">OFE_budgets</span> <span class="o">=</span> <span class="p">[</span> <span class="n">d</span><span class="o">.</span><span class="n">fv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">tuningOpt</span><span class="o">.</span><span class="n">PFA</span><span class="o">.</span><span class="n">designs</span> <span class="p">]</span> 
+<span class="n">Fmin_values</span> <span class="o">=</span> <span class="p">[</span> <span class="n">d</span><span class="o">.</span><span class="n">fv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">tuningOpt</span><span class="o">.</span><span class="n">PFA</span><span class="o">.</span><span class="n">designs</span> <span class="p">]</span> 
+
+<span class="n">log_OFE_budgets</span> <span class="o">=</span> <span class="p">[</span> <span class="n">d</span><span class="o">.</span><span class="n">xv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">tuningOpt</span><span class="o">.</span><span class="n">PFA</span><span class="o">.</span><span class="n">designs</span> <span class="p">]</span>
+<span class="n">N_values</span> <span class="o">=</span>        <span class="p">[</span> <span class="nb">int</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">xv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">tuningOpt</span><span class="o">.</span><span class="n">PFA</span><span class="o">.</span><span class="n">designs</span> <span class="p">]</span>
+<span class="n">Cr_values</span> <span class="o">=</span>       <span class="p">[</span> <span class="n">d</span><span class="o">.</span><span class="n">xv</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">tuningOpt</span><span class="o">.</span><span class="n">PFA</span><span class="o">.</span><span class="n">designs</span> <span class="p">]</span>
+<span class="n">F_values</span> <span class="o">=</span>        <span class="p">[</span> <span class="n">d</span><span class="o">.</span><span class="n">xv</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">tuningOpt</span><span class="o">.</span><span class="n">PFA</span><span class="o">.</span><span class="n">designs</span> <span class="p">]</span>
+
+<span class="n">line_Cr</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">OFE_budgets</span><span class="p">,</span> <span class="n">Cr_values</span><span class="p">,</span> <span class="s">&#39;b^&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">line_F</span>  <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">OFE_budgets</span><span class="p">,</span> <span class="n">F_values</span><span class="p">,</span> <span class="s">&#39;rx&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Cr, F&#39;</span><span class="p">)</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">twinx</span><span class="p">()</span>
+<span class="n">line_N</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">OFE_budgets</span><span class="p">,</span> <span class="n">N_values</span><span class="p">,</span> <span class="s">&#39;go&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">N_values</span><span class="p">)</span><span class="o">*</span><span class="mf">1.1</span><span class="p">)</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="n">line_Cr</span><span class="p">,</span><span class="n">line_F</span><span class="p">,</span><span class="n">line_N</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;Cr&#39;</span><span class="p">,</span><span class="s">&#39;F&#39;</span><span class="p">,</span><span class="s">&#39;N&#39;</span><span class="p">],</span> <span class="n">loc</span><span class="o">=</span><span class="s">&#39;upper center&#39;</span><span class="p">)</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;OFE budget&#39;</span><span class="p">)</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">OFE_budgets</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="nb">max</span><span class="p">(</span><span class="n">OFE_budgets</span><span class="p">)</span><span class="o">+</span><span class="mi">60</span><span class="p">)</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&#39;Optimal CPVs for different OFE budgets&#39;</span><span class="p">)</span>
+
+<span class="n">pyplot</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Getting Started</a><ul>
+<li><a class="reference internal" href="#setting-up-the-tuning-problem">Setting up the tuning problem</a></li>
+<li><a class="reference internal" href="#applying-the-tuning-algorithm">Applying the tuning algorithm</a></li>
+<li><a class="reference internal" href="#analysing-the-results">Analysing the results</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to optTune&#8217;s documentation!</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="tMOPSO.html"
+                        title="next chapter">tMOPSO</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/gettingStarted.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tMOPSO.html" title="tMOPSO"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to optTune’s documentation!"
+             >previous</a> |</li>
+        <li><a href="index.html">optTune 0.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Antoine Dymond.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

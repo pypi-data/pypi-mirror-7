@@ -1,0 +1,492 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>tMOPSO &mdash; optTune 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="optTune 0.1.0 documentation" href="index.html" />
+    <link rel="next" title="tPSO" href="tPSO.html" />
+    <link rel="prev" title="Examples" href="examples.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tPSO.html" title="tPSO"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="examples.html" title="Examples"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">optTune 0.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-optTune.tMOPSO_code.tMOPSO_module">
+<span id="tmopso"></span><h1>tMOPSO<a class="headerlink" href="#module-optTune.tMOPSO_code.tMOPSO_module" title="Permalink to this headline">¶</a></h1>
+<p>The tuning multi-objective particle swarm optimization (tMOPSO) algorithm tunes an optimization algorithms to a single problem for multiple objective function evaluation (OFE) budgets.
+tMOPSO finds multiple control parameter value (CPV) tuples each of which is optimal for a different OFE budget.</p>
+<dl class="class">
+<dt id="optTune.tMOPSO">
+<em class="property">class </em><tt class="descclassname">optTune.</tt><tt class="descname">tMOPSO</tt><big>(</big><em>optAlg</em>, <em>CPV_lb</em>, <em>CPV_ub</em>, <em>CPV_validity_checks</em>, <em>sampleSizes</em>, <em>gammaBudget</em>, <em>OFE_budgets=None</em>, <em>OFE_max=None</em>, <em>extra_termination_critea=</em>, <span class="optional">[</span><span class="optional">]</span><em>N=10</em>, <em>w=0.2</em>, <em>c_g=2.0</em>, <em>c_p=2.0</em>, <em>c_beta=0.1</em>, <em>resampling_interruption_confidence=0.9</em>, <em>resampling_interruption_mode='reduce_max'</em>, <em>OFE_assessment_overshoot_function=&lt;linearFunction y= 1.500000 * x  + 100.000000 &gt;</em>, <em>OFE_assessment_undershoot_function=&lt;linearFunction y= 0.000000 * x  + 0.000000 &gt;</em>, <em>constrain_to_initilization_bounds=False</em>, <em>saveTo=None</em>, <em>saveInterval=10</em>, <em>paretoArchive_local_use_history_info=True</em>, <em>printFunction=&lt;function to_stdout at 0x2ac3c2ca30c8&gt;</em>, <em>printLevel=2</em>, <em>addtoBatch=&lt;function _passfunction at 0x2ac3bb995230&gt;</em>, <em>processBatch=&lt;function _passfunction at 0x2ac3bb995230&gt;</em>, <em>post_iteration_function=&lt;function _passfunction at 0x2ac3bb995230&gt;</em>, <em>record_V_hist=True</em>, <em>record_X_hist=True</em><big>)</big><a class="headerlink" href="#optTune.tMOPSO" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Required Args</dt>
+<dd><ul class="first last simple">
+<li>optAlg - function which calls optimization algorithm or numerical method and returns two lists. The first list optAlg should return the utility measure such as the solution error (i.e f_found_opt - f_min) and should be decreasing, and the second list the number of objective function evaluations (OFEs) used in order to determine each element in the first list and should be increasing. The input arguments passed from tMOPSO to optAlg are ( numpy.array([CPV_1, CPV_2, ..., ]), OFE_budgets, randomSeed ). If OFE_budgets is a numpy.array then a solution error for each value in the list is desired, else if OFE_budgets is a integer, the solutions errors for every iteration up until OFE_budgets is desired. The type of OFE_budgets depends upon the OFE_budgets == None, if so then integer, else values from OFE_budgets is passed into optAlg.</li>
+<li>CPV_lb - initialization lower bound for CPV tuning, i.e.  numpy.array([CPV_1_init_lb, CPV_2_init_lb, ...])</li>
+<li>CPV_ub - numpy.array([CPV_1_init_ub, CPV_2_init_ub, ...])</li>
+<li>CPV_validity_checks - function used to check validity of candidate CPVs. Usage CPV_validity_checks(CPV_array, OFE_budget) returns tuple (valid, msg) where msg is string of why invalid. Should be a cheap function, as candidate CPVs are regenerated if they do not satisfy it. Use to prevent negative population sizes, populations size larger then OFE_budget checks, etcetera.</li>
+<li>sampleSizes - sample sizes used to generate and refine CPV utility values. For example if the sampleSizes are [5,15,30] then all candidate CPVs will be sampled 5 times, then the possibly not dominated CPVs are then sampled another 15 times, and if still promising the for another 30 times. CPV making it to the final iteration are therefore averaged over 50 independent runs.</li>
+<li>gammaBudget - the number of application layer evaluations (evaluation of the function optAlg optimizes) allocated for the tuning. NB include repeats, i.e. assessing optAlg for on OFE budget of 100 at 5 repeats, counts as a gamma of 500.</li>
+<li>OFE_budgets - numpy.array of OFE budgets for which the optAlg is to be tuned under. If None then algorithm is tuned under every OFE budget upto OFE_max.</li>
+<li>OFE_max - maximum OFE budget of interest. Need not if specified if OFE_budgets specified</li>
+</ul>
+</dd>
+<dt>Optional Args</dt>
+<dd><ul class="first last simple">
+<li>extra_termination_critea - termination criteria in addition to gammaBudget termination criteria.</li>
+<li>N - tMOPSO population size</li>
+<li>w - tMOPSO particle inertia factor</li>
+<li>c_g - parameter controlling the attraction towards the global guide</li>
+<li>c_p - parameter controlling the attraction towards the particles personal guide</li>
+<li>c_beta - particle target OFE budget perturbation factor [0,1], influences each particle velocity in the OFE budget dimension, and the local and global guide selection points.</li>
+<li>resampling_interruption_confidence - re-sampling interruption confidence level used by paretoArchive2D</li>
+<li>resampling_interruption_mode - choices=[&#8216;reduce_max&#8217;, &#8216;check_all&#8217;]</li>
+<li>OFE__assessment_overshoot_function - when assessing a CPV tuple for a OFE budget of beta, this factor is used to control overshoot, beta_actual = OFE__assessment_undershot_function(beta)</li>
+<li>OFE__assessment_undershoot_function -  like OFE__assessment_overshoot_function except control minimum value</li>
+<li>saveTo - save optimization to this file after the optimization has been complete, at the interval specified by save_interval, use None to disable saving</li>
+<li>saveInterval - optimization is saved every <cite>save_interval</cite> iterations. Zero for no saving during optimization</li>
+<li>boundConstrained - should CPV be constrained between initialization bounds CPV_lb and CPV_ub</li>
+<li>paretoArchive_local_use_history_info - use history info from solution error calculations to update Particles local approximations of the Pareto front. This boolean if True, may speed up tuning by increasing the quality of the each particles approximation of the Pareto Front. However, do this increase the computational overhead of tMOPSO.</li>
+<li>printLevel - 0 no printing, 1 only warnings, 2 overall info, 3 lots of info, 4 verbose (not implemented)</li>
+<li>addtoBatch - optAlg inputs are passed to this function before optAlg is called,</li>
+<li>processBatch - function is called after all addtoBatch calls have been made, and before any optAlg calls have been made. If used then optAlg, should be retrieve solutions from this functions results</li>
+<li>post_iteration_function - at the end of each iteration this function is called with tMOPSO instance as the only arg.</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="pure-python-example">
+<h3>pure Python example<a class="headerlink" href="#pure-python-example" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Tune the simulated annealing algorithm from the scipy package to the 5D Rosenbrock problem, for multiple objective function evaluation budgets simulatenously.</span>
+<span class="sd">The contorl parameter values (CPVs)  tuned are those which control are those which control the rate of exploration versus the rate of exploitation, namely </span>
+<span class="sd"> * m - control how quickly the Temperature cools down, i.e. higher m = higher exploration and lower exploitation.</span>
+<span class="sd">        c = m * exp(-n * quench)</span>
+<span class="sd">        T_new = T0 * exp(-c * k**quench)</span>
+<span class="sd"> * dwell - evaluation at each tempreture</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">optimize</span>
+<span class="kn">from</span> <span class="nn">optTune</span> <span class="kn">import</span> <span class="n">tMOPSO</span><span class="p">,</span> <span class="n">evaluation_history_recording_wrapper</span><span class="p">,</span> <span class="n">get_F_vals_at_specified_OFE_budgets</span><span class="p">,</span> <span class="n">linearFunction</span>
+
+
+<span class="k">def</span> <span class="nf">Ros_ND</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="p">:</span>
+    <span class="s">&quot;gerneralised Rossenbroch function&quot;</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">([</span><span class="mi">100</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">ii</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="n">ii</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span> <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)])</span>
+
+<span class="k">def</span> <span class="nf">solution_valid</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span> <span class="o">-</span><span class="mf">2.048</span> <span class="o">&lt;=</span> <span class="n">x</span> <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">and</span> <span class="p">(</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="mf">2.048</span> <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">run_simulated_annealing</span><span class="p">(</span><span class="n">CPVs</span><span class="p">,</span> <span class="n">OFE_budgets</span><span class="p">,</span> <span class="n">randomSeed</span><span class="p">):</span>
+    <span class="n">dwell</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">CPVs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="c">#equibavent to population size in evolutionary algorithms</span>
+    <span class="n">func</span> <span class="o">=</span> <span class="n">evaluation_history_recording_wrapper</span><span class="p">(</span> <span class="n">Ros_ND</span><span class="p">,</span> <span class="n">dwell</span><span class="p">,</span> <span class="n">solution_valid</span> <span class="p">)</span>
+    <span class="n">optimize</span><span class="o">.</span><span class="n">anneal</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> 
+                    <span class="n">x0</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span>
+                    <span class="c">#x0 = -2.048 + 2*2.048*numpy.random.rand(10), #if used make sure tMOPSO sample size greater than 100</span>
+                    <span class="n">m</span> <span class="o">=</span> <span class="n">CPVs</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                    <span class="n">T0</span> <span class="o">=</span> <span class="mf">500.0</span><span class="p">,</span>
+                    <span class="n">lower</span><span class="o">=</span> <span class="o">-</span><span class="mf">2.048</span><span class="p">,</span>
+                    <span class="n">upper</span><span class="o">=</span>  <span class="mf">2.048</span><span class="p">,</span>
+                    <span class="n">dwell</span><span class="o">=</span><span class="n">dwell</span><span class="p">,</span> 
+                    <span class="n">maxeval</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span> <span class="n">OFE_budgets</span> <span class="p">),</span> <span class="c">#termination criteria</span>
+                    <span class="n">feps</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> 
+                    <span class="n">Tf</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">get_F_vals_at_specified_OFE_budgets</span><span class="p">(</span><span class="n">F</span><span class="o">=</span><span class="n">func</span><span class="o">.</span><span class="n">f_hist</span><span class="p">,</span> <span class="n">E</span><span class="o">=</span><span class="n">func</span><span class="o">.</span><span class="n">OFE_hist</span><span class="p">,</span> <span class="n">E_desired</span><span class="o">=</span><span class="n">OFE_budgets</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">CPV_valid</span><span class="p">(</span><span class="n">CPVs</span><span class="p">,</span> <span class="n">OFE_budget</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">CPVs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span><span class="p">,</span><span class="s">&#39;dwell,CPVs[0] &lt; 5&#39;</span>
+    <span class="k">if</span> <span class="n">CPVs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.0001</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span><span class="p">,</span><span class="s">&#39;CPVs[1] &lt; 0.0001&#39;</span>
+    <span class="k">return</span> <span class="bp">True</span><span class="p">,</span><span class="s">&#39;&#39;</span>
+
+<span class="n">tuningOpt</span> <span class="o">=</span> <span class="n">tMOPSO</span><span class="p">(</span> 
+    <span class="n">optAlg</span> <span class="o">=</span> <span class="n">run_simulated_annealing</span><span class="p">,</span> 
+    <span class="n">CPV_lb</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">10</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]),</span> 
+    <span class="n">CPV_ub</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">50</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">]),</span>
+    <span class="n">CPV_validity_checks</span> <span class="o">=</span> <span class="n">CPV_valid</span><span class="p">,</span>
+    <span class="n">OFE_budgets</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">30</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span>
+    <span class="n">sampleSizes</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">20</span><span class="p">],</span> <span class="c">#resampling size of 30</span>
+    <span class="n">resampling_interruption_confidence</span> <span class="o">=</span> <span class="mf">0.6</span><span class="p">,</span>
+    <span class="n">gammaBudget</span> <span class="o">=</span> <span class="mi">30</span><span class="o">*</span><span class="mi">1000</span><span class="o">*</span><span class="mi">50</span><span class="p">,</span> <span class="c">#increase to get a smoother result ...</span>
+    <span class="n">OFE_assessment_overshoot_function</span> <span class="o">=</span> <span class="n">linearFunction</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">100</span> <span class="p">),</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">tuningOpt</span><span class="p">)</span>
+
+
+<span class="n">Fmin_values</span> <span class="o">=</span> <span class="p">[</span> <span class="n">d</span><span class="o">.</span><span class="n">fv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">tuningOpt</span><span class="o">.</span><span class="n">PFA</span><span class="o">.</span><span class="n">designs</span> <span class="p">]</span> 
+<span class="n">OFE_budgets</span> <span class="o">=</span> <span class="p">[</span> <span class="n">d</span><span class="o">.</span><span class="n">fv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">tuningOpt</span><span class="o">.</span><span class="n">PFA</span><span class="o">.</span><span class="n">designs</span> <span class="p">]</span>
+<span class="n">dwell_values</span> <span class="o">=</span>  <span class="p">[</span> <span class="nb">int</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">xv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">tuningOpt</span><span class="o">.</span><span class="n">PFA</span><span class="o">.</span><span class="n">designs</span> <span class="p">]</span>
+<span class="n">m_values</span> <span class="o">=</span> <span class="p">[</span> <span class="n">d</span><span class="o">.</span><span class="n">xv</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">tuningOpt</span><span class="o">.</span><span class="n">PFA</span><span class="o">.</span><span class="n">designs</span> <span class="p">]</span>
+
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;OFE budget     Fmin      dwell       m     &#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">c</span><span class="p">,</span><span class="n">d</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">OFE_budgets</span><span class="p">,</span> <span class="n">Fmin_values</span><span class="p">,</span> <span class="n">dwell_values</span><span class="p">,</span> <span class="n">m_values</span><span class="p">):</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;  </span><span class="si">%i</span><span class="s">       </span><span class="si">%6.4f</span><span class="s">      </span><span class="si">%i</span><span class="s">       </span><span class="si">%4.2f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">c</span><span class="p">,</span><span class="n">d</span><span class="p">))</span>
+
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span>
+<span class="n">p1</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">OFE_budgets</span><span class="p">,</span> <span class="n">dwell_values</span><span class="p">,</span> <span class="s">&#39;g.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;dwell&#39;</span><span class="p">)</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span> <span class="nb">min</span><span class="p">(</span><span class="n">dwell_values</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span> <span class="n">dwell_values</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">twinx</span><span class="p">()</span>
+<span class="n">p2</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">OFE_budgets</span><span class="p">,</span> <span class="n">m_values</span><span class="p">,</span> <span class="s">&#39;bx&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">m_values</span><span class="p">)</span><span class="o">*</span><span class="mf">1.1</span><span class="p">)</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;m (rate of cool)&#39;</span><span class="p">)</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="n">p1</span><span class="p">,</span><span class="n">p2</span><span class="p">],[</span><span class="s">&#39;dwell&#39;</span><span class="p">,</span><span class="s">&#39;m&#39;</span><span class="p">],</span> <span class="n">loc</span><span class="o">=</span><span class="s">&#39;upper center&#39;</span><span class="p">)</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;OFE budget&#39;</span><span class="p">)</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">OFE_budgets</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="nb">max</span><span class="p">(</span><span class="n">OFE_budgets</span><span class="p">)</span><span class="o">+</span><span class="mi">60</span><span class="p">)</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&#39;Optimal CPVs for different OFE budgets&#39;</span><span class="p">)</span>
+<span class="c">#pyplot.figure()</span>
+<span class="c">#tuningOpt.plot_HV_hist()</span>
+<span class="c">#pyplot.title(&#39;Hyper Volume History of multi-objective tuning optimization&#39;)</span>
+
+<span class="n">pyplot</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="f2py-example">
+<span id="tmopso-f2py-example"></span><h3>f2py example<a class="headerlink" href="#f2py-example" title="Permalink to this headline">¶</a></h3>
+<p>A faster way of the doing the above examples is to use <a class="reference external" href="www.f2py.com/">f2py</a>, and then call the resulting shared object from Python.</p>
+<p>Fortran code</p>
+<div class="highlight-fortran"><div class="highlight"><pre><span class="c">! written by Antoine Dymond, Jan 2012, based upon the Scipy.optimize.anneal code, the scipy license agreement is as follows:</span>
+<span class="c">!!$</span>
+<span class="c">!!$Copyright (c) 2001, 2002 Enthought, Inc.</span>
+<span class="c">!!$All rights reserved.</span>
+<span class="c">!!$</span>
+<span class="c">!!$Copyright (c) 2003-2009 SciPy Developers.</span>
+<span class="c">!!$All rights reserved.</span>
+<span class="c">!!$</span>
+<span class="c">!!$Redistribution and use in source and binary forms, with or without</span>
+<span class="c">!!$modification, are permitted provided that the following conditions are met:</span>
+<span class="c">!!$</span>
+<span class="c">!!$  a. Redistributions of source code must retain the above copyright notice,</span>
+<span class="c">!!$     this list of conditions and the following disclaimer.</span>
+<span class="c">!!$  b. Redistributions in binary form must reproduce the above copyright</span>
+<span class="c">!!$     notice, this list of conditions and the following disclaimer in the</span>
+<span class="c">!!$     documentation and/or other materials provided with the distribution.</span>
+<span class="c">!!$  c. Neither the name of the Enthought nor the names of its contributors</span>
+<span class="c">!!$     may be used to endorse or promote products derived from this software</span>
+<span class="c">!!$     without specific prior written permission.</span>
+<span class="c">!!$</span>
+<span class="c">!!$</span>
+<span class="c">!!$THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;</span>
+<span class="c">!!$AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE</span>
+<span class="c">!!$IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE</span>
+<span class="c">!!$ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR</span>
+<span class="c">!!$ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL</span>
+<span class="c">!!$DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR</span>
+<span class="c">!!$SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER</span>
+<span class="c">!!$CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT</span>
+<span class="c">!!$LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY</span>
+<span class="c">!!$OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH</span>
+<span class="c">!!$DAMAGE.</span>
+<span class="c">!</span>
+<span class="c">! compile using</span>
+<span class="c">! $ f2py -c -m anneal_fortran anneal.f90</span>
+
+
+<span class="k">module </span><span class="nv">anneal_module</span>
+  <span class="c">! to compile using f2py, leave real type as default, needs to be compadiable between numpy and fortran.</span>
+  <span class="k">implicit None</span>  <span class="c">! fortran is case insensitive.</span>
+  <span class="c">!f2py forces all variable to lower case in linking module</span>
+  <span class="kt">integer</span> <span class="kd">::</span> <span class="nv">problem_id</span><span class="p">,</span> <span class="nv">objFun_evals</span>
+  <span class="kt">real</span><span class="p">(</span><span class="mi">8</span><span class="p">),</span> <span class="k">allocatable</span><span class="p">,</span> <span class="k">dimension</span><span class="p">(:)</span> <span class="kd">::</span> <span class="nv">fval_hist</span><span class="p">,</span> <span class="nv">x_min</span>
+  <span class="kt">integer</span><span class="p">,</span> <span class="k">allocatable</span><span class="p">,</span> <span class="k">dimension</span><span class="p">(:)</span> <span class="kd">::</span> <span class="nv">eval_hist</span>
+
+<span class="k">contains</span>
+
+<span class="k">  function </span><span class="nv">objFun</span><span class="p">(</span><span class="nv">x</span><span class="p">,</span> <span class="nv">D</span><span class="p">)</span>
+    <span class="kt">integer</span> <span class="kd">::</span> <span class="nv">D</span><span class="p">,</span> <span class="nv">i</span>
+    <span class="kt">real</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span> <span class="kd">::</span> <span class="nv">x</span><span class="p">(</span><span class="nv">D</span><span class="p">),</span> <span class="nv">objFun</span>
+    <span class="nv">objFun</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="nv">objFun_evals</span> <span class="o">=</span> <span class="nv">objFun_evals</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">select case</span><span class="p">(</span><span class="nv">problem_id</span><span class="p">)</span>
+    <span class="k">case</span> <span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="c">!general Rossenbrock</span>
+       <span class="k">do </span><span class="nv">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span><span class="nv">D</span><span class="o">-</span><span class="mi">1</span>
+          <span class="nv">objFun</span> <span class="o">=</span> <span class="nv">objFun</span> <span class="o">+</span> <span class="mi">10</span><span class="mf">0.0</span><span class="o">*</span><span class="p">(</span><span class="nv">x</span><span class="p">(</span><span class="nv">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="nv">x</span><span class="p">(</span><span class="nv">i</span><span class="p">)</span><span class="o">**</span><span class="mf">2.0</span><span class="p">)</span><span class="o">**</span><span class="mf">2.0</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="nv">x</span><span class="p">(</span><span class="nv">i</span><span class="p">))</span><span class="o">**</span><span class="mf">2.0</span>
+       <span class="k">end do</span>
+<span class="k">    case</span> <span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="c">!sphere</span>
+       <span class="nv">objFun</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="nv">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">end select</span>
+<span class="k">  end function </span><span class="nv">objFun</span>
+
+  <span class="k">SUBROUTINE </span><span class="nv">set_random_seed</span><span class="p">(</span><span class="nv">seed_offset</span><span class="p">)</span>
+    <span class="c">!taken from the gfortran site. </span>
+    <span class="c">!http://gcc.gnu.org/onlinedocs/gfortran/RANDOM_005fSEED.html#RANDOM_005fSEED</span>
+    <span class="kt">INTEGER</span> <span class="kd">::</span> <span class="nv">i</span><span class="p">,</span> <span class="nv">n</span><span class="p">,</span> <span class="nv">seed_offset</span>
+    <span class="kt">INTEGER</span><span class="p">,</span> <span class="k">DIMENSION</span><span class="p">(:),</span> <span class="k">ALLOCATABLE</span> <span class="kd">::</span> <span class="nv">seed</span>   
+    <span class="k">CALL </span><span class="nb">RANDOM_SEED</span><span class="p">(</span><span class="nv">size</span> <span class="o">=</span> <span class="nv">n</span><span class="p">)</span>
+    <span class="k">ALLOCATE</span><span class="p">(</span><span class="nv">seed</span><span class="p">(</span><span class="nv">n</span><span class="p">))</span>
+    <span class="nv">seed</span> <span class="o">=</span> <span class="nv">seed_offset</span> <span class="o">+</span> <span class="mi">37</span> <span class="o">*</span> <span class="p">(</span><span class="o">/</span> <span class="p">(</span><span class="nv">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="nv">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="nv">n</span><span class="p">)</span> <span class="o">/</span><span class="p">)</span>
+    <span class="k">CALL </span><span class="nb">RANDOM_SEED</span><span class="p">(</span><span class="nv">PUT</span> <span class="o">=</span> <span class="nv">seed</span><span class="p">)</span>
+    <span class="k">DEALLOCATE</span><span class="p">(</span><span class="nv">seed</span><span class="p">)</span>
+  <span class="k">END SUBROUTINE </span><span class="nv">set_random_seed</span>
+
+
+  <span class="k">function </span><span class="nv">rand_uniform</span><span class="p">()</span>
+    <span class="kt">real</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span> <span class="kd">::</span> <span class="nv">rand_uniform</span>
+    <span class="k">call </span><span class="nb">random_number</span><span class="p">(</span><span class="nv">rand_uniform</span><span class="p">)</span>
+  <span class="k">end function </span><span class="nv">rand_uniform</span>
+
+  <span class="k">subroutine </span><span class="nv">fast_sa_run</span><span class="p">(</span><span class="nv">prob_id</span><span class="p">,</span> <span class="nv">x0</span><span class="p">,</span> <span class="nv">D</span><span class="p">,</span> <span class="nv">T0</span><span class="p">,</span> <span class="nv">dwell</span><span class="p">,</span> <span class="nv">m</span><span class="p">,</span> <span class="nv">n</span><span class="p">,</span> <span class="nv">quench</span><span class="p">,</span> <span class="nv">boltzmann</span><span class="p">,</span> <span class="nv">maxEvals</span><span class="p">,</span> <span class="nv">lower</span><span class="p">,</span> <span class="nv">upper</span><span class="p">,</span> <span class="nb">random_seed</span><span class="p">)</span>
+    <span class="kt">integer</span> <span class="kd">::</span> <span class="nv">prob_id</span><span class="p">,</span> <span class="nv">D</span><span class="p">,</span> <span class="nv">dwell</span><span class="p">,</span> <span class="nv">maxEvals</span><span class="p">,</span> <span class="nb">random_seed</span>
+<span class="nb">    </span><span class="kt">real</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span> <span class="kd">::</span> <span class="nv">T0</span><span class="p">,</span> <span class="nv">m</span><span class="p">,</span> <span class="nv">n</span><span class="p">,</span> <span class="nv">quench</span><span class="p">,</span> <span class="nv">boltzmann</span>
+    <span class="kt">real</span><span class="p">(</span><span class="mi">8</span><span class="p">),</span> <span class="k">dimension</span><span class="p">(</span><span class="nv">D</span><span class="p">)</span> <span class="kd">::</span> <span class="nv">x0</span><span class="p">,</span> <span class="nv">u</span><span class="p">,</span> <span class="nv">lower</span><span class="p">,</span> <span class="nv">upper</span> 
+    <span class="kt">real</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span> <span class="kd">::</span> <span class="nv">T</span><span class="p">,</span> <span class="nv">c</span><span class="p">,</span> <span class="nv">dE</span><span class="p">,</span> <span class="nv">y_j</span>
+    <span class="kt">integer</span> <span class="kd">::</span> <span class="nv">k</span><span class="p">,</span> <span class="nv">kMax</span><span class="p">,</span> <span class="nv">acceptTest</span><span class="p">,</span> <span class="nv">i</span><span class="p">,</span> <span class="nv">j</span>
+    <span class="kt">real</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span> <span class="kd">::</span> <span class="nv">current_state_fv</span><span class="p">,</span> <span class="nv">last_state_fv</span><span class="p">,</span> <span class="nv">best_state_fv</span>
+    <span class="kt">real</span><span class="p">(</span><span class="mi">8</span><span class="p">),</span> <span class="k">dimension</span><span class="p">(</span><span class="nv">D</span><span class="p">)</span> <span class="kd">::</span><span class="nv">current_state_xv</span><span class="p">,</span> <span class="nv">last_state_xv</span><span class="p">,</span> <span class="nv">best_state_xv</span>
+
+
+    <span class="k">call </span><span class="nv">set_random_seed</span><span class="p">(</span> <span class="nb">random_seed</span> <span class="p">)</span>
+    <span class="nv">problem_id</span>  <span class="o">=</span> <span class="nv">prob_id</span>
+    <span class="nv">kMax</span> <span class="o">=</span> <span class="nv">maxEvals</span><span class="o">/</span> <span class="nv">dwell</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nb">allocated</span><span class="p">(</span><span class="nv">fval_hist</span><span class="p">))</span> <span class="k">deallocate</span><span class="p">(</span><span class="nv">fval_hist</span><span class="p">,</span> <span class="nv">eval_hist</span> <span class="p">)</span>
+    <span class="k">allocate</span><span class="p">(</span><span class="nv">fval_hist</span><span class="p">(</span><span class="nv">kMax</span><span class="p">),</span> <span class="nv">eval_hist</span><span class="p">(</span><span class="nv">kMax</span><span class="p">))</span>
+
+    <span class="nv">fval_hist</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="nv">objFun_evals</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="nv">T</span> <span class="o">=</span> <span class="nv">T0</span>
+    <span class="nv">c</span> <span class="o">=</span> <span class="nv">m</span> <span class="o">*</span> <span class="nb">exp</span><span class="p">(</span><span class="nv">n</span> <span class="o">*</span> <span class="nv">quench</span><span class="p">)</span>
+    <span class="nv">last_state_xv</span> <span class="o">=</span> <span class="nv">x0</span>
+    <span class="nv">last_state_fv</span> <span class="o">=</span> <span class="nv">objFun</span><span class="p">(</span><span class="nv">x0</span><span class="p">,</span> <span class="nv">D</span><span class="p">)</span>
+    <span class="nv">best_state_xv</span> <span class="o">=</span> <span class="nv">x0</span>
+    <span class="nv">best_state_fv</span> <span class="o">=</span> <span class="nv">last_state_fv</span>
+    <span class="k">do </span><span class="nv">k</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span><span class="nv">kMax</span>
+       <span class="k">do </span><span class="nv">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="nv">dwell</span>
+          <span class="c">! schedule.update_guess</span>
+          <span class="k">call </span><span class="nb">random_number</span><span class="p">(</span><span class="nv">u</span><span class="p">)</span>
+          <span class="k">do </span><span class="nv">j</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span><span class="nv">D</span>
+             <span class="nv">y_j</span> <span class="o">=</span> <span class="nv">T</span> <span class="o">*</span> <span class="p">(</span> <span class="p">(</span> <span class="mi">1</span><span class="o">+</span><span class="mf">1.0</span><span class="o">/</span><span class="nv">T</span><span class="p">)</span> <span class="o">**</span> <span class="nb">abs</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="nv">u</span><span class="p">(</span><span class="nv">i</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.0</span> <span class="p">)</span>
+             <span class="k">if</span> <span class="p">(</span> <span class="p">(</span><span class="nv">u</span><span class="p">(</span><span class="nv">j</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="p">)</span> <span class="nv">y_j</span> <span class="o">=</span> <span class="o">-</span> <span class="nv">y_j</span>
+             <span class="nv">current_state_xv</span><span class="p">(</span><span class="nv">j</span><span class="p">)</span> <span class="o">=</span> <span class="nv">last_state_xv</span><span class="p">(</span><span class="nv">j</span><span class="p">)</span> <span class="o">+</span> <span class="nv">y_j</span><span class="o">*</span><span class="p">(</span><span class="nv">upper</span><span class="p">(</span><span class="nv">j</span><span class="p">)</span> <span class="o">-</span> <span class="nv">lower</span><span class="p">(</span><span class="nv">j</span><span class="p">))</span>
+             <span class="k">if</span> <span class="p">(</span><span class="nv">current_state_xv</span><span class="p">(</span><span class="nv">j</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nv">lower</span><span class="p">(</span><span class="nv">j</span><span class="p">))</span> <span class="nv">current_state_xv</span><span class="p">(</span><span class="nv">j</span><span class="p">)</span> <span class="o">=</span> <span class="nv">lower</span><span class="p">(</span><span class="nv">j</span><span class="p">)</span>
+             <span class="k">if</span> <span class="p">(</span><span class="nv">current_state_xv</span><span class="p">(</span><span class="nv">j</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nv">upper</span><span class="p">(</span><span class="nv">j</span><span class="p">))</span> <span class="nv">current_state_xv</span><span class="p">(</span><span class="nv">j</span><span class="p">)</span> <span class="o">=</span> <span class="nv">upper</span><span class="p">(</span><span class="nv">j</span><span class="p">)</span>
+          <span class="k">end do</span>
+<span class="k">          </span><span class="nv">current_state_fv</span> <span class="o">=</span>  <span class="nv">objFun</span><span class="p">(</span><span class="nv">current_state_xv</span><span class="p">,</span> <span class="nv">D</span><span class="p">)</span>
+          <span class="nv">dE</span> <span class="o">=</span> <span class="nv">current_state_fv</span> <span class="o">-</span> <span class="nv">last_state_fv</span>
+          <span class="c">!schedule.accept_test(dE)</span>
+          <span class="nv">acceptTest</span> <span class="o">=</span> <span class="mi">0</span>
+          <span class="k">if</span> <span class="p">(</span><span class="nv">dE</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="k">then</span>
+<span class="k">             </span><span class="nv">acceptTest</span> <span class="o">=</span> <span class="mi">1</span>
+          <span class="k">else</span>
+<span class="k">             if</span>  <span class="p">(</span> <span class="nb">exp</span><span class="p">(</span><span class="o">-</span><span class="nv">dE</span><span class="o">*</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="nv">boltzmann</span> <span class="o">/</span><span class="nv">T</span> <span class="p">)</span> <span class="o">&gt;</span> <span class="nv">rand_uniform</span><span class="p">()</span> <span class="p">)</span> <span class="nv">acceptTest</span> <span class="o">=</span> <span class="mi">1</span>
+          <span class="k">end if</span>
+<span class="k">          if</span> <span class="p">(</span> <span class="nv">acceptTest</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="k">then</span>
+<span class="k">             </span><span class="nv">last_state_xv</span> <span class="o">=</span> <span class="nv">current_state_xv</span>
+             <span class="nv">last_state_fv</span> <span class="o">=</span> <span class="nv">current_state_fv</span>
+             <span class="k">if</span> <span class="p">(</span><span class="nv">last_state_fv</span> <span class="o">&lt;</span> <span class="nv">best_state_fv</span><span class="p">)</span> <span class="k">then</span>
+<span class="k">                </span><span class="nv">best_state_xv</span> <span class="o">=</span> <span class="nv">last_state_xv</span>
+                <span class="nv">best_state_fv</span> <span class="o">=</span> <span class="nv">last_state_fv</span>
+             <span class="k">end if</span>
+<span class="k">          end if</span>
+<span class="k">       end do</span>
+       <span class="c">!tempreture update</span>
+       <span class="nv">T</span> <span class="o">=</span> <span class="nv">T0</span> <span class="o">*</span> <span class="nb">exp</span><span class="p">(</span><span class="o">-</span><span class="nv">c</span><span class="o">*</span><span class="nv">k</span><span class="o">*</span><span class="nv">quench</span><span class="p">)</span>
+       <span class="c">!book keeping</span>
+       <span class="nv">fval_hist</span><span class="p">(</span><span class="nv">k</span><span class="p">)</span> <span class="o">=</span> <span class="nv">best_state_fv</span>
+       <span class="nv">eval_hist</span><span class="p">(</span><span class="nv">k</span><span class="p">)</span> <span class="o">=</span> <span class="nv">objFun_evals</span>
+    <span class="k">end do</span>
+<span class="k">    if</span> <span class="p">(</span><span class="nb">allocated</span><span class="p">(</span><span class="nv">x_min</span><span class="p">))</span> <span class="k">deallocate</span><span class="p">(</span><span class="nv">x_min</span><span class="p">)</span>
+    <span class="k">allocate</span><span class="p">(</span><span class="nv">x_min</span><span class="p">(</span><span class="nv">D</span><span class="p">))</span>
+    <span class="nv">x_min</span> <span class="o">=</span> <span class="nv">best_state_xv</span>
+  <span class="k">end subroutine </span><span class="nv">fast_sa_run</span>
+
+<span class="k">end module </span><span class="nv">anneal_module</span>
+</pre></div>
+</div>
+<p>Python code</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Tune the simulated annealing algorithm from the scipy package to the generalized Rosenbrock problem, for multiple objective function evaluation (OFE) budgets simulatenously.</span>
+<span class="sd">Same as the other example, except a fortran version of fast sa is used.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span><span class="o">,</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">optTune</span> <span class="kn">import</span> <span class="n">tMOPSO</span><span class="p">,</span> <span class="n">get_F_vals_at_specified_OFE_budgets</span><span class="p">,</span> <span class="n">linearFunction</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;Please note this example only works on Linux, and requires gfortran&#39;</span><span class="p">)</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s">&#39;anneal_fortran.so&#39;</span><span class="p">):</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s">&#39;f2py -c -m anneal_fortran anneal.f90&#39;</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">anneal_fortran</span> <span class="kn">import</span> <span class="n">anneal_module</span>
+<span class="n">D</span> <span class="o">=</span> <span class="mi">5</span> <span class="c">#number of dimensions for Rosenbrock problem</span>
+
+<span class="k">def</span> <span class="nf">anneal</span><span class="p">(</span><span class="n">CPVs</span><span class="p">,</span> <span class="n">OFE_budgets</span><span class="p">,</span> <span class="n">randomSeed</span><span class="p">):</span>
+    <span class="c">#fast_sa_run - Function signature:</span>
+    <span class="c">#  fast_sa_run(prob_id,x0,t0,dwell,m,n,quench,boltzmann,maxevals,lower,upper,random_seed,[d])</span>
+    <span class="n">anneal_module</span><span class="o">.</span><span class="n">fast_sa_run</span><span class="p">(</span><span class="n">prob_id</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">,</span>
+                              <span class="n">x0</span> <span class="o">=</span> <span class="o">-</span><span class="mf">2.048</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="mf">2.048</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">D</span><span class="p">),</span>
+                              <span class="n">t0</span> <span class="o">=</span> <span class="mf">500.0</span><span class="p">,</span>
+                              <span class="n">dwell</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">CPVs</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                              <span class="n">m</span> <span class="o">=</span> <span class="n">CPVs</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                              <span class="n">n</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+                              <span class="n">quench</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+                              <span class="n">boltzmann</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+                              <span class="n">maxevals</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">OFE_budgets</span><span class="p">),</span>
+                              <span class="n">lower</span> <span class="o">=</span> <span class="o">-</span><span class="mf">2.048</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">D</span><span class="p">),</span>
+                              <span class="n">upper</span> <span class="o">=</span>  <span class="mf">2.048</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">D</span><span class="p">),</span>
+                              <span class="n">random_seed</span> <span class="o">=</span> <span class="n">randomSeed</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">get_F_vals_at_specified_OFE_budgets</span><span class="p">(</span><span class="n">F</span><span class="o">=</span><span class="n">anneal_module</span><span class="o">.</span><span class="n">fval_hist</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">E</span><span class="o">=</span><span class="n">anneal_module</span><span class="o">.</span><span class="n">eval_hist</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">E_desired</span><span class="o">=</span><span class="n">OFE_budgets</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">CPV_valid</span><span class="p">(</span><span class="n">CPVs</span><span class="p">,</span> <span class="n">OFE_budget</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">CPVs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span><span class="p">,</span><span class="s">&#39;dwell,CPVs[0] &lt; 5&#39;</span>
+    <span class="k">if</span> <span class="n">CPVs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.0001</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span><span class="p">,</span><span class="s">&#39;CPVs[1] &lt; 0.0001&#39;</span>
+    <span class="k">return</span> <span class="bp">True</span><span class="p">,</span><span class="s">&#39;&#39;</span>
+
+<span class="n">tuningOpt</span> <span class="o">=</span> <span class="n">tMOPSO</span><span class="p">(</span> 
+    <span class="n">optAlg</span> <span class="o">=</span> <span class="n">anneal</span><span class="p">,</span> 
+    <span class="n">CPV_lb</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">10</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]),</span> 
+    <span class="n">CPV_ub</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">50</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">]),</span>
+    <span class="n">CPV_validity_checks</span> <span class="o">=</span> <span class="n">CPV_valid</span><span class="p">,</span>
+    <span class="n">OFE_budgets</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">30</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span>
+    <span class="n">sampleSizes</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">20</span><span class="p">],</span> <span class="c">#resampling size of 30</span>
+    <span class="n">resampling_interruption_confidence</span> <span class="o">=</span> <span class="mf">0.6</span><span class="p">,</span>
+    <span class="n">gammaBudget</span> <span class="o">=</span> <span class="mi">30</span><span class="o">*</span><span class="mi">1000</span><span class="o">*</span><span class="mi">50</span><span class="p">,</span> <span class="c">#increase to get a smoother result ...</span>
+    <span class="n">OFE_assessment_overshoot_function</span> <span class="o">=</span> <span class="n">linearFunction</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">100</span> <span class="p">),</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="n">printLevel</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">tuningOpt</span><span class="p">)</span>
+
+<span class="n">Fmin_values</span> <span class="o">=</span> <span class="p">[</span> <span class="n">d</span><span class="o">.</span><span class="n">fv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">tuningOpt</span><span class="o">.</span><span class="n">PFA</span><span class="o">.</span><span class="n">designs</span> <span class="p">]</span> 
+<span class="n">OFE_budgets</span> <span class="o">=</span> <span class="p">[</span> <span class="n">d</span><span class="o">.</span><span class="n">fv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">tuningOpt</span><span class="o">.</span><span class="n">PFA</span><span class="o">.</span><span class="n">designs</span> <span class="p">]</span>
+<span class="n">dwell_values</span> <span class="o">=</span>  <span class="p">[</span> <span class="nb">int</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">xv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">tuningOpt</span><span class="o">.</span><span class="n">PFA</span><span class="o">.</span><span class="n">designs</span> <span class="p">]</span>
+<span class="n">m_values</span> <span class="o">=</span> <span class="p">[</span> <span class="n">d</span><span class="o">.</span><span class="n">xv</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">tuningOpt</span><span class="o">.</span><span class="n">PFA</span><span class="o">.</span><span class="n">designs</span> <span class="p">]</span>
+
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;OFE budget     Fmin      dwell       m     &#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">c</span><span class="p">,</span><span class="n">d</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">OFE_budgets</span><span class="p">,</span> <span class="n">Fmin_values</span><span class="p">,</span> <span class="n">dwell_values</span><span class="p">,</span> <span class="n">m_values</span><span class="p">):</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;  </span><span class="si">%i</span><span class="s">       </span><span class="si">%6.4f</span><span class="s">      </span><span class="si">%i</span><span class="s">       </span><span class="si">%4.2f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">c</span><span class="p">,</span><span class="n">d</span><span class="p">))</span>
+
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span>
+<span class="n">p1</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">OFE_budgets</span><span class="p">,</span> <span class="n">dwell_values</span><span class="p">,</span> <span class="s">&#39;g.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;dwell&#39;</span><span class="p">)</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span> <span class="nb">min</span><span class="p">(</span><span class="n">dwell_values</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span> <span class="n">dwell_values</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">twinx</span><span class="p">()</span>
+<span class="n">p2</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">OFE_budgets</span><span class="p">,</span> <span class="n">m_values</span><span class="p">,</span> <span class="s">&#39;bx&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">m_values</span><span class="p">)</span><span class="o">*</span><span class="mf">1.1</span><span class="p">)</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;m (rate of cool)&#39;</span><span class="p">)</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="n">p1</span><span class="p">,</span><span class="n">p2</span><span class="p">],[</span><span class="s">&#39;dwell&#39;</span><span class="p">,</span><span class="s">&#39;m&#39;</span><span class="p">],</span> <span class="n">loc</span><span class="o">=</span><span class="s">&#39;best&#39;</span><span class="p">)</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;OFE budget&#39;</span><span class="p">)</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">OFE_budgets</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="nb">max</span><span class="p">(</span><span class="n">OFE_budgets</span><span class="p">)</span><span class="o">+</span><span class="mi">60</span><span class="p">)</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&#39;Optimal CPVs for different OFE budgets&#39;</span><span class="p">)</span>
+
+<span class="n">pyplot</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">tMOPSO</a><ul>
+<li><a class="reference internal" href="#examples">Examples</a><ul>
+<li><a class="reference internal" href="#pure-python-example">pure Python example</a></li>
+<li><a class="reference internal" href="#f2py-example">f2py example</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="examples.html"
+                        title="previous chapter">Examples</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="tPSO.html"
+                        title="next chapter">tPSO</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/tMOPSO.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tPSO.html" title="tPSO"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="examples.html" title="Examples"
+             >previous</a> |</li>
+        <li><a href="index.html">optTune 0.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Antoine Dymond.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
