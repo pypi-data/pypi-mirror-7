@@ -1,0 +1,225 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Mininet Dumbbell &mdash; FNSS 0.5.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="FNSS 0.5.0 documentation" href="../index.html" />
+    <link rel="up" title="Examples" href="index.html" />
+    <link rel="next" title="Ns2" href="ns2.html" />
+    <link rel="prev" title="Rocketfuel Tm" href="rocketfuel_tm.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="ns2.html" title="Ns2"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="rocketfuel_tm.html" title="Rocketfuel Tm"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">FNSS 0.5.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Examples</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="rocketfuel_tm.html"
+                        title="previous chapter">Rocketfuel Tm</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="ns2.html"
+                        title="next chapter">Ns2</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="mininet-dumbbell">
+<h1>Mininet Dumbbell<a class="headerlink" href="#mininet-dumbbell" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-python"><div class="highlight"><pre><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Create dumbbell topology for Mininet</span>
+<span class="sd">====================================</span>
+
+<span class="sd">This example shows how to create a dumbbell topology with FNSS and export it</span>
+<span class="sd">to Mininet.</span>
+
+<span class="sd">This example requires Mininet to be installed on the machine.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+<span class="kn">import</span> <span class="nn">fnss</span>
+
+<span class="kn">from</span> <span class="nn">mininet.topo</span> <span class="kn">import</span> <span class="n">Topo</span>
+<span class="kn">from</span> <span class="nn">mininet.net</span> <span class="kn">import</span> <span class="n">Mininet</span>
+<span class="kn">from</span> <span class="nn">mininet.link</span> <span class="kn">import</span> <span class="n">TCLink</span>
+<span class="kn">from</span> <span class="nn">mininet.util</span> <span class="kn">import</span> <span class="n">dumpNodeConnections</span>
+<span class="kn">from</span> <span class="nn">mininet.log</span> <span class="kn">import</span> <span class="n">setLogLevel</span>
+<span class="kn">from</span> <span class="nn">mininet.node</span> <span class="kn">import</span> <span class="n">OVSController</span>
+
+
+<span class="c"># Create FNSS topology. Let&#39;s create a simple dumbbell topology</span>
+<span class="c"># This topology does not contain loops. If you want to use a topology with</span>
+<span class="c"># loops or multiple paths in Mininet you need to use a custom controller.</span>
+<span class="c"># More info here:</span>
+<span class="c"># https://github.com/mininet/mininet/wiki/Introduction-to-Mininet#multipath-routing</span>
+<span class="n">fnss_topo</span> <span class="o">=</span> <span class="n">fnss</span><span class="o">.</span><span class="n">dumbbell_topology</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+
+<span class="c"># now extract links located in the edges and links in the core</span>
+<span class="c"># we do this easily using Python list comprehension. Each link in the dumbbell</span>
+<span class="c"># topology has a &#39;type&#39; attribute which identifies whether it a link of the</span>
+<span class="c"># core path or it is in a bell.</span>
+<span class="c"># Look at dumbbell_topology documentation for more details.</span>
+
+<span class="c"># this return a dictionary of egdes and value of attribute type</span>
+<span class="c"># This function is provided by the NetworkX library.</span>
+<span class="c"># Since FNSS Topology and DirecteedTopology objects inherit from NetworkX&#39;s</span>
+<span class="c"># Graph and DiGraph, respectively, NetworkX functions can be used in FNSS too.</span>
+<span class="n">link_types</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">get_edge_attributes</span><span class="p">(</span><span class="n">fnss_topo</span><span class="p">,</span> <span class="s">&#39;type&#39;</span><span class="p">)</span>
+<span class="n">core_links</span> <span class="o">=</span> <span class="p">[</span><span class="n">links</span> <span class="k">for</span> <span class="n">links</span> <span class="ow">in</span> <span class="n">link_types</span> <span class="k">if</span> <span class="n">link_types</span><span class="p">[</span><span class="n">links</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;core&#39;</span><span class="p">]</span>
+<span class="n">edge_links</span> <span class="o">=</span> <span class="p">[</span><span class="n">links</span> <span class="k">for</span> <span class="n">links</span> <span class="ow">in</span> <span class="n">link_types</span>
+              <span class="k">if</span> <span class="n">link_types</span><span class="p">[</span><span class="n">links</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;right_bell&#39;</span>
+              <span class="ow">or</span> <span class="n">link_types</span><span class="p">[</span><span class="n">links</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;left_bell&#39;</span><span class="p">]</span>
+
+<span class="c"># set delay equal to 1 ms in edge links and equal to 2 ms in core links</span>
+<span class="n">fnss</span><span class="o">.</span><span class="n">set_delays_constant</span><span class="p">(</span><span class="n">fnss_topo</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&#39;ms&#39;</span><span class="p">,</span> <span class="n">edge_links</span><span class="p">)</span>
+<span class="n">fnss</span><span class="o">.</span><span class="n">set_delays_constant</span><span class="p">(</span><span class="n">fnss_topo</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s">&#39;ms&#39;</span><span class="p">,</span> <span class="n">core_links</span><span class="p">)</span>
+
+<span class="c"># set capacity of 10 Mbps in edge links and 40 Mbps in core links</span>
+<span class="n">fnss</span><span class="o">.</span><span class="n">set_capacities_constant</span><span class="p">(</span><span class="n">fnss_topo</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s">&#39;Mbps&#39;</span><span class="p">,</span> <span class="n">edge_links</span><span class="p">)</span>
+<span class="n">fnss</span><span class="o">.</span><span class="n">set_capacities_constant</span><span class="p">(</span><span class="n">fnss_topo</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="s">&#39;Mbps&#39;</span><span class="p">,</span> <span class="n">core_links</span><span class="p">)</span>
+
+<span class="c"># Set buffer size constant to all interfaces</span>
+<span class="n">fnss</span><span class="o">.</span><span class="n">set_buffer_sizes_constant</span><span class="p">(</span><span class="n">fnss_topo</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="s">&#39;packets&#39;</span><span class="p">)</span>
+
+<span class="c"># Now we deploy a traffic sources on right bell and traffic receivers on left</span>
+<span class="c"># bell</span>
+<span class="n">node_types</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">get_node_attributes</span><span class="p">(</span><span class="n">fnss_topo</span><span class="p">,</span> <span class="s">&#39;type&#39;</span><span class="p">)</span>
+<span class="n">core_nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">nodes</span> <span class="k">for</span> <span class="n">nodes</span> <span class="ow">in</span> <span class="n">node_types</span>
+              <span class="k">if</span> <span class="n">node_types</span><span class="p">[</span><span class="n">nodes</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;core&#39;</span><span class="p">]</span>
+<span class="n">left_nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">nodes</span> <span class="k">for</span> <span class="n">nodes</span> <span class="ow">in</span> <span class="n">node_types</span>
+              <span class="k">if</span> <span class="n">node_types</span><span class="p">[</span><span class="n">nodes</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;left_bell&#39;</span><span class="p">]</span>
+<span class="n">right_nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">nodes</span> <span class="k">for</span> <span class="n">nodes</span> <span class="ow">in</span> <span class="n">node_types</span>
+              <span class="k">if</span> <span class="n">node_types</span><span class="p">[</span><span class="n">nodes</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;right_bell&#39;</span><span class="p">]</span>
+
+<span class="c"># Set nodes on bells to be hosts and nodes on bottleneck path to be switches.</span>
+<span class="c"># Differently from datacenter topologies, which already provide annotation of</span>
+<span class="c"># what nodes are hosts and switches, we need to explicitly tell which nodes</span>
+<span class="c"># are switches and which are hosts to deploy the topology in Mininet</span>
+<span class="n">hosts</span> <span class="o">=</span> <span class="n">left_nodes</span> <span class="o">+</span> <span class="n">right_nodes</span>
+<span class="n">switches</span> <span class="o">=</span> <span class="n">core_nodes</span>
+
+<span class="c"># Convert FNSS topology to Mininet</span>
+<span class="c"># If argument relabel_nodes is set to False, node labels are not changed when</span>
+<span class="c"># converting an FNSS topology to a Mininet one, except converting the type to</span>
+<span class="c"># string (e.g. 1 -&gt; &#39;1&#39;). If relabel_nodes is set to True (default option)</span>
+<span class="c"># then nodes are label according to Mininet conventions, e.g. hosts are</span>
+<span class="c"># prepended an h (e.g. 1 -&gt; &#39;h1&#39;) and switches are prepended an s</span>
+<span class="c"># (e.g. 2 -&gt; &#39;s2&#39;)</span>
+<span class="n">mn_topo</span> <span class="o">=</span> <span class="n">fnss</span><span class="o">.</span><span class="n">to_mininet</span><span class="p">(</span><span class="n">fnss_topo</span><span class="p">,</span>
+                          <span class="n">switches</span><span class="o">=</span><span class="n">switches</span><span class="p">,</span>
+                          <span class="n">hosts</span><span class="o">=</span><span class="n">hosts</span><span class="p">,</span>
+                          <span class="n">relabel_nodes</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="c"># Create a Mininet instance and start it</span>
+<span class="c"># Use TCLink to implement links enables Linux Traffic Container (TC) for rate</span>
+<span class="c"># limitation</span>
+<span class="n">net</span> <span class="o">=</span> <span class="n">Mininet</span><span class="p">(</span><span class="n">topo</span><span class="o">=</span><span class="n">mn_topo</span><span class="p">,</span> <span class="n">link</span><span class="o">=</span><span class="n">TCLink</span><span class="p">,</span> <span class="n">controller</span><span class="o">=</span><span class="n">OVSController</span><span class="p">)</span>
+<span class="n">net</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+<span class="c"># Dump host connections</span>
+<span class="n">dumpNodeConnections</span><span class="p">(</span><span class="n">net</span><span class="o">.</span><span class="n">hosts</span><span class="p">)</span>
+
+<span class="c"># Test network connectivity</span>
+<span class="n">net</span><span class="o">.</span><span class="n">pingAll</span><span class="p">()</span>
+
+<span class="c"># Test bandwidth between nodes</span>
+<span class="n">h1</span><span class="p">,</span> <span class="n">h8</span> <span class="o">=</span> <span class="n">net</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;h1&#39;</span><span class="p">,</span> <span class="s">&#39;h8&#39;</span><span class="p">)</span>
+<span class="n">net</span><span class="o">.</span><span class="n">iperf</span><span class="p">((</span><span class="n">h1</span><span class="p">,</span> <span class="n">h8</span><span class="p">))</span>
+
+<span class="c"># Stop Mininet</span>
+<span class="n">net</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="ns2.html" title="Ns2"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="rocketfuel_tm.html" title="Rocketfuel Tm"
+             >previous</a> |</li>
+        <li><a href="../index.html">FNSS 0.5.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Examples</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012-2014, Lorenzo Saino, Cosmin Cocora.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
