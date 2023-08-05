@@ -1,0 +1,1410 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>5.4. NetShark, Packet Sources and Views &mdash; steelscript  documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+    <link rel="top" title="steelscript  documentation" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">steelscript  documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="netshark-packet-sources-and-views">
+<h1>5.4. NetShark, Packet Sources and Views<a class="headerlink" href="#netshark-packet-sources-and-views" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="netshark-objects">
+<h2>5.4.1. <a class="reference internal" href="#steelscript.netshark.core.NetShark" title="steelscript.netshark.core.NetShark"><tt class="xref py py-class docutils literal"><span class="pre">NetShark</span></tt></a> Objects<a class="headerlink" href="#netshark-objects" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="steelscript.netshark.core.NetShark">
+<em class="property">class </em><tt class="descclassname">steelscript.netshark.core.</tt><tt class="descname">NetShark</tt><big>(</big><em>host</em>, <em>port=None</em>, <em>auth=None</em>, <em>force_version=None</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark" title="Permalink to this definition">¶</a></dt>
+<dd><p>The NetShark class is the main interface to interact with a NetShark appliance.
+Among other things, it makes it possible to manage views, jobs, files and
+trace clips, and to query and modify the appliance settings.</p>
+<dl class="method">
+<dt id="steelscript.netshark.core.NetShark.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>host</em>, <em>port=None</em>, <em>auth=None</em>, <em>force_version=None</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Establishes a connection to a NetShark appliance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>host</strong> (<em>str</em>) &#8211; the name or IP address of the NetShark to connect to</li>
+<li><strong>port</strong> (<em>int</em>) &#8211; the TCP port on which the NetShark appliance
+listens.  if this parameter is not specified, the function
+will try to automatically determine the port.</li>
+<li><strong>auth</strong> &#8211; defines the
+authentication method and credentials to use to access the
+NetShark.  It should be an instance of
+<a class="reference internal" href="../common/service.html#steelscript.common.service.UserAuth" title="steelscript.common.service.UserAuth"><tt class="xref py py-class docutils literal"><span class="pre">UserAuth</span></tt></a> or
+<a class="reference internal" href="../common/service.html#steelscript.common.service.OAuth" title="steelscript.common.service.OAuth"><tt class="xref py py-class docutils literal"><span class="pre">OAuth</span></tt></a>.</li>
+<li><strong>force_version</strong> (<em>str</em>) &#8211; is the API version to use when
+communicating.  if unspecified, this will use the latest
+version supported by both this implementation and the
+NetShark appliance.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>See the base <a class="reference internal" href="../common/service.html#steelscript.common.service.Service" title="steelscript.common.service.Service"><tt class="xref py py-class docutils literal"><span class="pre">Service</span></tt></a>
+class for more information about additional functionality supported.</p>
+</dd></dl>
+
+<p>The following methods provide general information about
+the a NetShark:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#steelscript.netshark.core.NetShark.get_serverinfo" title="steelscript.netshark.core.NetShark.get_serverinfo"><tt class="xref py py-meth docutils literal"><span class="pre">get_serverinfo()</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.NetShark.get_protocol_version" title="steelscript.netshark.core.NetShark.get_protocol_version"><tt class="xref py py-meth docutils literal"><span class="pre">get_protocol_version()</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.NetShark.get_logininfo" title="steelscript.netshark.core.NetShark.get_logininfo"><tt class="xref py py-meth docutils literal"><span class="pre">get_logininfo()</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.NetShark.get_stats" title="steelscript.netshark.core.NetShark.get_stats"><tt class="xref py py-meth docutils literal"><span class="pre">get_stats()</span></tt></a></li>
+</ul>
+<p>The following methods are used to access <a class="reference internal" href="glossary.html#term-view"><em class="xref std std-term">view</em></a>.  Each of
+these methods returns a <a class="reference internal" href="#steelscript.netshark.core.View4" title="steelscript.netshark.core.View4"><tt class="xref py py-class docutils literal"><span class="pre">View</span></tt></a>.</p>
+<ul class="simple">
+<li><a class="reference internal" href="#steelscript.netshark.core.NetShark.get_open_views" title="steelscript.netshark.core.NetShark.get_open_views"><tt class="xref py py-meth docutils literal"><span class="pre">get_open_views()</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.NetShark.get_open_view_by_handle" title="steelscript.netshark.core.NetShark.get_open_view_by_handle"><tt class="xref py py-meth docutils literal"><span class="pre">get_open_view_by_handle()</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.NetShark.create_view" title="steelscript.netshark.core.NetShark.create_view"><tt class="xref py py-meth docutils literal"><span class="pre">create_view()</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.NetShark.create_view_from_template" title="steelscript.netshark.core.NetShark.create_view_from_template"><tt class="xref py py-meth docutils literal"><span class="pre">create_view_from_template()</span></tt></a></li>
+</ul>
+<p>The following methods are used to access packet sources (e.g., to
+obtain an object that can be used as an argument to
+<a class="reference internal" href="#steelscript.netshark.core.NetShark.create_view" title="steelscript.netshark.core.NetShark.create_view"><tt class="xref py py-meth docutils literal"><span class="pre">create_view()</span></tt></a>, etc.  The objects they return are
+described below in the section <a class="reference internal" href="#packet-source-objects"><em>Packet Source Objects</em></a>.</p>
+<ul class="simple">
+<li><a class="reference internal" href="#steelscript.netshark.core.NetShark.get_interfaces" title="steelscript.netshark.core.NetShark.get_interfaces"><tt class="xref py py-meth docutils literal"><span class="pre">get_interfaces()</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.NetShark.get_interface_by_name" title="steelscript.netshark.core.NetShark.get_interface_by_name"><tt class="xref py py-meth docutils literal"><span class="pre">get_interface_by_name()</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.NetShark.get_capture_jobs" title="steelscript.netshark.core.NetShark.get_capture_jobs"><tt class="xref py py-meth docutils literal"><span class="pre">get_capture_jobs()</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.NetShark.get_capture_job_by_name" title="steelscript.netshark.core.NetShark.get_capture_job_by_name"><tt class="xref py py-meth docutils literal"><span class="pre">get_capture_job_by_name()</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.NetShark.create_job" title="steelscript.netshark.core.NetShark.create_job"><tt class="xref py py-meth docutils literal"><span class="pre">create_job()</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.NetShark.get_clips" title="steelscript.netshark.core.NetShark.get_clips"><tt class="xref py py-meth docutils literal"><span class="pre">get_clips()</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.NetShark.create_clip" title="steelscript.netshark.core.NetShark.create_clip"><tt class="xref py py-meth docutils literal"><span class="pre">create_clip()</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.NetShark.get_trace_clip_by_description" title="steelscript.netshark.core.NetShark.get_trace_clip_by_description"><tt class="xref py py-meth docutils literal"><span class="pre">get_trace_clip_by_description()</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.NetShark.get_files" title="steelscript.netshark.core.NetShark.get_files"><tt class="xref py py-meth docutils literal"><span class="pre">get_files()</span></tt></a></li>
+</ul>
+<p>The following methods are used to work directly with trace files
+on the NetShark appliance filesystem:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#steelscript.netshark.core.NetShark.get_dir" title="steelscript.netshark.core.NetShark.get_dir"><tt class="xref py py-meth docutils literal"><span class="pre">get_dir()</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.NetShark.get_file" title="steelscript.netshark.core.NetShark.get_file"><tt class="xref py py-meth docutils literal"><span class="pre">get_file()</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.NetShark.exists" title="steelscript.netshark.core.NetShark.exists"><tt class="xref py py-meth docutils literal"><span class="pre">exists()</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.NetShark.create_dir" title="steelscript.netshark.core.NetShark.create_dir"><tt class="xref py py-meth docutils literal"><span class="pre">create_dir()</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.NetShark.create_multisegment_file" title="steelscript.netshark.core.NetShark.create_multisegment_file"><tt class="xref py py-meth docutils literal"><span class="pre">create_multisegment_file()</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.NetShark.create_merged_file" title="steelscript.netshark.core.NetShark.create_merged_file"><tt class="xref py py-meth docutils literal"><span class="pre">create_merged_file()</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.NetShark.upload_trace_file" title="steelscript.netshark.core.NetShark.upload_trace_file"><tt class="xref py py-meth docutils literal"><span class="pre">upload_trace_file()</span></tt></a></li>
+</ul>
+<p>The following methods are used to access <a class="reference internal" href="glossary.html#term-extractor-field"><em class="xref std std-term">extractor fields</em></a>.</p>
+<ul class="simple">
+<li><a class="reference internal" href="#steelscript.netshark.core.NetShark.get_extractor_fields" title="steelscript.netshark.core.NetShark.get_extractor_fields"><tt class="xref py py-meth docutils literal"><span class="pre">get_extractor_fields()</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.NetShark.find_extractor_field_by_name" title="steelscript.netshark.core.NetShark.find_extractor_field_by_name"><tt class="xref py py-meth docutils literal"><span class="pre">find_extractor_field_by_name()</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.NetShark.search_extractor_fields" title="steelscript.netshark.core.NetShark.search_extractor_fields"><tt class="xref py py-meth docutils literal"><span class="pre">search_extractor_fields()</span></tt></a></li>
+</ul>
+<p>Complete method descriptions:</p>
+<dl class="method">
+<dt id="steelscript.netshark.core.NetShark.create_clip">
+<tt class="descname">create_clip</tt><big>(</big><em>job</em>, <em>filters</em>, <em>description</em>, <em>locked=True</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark.create_clip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a clip in the NetShark appliance</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.NetShark.create_dir">
+<tt class="descname">create_dir</tt><big>(</big><em>path</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark.create_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new directory. It will trigger an exception if the directory
+exist.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a reference to the new directory</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.NetShark.create_job">
+<tt class="descname">create_job</tt><big>(</big><em>interface</em>, <em>name</em>, <em>packet_retention_size_limit</em>, <em>packet_retention_packet_limit=None</em>, <em>packet_retention_time_limit=None</em>, <em>bpf_filter=None</em>, <em>snap_length=65525</em>, <em>indexing_size_limit=None</em>, <em>indexing_synced=False</em>, <em>indexing_time_limit=None</em>, <em>start_immediately=False</em>, <em>requested_start_time=None</em>, <em>requested_stop_time=None</em>, <em>stop_rule_size_limit=None</em>, <em>stop_rule_packet_limit=None</em>, <em>stop_rule_time_limit=None</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark.create_job" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a Capture Job on this NetShark, and return it as a
+a capture job object that can be used to work with the new job.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>interface</strong> &#8211; is an interface object identifying the
+source of the packets that this job will capture. The
+method <cite>get_interfaces()</cite> returns interface objects for
+all interfaces on this netshark.</li>
+<li><strong>name</strong> &#8211; is the name that the job will have after being
+created, and that will be used to identify the job for
+successive operations.</li>
+<li><strong>packet_retention_size_limit</strong> &#8211; is the maximum size on
+disk that the job will reach before old packets begin to
+be discarded.  <cite>packet_retention_size_limit</cite> can be
+expressed as a number (in which case the unit will be
+bytes), or as a string.  The format of the string can be
+Number and unit (e.g.&#8221;1.3GB&#8221;),
+or percentage of total disk spoace (e.g. &#8220;20%&#8221;).</li>
+<li><strong>packet_retention_packet_limit</strong> &#8211; the maximum number of
+packets that the job can contain before old packets begin
+to be discarded.</li>
+<li><strong>packet_retention_time_limit</strong> &#8211; a <cite>datetime.timedelta</cite>
+object specifying the maximum time interval that the job
+may contain before old packets begin to be discarded.</li>
+<li><strong>bpf_filter</strong> &#8211; is a filter, based on the Wireshark capture
+filter syntax, that selects which incoming packets should
+be saved in the job.</li>
+<li><strong>snap_length</strong> &#8211; is the portion of each packet that will be
+written on disk, in bytes. The default value of 65535
+ensure that every packet is captured in its entirety.</li>
+<li><strong>indexing_size_limit</strong> &#8211; is the maximum size on disk that
+the index may reach before old index data may be
+discarded.  It is specified in the same format as
+<cite>keep_size</cite>.</li>
+<li><strong>indexing_synced</strong> &#8211; if True the job&#8217;s microflow index
+will be automatically pruned to cover the same time
+extension of the captured packets.</li>
+<li><strong>indexing_time_limit</strong> &#8211; is a <cite>datetime.timedelta</cite> object
+indicating how long index data should be retained.  This
+argument is only meaningful if <cite>index_and_capture_synced</cite>
+is False.</li>
+<li><strong>start_immediately</strong> &#8211; if True, the Job is started after
+it has been created.</li>
+<li><strong>requested_start_time</strong> &#8211; and <cite>requested_stop_time</cite> are
+<cite>datetime.datetime</cite> objects that, if specified, determine
+the absolute time when the job will start/stop.</li>
+<li><strong>stop_rule_size_limit</strong> &#8211; is specified, the job will stop
+storing new packets when the given size on disk is
+reached.  It is specified in the same format as
+<cite>keep_size</cite>.</li>
+<li><strong>stop_rule_packet_limit</strong> &#8211; if specified, the job will stop
+storing new packets when the given number of packets is
+reached.</li>
+<li><strong>stop_rule_time_limit</strong> &#8211; if specified, it should be a
+<cite>datetime.timedelta</cite> object, and the job will stop storing
+new packets when the given time has elapsed.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.NetShark.create_merged_file">
+<tt class="descname">create_merged_file</tt><big>(</big><em>path</em>, <em>files=None</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark.create_merged_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a merged file. &#8216;path&#8217; is the new file full name and
+&#8216;files&#8217; is a File objects list</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a reference to the new file</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.NetShark.create_multisegment_file">
+<tt class="descname">create_multisegment_file</tt><big>(</big><em>path</em>, <em>files=None</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark.create_multisegment_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a multisegment file. &#8216;path&#8217; is the new file full name and
+&#8216;files&#8217; is a File objects list</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a reference to the new file</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.NetShark.create_view">
+<tt class="descname">create_view</tt><big>(</big><em>src</em>, <em>columns</em>, <em>filters=None</em>, <em>start_time=None</em>, <em>end_time=None</em>, <em>name=None</em>, <em>charts=None</em>, <em>sync=True</em>, <em>sampling_time_msec=None</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark.create_view" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new view on this NetShark.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>src</strong> &#8211; identifies the source of packets to be analyzed.
+It may be any packet source object.</li>
+<li><strong>columns</strong> &#8211; specifies what information is extracted from
+packets and presented in this view.  It should be a list
+of <tt class="xref py py-class docutils literal"><span class="pre">Key</span></tt>
+and <tt class="xref py py-class docutils literal"><span class="pre">Value</span></tt>
+objects</li>
+<li><strong>filters</strong> &#8211; an optional list of filters that can be used
+to limit which packets from the packet source are
+processed by this view.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#steelscript.netshark.core.View4" title="steelscript.netshark.core.View4"><tt class="xref py py-class docutils literal"><span class="pre">View4</span></tt></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.NetShark.create_view_from_template">
+<tt class="descname">create_view_from_template</tt><big>(</big><em>source</em>, <em>template</em>, <em>name=None</em>, <em>sync=True</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark.create_view_from_template" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new view on this NetShark using <cite>template</cite>.</p>
+<p>For 9.5.x and earlier, <cite>template</cite> should be an XML view
+document, for later releases, <cite>template</cite> should be a
+JSON view description.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><a class="reference internal" href="#steelscript.netshark.core.View4" title="steelscript.netshark.core.View4"><tt class="xref py py-class docutils literal"><span class="pre">View4</span></tt></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.NetShark.download_log">
+<tt class="descname">download_log</tt><big>(</big><em>path=None</em>, <em>log_type='COMPLETE'</em>, <em>case_id=None</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark.download_log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Download log archive to local machine into path
+If path is None a temporary file is created</p>
+<p><cite>log_type</cite> can be:</p>
+<ul class="simple">
+<li>&#8216;CURRENT&#8217;</li>
+<li>&#8216;PROBE&#8217;</li>
+<li>&#8216;PACKETRECORDER&#8217;</li>
+<li>&#8216;COMPLETE&#8217; (default)</li>
+</ul>
+<p><cite>case_id</cite> is an integer that represent the case id</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.NetShark.exists">
+<tt class="descname">exists</tt><big>(</big><em>path</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark.exists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if a path exists, works for files or directories.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">true if the path exists, false otherwise</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.NetShark.find_extractor_field_by_name">
+<tt class="descname">find_extractor_field_by_name</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark.find_extractor_field_by_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a specific extractor field given its name</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.NetShark.get_capture_job_by_name">
+<tt class="descname">get_capture_job_by_name</tt><big>(</big><em>jobname</em>, <em>force_refetch=False</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark.get_capture_job_by_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a CaptureJob object for the capture job <tt class="docutils literal"><span class="pre">jobname</span></tt></p>
+<p>If <tt class="docutils literal"><span class="pre">force_refetch</span></tt> is True, the list of jobs will be
+re-fetched from the NetShark.  Otherwise, the list may be cached.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.NetShark.get_capture_jobs">
+<tt class="descname">get_capture_jobs</tt><big>(</big><em>force_refetch=False</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark.get_capture_jobs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of CaptureJob objects, corresponding to the
+capture jobs currently running on the NetShark.</p>
+<p>If <tt class="docutils literal"><span class="pre">force_refetch</span></tt> is True, the list of jobs will be
+re-fetched from the NetShark.  Otherwise, the list may be cached.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.NetShark.get_clips">
+<tt class="descname">get_clips</tt><big>(</big><em>force_refetch=False</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark.get_clips" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of TraceClip objects, corresponding to the
+trace clips available on the NetShark.</p>
+<p>If <tt class="docutils literal"><span class="pre">force_refetch</span></tt> is True, the list of clips will be
+re-fetched from the NetShark.  Otherwise, the list may be cached.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.NetShark.get_dir">
+<tt class="descname">get_dir</tt><big>(</big><em>path</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark.get_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a directory. It will trigger an exception if the directory does not
+exist.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a reference to the directory</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.NetShark.get_extractor_fields">
+<tt class="descname">get_extractor_fields</tt><big>(</big><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark.get_extractor_fields" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of all extractor fields available on this netshark</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.NetShark.get_file">
+<tt class="descname">get_file</tt><big>(</big><em>path</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark.get_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a path retrieve the <cite>File</cite> associated with it</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.NetShark.get_files">
+<tt class="descname">get_files</tt><big>(</big><em>force_refetch=False</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark.get_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of TraceFile, MergedFile or Multisegment objects,
+corresponding to the trace files available on the NetShark.</p>
+<p>If <tt class="docutils literal"><span class="pre">force_refetch</span></tt> is True, the list of files will be
+re-fetched from the NetShark.  Otherwise, the list may be cached.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.NetShark.get_interface_by_name">
+<tt class="descname">get_interface_by_name</tt><big>(</big><em>ifname</em>, <em>force_refetch=False</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark.get_interface_by_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return an Interface object corresponding to the
+interface named <tt class="docutils literal"><span class="pre">ifname</span></tt>.</p>
+<p>If <tt class="docutils literal"><span class="pre">force_refetch</span></tt> is True, the list of interfaces will be
+re-fetched from the NetShark.  Otherwise, the list may be cached.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.NetShark.get_interfaces">
+<tt class="descname">get_interfaces</tt><big>(</big><em>force_refetch=False</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark.get_interfaces" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of Interface objects, corresponding to the
+capture interfaces available on the NetShark.</p>
+<p>If <tt class="docutils literal"><span class="pre">force_refetch</span></tt> is True, the list of interfaces will be
+re-fetched from the NetShark.  Otherwise, the list may be cached.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.NetShark.get_logininfo">
+<tt class="descname">get_logininfo</tt><big>(</big><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark.get_logininfo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a dictionary with the information useful prior to
+logging in to the netshark, including the protocol version,
+banner, and whether or not a login purpose should be
+requested from the user.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.NetShark.get_open_view_by_handle">
+<tt class="descname">get_open_view_by_handle</tt><big>(</big><em>handle</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark.get_open_view_by_handle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Look up the view <tt class="docutils literal"><span class="pre">handle</span></tt> and return its View object</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.NetShark.get_open_views">
+<tt class="descname">get_open_views</tt><big>(</big><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark.get_open_views" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list of View objects, one for each open view on the NetShark appliance.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.NetShark.get_protocol_version">
+<tt class="descname">get_protocol_version</tt><big>(</big><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark.get_protocol_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the API protocol version used by this netshark.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.NetShark.get_serverinfo">
+<tt class="descname">get_serverinfo</tt><big>(</big><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark.get_serverinfo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the NetShark appliance overall info.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a named tuple with the server parameters</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.NetShark.get_stats">
+<tt class="descname">get_stats</tt><big>(</big><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark.get_stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the NetShark appliance storage info</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.NetShark.get_trace_clip_by_description">
+<tt class="descname">get_trace_clip_by_description</tt><big>(</big><em>description</em>, <em>force_refetch=False</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark.get_trace_clip_by_description" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a TraceClip object for the trace clip with the given
+description.</p>
+<p>If <tt class="docutils literal"><span class="pre">force_refetch</span></tt> is True, the list of jobs will be
+re-fetched from the NetShark.  Otherwise, the list may be cached.</p>
+<p><strong>Note</strong>: Clips don&#8217;t have descriptions by default. A description can
+be added to a clip by right-clicking on it in Pilot.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="steelscript.netshark.core.NetShark.model">
+<tt class="descname">model</tt><a class="headerlink" href="#steelscript.netshark.core.NetShark.model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the NetShark software model</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.NetShark.ping">
+<tt class="descname">ping</tt><big>(</big><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark.ping" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ping the probe.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True/False depending whether the server is up and running or not</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.NetShark.restart">
+<tt class="descname">restart</tt><big>(</big><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark.restart" title="Permalink to this definition">¶</a></dt>
+<dd><p>Restart the NetShark appliance.
+This will issue a system reboot.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.NetShark.restart_probe">
+<tt class="descname">restart_probe</tt><big>(</big><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark.restart_probe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Restart the NetShark probe.
+This will restart the Pilot server only.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.NetShark.search_extractor_fields">
+<tt class="descname">search_extractor_fields</tt><big>(</big><em>string</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark.search_extractor_fields" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search through the extractor fields to find the ones that
+match the given string in either the field name or the
+description.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.NetShark.upload_trace_file">
+<tt class="descname">upload_trace_file</tt><big>(</big><em>path</em>, <em>local_file</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.NetShark.upload_trace_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uploads a new trace file. &#8216;path&#8217; is the complete destination path,
+&#8216;local_file&#8217; is the the local file to upload.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">reference to the new trace file</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="steelscript.netshark.core.NetShark.version">
+<tt class="descname">version</tt><a class="headerlink" href="#steelscript.netshark.core.NetShark.version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the NetShark software version</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="packet-source-objects">
+<span id="id1"></span><h2>5.4.2. Packet Source Objects<a class="headerlink" href="#packet-source-objects" title="Permalink to this headline">¶</a></h2>
+<p>The objects described in this section are used to access packet
+sources.  None of these objects are directly instantiated from
+external code, they are returned by methods on <a class="reference internal" href="#steelscript.netshark.core.NetShark" title="steelscript.netshark.core.NetShark"><tt class="xref py py-class docutils literal"><span class="pre">NetShark</span></tt></a> or
+other routines.  Any of the objects in this section may be used as the
+<cite>src</cite> argument to <a class="reference internal" href="#steelscript.netshark.core.NetShark.create_view" title="steelscript.netshark.core.NetShark.create_view"><tt class="xref py py-meth docutils literal"><span class="pre">NetShark.create_view()</span></tt></a>.</p>
+<p>There are three basic data sources:</p>
+<ul class="simple">
+<li>Capture Jobs</li>
+<li>Interfaces</li>
+<li>Trace Clips</li>
+</ul>
+<div class="section" id="capture-job-objects">
+<span id="id2"></span><h3>5.4.2.1. Capture Job Objects<a class="headerlink" href="#capture-job-objects" title="Permalink to this headline">¶</a></h3>
+<p>Capture job objects are used to work with capture jobs.  These objects
+are not instantiated directly but are returned from <a class="reference internal" href="#steelscript.netshark.core.NetShark.get_capture_jobs" title="steelscript.netshark.core.NetShark.get_capture_jobs"><tt class="xref py py-meth docutils literal"><span class="pre">NetShark.get_capture_jobs()</span></tt></a>
+and <a class="reference internal" href="#steelscript.netshark.core.NetShark.get_capture_job_by_name" title="steelscript.netshark.core.NetShark.get_capture_job_by_name"><tt class="xref py py-meth docutils literal"><span class="pre">NetShark.get_capture_job_by_name()</span></tt></a>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">See <a class="reference internal" href="netshark-api4.html#steelscript.netshark.core.Job4" title="steelscript.netshark.core.Job4"><tt class="xref py py-class docutils literal"><span class="pre">Job4</span></tt></a> if connecting to a NetShark using API 4.0</p>
+</div>
+<dl class="class">
+<dt id="steelscript.netshark.core.Job5">
+<em class="property">class </em><tt class="descclassname">steelscript.netshark.core.</tt><tt class="descname">Job5</tt><big>(</big><em>shark</em>, <em>data</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Job5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">steelscript.netshark.core._source4.Job4</span></tt></p>
+<p>Capture job objects have the following properties:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#steelscript.netshark.core.Job5.name" title="steelscript.netshark.core.Job5.name"><tt class="xref py py-attr docutils literal"><span class="pre">name</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.Job5.size_on_disk" title="steelscript.netshark.core.Job5.size_on_disk"><tt class="xref py py-attr docutils literal"><span class="pre">size_on_disk</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.Job5.size_limit" title="steelscript.netshark.core.Job5.size_limit"><tt class="xref py py-attr docutils literal"><span class="pre">size_limit</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.Job5.packet_start_time" title="steelscript.netshark.core.Job5.packet_start_time"><tt class="xref py py-attr docutils literal"><span class="pre">packet_start_time</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.Job5.packet_end_time" title="steelscript.netshark.core.Job5.packet_end_time"><tt class="xref py py-attr docutils literal"><span class="pre">packet_end_time</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.Job5.interface" title="steelscript.netshark.core.Job5.interface"><tt class="xref py py-attr docutils literal"><span class="pre">interface</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.Job5.handle" title="steelscript.netshark.core.Job5.handle"><tt class="xref py py-attr docutils literal"><span class="pre">handle</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.Job5.dpi_enabled" title="steelscript.netshark.core.Job5.dpi_enabled"><tt class="xref py py-attr docutils literal"><span class="pre">dpi_enabled</span></tt></a></li>
+</ul>
+<p>The following methods access information about a job:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#steelscript.netshark.core.Job5.get_status" title="steelscript.netshark.core.Job5.get_status"><tt class="xref py py-meth docutils literal"><span class="pre">get_status()</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.Job5.get_state" title="steelscript.netshark.core.Job5.get_state"><tt class="xref py py-meth docutils literal"><span class="pre">get_state()</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.Job5.get_stats" title="steelscript.netshark.core.Job5.get_stats"><tt class="xref py py-meth docutils literal"><span class="pre">get_stats()</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.Job5.get_index_info" title="steelscript.netshark.core.Job5.get_index_info"><tt class="xref py py-meth docutils literal"><span class="pre">get_index_info()</span></tt></a></li>
+</ul>
+<p>The following methods are useful for controlling a capture job:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#steelscript.netshark.core.Job5.start" title="steelscript.netshark.core.Job5.start"><tt class="xref py py-meth docutils literal"><span class="pre">start()</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.Job5.stop" title="steelscript.netshark.core.Job5.stop"><tt class="xref py py-meth docutils literal"><span class="pre">stop()</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.Job5.clear" title="steelscript.netshark.core.Job5.clear"><tt class="xref py py-meth docutils literal"><span class="pre">clear()</span></tt></a></li>
+</ul>
+<p>The following methods can be used to create and delete jobs, though
+<a class="reference internal" href="#steelscript.netshark.core.Job5.create" title="steelscript.netshark.core.Job5.create"><tt class="xref py py-meth docutils literal"><span class="pre">create()</span></tt></a> does the same thing as
+<a class="reference internal" href="#steelscript.netshark.core.NetShark.create_clip" title="steelscript.netshark.core.NetShark.create_clip"><tt class="xref py py-meth docutils literal"><span class="pre">NetShark.create_clip()</span></tt></a>.</p>
+<ul class="simple">
+<li><a class="reference internal" href="#steelscript.netshark.core.Job5.create" title="steelscript.netshark.core.Job5.create"><tt class="xref py py-meth docutils literal"><span class="pre">create()</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.Job5.delete" title="steelscript.netshark.core.Job5.delete"><tt class="xref py py-meth docutils literal"><span class="pre">delete()</span></tt></a></li>
+</ul>
+<p>Finally, these methods are useful for creating trace clips and
+for downloading raw packets from a capture job.</p>
+<ul class="simple">
+<li><a class="reference internal" href="#steelscript.netshark.core.Job5.add_clip" title="steelscript.netshark.core.Job5.add_clip"><tt class="xref py py-meth docutils literal"><span class="pre">add_clip()</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.Job5.download" title="steelscript.netshark.core.Job5.download"><tt class="xref py py-meth docutils literal"><span class="pre">download()</span></tt></a></li>
+</ul>
+<p>Complete method and property descriptions:</p>
+<dl class="method">
+<dt id="steelscript.netshark.core.Job5.add_clip">
+<tt class="descname">add_clip</tt><big>(</big><em>filters</em>, <em>description</em>, <em>locked=True</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Job5.add_clip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new trace clip under this job.</p>
+<p><cite>filters</cite> limit which packets from the clip should go into
+this clip.  Since all packets in the new clip will be kept on
+disk if the clip is locked, this field typically includes
+time filters to limit the clip to a fixed time interval.</p>
+<p><cite>description</cite> is a name for the clip, it is shown next to the
+clip in the Pilot user interface.</p>
+<p>If <cite>locked</cite> is True, packets in the new clip will not be deleted
+from disk as long as the clip exists.  Note that locking packets
+in trace clips necessarily reduces the amount of disk capacity
+for existing capture jobs.</p>
+<p>Returns a trace clip object representing the new clip.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.Job5.clear">
+<tt class="descname">clear</tt><big>(</big><em>restart=False</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Job5.clear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear data in the NetShark appliance</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="steelscript.netshark.core.Job5.create">
+<em class="property">classmethod </em><tt class="descname">create</tt><big>(</big><em>shark</em>, <em>interface</em>, <em>name</em>, <em>packet_retention_size_limit</em>, <em>packet_retention_packet_limit=None</em>, <em>packet_retention_time_limit=None</em>, <em>bpf_filter=None</em>, <em>snap_length=65525</em>, <em>indexing_size_limit=None</em>, <em>indexing_synced=False</em>, <em>indexing_time_limit=None</em>, <em>start_immediately=False</em>, <em>requested_start_time=None</em>, <em>requested_stop_time=None</em>, <em>stop_rule_size_limit=None</em>, <em>stop_rule_packet_limit=None</em>, <em>stop_rule_time_limit=None</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Job5.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new capture job</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.Job5.delete">
+<tt class="descname">delete</tt><big>(</big><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Job5.delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete job from the NetShark appliance</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.Job5.download">
+<tt class="descname">download</tt><big>(</big><em>path=None</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Job5.download" title="Permalink to this definition">¶</a></dt>
+<dd><p>Download the Job packets to a path.
+If path is None packets will be exported to a temporary file.
+A file object that contains the packets is returned.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="steelscript.netshark.core.Job5.dpi_enabled">
+<tt class="descname">dpi_enabled</tt><a class="headerlink" href="#steelscript.netshark.core.Job5.dpi_enabled" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="steelscript.netshark.core.Job5.get">
+<em class="property">classmethod </em><tt class="descname">get</tt><big>(</big><em>shark</em>, <em>id</em>, <em>name=None</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Job5.get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="steelscript.netshark.core.Job5.get_all">
+<em class="property">classmethod </em><tt class="descname">get_all</tt><big>(</big><em>shark</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Job5.get_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the complete list of capture jobs on given a NetShark.</p>
+<p><tt class="docutils literal"><span class="pre">netshark</span></tt> is an <tt class="xref py py-class docutils literal"><span class="pre">steelscript.netshark.core.netshark.NetShark</span></tt> object</p>
+<p>Returns a list of <tt class="docutils literal"><span class="pre">CaptureJob</span></tt> objects</p>
+<dl class="docutils">
+<dt>size_on_disk, keep_size, packet_start_time,</dt>
+<dd>packet_end_time,</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.Job5.get_index_info">
+<tt class="descname">get_index_info</tt><big>(</big><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Job5.get_index_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return statistics about the capture job index.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.Job5.get_state">
+<tt class="descname">get_state</tt><big>(</big><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Job5.get_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the state of the job (e.g. RUNNING, STOPPED)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.Job5.get_stats">
+<tt class="descname">get_stats</tt><big>(</big><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Job5.get_stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return statistics about the capture job.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.Job5.get_status">
+<tt class="descname">get_status</tt><big>(</big><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Job5.get_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return status information about the capture job.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="steelscript.netshark.core.Job5.handle">
+<tt class="descname">handle</tt><a class="headerlink" href="#steelscript.netshark.core.Job5.handle" title="Permalink to this definition">¶</a></dt>
+<dd><p>The internal capture job handle. The handle is sometimes required
+for advanced operations on the job.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="steelscript.netshark.core.Job5.interface">
+<tt class="descname">interface</tt><a class="headerlink" href="#steelscript.netshark.core.Job5.interface" title="Permalink to this definition">¶</a></dt>
+<dd><p>an <tt class="xref py py-class docutils literal"><span class="pre">Interface</span></tt> object, representing the interface used as a packet
+source for this job.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.Job5.is_live">
+<tt class="descname">is_live</tt><big>(</big><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Job5.is_live" title="Permalink to this definition">¶</a></dt>
+<dd><p>Can be used to determine if a source object is live or offline.
+The result is always False for a CaptureJob.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="steelscript.netshark.core.Job5.name">
+<tt class="descname">name</tt><a class="headerlink" href="#steelscript.netshark.core.Job5.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>The capture job name</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="steelscript.netshark.core.Job5.packet_end_time">
+<tt class="descname">packet_end_time</tt><a class="headerlink" href="#steelscript.netshark.core.Job5.packet_end_time" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="steelscript.netshark.core.Job5.packet_start_time">
+<tt class="descname">packet_start_time</tt><a class="headerlink" href="#steelscript.netshark.core.Job5.packet_start_time" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.Job5.save">
+<tt class="descname">save</tt><big>(</big><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Job5.save" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="steelscript.netshark.core.Job5.size_limit">
+<tt class="descname">size_limit</tt><a class="headerlink" href="#steelscript.netshark.core.Job5.size_limit" title="Permalink to this definition">¶</a></dt>
+<dd><p>The capture job maximum size, corresponding to the one shown by the
+NetShark UI shows.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="steelscript.netshark.core.Job5.size_on_disk">
+<tt class="descname">size_on_disk</tt><a class="headerlink" href="#steelscript.netshark.core.Job5.size_on_disk" title="Permalink to this definition">¶</a></dt>
+<dd><p>The capture job actual size, corresponding to the one shown by the
+NetShark UI shows.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="steelscript.netshark.core.Job5.source_options">
+<tt class="descname">source_options</tt><a class="headerlink" href="#steelscript.netshark.core.Job5.source_options" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="steelscript.netshark.core.Job5.source_path">
+<tt class="descname">source_path</tt><a class="headerlink" href="#steelscript.netshark.core.Job5.source_path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.Job5.start">
+<tt class="descname">start</tt><big>(</big><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Job5.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start a job in the NetShark appliance</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.Job5.stop">
+<tt class="descname">stop</tt><big>(</big><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Job5.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stop a job in the NetShark appliance</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.Job5.update">
+<tt class="descname">update</tt><big>(</big><em>data</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Job5.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the data of the current object
+with new data from the server</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="interface-objects">
+<h3>5.4.2.2. Interface Objects<a class="headerlink" href="#interface-objects" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">See <a class="reference internal" href="netshark-api4.html#steelscript.netshark.core.Interface4" title="steelscript.netshark.core.Interface4"><tt class="xref py py-class docutils literal"><span class="pre">Interface4</span></tt></a> if connecting to a NetShark using API 4.0</p>
+</div>
+<dl class="class">
+<dt id="steelscript.netshark.core.Interface5">
+<em class="property">class </em><tt class="descclassname">steelscript.netshark.core.</tt><tt class="descname">Interface5</tt><big>(</big><em>shark</em>, <em>data</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Interface5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">steelscript.netshark.core._source4.Interface4</span></tt></p>
+<dl class="attribute">
+<dt id="steelscript.netshark.core.Interface5.description">
+<tt class="descname">description</tt><a class="headerlink" href="#steelscript.netshark.core.Interface5.description" title="Permalink to this definition">¶</a></dt>
+<dd><p>The interface description.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="steelscript.netshark.core.Interface5.get">
+<em class="property">classmethod </em><tt class="descname">get</tt><big>(</big><em>shark</em>, <em>id</em>, <em>name=None</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Interface5.get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="steelscript.netshark.core.Interface5.get_all">
+<em class="property">classmethod </em><tt class="descname">get_all</tt><big>(</big><em>shark</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Interface5.get_all" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.Interface5.is_live">
+<tt class="descname">is_live</tt><big>(</big><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Interface5.is_live" title="Permalink to this definition">¶</a></dt>
+<dd><p>Can be used to determine if a source object is live or offline.
+The result is always True for an Interface4.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="steelscript.netshark.core.Interface5.name">
+<tt class="descname">name</tt><a class="headerlink" href="#steelscript.netshark.core.Interface5.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>The interface device name.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.Interface5.save">
+<tt class="descname">save</tt><big>(</big><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Interface5.save" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="steelscript.netshark.core.Interface5.source_options">
+<tt class="descname">source_options</tt><a class="headerlink" href="#steelscript.netshark.core.Interface5.source_options" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="steelscript.netshark.core.Interface5.source_path">
+<tt class="descname">source_path</tt><a class="headerlink" href="#steelscript.netshark.core.Interface5.source_path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.Interface5.update">
+<tt class="descname">update</tt><big>(</big><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Interface5.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update current object with the values from the server</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="trace-clip-objects">
+<h3>5.4.2.3. Trace Clip Objects<a class="headerlink" href="#trace-clip-objects" title="Permalink to this headline">¶</a></h3>
+<p>Trace clip objects are used to work with trace clips.
+These objects are not instantiated directly but are returned from
+methods such as <a class="reference internal" href="#steelscript.netshark.core.NetShark.get_clips" title="steelscript.netshark.core.NetShark.get_clips"><tt class="xref py py-meth docutils literal"><span class="pre">NetShark.get_clips()</span></tt></a>.</p>
+<dl class="class">
+<dt id="steelscript.netshark.core.Clip4">
+<em class="property">class </em><tt class="descclassname">steelscript.netshark.core.</tt><tt class="descname">Clip4</tt><big>(</big><em>shark</em>, <em>data</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Clip4" title="Permalink to this definition">¶</a></dt>
+<dd><p>A trace clip packet source.
+These objects are returned by <cite>NetShark.get_clips</cite>.</p>
+<p>Trace clip objects have the following properties:</p>
+<ul class="simple">
+<li><tt class="xref py py-meth docutils literal"><span class="pre">description()</span></tt></li>
+<li><tt class="xref py py-meth docutils literal"><span class="pre">size()</span></tt></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.Clip4.add" title="steelscript.netshark.core.Clip4.add"><tt class="xref py py-meth docutils literal"><span class="pre">add()</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.Clip4.delete" title="steelscript.netshark.core.Clip4.delete"><tt class="xref py py-meth docutils literal"><span class="pre">delete()</span></tt></a></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.Clip4.download" title="steelscript.netshark.core.Clip4.download"><tt class="xref py py-meth docutils literal"><span class="pre">download()</span></tt></a></li>
+</ul>
+<p>These methods provide a way to obtain clip objects, though it
+is usually easier to use methods like <cite>NetShark.get_clips</cite>.</p>
+<ul class="simple">
+<li><tt class="xref py py-meth docutils literal"><span class="pre">Clip4.get()</span></tt></li>
+<li><a class="reference internal" href="#steelscript.netshark.core.Clip4.get_all" title="steelscript.netshark.core.Clip4.get_all"><tt class="xref py py-meth docutils literal"><span class="pre">get_all()</span></tt></a></li>
+</ul>
+<p>Complete method and property descriptions:</p>
+<dl class="classmethod">
+<dt id="steelscript.netshark.core.Clip4.add">
+<em class="property">classmethod </em><tt class="descname">add</tt><big>(</big><em>shark</em>, <em>job</em>, <em>filters</em>, <em>description</em>, <em>locked=True</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Clip4.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new clip given a NetShark connection and a job handle.</p>
+<p><cite>netshark</cite> is a NetShark object</p>
+<p><cite>description</cite> will be associated with the new clip.
+(The description is shown near the clip in grey in Pilot)</p>
+<p><cite>job</cite> is the capture job to use</p>
+<p><cite>filters</cite> is the list of filters to associate to the clip.
+In order for the clip to be valid, there must be at list one
+time filter in this list</p>
+<p>Returns a trace clip object for the new clip.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.Clip4.delete">
+<tt class="descname">delete</tt><big>(</big><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Clip4.delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Erase the clip from netshark</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="steelscript.netshark.core.Clip4.description">
+<tt class="descname">description</tt><a class="headerlink" href="#steelscript.netshark.core.Clip4.description" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the description of the clip</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.Clip4.download">
+<tt class="descname">download</tt><big>(</big><em>path=None</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Clip4.download" title="Permalink to this definition">¶</a></dt>
+<dd><p>Download the Clip packets to a file.
+If path is None packets will be exported to a temporary file.
+A file object that contains the packets is returned.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="steelscript.netshark.core.Clip4.get_all">
+<em class="property">classmethod </em><tt class="descname">get_all</tt><big>(</big><em>shark</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Clip4.get_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the complete list of trace files on given a NetShark.</p>
+<p><tt class="docutils literal"><span class="pre">netshark</span></tt> is an <tt class="docutils literal"><span class="pre">steelscript.netshark.core.netshark.NetShark</span></tt> object</p>
+<p>Returns a list of <tt class="docutils literal"><span class="pre">TraceFile</span></tt> objects</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.Clip4.locked">
+<tt class="descname">locked</tt><big>(</big><em>*args</em>, <em>**kwds</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Clip4.locked" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set or retrieve locked state of a clip</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="steelscript.netshark.core.Clip4.size">
+<tt class="descname">size</tt><a class="headerlink" href="#steelscript.netshark.core.Clip4.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the size of the clip</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="steelscript.netshark.core.Clip4.source_path">
+<tt class="descname">source_path</tt><a class="headerlink" href="#steelscript.netshark.core.Clip4.source_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the path of a Clip used for the internal netshark representation</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="extractor-fields">
+<span id="id3"></span><h2>5.4.3. Extractor Fields<a class="headerlink" href="#extractor-fields" title="Permalink to this headline">¶</a></h2>
+<p>Extractor Field objects represent individual extractor fields.
+These objects are returned by <a class="reference internal" href="#steelscript.netshark.core.NetShark.get_extractor_fields" title="steelscript.netshark.core.NetShark.get_extractor_fields"><tt class="xref py py-meth docutils literal"><span class="pre">NetShark.get_extractor_fields()</span></tt></a>,
+<a class="reference internal" href="#steelscript.netshark.core.NetShark.find_extractor_field_by_name" title="steelscript.netshark.core.NetShark.find_extractor_field_by_name"><tt class="xref py py-meth docutils literal"><span class="pre">NetShark.find_extractor_field_by_name()</span></tt></a>, and <a class="reference internal" href="#steelscript.netshark.core.NetShark.search_extractor_fields" title="steelscript.netshark.core.NetShark.search_extractor_fields"><tt class="xref py py-meth docutils literal"><span class="pre">NetShark.search_extractor_fields()</span></tt></a>.</p>
+<p>Each extractor field is a python
+<a class="reference external" href="http://docs.python.org/library/collections.html#collections.namedtuple">namedtuple</a>
+with the following fields:</p>
+<ul class="simple">
+<li><cite>name</cite>: the name of the field, e.g., <cite>ip.source_ip</cite></li>
+<li><cite>desc</cite>: a brief description of the field</li>
+<li><cite>type</cite>: a string describing the type of the field
+(e.g., integer, string ip address, etc.)</li>
+</ul>
+</div>
+<div class="section" id="view-objects">
+<h2>5.4.4. View Objects<a class="headerlink" href="#view-objects" title="Permalink to this headline">¶</a></h2>
+<p>View objects are returned from <a class="reference internal" href="#steelscript.netshark.core.NetShark.create_view" title="steelscript.netshark.core.NetShark.create_view"><tt class="xref py py-meth docutils literal"><span class="pre">NetShark.create_view()</span></tt></a>.</p>
+<p>A View object encapsulates everything needed to read data from an
+existing view on a NetShark.  Every view has one or more associated
+<em>outputs</em>.  For example, the standard &#8220;Bandwidth over time&#8221; view has
+separate outputs for &#8220;bits over time&#8221;, &#8220;bytes over time&#8221;, and &#8220;packets
+over time&#8221;.  In flyscript, a View object contains an associated Output
+object for each output.  To read data from a view, you must first
+locate the appropriate Output object, then use the method
+<a class="reference internal" href="#steelscript.netshark.core.Output4.get_data" title="steelscript.netshark.core.Output4.get_data"><tt class="xref py py-meth docutils literal"><span class="pre">Output4.get_data()</span></tt></a>.</p>
+<dl class="class">
+<dt id="steelscript.netshark.core.View4">
+<em class="property">class </em><tt class="descclassname">steelscript.netshark.core.</tt><tt class="descname">View4</tt><big>(</big><em>shark</em>, <em>handle</em>, <em>config=None</em>, <em>source=None</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.View4" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="steelscript.netshark.core.View4.all_outputs">
+<tt class="descname">all_outputs</tt><big>(</big><big>)</big><a class="headerlink" href="#steelscript.netshark.core.View4.all_outputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of Output objects, one for each output
+in this view</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.View4.close">
+<tt class="descname">close</tt><big>(</big><big>)</big><a class="headerlink" href="#steelscript.netshark.core.View4.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close this view on the server (which permanently deletes
+the view plus any associated configuration and output data).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.View4.get_data">
+<tt class="descname">get_data</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.View4.get_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the data from the output in this view.
+Shorthand for <cite>all_outputs()[0].get_data()</cite>.</p>
+<p>Raises a LookupError if the view has more than one output.</p>
+<p>For a full description of the function arguments, refer to the
+method Output.get_data().</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.View4.get_iterdata">
+<tt class="descname">get_iterdata</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.View4.get_iterdata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an iterator for the data from the output
+in this view.  Shorthand for <cite>all_outputs()[0].get_iterdata()</cite>.</p>
+<p>Raises a LookupError if the view has more than one output.</p>
+<p>For a full description of the function arguments, refer to the
+method Output.get_iterdata()</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.View4.get_legend">
+<tt class="descname">get_legend</tt><big>(</big><big>)</big><a class="headerlink" href="#steelscript.netshark.core.View4.get_legend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the legend from the output in this view.
+Shorthand for <cite>all_outputs()[0].get_legend()</cite>.</p>
+<p>Raises a LookupError if the view has more than one output.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.View4.get_output">
+<tt class="descname">get_output</tt><big>(</big><em>id</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.View4.get_output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the Output object corresponding to
+the output <tt class="docutils literal"><span class="pre">id</span></tt>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.View4.get_progress">
+<tt class="descname">get_progress</tt><big>(</big><big>)</big><a class="headerlink" href="#steelscript.netshark.core.View4.get_progress" title="Permalink to this definition">¶</a></dt>
+<dd><p>For views applied to non-live sources (i.e., to trace clips
+or trace files), returns an integer between 0 and 100 indicating
+the percentage of the packet source that has been processed.
+Output data is not available on the view until this value reaches
+100%</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.View4.get_timeinfo">
+<tt class="descname">get_timeinfo</tt><big>(</big><big>)</big><a class="headerlink" href="#steelscript.netshark.core.View4.get_timeinfo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a dictionary object with details about the time
+range covered by this view.  The returned object has the
+following entries:</p>
+<ul class="simple">
+<li><cite>start</cite>: the time of the first packet for which data is available</li>
+<li><cite>end</cite>: the end time of the last sample</li>
+<li><cite>delta</cite>: the sampling time of each sample</li>
+</ul>
+<p>This function adds a delta to the end time of the view provided by netshark
+If you need the timeinfo provided by netshark as it is use _get_timeinfo</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.View4.is_ready">
+<tt class="descname">is_ready</tt><big>(</big><big>)</big><a class="headerlink" href="#steelscript.netshark.core.View4.is_ready" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a boolean indicating whether data can be
+retrieved from this view or not.  If this function returns
+False, the view data is still being computed, its progress
+can be followed with the method get_progress().</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="output-objects">
+<span id="id4"></span><h2>5.4.5. Output Objects<a class="headerlink" href="#output-objects" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="steelscript.netshark.core.Output4">
+<em class="property">class </em><tt class="descclassname">steelscript.netshark.core.</tt><tt class="descname">Output4</tt><big>(</big><em>view</em>, <em>ouid</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Output4" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">steelscript.netshark.core._interfaces.Output</span></tt></p>
+<dl class="method">
+<dt id="steelscript.netshark.core.Output4.get_data">
+<tt class="descname">get_data</tt><big>(</big><em>start=None</em>, <em>end=None</em>, <em>delta=None</em>, <em>aggregated=False</em>, <em>sortby=None</em>, <em>sorttype='descending'</em>, <em>fromentry=0</em>, <em>toentry=0</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Output4.get_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the data for this view. This function downloads the whole
+dataset before returning it, so it&#8217;s useful when random access to the
+view data is necessary.</p>
+<p>The arguments have the same meanings as corresponding arguments
+to get_iterdata(), see its documentation for a full explanation
+of all arguments and their meanings.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.Output4.get_iterdata">
+<tt class="descname">get_iterdata</tt><big>(</big><em>start=None</em>, <em>end=None</em>, <em>delta=None</em>, <em>aggregated=False</em>, <em>sortby=None</em>, <em>sorttype='descending'</em>, <em>fromentry=0</em>, <em>toentry=0</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Output4.get_iterdata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an iterator to the output data. This function is ideal for
+sequential parsing of the view data, because it downloads the
+dataset incrementally as it is accessed.</p>
+<p><cite>start</cite> and <cite>end</cite> are <cite>datetime.datetime</cite> objects representing
+the earliest and latest packets that should be considered.
+If <cite>start</cite> and <cite>end</cite> are unspecified, the start/end of the
+underlying packet source are used.</p>
+<p><cite>delta</cite> is a <cite>datetime.timedelta</cite> object that can be used to
+override the default data aggregation interval.  If this
+parameter is unspecified, the underlying view sample interval
+(which defaults to 1 second) is used.  If this parameter is
+specified, it must be an even multiple of the underlying
+view sample interval.</p>
+<p>If <cite>aggregated</cite> is True, the parameter <cite>delta</cite> is automatically
+computed to be the full extent of this request (i.e., the difference
+between the effective start and end times).  This is useful if
+you do not care about timeseries data (e.g., if the data from
+this view is to be plotted in a single chart that has no
+time component).</p>
+<p>The <cite>sortby</cite> parameter is one of the fields of the output (x1, x2 ...)</p>
+<p>The <cite>sorttype</cite> can be:
+* <cite>ascending</cite>: the output is sorted from smallest to largest
+* <cite>descending</cite>: the output is sorted largest to smallest</p>
+<p>The <cite>fromentry</cite> parameter represent the first sorted item we want
+to appear in the output.  0 means from the first one.</p>
+<p>The <cite>toentry</cite> parameter represent the last sorted item we want to
+appear in the output.  0 means all of them.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.Output4.get_legend">
+<tt class="descname">get_legend</tt><big>(</big><big>)</big><a class="headerlink" href="#steelscript.netshark.core.Output4.get_legend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the legend for this output.  The legend consists of
+an ordered list of entries, one for each column of data in this
+output.  Each entry is a dictionary object with the following
+entries:</p>
+<ul class="simple">
+<li><cite>name</cite>: A short name for the field</li>
+<li><cite>description</cite>: A slightly longer, more descriptive name for the field</li>
+<li><cite>field</cite>: the name of the extractor field that produces this column</li>
+<li><cite>calculation</cite>: how data from multiple packets in a sample
+is aggregated (e.g., &#8220;SUM&#8221;, &#8220;AVG&#8221;, etc.)</li>
+</ul>
+<p>The following parameters are intended for internal netshark use:</p>
+<ul class="simple">
+<li><cite>type</cite></li>
+<li><cite>id</cite></li>
+<li><cite>base</cite></li>
+<li><cite>dimension</cite></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-steelscript.netshark.core.filters">
+<span id="filters"></span><span id="netshark-filters"></span><h2>5.4.6. Filters<a class="headerlink" href="#module-steelscript.netshark.core.filters" title="Permalink to this headline">¶</a></h2>
+<p>Filters are used to reduce the traffic that is fed to NetShark
+views, and are basic tools when doing data analysis with a NetShark
+Appliance.  NetShark supports 4 main classes of filters: Time filters,
+the native NetShark filters, BPF filters (also known as Wireshark
+capture filters) and Wireshark display filters.</p>
+<div class="section" id="timefilter-objects">
+<h3>5.4.6.1. TimeFilter Objects<a class="headerlink" href="#timefilter-objects" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="steelscript.netshark.core.filters.TimeFilter">
+<em class="property">class </em><tt class="descclassname">steelscript.netshark.core.filters.</tt><tt class="descname">TimeFilter</tt><big>(</big><em>start</em>, <em>end</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.filters.TimeFilter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="steelscript.netshark.core.filters.TimeFilter.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>start</em>, <em>end</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.filters.TimeFilter.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a TimeFilter representing a time range.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>start</strong> (<em>datetime</em>) &#8211; Start time</li>
+<li><strong>end</strong> (<em>datetime</em>) &#8211; End time</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="steelscript.netshark.core.filters.TimeFilter.parse_range">
+<em class="property">classmethod </em><tt class="descname">parse_range</tt><big>(</big><em>string</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.filters.TimeFilter.parse_range" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creata a TimeFilter based on human readable string.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>string</strong> (<em>str</em>) &#8211; time string</td>
+</tr>
+</tbody>
+</table>
+<p>The <tt class="docutils literal"><span class="pre">string</span></tt> parameter can be any time range string
+such as:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">12:00</span> <span class="pre">PM</span> <span class="pre">to</span> <span class="pre">1:00</span> <span class="pre">PM</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">last</span> <span class="pre">2</span> <span class="pre">weeks</span></tt></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="netsharkfilter-objects">
+<h3>5.4.6.2. NetSharkFilter Objects<a class="headerlink" href="#netsharkfilter-objects" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="steelscript.netshark.core.filters.NetSharkFilter">
+<em class="property">class </em><tt class="descclassname">steelscript.netshark.core.filters.</tt><tt class="descname">NetSharkFilter</tt><big>(</big><em>string</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.filters.NetSharkFilter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="steelscript.netshark.core.filters.NetSharkFilter.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>string</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.filters.NetSharkFilter.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a filter in native NetShark syntax.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>string</strong> (<em>str</em>) &#8211; filter string</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="bpffilter-objects">
+<h3>5.4.6.3. BpfFilter Objects<a class="headerlink" href="#bpffilter-objects" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="steelscript.netshark.core.filters.BpfFilter">
+<em class="property">class </em><tt class="descclassname">steelscript.netshark.core.filters.</tt><tt class="descname">BpfFilter</tt><big>(</big><em>string</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.filters.BpfFilter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="steelscript.netshark.core.filters.BpfFilter.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>string</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.filters.BpfFilter.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a filter in BPF syntax.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>string</strong> (<em>str</em>) &#8211; filter string</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="wiresharkdisplayfilter-objects">
+<h3>5.4.6.4. WiresharkDisplayFilter Objects<a class="headerlink" href="#wiresharkdisplayfilter-objects" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="steelscript.netshark.core.filters.WiresharkDisplayFilter">
+<em class="property">class </em><tt class="descclassname">steelscript.netshark.core.filters.</tt><tt class="descname">WiresharkDisplayFilter</tt><big>(</big><em>string</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.filters.WiresharkDisplayFilter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="steelscript.netshark.core.filters.WiresharkDisplayFilter.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>string</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.filters.WiresharkDisplayFilter.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a filter in Wireshark display syntax..</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>string</strong> (<em>str</em>) &#8211; filter string</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-steelscript.netshark.core.viewutils">
+<span id="utilities"></span><h2>5.4.7. Utilities<a class="headerlink" href="#module-steelscript.netshark.core.viewutils" title="Permalink to this headline">¶</a></h2>
+<p>This is a set of utility functions for working with views.</p>
+<p>Utilities for writing view data</p>
+<dl class="function">
+<dt id="steelscript.netshark.core.viewutils.print_data">
+<tt class="descclassname">steelscript.netshark.core.viewutils.</tt><tt class="descname">print_data</tt><big>(</big><em>legend</em>, <em>stream</em>, <em>timeformat='%Y/%m/%d %H:%M:%S.%f'</em>, <em>include_sample_times=True</em>, <em>widths=None</em>, <em>limit=None</em>, <em>line_prefix=''</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.viewutils.print_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print the data of a given view output to stdout.</p>
+<p><cite>widths</cite> is an optional list of integers, specifying how
+many characters wide each column should be.  If it is not
+specified, reasonable defaults are chosen.</p>
+<p>If <cite>limit</cite> is specified, only the first <cite>limit</cite> rows are printed.</p>
+<p><cite>line_prefix</cite> is a string that is printed at the start of every line.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="steelscript.netshark.core.viewutils.write_csv">
+<tt class="descclassname">steelscript.netshark.core.viewutils.</tt><tt class="descname">write_csv</tt><big>(</big><em>filename</em>, <em>legend</em>, <em>stream</em>, <em>include_column_names=True</em>, <em>include_sample_times=True</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.viewutils.write_csv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the data of a view output to a comma separated values (csv) file.</p>
+<p><cite>legend</cite> is an output legend, typically just the result
+of <cite>output.get_legend()</cite></p>
+<p><cite>stream</cite> is a series of data samples, typically the result
+of <cite>output.get_data()</cite> or <cite>output.get_iterdata()</cite></p>
+<p>If <cite>include_column_names</cite> is True, the first line in the file
+will be a summary row indicating the fileds that the file contains.</p>
+<p>If <cite>include_sample_times</cite> is True, the first column will be a
+timestamp.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="steelscript.netshark.core.viewutils.OutputMixer">
+<em class="property">class </em><tt class="descclassname">steelscript.netshark.core.viewutils.</tt><tt class="descname">OutputMixer</tt><a class="headerlink" href="#steelscript.netshark.core.viewutils.OutputMixer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper class that blends multiple data streams (ie from View.get_data)
+into a single combined stream.
+For example, given a &#8220;Bandwidth Over Time&#8221; view with separate
+outputs for bytes and packets, this class can be used to create
+a single output stream with bytes and packets columns.</p>
+<p>Mixing is only supported on simple time-based views that do
+not include any keys (e.g., bandwidth over time, etc.)</p>
+<p>See examples/netshark/readview.py for typical usage.</p>
+<p>Mixing multiple view outputs</p>
+<dl class="method">
+<dt id="steelscript.netshark.core.viewutils.OutputMixer.add_source">
+<tt class="descname">add_source</tt><big>(</big><em>src</em>, <em>prefix=None</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.viewutils.OutputMixer.add_source" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add new source to mixer</p>
+<p><cite>src</cite> is time-based view object</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.viewutils.OutputMixer.get_iterdata">
+<tt class="descname">get_iterdata</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#steelscript.netshark.core.viewutils.OutputMixer.get_iterdata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a generator for the combined stream of outputs from each source object</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="steelscript.netshark.core.viewutils.OutputMixer.get_legend">
+<tt class="descname">get_legend</tt><big>(</big><big>)</big><a class="headerlink" href="#steelscript.netshark.core.viewutils.OutputMixer.get_legend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the legend for each of the source objects</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="steelscript.netshark.core.viewutils.OutputMixer.sourceobj">
+<em class="property">class </em><tt class="descname">sourceobj</tt><a class="headerlink" href="#steelscript.netshark.core.viewutils.OutputMixer.sourceobj" title="Permalink to this definition">¶</a></dt>
+<dd><p>sourceobj(output, prefix, offset)</p>
+<dl class="attribute">
+<dt id="steelscript.netshark.core.viewutils.OutputMixer.sourceobj.offset">
+<tt class="descname">offset</tt><a class="headerlink" href="#steelscript.netshark.core.viewutils.OutputMixer.sourceobj.offset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 2</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="steelscript.netshark.core.viewutils.OutputMixer.sourceobj.output">
+<tt class="descname">output</tt><a class="headerlink" href="#steelscript.netshark.core.viewutils.OutputMixer.sourceobj.output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="steelscript.netshark.core.viewutils.OutputMixer.sourceobj.prefix">
+<tt class="descname">prefix</tt><a class="headerlink" href="#steelscript.netshark.core.viewutils.OutputMixer.sourceobj.prefix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/rb-ss-logo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="overview.html">SteelScript NetShark</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">5.4. NetShark, Packet Sources and Views</a><ul>
+<li><a class="reference internal" href="#netshark-objects">5.4.1. <tt class="docutils literal"><span class="pre">NetShark</span></tt> Objects</a></li>
+<li><a class="reference internal" href="#packet-source-objects">5.4.2. Packet Source Objects</a><ul>
+<li><a class="reference internal" href="#capture-job-objects">5.4.2.1. Capture Job Objects</a></li>
+<li><a class="reference internal" href="#interface-objects">5.4.2.2. Interface Objects</a></li>
+<li><a class="reference internal" href="#trace-clip-objects">5.4.2.3. Trace Clip Objects</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#extractor-fields">5.4.3. Extractor Fields</a></li>
+<li><a class="reference internal" href="#view-objects">5.4.4. View Objects</a></li>
+<li><a class="reference internal" href="#output-objects">5.4.5. Output Objects</a></li>
+<li><a class="reference internal" href="#module-steelscript.netshark.core.filters">5.4.6. Filters</a><ul>
+<li><a class="reference internal" href="#timefilter-objects">5.4.6.1. TimeFilter Objects</a></li>
+<li><a class="reference internal" href="#netsharkfilter-objects">5.4.6.2. NetSharkFilter Objects</a></li>
+<li><a class="reference internal" href="#bpffilter-objects">5.4.6.3. BpfFilter Objects</a></li>
+<li><a class="reference internal" href="#wiresharkdisplayfilter-objects">5.4.6.4. WiresharkDisplayFilter Objects</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-steelscript.netshark.core.viewutils">5.4.7. Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/netshark/netshark.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>
+<a href="../license.html">License</a>
+</h3>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">steelscript  documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014 Riverbed Technology, Inc..
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
