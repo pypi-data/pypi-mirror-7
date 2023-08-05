@@ -1,0 +1,69 @@
+- extends 'site.html'
+
+
+- load i18n
+- load django_bootstrap_breadcrumbs
+
+
+- block breadcrumbs
+  = block.super
+  - breadcrumb task.application.name "app_details" task.application.safe_id
+  - breadcrumb "Tasks" "app_tasks" task.application.safe_id
+  - breadcrumb task.title|truncatechars:"60" "task_details" task.safe_id
+
+
+- block content
+
+
+  .progress.upaas-task-details-progressbar.active.progress-striped
+    #upaas-task-progress.progress-bar{'role':'progressbar', 'aria-valuenow':'{{ task.progress }}', 'aria-valuemin':'0', 'aria-valuemax':'100', 'style':'width: {{ task.progress }}%;'}
+
+  .upaas-messages-table-area.small
+    %table#upaas-task-messages-table.table.table-striped.table-condensed
+      %thead
+        %tr
+          %th
+            - trans "Date"
+          %th
+            - trans "Message"
+      %tbody
+        - if task.is_pending
+          %tr
+            %td.text-center{'colspan':'2'}
+              %h1.text-muted
+                %i.upaas-help-tooltip{'class':'={ task.icon_class }', 'title':'{% trans "Task is waiting to be started" %}'}
+
+
+- block js_bottom
+
+  :javascript
+
+    $(document).ready(function(){
+      var task = window.UPAAS.utils.where_or_get_first(window.UPAAS.tasks.Tasks, {id: '{{ task.safe_id }}'});
+      var collection = window.UPAAS.tasks.create_task_messages_collection(task.get('resource_uri'));
+      if (task.attributes.is_finished) {
+        window.UPAAS.utils.set_progressbar_finished('.upaas-task-details-progressbar', '#upaas-task-progress', task.attributes.is_successful);
+        collection.fetch();
+      } else {
+        var collection_poller = Backbone.Poller.get(collection);
+        collection_poller.set({delay: 3000}).start();
+
+        var task_poller = Backbone.Poller.get(task);
+        task_poller.set({delay: 3000}).start();
+        task.bind('change:progress', function(task){
+          window.UPAAS.utils.update_progress('#upaas-task-progress', task.attributes.progress);
+        });
+        task.bind('change:is_finished', function(task){
+          if (task.attributes.is_finished) {
+            window.UPAAS.utils.set_progressbar_finished('.upaas-task-details-progressbar', '#upaas-task-progress', task.attributes.is_successful);
+            task_poller.stop();
+            collection_poller.stop();
+          }
+        });
+      }
+    });
+
+
+- block haml_templates
+  = block.super
+  - include "applications/partials/task_messages.js.haml"

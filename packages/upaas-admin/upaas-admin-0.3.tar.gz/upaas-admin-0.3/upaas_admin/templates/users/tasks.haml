@@ -1,0 +1,42 @@
+- extends 'site.html'
+
+
+- load i18n
+
+
+- block content
+
+  - if tabs
+    - include "users/partials/users_index_tabs.html"
+
+  %table.table
+
+    %thead
+      %tr
+        %th
+        %th
+          - trans "Title"
+        %th
+          - trans "Application"
+        %th
+          - trans "Created"
+
+    %tbody
+      - for task in tasks
+        %tr{'id':'upaas-task-list-={ task.safe_id }'}
+          %td.upaas-list-col-status
+            %i{'class':'={ task.icon_class }'}
+          %td
+            = task.title
+          %td
+            %a{'href':'{% url "app_details" task.application.safe_id %}'}
+              = task.application.name|truncatechars:30
+          %td
+            %a{'href':'{% url "app_task_details" task.safe_id %}'}
+              = task.date_created
+      - empty
+        %tr
+          %td.text-center{'colspan':'4'}
+            - trans "No tasks"
+
+  - include "partials/pagination_footer.html"
