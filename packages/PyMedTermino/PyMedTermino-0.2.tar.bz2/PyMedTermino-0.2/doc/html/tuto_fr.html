@@ -1,0 +1,1087 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Tutoriel PyMedTermino (French version / version française) &mdash; PyMedTermino 0.2 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="PyMedTermino 0.2 documentation" href="index.html" />
+    <link rel="next" title="Module reference" href="reference.html" />
+    <link rel="prev" title="PyMedTermino tutorial" href="tuto_en.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="reference.html" title="Module reference"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="tuto_en.html" title="PyMedTermino tutorial"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">PyMedTermino 0.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="tutoriel-pymedtermino-french-version-version-francaise">
+<h1>Tutoriel PyMedTermino (French version / version française)<a class="headerlink" href="#tutoriel-pymedtermino-french-version-version-francaise" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>PyMedTermino (Terminologies Médicales en Python) est un module Python permettant d&#8217;accéder facilement aux
+principales terminologies médicales. Les terminologies suivantes sont proposées :</p>
+<blockquote>
+<div><ul class="simple">
+<li>La SNOMED CT</li>
+<li>La CIM10</li>
+<li>L&#8217;UMLS</li>
+<li>Les icônes VCM (une terminologie à base d&#8217;icônes développée à l&#8217;université Paris 13)</li>
+</ul>
+</div></blockquote>
+<p>Les principales fonctionnalités de PyMedTermino sont les suivantes :</p>
+<blockquote>
+<div><ul class="simple">
+<li>Une API unique permettant d&#8217;accéder à toutes les terminologies</li>
+<li>Recherche textuelle optimisée</li>
+<li>Accès aux libellés, synonymes et traductions</li>
+<li>Gestion des concepts et des relations entre concepts</li>
+<li>Correspondance entre terminologies, via l&#8217;UMLS ou via des fichiers de correspondances manuelles</li>
+</ul>
+</div></blockquote>
+<p>PyMedTermino a été conçu pour permettre un accès &#8220;en batch&#8221; aux terminologies ; ce n&#8217;est pas un
+navigateur/browser de terminologies (bien qu&#8217;il pourrait être utiliser pour écrire un tel navigateur en Python).</p>
+<p>Pour la SNOMED CT et la CIM10, les données ne sont pas incluses (car elles ne sont pas librement
+redistribuables) mais peuvent être téléchargées au format XML gratuitement. PyMedTermino contient des
+scripts pour exporter ces données dans des bases de données SQLite3.</p>
+<p>Pour l&#8217;UMLS, les données ne sont pas incluses (pour les mêmes raisons, et car elles sont très
+volumineuses). PyMedTermino peut en revanche se connecter à un serveur MySQL contenant les bases UMLS
+telles que fournies par la NLM.</p>
+<p>Pour les icônes VCM, l&#8217;ensemble des terminologies est fourni sous forme d&#8217;ontologie OWL et de bases de
+données SQLite3. En revanche, les images des icônes ne sont pas incluses et doivent être téléchargées
+séparément (ou bien vous pouvez utiliser le serveur iconique pour générer les icônes) : PyMedTermino ne
+comprend que la partie “ terminologique ” de VCM.</p>
+<p>PyMedTermino a été réalisé par Jean-Baptiste Lamy :</p>
+<p>&lt;jean-baptiste.lamy <strong>&#64;</strong> univ-paris13 <strong>.</strong> fr&gt;</p>
+<div class="highlight-python"><div class="highlight"><pre>LIMICS, Université Paris 13, Sorbonne Paris Cité, INSERM UMRS 1142, Université Paris 6
+74 rue Marcel Cachin
+93017 Bobigny
+France
+</pre></div>
+</div>
+<p>PyMedTermino est disponible sous licence GNU LGPL; il supporte à la fois Python 2.7 et 3 (testé en 3.3 et
+3.4) et est multi-plateforme (testé sous Linux et Windows).</p>
+<p>Voici un exemple des possibilités de PyMedTermino :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">SNOMEDCT</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&quot;tachycardia*&quot;</span><span class="p">)</span>
+<span class="go">[SNOMEDCT[3424008]  # Tachycardia (finding)</span>
+<span class="go">, SNOMEDCT[4006006]  # Fetal tachycardia affecting management of mother (disorder)</span>
+<span class="go">, SNOMEDCT[6456007]  # Supraventricular tachycardia (disorder)</span>
+<span class="go">...]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SNOMEDCT</span><span class="p">[</span><span class="mi">3424008</span><span class="p">]</span><span class="o">.</span><span class="n">parents</span>
+<span class="go">[SNOMEDCT[301113001]  # Finding of heart rate (finding)</span>
+<span class="go">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SNOMEDCT</span><span class="p">[</span><span class="mi">3424008</span><span class="p">]</span><span class="o">.</span><span class="n">children</span>
+<span class="go">[SNOMEDCT[11092001]  # Sinus tachycardia (finding)</span>
+<span class="go">, SNOMEDCT[278086000]  # Baseline tachycardia (finding)</span>
+<span class="go">, SNOMEDCT[162992001]  # On examination - pulse rate tachycardia (finding)</span>
+<span class="go">...]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">SNOMEDCT</span><span class="p">[</span><span class="mi">3424008</span><span class="p">]</span><span class="o">.</span><span class="n">ancestors_no_double</span><span class="p">())</span>
+<span class="go">[SNOMEDCT[301113001]  # Finding of heart rate (finding)</span>
+<span class="go">, SNOMEDCT[106066004]  # Cardiac rhythm AND/OR rate finding (finding)</span>
+<span class="go">, SNOMEDCT[250171008]  # Clinical history and observation findings (finding)</span>
+<span class="go">, SNOMEDCT[404684003]  # Clinical finding (finding)</span>
+<span class="go">, SNOMEDCT[138875005]  # SNOMED CT Concept (SNOMED RT+CTV3)</span>
+<span class="go">...]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SNOMEDCT</span><span class="p">[</span><span class="mi">3424008</span><span class="p">]</span><span class="o">.</span><span class="n">relations</span>
+<span class="go">set([&#39;INVERSE_has_definitional_manifestation&#39;, &#39;finding_site&#39;, &#39;interprets&#39;, &#39;has_interpretation&#39;, &#39;INVERSE_associated_with&#39;])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SNOMEDCT</span><span class="p">[</span><span class="mi">3424008</span><span class="p">]</span><span class="o">.</span><span class="n">finding_site</span>
+<span class="go">[SNOMEDCT[24964005]  # Cardiac conducting system structure (body structure)</span>
+<span class="go">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SNOMEDCT</span><span class="p">[</span><span class="mi">3424008</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">VCM</span>   <span class="c"># Maps the SNOMED CT concept to VCM icon</span>
+<span class="go">Concepts([</span>
+<span class="go">  VCM[u&quot;current--hyper--heart_rhythm&quot;]  #</span>
+<span class="go">])</span>
+</pre></div>
+</div>
+<p>PyMedTermino sur BitBucket (dépôt de développement) : <a class="reference external" href="https://bitbucket.org/jibalamy/pymedtermino">https://bitbucket.org/jibalamy/pymedtermino</a></p>
+<p>PyMedTermino sur PyPI (Python Package Index, version stable): <a class="reference external" href="https://pypi.python.org/pypi/PyMedTermino">https://pypi.python.org/pypi/PyMedTermino</a></p>
+</div>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li>Extraire l&#8217;archive PyMedTermino-X.Y.tar.bz2</li>
+<li>Après inscription auprès de la NLM, télécharger les données de la SNOMED CT :</li>
+</ol>
+<blockquote>
+<div><ul>
+<li><p class="first"><a class="reference external" href="http://www.nlm.nih.gov/research/umls/licensedcontent/snomedctfiles.html">http://www.nlm.nih.gov/research/umls/licensedcontent/snomedctfiles.html</a></p>
+<p>(télécharger “ SnomedCT_Release_INT_&lt;date&gt;.zip ” et le décompresser)</p>
+</li>
+<li><p class="first"><a class="reference external" href="http://www.nlm.nih.gov/research/umls/Snomed/core_subset.html">http://www.nlm.nih.gov/research/umls/Snomed/core_subset.html</a></p>
+<p>(télécharger “ SNOMEDCT_CORE_SUBSET_&lt;date&gt; ” et le décompresser)</p>
+</li>
+</ul>
+</div></blockquote>
+<ol class="arabic simple">
+<li>Après inscription, télécharger les données de la CIM10 ainsi que les traductions :</li>
+</ol>
+<blockquote>
+<div><ul>
+<li><p class="first"><a class="reference external" href="http://apps.who.int/classifications/apps/icd/ClassificationDownload/DLArea/Download.aspx">http://apps.who.int/classifications/apps/icd/ClassificationDownload/DLArea/Download.aspx</a></p>
+<p>(télécharger la CIM10 au format “ ClaML ” et la dézipper)</p>
+</li>
+<li><p class="first"><a class="reference external" href="http://www.icd10.ch/">http://www.icd10.ch/</a></p>
+<p>(optionnel, pour les traductions françaises et allemandes ; télécharger la CIM10 au format XML et la dézipper)</p>
+</li>
+</ul>
+</div></blockquote>
+<ol class="arabic">
+<li><p class="first">Éditer le fichier setup.py et renseigner les 4 chemins où vous avez décompressés les données, par exemple</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">SNOMEDCT_DIR</span> <span class="o">=</span> <span class="s">&quot;/home/jiba/telechargements/base_med/SnomedCT_Release_INT_20130731&quot;</span>
+<span class="n">SNOMEDCT_CORE_FILE</span> <span class="o">=</span> <span class="s">&quot;/home/jiba/telechargements/base_med/SNOMEDCT_CORE_SUBSET_201308.txt&quot;</span>
+<span class="n">ICD10_DIR</span> <span class="o">=</span> <span class="s">&quot;/home/jiba/telechargements/base_med/icd10&quot;</span>
+<span class="n">CIM10_DIR</span> <span class="o">=</span> <span class="s">&quot;/home/jiba/telechargements/base_med/cim10&quot;</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<blockquote>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">vous pouvez laisser vide les chemins si vous ne souhaitez pas installer les terminologies correspondantes.</p>
+</div>
+</div></blockquote>
+<ol class="arabic">
+<li><p class="first">Compiler PyMedTermino et convertir les données télécharger en bases de données SQL SQLite3</p>
+<div class="highlight-python"><div class="highlight"><pre>python setup.py build
+</pre></div>
+</div>
+</li>
+</ol>
+<blockquote>
+<div><div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">la création des bases de données nécessite un espace disque important (~1-2 Go).</p>
+</div>
+</div></blockquote>
+<ol class="arabic">
+<li><p class="first">Obtenir les droits administrateurs. Sous Linux, selon votre distribution, utilisez l&#8217;une d&#8217;une commande suivante</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">su</span> <span class="c"># Mageia,...</span>
+<span class="n">sudo</span> <span class="o">-</span><span class="n">i</span> <span class="c"># Ubuntu, Linux Mint,...</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Installer PyMedTermino</p>
+<div class="highlight-python"><div class="highlight"><pre>python setup.py install
+</pre></div>
+</div>
+</li>
+<li><p class="first">Nettoyer le répertoire d&#8217;installation (optionnel, mais cela permet de libérer un espace disque important !)</p>
+<div class="highlight-python"><div class="highlight"><pre>python setup.py clean
+</pre></div>
+</div>
+</li>
+</ol>
+<div class="section" id="problemes-frequents">
+<h3>Problèmes fréquents<a class="headerlink" href="#problemes-frequents" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="operationalerror-no-such-module-fts4">
+<h4>OperationalError: no such module: fts4<a class="headerlink" href="#operationalerror-no-such-module-fts4" title="Permalink to this headline">¶</a></h4>
+<p>Sous Windows, si vous rencontrez ce problème à l&#8217;installation, il vous faut mettre à jour la DLL Sqlite3. Pour cela, télécharger la dernière version à partir de [<a class="reference external" href="http://www.sqlite.org/download.html">http://www.sqlite.org/download.html</a>], et remplacer la DLL dans le répertoire Python27/DLLs par la version téléchargée.</p>
+</div>
+<div class="section" id="ioerror-errno-22-invalid-argument">
+<h4>IOError: [Errno 22] Invalid argument<a class="headerlink" href="#ioerror-errno-22-invalid-argument" title="Permalink to this headline">¶</a></h4>
+<p>Sous Windows, on obtient cette erreur si les fichiers volumineux de la SNOMED CT sont sur un répertoire
+partagé. C&#8217;est une limitation lié au système de Microsoft, il faut donc impérativement avoir les fichier
+de la SNOMED en local.</p>
+</div>
+</div>
+</div>
+<div class="section" id="chargement-des-modules-et-parametres-globaux">
+<h2>Chargement des modules et paramètres globaux<a class="headerlink" href="#chargement-des-modules-et-parametres-globaux" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pymedtermino</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pymedtermino</span><span class="o">.</span><span class="n">LANGUAGE</span> <span class="o">=</span> <span class="s">&quot;fr&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pymedtermino</span><span class="o">.</span><span class="n">REMOVE_SUPPRESSED_CONCEPTS</span> <span class="o">=</span> <span class="bp">True</span>
+</pre></div>
+</div>
+<p>Les paramètres globaux suivants sont disponibles :</p>
+<dl class="data">
+<dt>
+<tt class="descclassname">pymedtermino.</tt><tt class="descname">DATA_DIR</tt></dt>
+<dd><p>indique le répertoire où sont présents les fichiers de base de données SQLite3 contenant les terminologies. Valeur par défaut : le répertoire de PyMedTermino.</p>
+</dd></dl>
+
+<dl class="data">
+<dt>
+<tt class="descclassname">pymedtermino.</tt><tt class="descname">LANGUAGE</tt></dt>
+<dd><p>indique la langue utiliser par défaut pour afficher les termes, lorsque plusieurs langues sont disponibles. Si la langue demandé n&#8217;est pas disponible, l&#8217;anglais est utilisé à défaut. ATTENTION : ce paramètre doit être renseigné AVANT de charger les terminologies. Valeur par défaut : &#8220;en&#8221; (anglais).</p>
+</dd></dl>
+
+<dl class="data">
+<dt>
+<tt class="descclassname">pymedtermino.</tt><tt class="descname">REMOVE_SUPPRESSED_CONCEPTS</tt></dt>
+<dd><p>indique s&#8217;il faut retirer ou non les concepts marqués comme supprimés ou dépréciés dans les terminologies. Valeur par défaut : 1 (vrai).</p>
+</dd></dl>
+
+<dl class="data">
+<dt>
+<tt class="descclassname">pymedtermino.</tt><tt class="descname">REMOVE_SUPPRESSED_TERMS</tt></dt>
+<dd><p>indique s&#8217;il faut retirer ou non les termes (=libellés textuels) marqués comme supprimés ou dépréciés dans les terminologies. Valeur par défaut : 1 (vrai).</p>
+</dd></dl>
+
+<dl class="data">
+<dt>
+<tt class="descclassname">pymedtermino.</tt><tt class="descname">REMOVE_SUPPRESSED_RELATIONS</tt></dt>
+<dd><p>indique s&#8217;il faut retirer ou non les relations marquées comme supprimées ou dépréciées dans les terminologies. Valeur par défaut : 1 (vrai).</p>
+</dd></dl>
+
+<p><strong>Après</strong> avoir défini les paramètres globaux, vous êtes prêt pour  importer les modules des différentes
+terminologies. Le raccourci suivant permet de charger toutes les terminologies disponibles (pratique mais
+pas toujours performant !) :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pymedtermino.all</span> <span class="kn">import</span> <span class="o">*</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="snomed-ct">
+<h2>SNOMED CT<a class="headerlink" href="#snomed-ct" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="chargement-des-modules">
+<h3>Chargement des modules<a class="headerlink" href="#chargement-des-modules" title="Permalink to this headline">¶</a></h3>
+<p>Ensuite, il est possible d&#8217;importer en Python la SNOMED CT :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pymedtermino</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pymedtermino.snomedct</span> <span class="kn">import</span> <span class="o">*</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="concepts">
+<h3>Concepts<a class="headerlink" href="#concepts" title="Permalink to this headline">¶</a></h3>
+<p>L&#8217;objet SNOMEDCT représente la terminologie SNOMED CT. Un concept SNOMED CT peut être obtenu à partir de
+son code (ici nous allons prendre comme exemple le code 302509004, correspondant au cœur) en indexant cet
+objet :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">concept</span> <span class="o">=</span> <span class="n">SNOMEDCT</span><span class="p">[</span><span class="mi">302509004</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">concept</span>
+<span class="go">SNOMEDCT[302509004]  # Entire heart (body structure)</span>
+</pre></div>
+</div>
+<p>La méthode has_concept() permet de vérifier si un code correspond à un concept ou non :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">SNOMEDCT</span><span class="o">.</span><span class="n">has_concept</span><span class="p">(</span><span class="s">&quot;invalid_code&quot;</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>Chaque concept possède un code et un terme (= libellé correspondant au terme préféré) :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">concept</span><span class="o">.</span><span class="n">code</span>
+<span class="go">302509004</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">concept</span><span class="o">.</span><span class="n">term</span>
+<span class="go">u&#39;Entire heart (body structure)&#39;</span>
+</pre></div>
+</div>
+<p>La SNOMED CT propose aussi des termes synonymes (notez le “ s ” sur “ terms ”) :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">concept</span><span class="o">.</span><span class="n">terms</span>
+<span class="go">[u&#39;Heart&#39;, u&#39;Entire heart&#39;, u&#39;Entire heart (body structure)&#39;]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="recherche-textuelle">
+<h3>Recherche textuelle<a class="headerlink" href="#recherche-textuelle" title="Permalink to this headline">¶</a></h3>
+<p>La méthode search() permet d&#8217;effectuer une recherche textuelle, parmi les libellées des concepts et leurs
+synonymes :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">SNOMEDCT</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&quot;Cardiac structure&quot;</span><span class="p">)</span>
+<span class="go">[ SNOMEDCT[80891009] # Heart structure (body structure)</span>
+<span class="go">, SNOMEDCT[308793001] # Embryonic cardiac structure (body structure)</span>
+<span class="go">...]</span>
+</pre></div>
+</div>
+<p>La recherche textuelle utilise le moteur FTS de SQLite, il est donc possible d&#8217;utiliser les
+fonctionnalités offertes par ce moteur. Par exemple pour rechercher tous les mots commençant par un
+préfixe donné :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">SNOMEDCT</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&quot;osteo*&quot;</span><span class="p">)</span>
+<span class="go">[ SNOMEDCT[1551001]  # Osteomyelitis of femur (disorder)</span>
+<span class="go">, SNOMEDCT[4598005]  # Osteomalacia (disorder)</span>
+<span class="go">...]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="relations-est-un-concepts-parents-et-enfants">
+<h3>Relations est-un : concepts parents et enfants<a class="headerlink" href="#relations-est-un-concepts-parents-et-enfants" title="Permalink to this headline">¶</a></h3>
+<p>Les attributs “ parents ” et “ children ” permettent d&#8217;obtenir la liste des concepts parents et des
+concepts enfants (c&#8217;est-à-dire ceux reliés au concept par des relations est-un) :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">concept</span><span class="o">.</span><span class="n">parents</span>
+<span class="go">[SNOMEDCT[116004006]  # Hollow viscus (body structure)</span>
+<span class="go">, SNOMEDCT[80891009]  # Heart structure (body structure)</span>
+<span class="go">, SNOMEDCT[187639008]  # Entire thoracic viscus (body structure)</span>
+<span class="go">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">concept</span><span class="o">.</span><span class="n">children</span>
+<span class="go">[SNOMEDCT[195591003]  # Entire transplanted heart (body structure)</span>
+<span class="go">]</span>
+</pre></div>
+</div>
+<p>Les méthodes ancestors() et descendants() permettent de parcourir les concepts ancêtres (les parents, les
+parents des parents, etc) et les concepts descendants (les enfants, les enfants des enfants, etc) :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">ancestor</span> <span class="ow">in</span> <span class="n">concept</span><span class="o">.</span><span class="n">ancestors</span><span class="p">():</span> <span class="k">print</span> <span class="n">ancestor</span>
+<span class="go">SNOMEDCT[116004006]  # Hollow viscus (body structure)</span>
+<span class="go">SNOMEDCT[118760003]  # Entire viscus (body structure)</span>
+<span class="go">SNOMEDCT[272625005]  # Entire body organ (body structure)</span>
+<span class="go">[...]</span>
+</pre></div>
+</div>
+<p>Les méthodes ancestors() et descendants() retournent des générateurs Python, pour obtenir la liste des
+ancêtres ou des descendants il faut utiliser la fonction list() :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">concept</span><span class="o">.</span><span class="n">ancestors</span><span class="p">()</span>
+<span class="go">&lt;generator object ancestors at 0xb3f734c&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">concept</span><span class="o">.</span><span class="n">ancestors</span><span class="p">())</span>
+<span class="go">[SNOMEDCT[116004006]  # Hollow viscus (body structure)</span>
+<span class="go">, SNOMEDCT[118760003]  # Entire viscus (body structure)</span>
+<span class="go">, SNOMEDCT[272625005]  # Entire body organ (body structure)</span>
+<span class="go">,...]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">concept</span><span class="o">.</span><span class="n">descendants</span><span class="p">())</span>
+<span class="go">[SNOMEDCT[195591003]  # Entire transplanted heart (body structure)</span>
+<span class="go">]</span>
+</pre></div>
+</div>
+<p>Les méthodes ancestors_no_double() et descendants_no_double() fonctionnent de la même manière mais en
+éliminant les doublons. Les méthodes self_and_ancestors() et self_and_descendants() fonctionnent de la
+même manière mais retournent aussi le concept de départ lui-même. Les méthodes
+self_and_ancestors_no_double() et self_and_descendants_no_double() combinent les deux comportements.</p>
+<p>Enfin, la méthode is_a() permet de tester si un concept est un descendant d&#8217;un autre concept :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">concept</span><span class="o">.</span><span class="n">is_a</span><span class="p">(</span><span class="n">SNOMEDCT</span><span class="p">[</span><span class="mi">272625005</span><span class="p">])</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="relations-partie-de">
+<h3>Relations partie-de<a class="headerlink" href="#relations-partie-de" title="Permalink to this headline">¶</a></h3>
+<p>Les attributs “ part_of ” et “ INVERSE_part_of ” permettent d&#8217;accéder aux concepts partie ou tout :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">concept</span><span class="o">.</span><span class="n">part_of</span>
+<span class="go">[SNOMEDCT[362010009] # Entire heart AND pericardium (body structure)</span>
+<span class="go">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">concept</span><span class="o">.</span><span class="n">INVERSE_part_of</span>
+<span class="go">[SNOMEDCT[102298001] # Structure of chordae tendineae cordis (body structure)</span>
+<span class="go">, SNOMEDCT[181285005] # Entire heart valve (body structure)</span>
+<span class="go">, SNOMEDCT[181288007] # Entire tricuspid valve (body structure)</span>
+<span class="go">, SNOMEDCT[181293005] # Entire cardiac wall (body structure)</span>
+<span class="go">,...]</span>
+</pre></div>
+</div>
+<p>Les méthodes ancestor_parts() et descendant_parts() retournent un générateur Python permettant de
+parcourir les super- ou sous-parties du concept :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">concept</span><span class="o">.</span><span class="n">ancestor_parts</span><span class="p">())</span>
+<span class="go">[SNOMEDCT[362010009] # Entire heart AND pericardium (body structure)</span>
+<span class="go">, SNOMEDCT[362688008] # Entire middle mediastinum (body structure)</span>
+<span class="go">, SNOMEDCT[181217005] # Entire mediastinum (body structure)</span>
+<span class="go">, SNOMEDCT[302551006] # Entire thorax (body structure)</span>
+<span class="go">,...]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">concept</span><span class="o">.</span><span class="n">descendant_parts</span><span class="p">())</span>
+<span class="go">[SNOMEDCT[181285005]  # Entire heart valve (body structure)</span>
+<span class="go">, SNOMEDCT[192664000]  # Entire cardiac valve leaflet (body structure)</span>
+<span class="go">, SNOMEDCT[192747009]  # Structure of cardiac valve cusp (body structure)</span>
+<span class="go">,...]</span>
+</pre></div>
+</div>
+<p>Enfin, la méthode is_part_of() permet de tester si un concept est une partie d&#8217;un autre concept (de
+manière récursive) :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">concept</span><span class="o">.</span><span class="n">is_part_of</span><span class="p">(</span><span class="n">SNOMEDCT</span><span class="p">[</span><span class="mi">91744000</span><span class="p">])</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="autres-relations">
+<h3>Autres relations<a class="headerlink" href="#autres-relations" title="Permalink to this headline">¶</a></h3>
+<p>L&#8217;attribut “ relations ” permet d&#8217;obtenir la liste des types de relations disponibles pour ce concept.
+Les relations est-un (is_a) ne sont jamais incluses dans “ relations ”, elles sont gérées via les
+attributs “ parents ” et “ children ” vus précédemment, en revanche les relations partie-de y figurent.
+Les relations inverses sont préfixées par “ INVERSE_ ”.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">concept</span> <span class="o">=</span> <span class="n">SNOMEDCT</span><span class="p">[</span><span class="mi">3424008</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">concept</span>
+<span class="go">SNOMEDCT[3424008] # Tachycardia (finding)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">concept</span><span class="o">.</span><span class="n">relations</span>
+<span class="go">set([u&#39;INVERSE_has_definitional_manifestation&#39;, u&#39;finding_site&#39;, u&#39;interprets&#39;, u&#39;has_interpretation&#39;, u&#39;INVERSE_associated_with&#39;])</span>
+</pre></div>
+</div>
+<p>Chaque relation correspond à un attribut du concept, qui retourne une liste avec le ou les valeurs
+correspondantes :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">concept</span><span class="o">.</span><span class="n">finding_site</span>
+<span class="go">[SNOMEDCT[24964005] # Cardiac conducting system structure (body structure)</span>
+<span class="go">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">concept</span><span class="o">.</span><span class="n">interprets</span>
+<span class="go">[SNOMEDCT[364075005]  # Heart rate (observable entity)</span>
+<span class="go">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">concept</span><span class="o">.</span><span class="n">INVERSE_has_definitional_manifestation</span>
+<span class="go">[ SNOMEDCT[413342000]  # Neonatal tachycardia (disorder)</span>
+<span class="go">, SNOMEDCT[195069001]  # Paroxysmal atrial tachycardia (disorder)</span>
+<span class="go">, SNOMEDCT[195070000]  # Paroxysmal atrioventricular tachycardia (disorder)</span>
+<span class="go">,...]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="groupes-de-relations">
+<h3>Groupes de relations<a class="headerlink" href="#groupes-de-relations" title="Permalink to this headline">¶</a></h3>
+<p>Dans la SNOMED CT, les relations peuvent être regroupées en groupes. L&#8217;attribut “ groups ” permet d&#8217;obtenir la liste des groupes de relation. Il est ensuite possible d&#8217;accéder aux relations du groupe comme pour un concept.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">SNOMEDCT</span><span class="p">[</span><span class="mi">186675001</span><span class="p">]</span>
+<span class="go">SNOMEDCT[186675001]  # Viral pharyngoconjunctivitis (disorder)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SNOMEDCT</span><span class="p">[</span><span class="mi">186675001</span><span class="p">]</span><span class="o">.</span><span class="n">groups</span>
+<span class="go">[&lt;Group associated_morphology Inflammation (morphologic abnormality); finding_site Conjunctival structure (body structure)&gt;, &lt;Group associated_morphology Inflammation (morphologic abnormality); finding_site Pharyngeal structure (body structure)&gt;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SNOMEDCT</span><span class="p">[</span><span class="mi">186675001</span><span class="p">]</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">relations</span>
+<span class="go">set([u&#39;associated_morphology&#39;, u&#39;finding_site&#39;])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SNOMEDCT</span><span class="p">[</span><span class="mi">186675001</span><span class="p">]</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">finding_site</span>
+<span class="go">Concepts([</span>
+<span class="go">  SNOMEDCT[29445007]  # Conjunctival structure (body structure)</span>
+<span class="go">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SNOMEDCT</span><span class="p">[</span><span class="mi">186675001</span><span class="p">]</span><span class="o">.</span><span class="n">groups</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">associated_morphology</span>
+<span class="go">Concepts([</span>
+<span class="go">  SNOMEDCT[23583003]  # Inflammation (morphologic abnormality)</span>
+<span class="go">])</span>
+</pre></div>
+</div>
+<p>Les relations qui n&#8217;appartiennent à aucun groupe sont réunies dans un groupe “ hors-groupe ” (qui ne figure pas dans la liste “ groups ”).</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">SNOMEDCT</span><span class="p">[</span><span class="mi">186675001</span><span class="p">]</span><span class="o">.</span><span class="n">out_of_group</span>
+<span class="go">&lt;Group causative_agent Virus (organism); pathological_process Infectious process (qualifier value)&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="parcourir-la-snomed-ct">
+<h3>Parcourir la SNOMED CT<a class="headerlink" href="#parcourir-la-snomed-ct" title="Permalink to this headline">¶</a></h3>
+<p>Pour obtenir les premiers niveaux de la terminologie (= les concepts racines), il faut utiliser la méthode first_levels() :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">SNOMEDCT</span><span class="o">.</span><span class="n">first_levels</span><span class="p">()</span>
+<span class="go">[ SNOMEDCT[123037004] # Body structure (body structure)</span>
+<span class="go">, SNOMEDCT[404684003] # Clinical finding (finding)</span>
+<span class="go">, SNOMEDCT[308916002] # Environment or geographical location (environment / location)</span>
+<span class="go">,...]</span>
+</pre></div>
+</div>
+<p>La méthode all_concepts() retourne un générateur Python qui parcourt tous les concepts de la SNOMED CT.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">concept</span> <span class="ow">in</span> <span class="n">SNOMEDCT</span><span class="o">.</span><span class="n">all_concepts</span><span class="p">():</span> <span class="p">[</span><span class="o">...</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>La méthode all_concepts_no_double() fonctionne de la même manière mais élimine les doublons.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">concept</span> <span class="ow">in</span> <span class="n">SNOMEDCT</span><span class="o">.</span><span class="n">all_concepts_no_double</span><span class="p">():</span> <span class="p">[</span><span class="o">...</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="core-problem-list">
+<h3>CORE Problem List<a class="headerlink" href="#core-problem-list" title="Permalink to this headline">¶</a></h3>
+<p>La CORE Problem List est un sous-ensemble de la SNOMED CT approprié pour le codage de l&#8217;information clinique. L&#8217;attribut “ is_in_core ” permet de savoir si un concept appartient à la CORE Problem List :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">concept</span><span class="o">.</span><span class="n">is_in_core</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+<p>Il est aussi possible de parcourir tous les concepts de la CORE Problem List :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">core_concept</span> <span class="ow">in</span> <span class="n">SNOMEDCT</span><span class="o">.</span><span class="n">CORE_problem_list</span><span class="p">():</span> <span class="p">[</span><span class="o">...</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="signes-cliniques-associees-a-un-concept">
+<h3>Signes cliniques associées à un concept<a class="headerlink" href="#signes-cliniques-associees-a-un-concept" title="Permalink to this headline">¶</a></h3>
+<p>La méthode associated_clinical_findings() permet de lister tous les signes cliniques associés à un concept de structure anatomique (body structure) ou de morphologie, y compris leurs descendants et leur parties descendantes. Par exemple pour lister toutes les maladies des structures cardiaques :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">SNOMEDCT</span><span class="p">[</span><span class="mi">80891009</span><span class="p">]</span>
+<span class="go">SNOMEDCT[80891009]  # Heart structure (body structure)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">SNOMEDCT</span><span class="p">[</span><span class="mi">80891009</span><span class="p">]</span><span class="o">.</span><span class="n">associated_clinical_findings</span><span class="p">()</span>
+<span class="go">Concepts([</span>
+<span class="go">  SNOMEDCT[250981008]  # Abnormal aortic cusp (disorder)</span>
+<span class="go">, SNOMEDCT[250982001]  # Commissural fusion of aortic cusp (disorder)</span>
+<span class="go">, SNOMEDCT[250984000]  # Torn aortic cusp (disorder)</span>
+<span class="go">,...]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="cim10">
+<h2>CIM10<a class="headerlink" href="#cim10" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id1">
+<h3>Chargement des modules<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pymedtermino</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pymedtermino.icd10</span> <span class="kn">import</span> <span class="o">*</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id2">
+<h3>Concepts<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<p>L&#8217;objet ICD10 permet d&#8217;accéder aux concepts de la CIM10. Cet objet fonctionne de manière très proche de
+la terminologie SNOMED CT décrite précédemment (voir <a class="reference internal" href="#snomed-ct">SNOMED CT</a>).</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ICD10</span><span class="p">[</span><span class="s">&quot;E10&quot;</span><span class="p">]</span>
+<span class="go">ICD10[u&quot;E10&quot;]  # diabète sucré insulino-dépendant</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ICD10</span><span class="p">[</span><span class="s">&quot;E10&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parents</span>
+<span class="go">[ICD10[u&quot;E10-E14&quot;]  # diabète sucré</span>
+<span class="go">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">ICD10</span><span class="p">[</span><span class="s">&quot;E10&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">ancestors</span><span class="p">())</span>
+<span class="go">[ ICD10[u&quot;E10-E14&quot;]  # diabète sucré</span>
+<span class="go">, ICD10[u&quot;IV&quot;]  # maladies endocriniennes, nutritionnelles et métaboliques</span>
+<span class="go">]</span>
+</pre></div>
+</div>
+<p>La CIM10 étant monoaxiale, la liste parents contient au plus un seul concept parent.</p>
+</div>
+<div class="section" id="traduction">
+<h3>Traduction<a class="headerlink" href="#traduction" title="Permalink to this headline">¶</a></h3>
+<p>La CIM10 est disponible en plusieurs langues. La méthode get_translation() permet d&#8217;obtenir la traduction
+dans une langue donnée :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">ICD10</span><span class="p">[</span><span class="s">&quot;E10&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get_translation</span><span class="p">(</span><span class="s">&quot;fr&quot;</span><span class="p">))</span>
+<span class="go">diabète sucré insulino-dépendant</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">ICD10</span><span class="p">[</span><span class="s">&quot;E10&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get_translation</span><span class="p">(</span><span class="s">&quot;en&quot;</span><span class="p">))</span>
+<span class="go">Insulin-dependent diabetes mellitus</span>
+</pre></div>
+</div>
+<p>La langue utilisée par défaut est défini par pymedtermino.LANGUAGE (qui doit être défini <strong>avant</strong> de charger les concepts).</p>
+</div>
+<div class="section" id="relations">
+<h3>Relations<a class="headerlink" href="#relations" title="Permalink to this headline">¶</a></h3>
+<p>Les relations incluent les relations d&#8217;inclusion et d&#8217;exclusion de la CIM10.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ICD10</span><span class="p">[</span><span class="s">&quot;E10&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">relations</span>
+<span class="go">set([u&#39;inclusion&#39;, u&#39;exclusion&#39;, u&#39;modifierlink&#39;])</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ICD10</span><span class="p">[</span><span class="s">&quot;E10&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">exclusion</span>
+<span class="go">[Text(ICD10[u&quot;E10&quot;]  # diabète sucré insulino-dépendant</span>
+<span class="go">, &#39;exclusion&#39;, u&#39;diabetes mellitus (in) malnutrition-related E12.-&#39;, 0, ICD10[u&quot;E12&quot;]  # diabète sucré de malnutrition</span>
+<span class="go">)...]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="umls">
+<h2>UMLS<a class="headerlink" href="#umls" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id3">
+<h3>Chargement des modules<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pymedtermino</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pymedtermino.umls</span> <span class="kn">import</span> <span class="o">*</span>
+</pre></div>
+</div>
+<p>Une fois les modules importées, il faut se connecter à la base de données MySQL contenant les données de
+l&#8217;UMLS, de la manière suivante :</p>
+<div class="highlight-python"><div class="highlight"><pre>&gt;&gt;&gt; connect_to_umls_db(hôte, utilisateur, mot_de_passe, nom_de_la_base = &quot;umls&quot;, encodage = &quot;latin1&quot;)
+</pre></div>
+</div>
+<p>Hôte, utilisateur, mot_de_passe doivent être précisés.</p>
+</div>
+<div class="section" id="concepts-umls-cui">
+<h3>Concepts UMLS (CUI)<a class="headerlink" href="#concepts-umls-cui" title="Permalink to this headline">¶</a></h3>
+<p>Dans UMLS, les CUI correspondent à des concepts : un même concept rassemble des termes et des codes
+équivalent de différentes terminologies.</p>
+<p>PyMedTermino permet d&#8217;accéder aux CUI via la terminologie UMLS_CUI :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">UMLS_CUI</span><span class="p">[</span><span class="s">u&quot;C0085580&quot;</span><span class="p">]</span>
+<span class="go">UMLS_CUI[u&quot;C0085580&quot;] # Hypertension artérielle essentielle (MDRJPN, SNOMEDCT, ICD10, BI, CCS, MDRPOR, COSTAR, ICD10DUT, KCD5, RCD, MDRGER, AOD, MDRFRE, MDRCZE, SCTSPA, DMDICD10, ICPC2P, OMIM, MDRITA, MDR, MEDCIN, ICD10CM, MDRDUT, ICD10AM, MTH, CSP, MDRSPA, SNM, DXP, NCI, PSY, SNMI, ICD9CM, CCPSS)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">UMLS_CUI</span><span class="p">[</span><span class="s">u&quot;C0085580&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">term</span>
+<span class="go">u&#39;Hypertension art\xe9rielle essentielle&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">UMLS_CUI</span><span class="p">[</span><span class="s">u&quot;C0085580&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">terms</span>
+<span class="go">[&#39;Hypertension art\xe9rielle essentielle&#39;, &#39;Hypertension primitive&#39;, &#39;Hypertension essentielle, non pr\xe9cis\xe9e&#39;, &#39;Hypertension essentielle non pr\xe9cis\xe9e&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">UMLS_CUI</span><span class="p">[</span><span class="s">u&quot;C0085580&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">original_terminologies</span>
+<span class="go">set([&#39;MDRJPN&#39;, &#39;SNOMEDCT&#39;, &#39;ICD10&#39;, &#39;BI&#39;, &#39;CCS&#39;, &#39;MDRPOR&#39;, &#39;COSTAR&#39;, &#39;ICD10DUT&#39;, &#39;KCD5&#39;, &#39;RCD&#39;, &#39;MDRGER&#39;, &#39;AOD&#39;, &#39;MDRFRE&#39;, &#39;MDRCZE&#39;, &#39;SCTSPA&#39;, &#39;DMDICD10&#39;, &#39;ICPC2P&#39;, &#39;OMIM&#39;, &#39;MDRITA&#39;, &#39;MDR&#39;, &#39;MEDCIN&#39;, &#39;ICD10CM&#39;, &#39;MDRDUT&#39;, &#39;ICD10AM&#39;, &#39;MTH&#39;, &#39;CSP&#39;, &#39;MDRSPA&#39;, &#39;SNM&#39;, &#39;DXP&#39;, &#39;NCI&#39;, &#39;PSY&#39;, &#39;SNMI&#39;, &#39;ICD9CM&#39;, &#39;CCPSS&#39;])</span>
+</pre></div>
+</div>
+<p>Il est possible de manipuler les relations des CUI de la même manière que pour les concepts SNOMED CT
+(voir section [sub:Autres-relations-SNOMEDCT]), par exemple :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">UMLS_CUI</span><span class="p">[</span><span class="s">u&quot;C0085580&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">relations</span>
+<span class="go">set([&#39;has_finding_site&#39;, &#39;INVERSE_translation_of&#39;, &#39;SIB&#39;, &#39;INVERSE_has_alias&#39;, &#39;may_be_a&#39;, None, &#39;RQ&#39;, &#39;INVERSE_mapped_from&#39;,...])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">UMLS_CUI</span><span class="p">[</span><span class="s">u&quot;C0085580&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">has_finding_site</span>
+<span class="go">[UMLS_CUI[u&quot;C0459964&quot;]  # Systemic arterial structure (RCD, SCTSPA, SNOMEDCT)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="concept-umls-issus-des-terminologies-sources-aui">
+<h3>Concept UMLS issus des terminologies sources (AUI)<a class="headerlink" href="#concept-umls-issus-des-terminologies-sources-aui" title="Permalink to this headline">¶</a></h3>
+<p>La terminologie UMLS_AUI permet d&#8217;accéder aux atomes de l&#8217;UMLS. Un atome UMLS correspond à un concept
+dans une terminologie source donnée ; “ diabète de type 2 dans la CIM10 ” est un atome différent de “
+diabète de type 2 dans la SNOMED CT ”.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">UMLS_AUI</span><span class="p">[</span><span class="s">u&quot;A0930328&quot;</span><span class="p">]</span>
+<span class="go">UMLS_AUI[u&quot;A0930328&quot;] # Essential (primary) hypertension (ICD10)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">UMLS_AUI</span><span class="p">[</span><span class="s">u&quot;A0930328&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">original_terminologies</span>
+<span class="go">set([&#39;ICD10&#39;])</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="extraction-de-terminologie-de-l-umls">
+<h3>Extraction de terminologie de l&#8217;UMLS<a class="headerlink" href="#extraction-de-terminologie-de-l-umls" title="Permalink to this headline">¶</a></h3>
+<p>PyMedTermino permet d&#8217;extraire des terminologies de l&#8217;UMLS, et de les utiliser avec les codes des
+terminologies sources (plutôt que les AUI), par exemple pour extraire la SNOMED CT, la CIM10 et la CISP 2 :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">UMLS_SNOMEDCT</span>  <span class="o">=</span> <span class="n">UMLS_AUI</span><span class="o">.</span><span class="n">extract_terminology</span><span class="p">(</span><span class="s">&quot;SNOMEDCT&quot;</span><span class="p">,</span> <span class="n">has_int_code</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">UMLS_ICD10</span>     <span class="o">=</span> <span class="n">UMLS_AUI</span><span class="o">.</span><span class="n">extract_terminology</span><span class="p">(</span><span class="s">&quot;ICD10&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">UMLS_ICPC2EENG</span> <span class="o">=</span> <span class="n">UMLS_AUI</span><span class="o">.</span><span class="n">extract_terminology</span><span class="p">(</span><span class="s">&quot;ICPC2EENG&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Le premier paramètre de la fonction UMLS_AUI.extract_terminology() est le nom de la terminologie à
+extraire (que l&#8217;on peut trouver dans la liste des sources de l&#8217;UMLS). Le paramètre optionnel “
+has_int_code = 1 ” permet d&#8217;indiquer que les codes de la terminologie source sont numériques, ce qui
+évite ensuite d&#8217;avoir à les mettre entre guillemets.</p>
+<p>Les terminologies extraites peuvent ensuite être utilisées :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">UMLS_ICD10</span><span class="p">[</span><span class="s">&quot;I10&quot;</span><span class="p">]</span>
+<span class="go">UMLS_ICD10[u&quot;I10&quot;]  # Essential (primary) hypertension (ICD10)</span>
+</pre></div>
+</div>
+<p>Il est possible d&#8217;accéder aux relations (lorsqu&#8217;elles existent) de la même manière que précédemment.</p>
+</div>
+<div class="section" id="correspondance-entre-terminologies-de-l-umls">
+<h3>Correspondance entre terminologies de l&#8217;UMLS<a class="headerlink" href="#correspondance-entre-terminologies-de-l-umls" title="Permalink to this headline">¶</a></h3>
+<p>PyMedTermino défini automatiquement des correspondances entre les terminologies extraites de l&#8217;UMLS, par exemple :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">UMLS_ICD10</span><span class="p">[</span><span class="s">&quot;I10&quot;</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">UMLS_SNOMEDCT</span>
+<span class="go">Concepts([</span>
+<span class="go">  UMLS_SNOMEDCT[u&quot;59621000&quot;]  # Essential hypertension (SNOMEDCT)</span>
+<span class="go">])</span>
+</pre></div>
+</div>
+<p>Pour plus d&#8217;information sur les correspondances, voir la section sur les <a class="reference internal" href="#correspondances">Correspondances</a>.</p>
+</div>
+</div>
+<div class="section" id="vcm">
+<h2>VCM<a class="headerlink" href="#vcm" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id4">
+<h3>Chargement des modules<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pymedtermino</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pymedtermino.vcm</span> <span class="kn">import</span> <span class="o">*</span>
+</pre></div>
+</div>
+<p>Les bases de données décrivant les terminologies VCM sont incluses dans PyMedTermino.</p>
+</div>
+<div class="section" id="icones-vcm">
+<h3>Icônes VCM<a class="headerlink" href="#icones-vcm" title="Permalink to this headline">¶</a></h3>
+<p>L&#8217;objet VCM permet d&#8217;accéder aux icônes VCM, identifiées par leur code, en français ou en anglais :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">icon</span> <span class="o">=</span> <span class="n">VCM</span><span class="p">[</span><span class="s">&quot;en_cours--patho--coeur&quot;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">icon</span> <span class="o">=</span> <span class="n">VCM</span><span class="p">[</span><span class="s">&quot;current--patho--heart&quot;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">icon</span> <span class="o">=</span> <span class="n">VCM</span><span class="p">[</span><span class="s">&quot;en_cours--patho-vaisseau--coeur--traitement--medicament--rien--rien&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Le code d&#8217;icône inclut jusqu&#8217;à 7 composantes, séparé par deux tirets (<tt class="docutils literal"><span class="pre">--</span></tt>) :</p>
+<ol class="arabic simple">
+<li>La couleur centrale</li>
+<li>Le ou les modificateurs de forme (séparés par un seul tiret si plusieurs)</li>
+<li>Le pictogramme central</li>
+<li>La couleur en exposant</li>
+<li>Le pictogramme en exposant</li>
+<li>Le pictogramme en second exposant</li>
+<li>L&#8217;ombre</li>
+</ol>
+<p>Les valeurs possibles pour chaque composante sont listées dans le lexique graphique (voir le lexique des
+pictogrammes VCM, ou la terminologie VCM_LEXICON ci-dessous). Les composantes absentes dans le code de
+l&#8217;icône sont remplacées par la valeur rien / empty.</p>
+<p>Des attributs permettent de récupérer les différentes composantes d&#8217;une icône :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">icon</span><span class="o">.</span><span class="n">central_color</span>
+<span class="go">VCM_LEXICON[496] # Red_color</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">icon</span><span class="o">.</span><span class="n">modifiers</span>
+<span class="go">Concepts([</span>
+<span class="go">  VCM_LEXICON[536]  # Modifier_vessel</span>
+<span class="go">, VCM_LEXICON[504]  # Modifier_patho</span>
+<span class="go">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">icon</span><span class="o">.</span><span class="n">central_pictogram</span>
+<span class="go">VCM_LEXICON[549]  # Pictogramme_heart</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">icon</span><span class="o">.</span><span class="n">central_pictogram</span><span class="o">.</span><span class="n">text_code</span>
+<span class="go">heart</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">icon</span><span class="o">.</span><span class="n">top_right_color</span>
+<span class="go">VCM_LEXICON[690]  # Green_color</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">icon</span><span class="o">.</span><span class="n">top_right_pictogram</span>
+<span class="go">VCM_LEXICON[697]  # Drug_top_right_pictogram</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">icon</span><span class="o">.</span><span class="n">second_top_right_pictogram</span>
+<span class="go">VCM_LEXICON[718]  # No_second_top_right_pictogram</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">icon</span><span class="o">.</span><span class="n">shadow</span>
+<span class="go">VCM_LEXICON[722]  # No_shadow</span>
+</pre></div>
+</div>
+<p>L&#8217;attribut “ lexs ” permet d&#8217;obtenir l&#8217;ensemble des composantes :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">icon</span><span class="o">.</span><span class="n">lexs</span>
+<span class="go">Concepts([</span>
+<span class="go">  VCM_LEXICON[536]  # Modifier_vessel</span>
+<span class="go">, VCM_LEXICON[549]  # Pictogramme_heart</span>
+<span class="go">, VCM_LEXICON[722]  # No_shadow</span>
+<span class="go">, VCM_LEXICON[496]  # Red_color</span>
+<span class="go">, VCM_LEXICON[504]  # Modifier_patho</span>
+<span class="go">, VCM_LEXICON[718]  # No_second_top_right_pictogram</span>
+<span class="go">, VCM_LEXICON[697]  # Drug_top_right_pictogram</span>
+<span class="go">, VCM_LEXICON[690]  # Green_color</span>
+<span class="go">])</span>
+</pre></div>
+</div>
+<p>Les attributs suivants permettent d&#8217;obtenir les modificateurs d&#8217;une catégorie précise : modificateur
+pathologique ou physiologique, étiologique,... :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">icon</span><span class="o">.</span><span class="n">physio</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">icon</span><span class="o">.</span><span class="n">patho</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">icon</span><span class="o">.</span><span class="n">etiology</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">icon</span><span class="o">.</span><span class="n">quantitative</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">icon</span><span class="o">.</span><span class="n">process</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">icon</span><span class="o">.</span><span class="n">transverse</span>
+</pre></div>
+</div>
+<p>L&#8217;attribut “ consistent ” permet de savoir si l&#8217;icône est consistante ou non (vis-à-vis de l&#8217;ontologie
+des icônes VCM, décrite dans l&#8217;article : J-B Lamy et al., Validating the semantics of a medical iconic
+language using ontological reasoningJ-B Lamy et al., Validating the semantics of a medical iconic
+language using ontological reasoning, Journal of Biomedical Informatics 2013, 46(1):56-67) :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">icon</span><span class="o">.</span><span class="n">consistent</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="lexique-graphique">
+<h3>Lexique graphique<a class="headerlink" href="#lexique-graphique" title="Permalink to this headline">¶</a></h3>
+<p>La terminologie VCM_LEXICON décrit le lexique graphique des primitives des icônes VCM : pictogrammes,
+couleurs et formes. Chaque primitive est identifié par un code numérique arbitraire, par exemple pour le
+pictogramme du cœur :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">heart</span> <span class="o">=</span> <span class="n">VCM_LEXICON</span><span class="p">[</span><span class="mi">549</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">heart</span>
+<span class="go">VCM_LEXICON[549] # Pictogramme_heart</span>
+</pre></div>
+</div>
+<p>Chaque concept du lexique possède aussi des codes textuels (plus facile à retenir que le code numérique,
+disponible en français et en anglais), et une catégorie :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">heart</span><span class="o">.</span><span class="n">text_code</span>
+<span class="go">u&#39;coeur&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">heart</span><span class="o">.</span><span class="n">text_codes</span>
+<span class="go">[u&#39;heart&#39;, u&#39;coeur&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">heart</span><span class="o">.</span><span class="n">category</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+<p>Les catégories correspondent aux différentes parties des icônes VCM :</p>
+<ol class="arabic simple" start="0">
+<li>Couleur centrale</li>
+<li>Modificateur de forme</li>
+<li>Pictogramme central</li>
+<li>Couleur en exposant</li>
+<li>Pictogramme en exposant</li>
+<li>Pictogramme en second exposant</li>
+<li>Ombre</li>
+</ol>
+<p>Il est aussi possible d&#8217;obtenir un concept du lexique à partir de sa catégorie et de son code textuel :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">VCM_LEXICON</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="s">&quot;heart&quot;</span><span class="p">]</span>
+<span class="go">VCM_LEXICON[549] # Pictogramme_heart</span>
+</pre></div>
+</div>
+<p>Les relations sont gérés comme d&#8217;ordinaire dans PyMedTermino (voir section sur la SNOMED CT : parents,
+children, is_a(), ancestors(), descendants(),...). De plus la relation graphical_is_a indique les autres
+éléments du lexique qui sont réutilisés. Par exemple le pictogramme du rythme cardiaque reprend le
+pictogramme du cœur :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">heart_rhythm</span> <span class="o">=</span> <span class="n">VCM_LEXICON</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="s">&quot;heart_rhythm&quot;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">heart_rhythm</span><span class="o">.</span><span class="n">graphical_is_a</span>
+<span class="go">[VCM_LEXICON[549]  # Pictogramme_heart</span>
+<span class="go">]</span>
+</pre></div>
+</div>
+<p>Les attributs “ graphical_children ” et “ graphical_parents ” permettent d&#8217;obtenir la liste des éléments
+du lexique qui réutilisent ou qui sont réutilisés par un autre.</p>
+</div>
+<div class="section" id="creer-une-icone-vcm-a-partir-d-elements-du-lexique">
+<h3>Créer une icône VCM à partir d&#8217;éléments du lexique<a class="headerlink" href="#creer-une-icone-vcm-a-partir-d-elements-du-lexique" title="Permalink to this headline">¶</a></h3>
+<p>Un ensemble de concepts du lexique peut être converti en icône VCM :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Concepts</span><span class="p">([</span><span class="n">VCM_LEXICON</span><span class="p">[</span><span class="mi">549</span><span class="p">],</span> <span class="n">VCM_LEXICON</span><span class="p">[</span><span class="mi">496</span><span class="p">],</span> <span class="n">VCM_LEXICON</span><span class="p">[</span><span class="mi">504</span><span class="p">]])</span> <span class="o">&gt;&gt;</span> <span class="n">VCM</span>
+<span class="go">Concepts([</span>
+<span class="go">  VCM[u&quot;en_cours--patho--coeur&quot;]  #</span>
+<span class="go">])</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="concepts-medicaux">
+<h3>Concepts médicaux<a class="headerlink" href="#concepts-medicaux" title="Permalink to this headline">¶</a></h3>
+<p>VCM_CONCEPT est une terminologie qui représente les concepts médicaux de VCM. Chaque concept médical est
+défini par un code arbitraire, par exemple pour le cœur :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">heart</span> <span class="o">=</span> <span class="n">VCM_CONCEPT</span><span class="p">[</span><span class="mi">266</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">heart</span>
+<span class="go">VCM_CONCEPT[266] # Cardiac_structure</span>
+</pre></div>
+</div>
+<p>Les relations sont gérés comme d&#8217;ordinaire dans PyMedTermino (voir section sur la SNOMED CT : parents,
+children, is_a(), ancestors(), descendants(), relations...).</p>
+<p>VCM_CONCEPT_MONOAXIAL est une terminologie identique à VCM_CONCEPT, mais monoaxiale. Les concepts sont
+donc les mêmes, mais avec au maximum un seul parent par concept. Cette terminologie est principalement
+utilisé en interne pour relier VCM_CONCEPT (multiaxial) à VCM_LEXICON (monoaxial).</p>
+</div>
+<div class="section" id="correspondances">
+<h3>Correspondances<a class="headerlink" href="#correspondances" title="Permalink to this headline">¶</a></h3>
+<p>Une correspondance (mapping) permet de transcoder un ou plusieurs concepts d&#8217;une terminologie source vers
+une terminologie destination. PyMedTermino utilise l&#8217;opérateur &gt;&gt; pour les correspondances, de la manière
+suivante</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">concept</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">TERMINOLOGIE_DESTINATION</span>
+</pre></div>
+</div>
+<p>ou concept(s) peut être soit un concept de la terminologie source, soit un ensemble de concepts (voir
+<a class="reference internal" href="reference.html#pymedtermino.Concepts" title="pymedtermino.Concepts"><tt class="xref py py-class docutils literal"><span class="pre">pymedtermino.Concepts</span></tt></a>). L&#8217;opérateur &gt;&gt; retourne un ensemble de concepts dans la
+terminologie destination. Les opérateurs &gt;&gt; peuvent donc être chaînés</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">concept</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">TERMINOLOGIE_INTERMEDIAIRE</span> <span class="o">&gt;&gt;</span> <span class="n">TERMINOLOGIE_DESTINATION</span>
+</pre></div>
+</div>
+<p>PyMedTermino inclut plusieurs correspondances, décrite dans les sous-sections suivantes.</p>
+</div>
+<div class="section" id="correspondances-umls">
+<h3>Correspondances UMLS<a class="headerlink" href="#correspondances-umls" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="umls-cui-umls-aui">
+<h4>UMLS_CUI &lt;=&gt; UMLS_AUI<a class="headerlink" href="#umls-cui-umls-aui" title="Permalink to this headline">¶</a></h4>
+<p>PyMedTermino peut convertir les CUI en AUI et vice versa :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">UMLS_CUI</span><span class="p">[</span><span class="s">u&quot;C0085580&quot;</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">UMLS_AUI</span>
+<span class="go">Concepts([</span>
+<span class="go">  UMLS_AUI[u&quot;A16015049&quot;]  # Hypertension primitive (MDRFRE)</span>
+<span class="go">, UMLS_AUI[u&quot;A11101884&quot;]  # Hypertension essentielle, non précisée (MDRFRE)</span>
+<span class="go">, UMLS_AUI[u&quot;A11089284&quot;]  # Hypertension essentielle non précisée (MDRFRE)</span>
+<span class="go">...])</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="terminologie-extraite-de-l-umls-cui-ou-aui">
+<h4>Terminologie extraite de l&#8217;UMLS &lt;=&gt; CUI ou AUI<a class="headerlink" href="#terminologie-extraite-de-l-umls-cui-ou-aui" title="Permalink to this headline">¶</a></h4>
+<p>PyMedTermino peut convertir les concepts des terminologies extraites de l&#8217;UMLS en CUI ou en AUI, et vice
+versa :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">UMLS_ICD10</span><span class="p">[</span><span class="s">&quot;I10&quot;</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">UMLS_CUI</span>
+<span class="go">Concepts([</span>
+<span class="go">  UMLS_CUI[u&quot;C0085580&quot;]  # Hypertension artérielle essentielle (MDRJPN, SNOMEDCT, ICD10, BI, CCS, MDRPOR, COSTAR, ICD10DUT, KCD5, RCD, MDRGER, AOD, MDRFRE, MDRCZE, SCTSPA, DMDICD10, ICPC2P, OMIM, MDRITA, MDR, MEDCIN, ICD10CM, MDRDUT, ICD10AM, MTH, CSP, MDRSPA, SNM, DXP, NCI, PSY, SNMI, ICD9CM, CCPSS)</span>
+<span class="go">])</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="terminologie-extraite-de-l-umls-terminologie-source">
+<h4>Terminologie extraite de l&#8217;UMLS &lt;=&gt; terminologie source<a class="headerlink" href="#terminologie-extraite-de-l-umls-terminologie-source" title="Permalink to this headline">¶</a></h4>
+<p>PyMedTermino peut convertir les concepts des terminologies extraites de l&#8217;UMLS vers la terminologie
+source, et vice versa :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ICD10</span><span class="p">[</span><span class="s">&quot;I10&quot;</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">UMLS_ICD10</span>
+<span class="go">Concepts([</span>
+<span class="go">  UMLS_ICD10[u&quot;I10&quot;]  # Essential (primary) hypertension (ICD10)</span>
+<span class="go">])</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="terminologie-extraite-de-l-umls-autre-terminologie-extraite-de-l-umls">
+<h4>Terminologie extraite de l&#8217;UMLS &lt;=&gt; autre terminologie extraite de l&#8217;UMLS<a class="headerlink" href="#terminologie-extraite-de-l-umls-autre-terminologie-extraite-de-l-umls" title="Permalink to this headline">¶</a></h4>
+<p>PyMedTermino crée automatiquement des correspondances entre les terminologies extraites de l&#8217;UMLS avec
+UMLS_AUI.extract_terminology() :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">UMLS_ICD10</span><span class="p">[</span><span class="s">&quot;I10&quot;</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">UMLS_SNOMEDCT</span>
+<span class="go">Concepts([</span>
+<span class="go">  UMLS_SNOMEDCT[u&quot;59621000&quot;]  # Essential hypertension (SNOMEDCT)</span>
+<span class="go">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="snomedct-vcm">
+<h3>SNOMEDCT &lt;=&gt; VCM<a class="headerlink" href="#snomedct-vcm" title="Permalink to this headline">¶</a></h3>
+<p>Cette correspondance associe des icônes VCM aux concepts SNOMED CT. Elle a été construite de manière
+automatique à partir des correspondances SNOMEDCT &lt;=&gt; VCM_CONCEPT et VCM_CONCEPT &lt;=&gt; VCM_LEXICON (comme
+décrit dans l&#8217;article: J-B Lamy et al., A Semi-automatic Semantic Method for Mapping SNOMED CT Concepts
+to VCM Icons J-B Lamy et al., A Semi-automatic Semantic Method for Mapping SNOMED CT Concepts to VCM
+Icons, Studies in health technology and informatics 2013, 192:42-6).</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pymedtermino.snomedct_2_vcm</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SNOMEDCT</span><span class="p">[</span><span class="mi">3424008</span><span class="p">]</span>
+<span class="go">SNOMEDCT[3424008]  # Tachycardia (finding)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SNOMEDCT</span><span class="p">[</span><span class="mi">3424008</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">VCM</span>
+<span class="go">Concepts([</span>
+<span class="go">  VCM[u&quot;en_cours--hyper--coeur_rythme&quot;]  #</span>
+<span class="go">])</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="vcm-lexicon-vcm">
+<h3>VCM_LEXICON =&gt; VCM<a class="headerlink" href="#vcm-lexicon-vcm" title="Permalink to this headline">¶</a></h3>
+<p>Un ensemble d&#8217;éléments du lexique peut être converti en icône VCM :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Concepts</span><span class="p">([</span><span class="n">VCM_LEXICON</span><span class="p">[</span><span class="mi">549</span><span class="p">],</span> <span class="n">VCM_LEXICON</span><span class="p">[</span><span class="mi">496</span><span class="p">],</span> <span class="n">VCM_LEXICON</span><span class="p">[</span><span class="mi">504</span><span class="p">]])</span> <span class="o">&gt;&gt;</span> <span class="n">VCM</span>
+<span class="go">Concepts([</span>
+<span class="go">  VCM[u&quot;en_cours--patho--coeur&quot;]  #</span>
+<span class="go">])</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="vcm-concept-vcm-lexicon">
+<h3>VCM_CONCEPT &lt;=&gt; VCM_LEXICON<a class="headerlink" href="#vcm-concept-vcm-lexicon" title="Permalink to this headline">¶</a></h3>
+<p>Cette correspondance permet de transformer un concept médical en élément du lexique VCM, et vice versa.
+Elle a été construite manuellement, et fait partie de l&#8217;ontologie des icônes VCM.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">VCM_CONCEPT</span><span class="p">[</span><span class="mi">266</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">VCM_LEXICON</span>
+<span class="go">Concepts([</span>
+<span class="go">  VCM_LEXICON[549]  # Pictogramme_heart</span>
+<span class="go">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">VCM_LEXICON</span><span class="p">[</span><span class="mi">549</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">VCM_CONCEPT</span>
+<span class="go">Concepts([</span>
+<span class="go">  VCM_CONCEPT[266]  # Structure_cardiaque</span>
+<span class="go">, VCM_CONCEPT[102]  # Fonction_cardiaque</span>
+<span class="go">])</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="snomedct-vcm-concept">
+<h3>SNOMEDCT &lt;=&gt; VCM_CONCEPT<a class="headerlink" href="#snomedct-vcm-concept" title="Permalink to this headline">¶</a></h3>
+<p>Cette correspondance associe les concepts SNOMED CT (principalement ceux de structures anatomiques et
+morphologies) aux concepts VCM. Elle a été construite manuellement.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">SNOMEDCT</span><span class="p">[</span><span class="mi">302509004</span><span class="p">]</span>
+<span class="go">SNOMEDCT[302509004] # Entire heart (body structure)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SNOMEDCT</span><span class="p">[</span><span class="mi">302509004</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">VCM_CONCEPT</span>
+<span class="go">Concepts([</span>
+<span class="go">  VCM_CONCEPT[266] # Structure_cardiaque</span>
+<span class="go">, VCM_CONCEPT[239] # Région_du_thorax</span>
+<span class="go">])</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="exemples">
+<h3>Exemples<a class="headerlink" href="#exemples" title="Permalink to this headline">¶</a></h3>
+<p>En chaînant plusieurs correspondances, il est possible de convertir un concept CIM10 en SNOMED CT via
+l&#8217;UMLS :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ICD10</span><span class="p">[</span><span class="s">&quot;I10&quot;</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">UMLS_ICD10</span> <span class="o">&gt;&gt;</span> <span class="n">UMLS_SNOMEDCT</span> <span class="o">&gt;&gt;</span> <span class="n">SNOMEDCT</span>
+<span class="go">Concepts([</span>
+<span class="go">  SNOMEDCT[59621000]  # Essential hypertension (disorder)</span>
+<span class="go">])</span>
+</pre></div>
+</div>
+<p>Si vous souhaitez utiliser cette méthode par défaut pour les correspondances de la CIM10 vers la SNOMED
+CT, vous pouvez enregistrer cette correspondance de la manière suivante :</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">ICD10</span> <span class="o">&gt;&gt;</span> <span class="n">UMLS_ICD10</span> <span class="o">&gt;&gt;</span> <span class="n">UMLS_SNOMEDCT</span> <span class="o">&gt;&gt;</span> <span class="n">SNOMEDCT</span><span class="p">)</span><span class="o">.</span><span class="n">register</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ICD10</span><span class="p">[</span><span class="s">&quot;I10&quot;</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">SNOMEDCT</span>
+<span class="go">Concepts([</span>
+<span class="go">  SNOMEDCT[59621000]  # Essential hypertension (disorder)</span>
+<span class="go">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="utiliser-pymedtermino-sans-python">
+<h2>Utiliser PyMedTermino sans Python<a class="headerlink" href="#utiliser-pymedtermino-sans-python" title="Permalink to this headline">¶</a></h2>
+<p>PyMedTermino peut aussi être utilisé sans Python, simplement pour convertir les données XML de la SNOMED
+CT et de la CIM10 en bases de données. Les bases de données SQLite3 ainsi créées peuvent ensuite être
+interrogé avec la plupart des langages de programmation, cependant vous n&#8217;aurez pas accès aux fonctions
+de plus haut niveau proposées par PyMedTermino (comme les fonctions ancestors() et descendants() par
+exemple).</p>
+<p>La définition des tables des bases de données peut être consultée dans les fichiers
+scripts/import_sonmedct.py et scripts/import_icd10.py.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Tutoriel PyMedTermino (French version / version française)</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#installation">Installation</a><ul>
+<li><a class="reference internal" href="#problemes-frequents">Problèmes fréquents</a><ul>
+<li><a class="reference internal" href="#operationalerror-no-such-module-fts4">OperationalError: no such module: fts4</a></li>
+<li><a class="reference internal" href="#ioerror-errno-22-invalid-argument">IOError: [Errno 22] Invalid argument</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#chargement-des-modules-et-parametres-globaux">Chargement des modules et paramètres globaux</a></li>
+<li><a class="reference internal" href="#snomed-ct">SNOMED CT</a><ul>
+<li><a class="reference internal" href="#chargement-des-modules">Chargement des modules</a></li>
+<li><a class="reference internal" href="#concepts">Concepts</a></li>
+<li><a class="reference internal" href="#recherche-textuelle">Recherche textuelle</a></li>
+<li><a class="reference internal" href="#relations-est-un-concepts-parents-et-enfants">Relations est-un : concepts parents et enfants</a></li>
+<li><a class="reference internal" href="#relations-partie-de">Relations partie-de</a></li>
+<li><a class="reference internal" href="#autres-relations">Autres relations</a></li>
+<li><a class="reference internal" href="#groupes-de-relations">Groupes de relations</a></li>
+<li><a class="reference internal" href="#parcourir-la-snomed-ct">Parcourir la SNOMED CT</a></li>
+<li><a class="reference internal" href="#core-problem-list">CORE Problem List</a></li>
+<li><a class="reference internal" href="#signes-cliniques-associees-a-un-concept">Signes cliniques associées à un concept</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#cim10">CIM10</a><ul>
+<li><a class="reference internal" href="#id1">Chargement des modules</a></li>
+<li><a class="reference internal" href="#id2">Concepts</a></li>
+<li><a class="reference internal" href="#traduction">Traduction</a></li>
+<li><a class="reference internal" href="#relations">Relations</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#umls">UMLS</a><ul>
+<li><a class="reference internal" href="#id3">Chargement des modules</a></li>
+<li><a class="reference internal" href="#concepts-umls-cui">Concepts UMLS (CUI)</a></li>
+<li><a class="reference internal" href="#concept-umls-issus-des-terminologies-sources-aui">Concept UMLS issus des terminologies sources (AUI)</a></li>
+<li><a class="reference internal" href="#extraction-de-terminologie-de-l-umls">Extraction de terminologie de l&#8217;UMLS</a></li>
+<li><a class="reference internal" href="#correspondance-entre-terminologies-de-l-umls">Correspondance entre terminologies de l&#8217;UMLS</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#vcm">VCM</a><ul>
+<li><a class="reference internal" href="#id4">Chargement des modules</a></li>
+<li><a class="reference internal" href="#icones-vcm">Icônes VCM</a></li>
+<li><a class="reference internal" href="#lexique-graphique">Lexique graphique</a></li>
+<li><a class="reference internal" href="#creer-une-icone-vcm-a-partir-d-elements-du-lexique">Créer une icône VCM à partir d&#8217;éléments du lexique</a></li>
+<li><a class="reference internal" href="#concepts-medicaux">Concepts médicaux</a></li>
+<li><a class="reference internal" href="#correspondances">Correspondances</a></li>
+<li><a class="reference internal" href="#correspondances-umls">Correspondances UMLS</a><ul>
+<li><a class="reference internal" href="#umls-cui-umls-aui">UMLS_CUI &lt;=&gt; UMLS_AUI</a></li>
+<li><a class="reference internal" href="#terminologie-extraite-de-l-umls-cui-ou-aui">Terminologie extraite de l&#8217;UMLS &lt;=&gt; CUI ou AUI</a></li>
+<li><a class="reference internal" href="#terminologie-extraite-de-l-umls-terminologie-source">Terminologie extraite de l&#8217;UMLS &lt;=&gt; terminologie source</a></li>
+<li><a class="reference internal" href="#terminologie-extraite-de-l-umls-autre-terminologie-extraite-de-l-umls">Terminologie extraite de l&#8217;UMLS &lt;=&gt; autre terminologie extraite de l&#8217;UMLS</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#snomedct-vcm">SNOMEDCT &lt;=&gt; VCM</a></li>
+<li><a class="reference internal" href="#vcm-lexicon-vcm">VCM_LEXICON =&gt; VCM</a></li>
+<li><a class="reference internal" href="#vcm-concept-vcm-lexicon">VCM_CONCEPT &lt;=&gt; VCM_LEXICON</a></li>
+<li><a class="reference internal" href="#snomedct-vcm-concept">SNOMEDCT &lt;=&gt; VCM_CONCEPT</a></li>
+<li><a class="reference internal" href="#exemples">Exemples</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#utiliser-pymedtermino-sans-python">Utiliser PyMedTermino sans Python</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="tuto_en.html"
+                        title="previous chapter">PyMedTermino tutorial</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="reference.html"
+                        title="next chapter">Module reference</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/tuto_fr.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="reference.html" title="Module reference"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="tuto_en.html" title="PyMedTermino tutorial"
+             >previous</a> |</li>
+        <li><a href="index.html">PyMedTermino 0.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Jean-Baptiste Lamy.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
