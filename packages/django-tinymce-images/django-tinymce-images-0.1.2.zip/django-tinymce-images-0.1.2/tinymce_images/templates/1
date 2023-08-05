@@ -1,0 +1,51 @@
+diff --git a/tinymce_images/static/tiny_mce/plugins/images/images.html b/tinymce_images/static/tiny_mce/plugins/images/images.html
+index 99a7dcd..d128c57 100644
+--- a/tinymce_images/static/tiny_mce/plugins/images/images.html
++++ b/tinymce_images/static/tiny_mce/plugins/images/images.html
+@@ -12,7 +12,7 @@
+     <script type="text/javascript" src="js/jquery-colors.js"></script>
+     <script type="text/javascript" src="js/jquery.form.js"></script>
+     <script type="text/javascript" src="js/jquery.MultiFile.js"></script>
+-    <script type="text/javascript" src="/tinymce/images/connector/"></script>
++    <script type="text/javascript" src="/tinymce/images/"></script>
+     <script type="text/javascript" src="js/images.js?ver20111111"></script>
+     
+     <!--  SWFUpload -->
+diff --git a/tinymce_images/templates/connector_url.js b/tinymce_images/templates/connector_url.js
+index a04726e..35307e4 100644
+--- a/tinymce_images/templates/connector_url.js
++++ b/tinymce_images/templates/connector_url.js
+@@ -1,2 +1,2 @@
+-
+-connector_url = '{{ params.connector_url }}';
++{% load url from future %}
++connector_url = '{% url 'connector_url' %}';
+diff --git a/tinymce_images/urls.py b/tinymce_images/urls.py
+index 8d752b2..65bbfd0 100644
+--- a/tinymce_images/urls.py
++++ b/tinymce_images/urls.py
+@@ -26,21 +26,10 @@ urlpatterns = patterns('tinymce_images.views',
+ )
+ 
+ 
+-class ConnectorView(TemplateView):
+-
+-    def get_context_data(self, **kwargs):
+-        kwargs.update(connector_url='/%s' % url_prefix)
+-        return super(ConnectorView, self).get_context_data(**kwargs)
+-
+-    def get(self, request, *args, **kwargs):
+-        context = self.get_context_data(**kwargs)
+-        return self.render_to_response(context,
+-                                       content_type='text/javascript')
+-
+-
+ urlpatterns = patterns("",
+     url(r'^%s' % url_prefix, include(urlpatterns)),
+-    url(r'^%sconnector/$' % url_prefix,
+-        ConnectorView.as_view(template_name='connector_url.js'),
++    url(r'^%s$' % url_prefix,
++        TemplateView.as_view(template_name='connector_url.js',
++                             content_type='text/javascript'),
+         name='connector_url'),
+ )
