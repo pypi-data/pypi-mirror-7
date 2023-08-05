@@ -1,0 +1,51 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:browser="http://namespaces.zope.org/browser"
+    i18n_domain="pretaweb.agls">
+
+    <include package="z3c.jbot" file="meta.zcml" />
+
+    <!-- Need to override several templates -->
+    <browser:jbot
+        directory="jbot"
+        layer=".interfaces.IPackageLayer"
+        />
+
+
+  <browser:page
+      for="Products.CMFPlone.interfaces.siteroot.IPloneSiteRoot"
+      name="agls-controlpanel"
+      class=".controlpanel.AGLSControlPanelView"
+      layer=".interfaces.IPackageLayer"
+      permission="cmf.ManagePortal"
+      />
+
+    <browser:view
+        for="*"
+        name="agls"
+        class=".agls.AGLSView"
+        layer=".interfaces.IPackageLayer"
+        permission="zope.Public"
+        allowed_interface=".interfaces.IAGLSView"
+        allowed_attributes="Created Creator Title Description Subject Type Identifier Publisher  Format"
+        />
+
+    <!-- Custom indexers -->
+    <adapter name="agls_subject" factory=".agls.agls_subject" />
+    <adapter name="agls_type" factory=".agls.agls_type" />
+
+  <!-- Override Dublin Core viewlet to make it AGLS complaint -->
+  <browser:viewlet
+      name="plone.htmlhead.dublincore"
+      manager="plone.app.layout.viewlets.interfaces.IHtmlHead"
+      class=".viewlets.AGLSViewlet"
+      layer=".interfaces.IPackageLayer"
+      permission="zope2.View"
+      />
+
+  <browser:resource
+      name="agls_icon.png"
+      file="resources/img/agls_icon.png"
+      />
+
+</configure>
