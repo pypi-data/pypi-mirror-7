@@ -1,0 +1,39 @@
+#!python
+"executable python script for user story four from kata.txt"
+
+from __future__ import print_function
+
+from toolz import pipe
+
+from parse import generators
+from parse.options import in_path_and_out_path
+
+def parse(input_path, output_path):
+    "parse input into output"
+    results = _results_from_path(input_path)
+    _output_to_file_or_stdout(output_path, results)
+
+def _results_from_path(path):
+    "parse results as described by kata.txt and settings.py"
+    return pipe(path, 
+                generators.entries_from_path, 
+                generators.figures_from_entries,
+                generators.superpositions_from_figures,
+                generators.accounts_from_superpositions,
+                generators.results_from_accounts)
+
+def _output_to_file_or_stdout(path, results):
+    "print results to path or (default of) StdOut"
+    if path is None:
+        map(print, results)
+    else:
+        _output_to_file(path, results)
+
+def _output_to_file(path, results):
+    "print results to file at path"
+    with open(path, 'w') as out_file:
+        for result in results:
+            print(result, file=out_file)
+
+if __name__ == '__main__':
+    parse(*in_path_and_out_path())
