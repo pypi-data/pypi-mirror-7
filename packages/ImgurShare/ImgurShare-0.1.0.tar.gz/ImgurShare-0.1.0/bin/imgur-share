@@ -1,0 +1,44 @@
+#!/usr/bin/env python
+
+from __future__ import print_function
+from os.path import basename, realpath
+from requests.exceptions import HTTPError
+import argparse
+import os
+import sys
+
+import pyimgur
+
+
+CLIENT_ID = '1e680eeb10744b3'
+TITLE_DESC = 'Uploaded with imgur-share'
+
+
+if __name__ == '__main__':
+    im = pyimgur.Imgur(CLIENT_ID)
+    parser = argparse.ArgumentParser(description='Upload images anonymously '
+                                     'to Imgur')
+
+    parser.add_argument('file',
+                        metavar='FILE',
+                        nargs='+',
+                        type=argparse.FileType('rb'),
+                        help='File(s) to upload')
+
+    args = parser.parse_args()
+    files = args.file
+    failed = False
+
+    for f in files:
+        try:
+            image = im.upload_image(f.name,
+                                title=TITLE_DESC,
+                                description=TITLE_DESC)
+            print('%s -> %s' % (f.name, image.link))
+        except HTTPError:
+            print('Failed to upload %s' % (realpath(f.name)), file=sys.stderr)
+            failed = True
+        f.close()
+
+    if failed:
+        sys.exit(1)
