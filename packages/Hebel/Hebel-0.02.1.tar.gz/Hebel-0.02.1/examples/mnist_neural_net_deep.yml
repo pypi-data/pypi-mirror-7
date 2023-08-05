@@ -1,0 +1,75 @@
+run_conf:
+  iterations: 3000
+optimizer: !obj:hebel.optimizers.SGD {
+  model: !obj:hebel.models.NeuralNet {
+    layers: [
+      !obj:hebel.layers.InputDropout {
+        n_in: 784,
+        dropout_probability: .2,
+      },
+      !obj:hebel.layers.HiddenLayer {
+        n_in: 784,
+        n_units: 2000,
+        activation_function: relu,
+        dropout: yes,
+        l2_penalty_weight: .0
+      },
+      !obj:hebel.layers.HiddenLayer {
+        n_in: 2000,
+        n_units: 2000,
+        activation_function: relu,
+        dropout: yes,
+        l2_penalty_weight: .0
+      },
+      !obj:hebel.layers.HiddenLayer {
+        n_in: 2000,
+        n_units: 2000,
+        activation_function: relu,
+        dropout: yes,
+        l2_penalty_weight: .0
+      },
+      !obj:hebel.layers.HiddenLayer {
+        n_in: 2000,
+        n_units: 500,
+        activation_function: relu,
+        dropout: yes,
+        l2_penalty_weight: .0
+      },
+      !obj:hebel.layers.HiddenLayer {
+        n_in: 500,
+        n_units: 500,
+        activation_function: relu,
+        dropout: yes,
+        l2_penalty_weight: .0
+      }    
+    ],
+    top_layer: !obj:hebel.layers.SoftmaxLayer {
+      n_in: 500,
+      n_out: 10     
+    }
+  },
+  parameter_updater: !import hebel.parameter_updaters.NesterovMomentumUpdate,
+  train_data: !obj:hebel.data_providers.MNISTDataProvider {
+    batch_size: 100,
+    array: train
+  },
+  validation_data: !obj:hebel.data_providers.MNISTDataProvider {
+    array: val
+  },
+  learning_rate_schedule: !obj:hebel.schedulers.exponential_scheduler {
+    init_value: 2., decay: .995
+  },
+  momentum_schedule: !obj:hebel.schedulers.linear_scheduler_up {
+    init_value: .1, target_value: .99, duration: 200
+  },
+  progress_monitor:
+    !obj:hebel.monitors.ProgressMonitor {
+      experiment_name: mnist_deep,
+      save_model_path: examples/mnist,
+      output_to_log: yes
+    }
+}
+test_dataset:
+  test_data: !obj:hebel.data_providers.MNISTDataProvider {
+    array: test
+}
