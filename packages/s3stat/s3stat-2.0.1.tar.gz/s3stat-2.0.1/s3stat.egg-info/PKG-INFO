@@ -1,0 +1,131 @@
+Metadata-Version: 1.0
+Name: s3stat
+Version: 2.0.1
+Summary: An extensible Amazon S3 and Cloudfront log parser.
+Home-page: https://github.com/nagyv/s3stat
+Author: Viktor Nagy
+Author-email: v@pulilab.com
+License: UNKNOWN
+Description: 
+        S3 Stat
+        =======
+        
+        This python module uses the really nice `goaccess <http://goaccess.prosoftcorp.com/>`_ utility
+        to provide you with an amazing Amazon log file analyser tool that is relatively easy to install, and is extremely
+        easy to extend.
+        
+        Installation
+        -------------
+        
+        ::
+            
+            pip install s3stat
+        
+        This installs `s3stat.py` in your PYTHONPATH in case you would like to run it from the command line.
+        
+        Quickstart
+        ------------
+        
+        Install goaccess
+        .................. 
+        
+        You should install `goaccess <http://goaccess.prosoftcorp.com/>`_
+        
+        .. note::
+            Cloudfront log file processing requires goaccess 0.7.1+
+        
+        Generating an AWS user
+        ........................
+        
+        First you should create a user that has approriate rights to read your log files, and you should have its AWS access keys ready.
+        
+        #. Log in to the `aws console <https://console.aws.amazon.com/iam/home?#users>`_
+        #. Create a new user and select the option to generate an access key for the user 
+        #. Save the access key and secure keys, as these will be needed soon 
+        #. Open the *Permissions* tab for the user, and attach a new user policy. Select custom policy, and copy the following::
+        
+                {
+                  "Statement": [
+                    {
+                      "Sid": "Stmt1334764540928",
+                      "Action": [
+                        "s3:GetBucketAcl",
+                        "s3:GetBucketLogging",
+                        "s3:GetObject",
+                        "s3:ListAllMyBuckets",
+                        "s3:ListBucket",
+                        "s3:PutBucketAcl",
+                        "s3:PutBucketLogging",
+                        "s3:PutObject",
+                        "s3:PutObjectAcl"
+                      ],
+                      "Effect": "Allow",
+                      "Resource": [
+                        "arn:aws:s3:::*"
+                      ]
+                    },
+                    {
+                      "Sid": "Stmt1334764631669",
+                      "Action": [
+                        "cloudfront:GetDistribution",
+                        "cloudfront:GetDistributionConfig",
+                        "cloudfront:GetStreamingDistribution",
+                        "cloudfront:GetStreamingDistributionConfig",
+                        "cloudfront:ListDistributions",
+                        "cloudfront:ListStreamingDistributions",
+                        "cloudfront:UpdateDistribution",
+                        "cloudfront:UpdateStreamingDistribution"
+                      ],
+                      "Effect": "Allow",
+                      "Resource": [
+                        "*"
+                      ]
+                    }
+                  ]
+                }
+        
+        Set up logging in your buckets 
+        ............................... 
+        
+        First you should ask Amazon to generate logs for your buckets and cloudfront distributions. 
+        
+        Run this script
+        ................ 
+        
+        ::
+        
+            s3stat.py <aws key> <aws secret> <bucket> <log_path>
+        
+        This will download all the log files for today, and start a goaccess instance in your console. 
+        
+        For further options you might run::
+        
+            s3stat.py -h
+        
+        
+        Extending
+        ----------
+        
+        Actually s3stat was designed to be easy to add to your pythonic workflow, as a result it defines 
+        a single class that you can subclass to process the results in json format.::
+        
+            import s3stat
+        
+            class MyS3Stat(s3stat.S3Stat):
+        
+                def process(self, json):
+                    print json
+        
+            mytask = MyS3Stat(bukcet, log_path, for_date, (aws_key, aws_secret))
+            mytask.run()
+        
+        Where the `aws_*` parameters are optional, if missing then they are taken from the environment variables as provided by boto.
+        
+        ToDo
+        -----
+        
+        * provide a command that adds logging to specified buckets and cloudfront distributions
+        
+        
+Keywords: s3stat amazon statistics goaccess
+Platform: UNKNOWN
