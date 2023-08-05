@@ -1,0 +1,26 @@
+[uwsgi]
+master = true
+processes = 8
+http-socket=127.0.0.1:0
+plugins=python
+harikiri=20
+max-requests=1000
+vacuum=True
+disable-logging = True
+
+uid = backstage
+gid = backstage
+
+#Virtual Environment, two ways of saying the same thing.
+home = {VENUE_ROOT}/venv # Path to virtual environment,
+virtualenv = {VENUE_ROOT}/venv
+
+pythonpath = {VENUE_ROOT} # Path to project
+
+chdir = {VENUE_ROOT}/acts
+pythonpath = {VENUE_ROOT}/acts
+module = {ACT_NAME}.wsgi:application
+
+pidfile = /tmp/uwsgi-backstage-{VENUE_NAME}-{ACT_NAME}.pid
+socket  = /tmp/uwsgi-backstage-{VENUE_NAME}-{ACT_NAME}.sock
+daemonize=/var/log/uwsgi/backstage-{VENUE_NAME}-{ACT_NAME}.log
