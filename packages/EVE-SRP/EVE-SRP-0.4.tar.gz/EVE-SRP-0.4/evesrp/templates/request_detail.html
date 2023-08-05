@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% import "macros.html" as macros %}
+
+{% block content %}
+<div class="row">
+  <div class="col-sm-offset-1 col-sm-10 col-md-offset-0 col-md-6 col-lg-offset-1 col-lg-5">
+    {% block left_col %}
+    {% block info %}
+    <dl class="dl-horizontal">
+      <dt>Lossmail</dt>
+      <dd><a href="{{ srp_request.killmail_url }}" target="_blank">{{ srp_request.id }}</a></dd>
+      <dt>Time of Loss</dt>
+      <dd>{{ srp_request.kill_timestamp.strftime('%d %b %Y %H:%M') }}</dd>
+      <dt>Division</dt>
+      <dd>
+        {{ srp_request.division.name }}
+        <form method="get" action="{{ url_for('requests.request_change_division', request_id=srp_request.id) }}">
+          <button class="btn btn-default btn-xs" type="submit">Change Division</button>
+        </form>
+      </dd>
+      <dt>Details</dt>
+      <dd>
+        <div class="panel panel-default">
+          <p class="panel-body">{{ srp_request.details }}</p>
+        </div>
+        {% if not srp_request.finalized and srp_request.submitter == current_user %}
+        <form method="get" action="{{ url_for('requests.request_detail_update', request_id=srp_request.id) }}">
+          <button class="btn btn-default btn-sm" type="submit">Update Details</button>
+        </form>
+        {% endif %}
+      </dd>
+      <dt>Pilot</dt>
+      <dd>
+        {% if srp_request.division.pilot_transformer %}
+        <a href="{{ srp_request.division.pilot_transformer(srp_request.pilot) }}">{{ srp_request.pilot.name }}</a>
+        {% else %}
+        {{ srp_request.pilot.name }}
+        {% endif %}
+        &bull; <a href="{{ url_for('requests.user_notes', user_id=srp_request.submitter.id) }}">User Notes</a>
+      </dd>
+      <dt>Corporation</dt>
+      <dd>{{ srp_request.corporation }}</dd>
+      <dt>Alliance</dt>
+      <dd>{{ srp_request.alliance|default(' ') }}
+      <dt>Location</dt>
+      <dd>{{ srp_request.region }} / {{ srp_request.constellation }} / {{ srp_request.system }}</dd>
+      <dt>Ship</dt>
+      {% if srp_request.division.ship_transformer %}
+      <dd><a href="{{ srp_request.division.ship_transformer(ship_name=srp_request.ship_type) }}">{{ srp_request.ship_type }}</a></dd>
+      {% else %}
+      <dd>{{ srp_request.ship_type }}</dd>
+      {% endif %}
+      <dt>Status</dt>
+      <dd><span class="label label-{{ macros.status_color(srp_request.status) }}">{{ srp_request.status|capitalize }}</span></dd>
+      <dt>Payout</dt>
+      <dd id="payout">
+        <span data-toggle="tooltip" data-placement="bottom" title="Base Payout: {{ srp_request.base_payout * 1000000 }}">
+          {{ srp_request.payout }}
+        </span>
+      </dd>
+    </dl>
+    {% endblock info %}
+    {% block action_form %}
+    <form class="form" method='post'>
+      {{ macros.render_input(action_form.id_) }}
+      {{ macros.render_input(action_form.type_) }}
+      {{ macros.render_input(action_form.csrf_token) }}
+      <div class="form-group input-group">
+        {{ action_form.note(class="form-control") }}
+        <div class="input-group-btn">
+          <button type="submit" class="btn btn-default">Comment</button>
+          {% if current_user.has_permission(('review', 'pay'), srp_request.division) %}
+          <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+            <span class="caret"></span>
+            <span class="sr-only">Toggle Dropdown</span>
+          </button>
+          <ul class="dropdown-menu" id="request-action-type" role="menu">
+            {% if srp_request.status == 'evaluating' %}
+            {{ '<li><a href="#" id="approved">Approve</a></li>'|safe if current_user.has_permission('review', srp_request.division) }}
+            {{ '<li><a href="#" id="incomplete">Incomplete</a></li>'|safe if current_user.has_permission('review', srp_request.division) }}
+            {{ '<li><a href="#" id="rejected">Reject</a></li>'|safe if current_user.has_permission('review', srp_request.division) }}
+            {% elif srp_request.status == 'paid' %}
+            {{ '<li><a href="#" id="evaluating">Evaluating</a></li>'|safe if current_user.has_permission('pay', srp_request.division) }}
+            {% elif srp_request.status == 'approved' %}
+            {{ '<li><a href="#" id="evaluating">Evaluating</a></li>'|safe if current_user.has_permission('review', srp_request.division) }}
+            {{ '<li><a href="#" id="paid">Paid</a></li>'|safe if current_user.has_permission('pay', srp_request.division) }}
+            {% elif srp_request.status == 'incomplete' %}
+            {{ '<li><a href="#" id="evaluating">Evaluating</a></li>'|safe if current_user.has_permission(('review', 'submit'), srp_request.division) }}
+            {{ '<li><a href="#" id="rejected">Reject</a></li>'|safe if current_user.has_permission('review', srp_request.division) }}
+            {% elif srp_request.status == 'rejected' %}
+            {{ '<li><a href="#" id="evaluating">Evaluating</a></li>'|safe if current_user.has_permission('review', srp_request.division) }}
+            {% endif %}
+          {% endif %}
+          </ul>
+        </div>
+      </div>
+    </form>
+    {% endblock action_form %}
+    {% block action_list %}
+    <div class="list-group">
+      {% for action in srp_request.actions %}
+      {% with %}
+        {% set item_class = 'text-' ~ macros.status_color(action.type_) if macros.status_color(action.type_) != '' %}
+        <div class="list-group-item">
+          <h4 class="list-group-item-heading{{ ' ' ~ item_class if item_class is defined }}">{{ action.type_|capitalize if action.type_ != 'comment' }}</h4>
+          <blockquote class="list-group-item-text">
+            <p>{{ action.note }}</p>
+            <footer>{{ action.user.name }} ({{ action.timestamp.strftime('%d %b %Y @ %H:%M:%S') }})</footer>
+          </blockquote>
+        </div>
+      {% endwith %}
+      {% endfor %}
+    </div>
+    {% endblock action_list %}
+    {% endblock left_col %}
+  </div>
+  <div class="col-sm-offset-1 col-sm-10 col-md-offset-0 col-md-6 col-lg-5">
+    <dl class="dl-horizontal">
+      {% block right_col %}
+      <dt>Modifiers</dt>
+      <dd>
+        {% block list_modifiers %}
+        <div class="list-group">
+          {% for modifier in srp_request.modifiers %}
+          <div class="list-group-item">
+            <div class="list-group-item-heading">
+              {% block modifier_header scoped %}
+              {{ '<del>'|safe if modifier.voided }}
+              {% with %}
+                {% if modifier.value < 0 %}
+                  {% set color_class = 'text-danger' %}
+                  {% set modifier_text = 'Deduction' %}
+                {% else %}
+                  {% set color_class = 'text-success' %}
+                  {% set modifier_text = 'Bonus' %}
+                {% endif %}
+                {% if modifier.voided %}
+                  {% set color_class = "text-muted" %}
+                {% endif %}
+                {% if modifier.type_ == 'percentage' %}
+              <h4 class="{{ color_class }}">{{ modifier.value }}% {{ modifier_text }}</h4>
+                {% elif modifier.type_ == 'absolute' %}
+              <h4 class="{{ color_class }}">{{ modifier.value }}M ISK {{ modifier_text }}</h4>
+                {% endif %}
+              {% endwith %}
+              {{ '</del>'|safe if modifier.voided }}
+              {% endblock modifier_header %}
+            </div>
+            <blockquote class="list-group-item-text blockquote-reverse">
+              <p class="list-group-item-text">
+              {% if modifier.voided %}
+                <del>{{ modifier.note }}</del>
+                <footer><del>{{ modifier.user.name }} {{ modifier.timestamp.strftime('%d %b %Y @ %H:%M') }}</del></footer>
+                <footer>Voided by {{ modifier.voided_user.name }} {{ modifier.voided_timestamp.strftime('%d %b %Y @ %H:%M') }}</footer>
+              {% else %}
+                {{ modifier.note }}
+                <footer>{{ modifier.user.name }} {{ modifier.timestamp.strftime('%d %b %Y @ %H:%M') }}</footer>
+              {% endif %}
+              </p>
+            </blockquote>
+          </div>
+          {% endfor %}
+        </div>
+        {% endblock list_modifiers %}
+      </dd>
+      {% endblock right_col %}
+    </dl>
+  </div>
+</div>
+{% endblock content %}
