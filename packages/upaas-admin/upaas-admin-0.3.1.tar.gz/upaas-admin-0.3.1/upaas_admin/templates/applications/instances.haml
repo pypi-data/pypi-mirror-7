@@ -1,0 +1,29 @@
+- extends 'applications/base.html'
+
+
+- load i18n
+
+
+- block app_content
+
+  #stats-container
+    %h1.text-center.text-muted
+      %i.fa.fa-refresh.fa-spin
+
+
+- block js_bottom
+  = block.super
+
+  :javascript
+    $(document).ready(function(){
+      var app = window.UPAAS.utils.where_or_get_first(window.UPAAS.applications.Applications, {id: '{{ app.safe_id }}'});
+      var collection = window.UPAAS.applications.create_application_instances_collection(app.get('resource_uri'));
+      var collection_poller = Backbone.Poller.get(collection);
+      collection_poller.set({delay: 3000}).start();
+    });
+
+
+- block haml_templates
+  = block.super
+  - include "applications/partials/instance.js.haml"
+  - include "applications/partials/stopped.js.haml"

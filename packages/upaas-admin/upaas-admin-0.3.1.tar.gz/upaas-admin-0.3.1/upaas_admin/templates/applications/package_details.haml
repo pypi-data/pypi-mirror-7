@@ -1,0 +1,176 @@
+- extends 'applications/base.html'
+
+
+- load i18n
+- load django_bootstrap_breadcrumbs
+- load crispy_forms_tags
+
+
+- block breadcrumbs
+  = block.super
+  - breadcrumb "Packages" "app_packages" pkg.application.safe_id
+  - breadcrumb pkg.safe_id "package_details" pkg.safe_id
+
+
+- block app_content
+
+  .tabbable
+
+    %ul.nav.nav-tabs
+      %li.active
+        %a{'href':'#details', 'data-toggle':'tab'}
+          - trans "Details"
+      - if pkg.revision_id
+        %li
+          %a{'href':'#revision', 'data-toggle':'tab'}
+            - trans "Revision"
+      %li
+        %a{'href':'#metadata', 'data-toggle':'tab'}
+          - trans "Metadata"
+      - if metadiff
+        %li
+          %a{'href':'#metadiff', 'data-toggle':'tab'}
+            - trans "Metadata diff"
+
+    .tab-content
+
+      #details.tab-pane.active
+        %dl.dl-horizontal
+
+          - if pkg.parent_package
+            %dt
+              {% trans "Parent package" %}:
+            %dd
+              %a{'href':'{% url "package_details" pkg.parent_package.safe_id %}'}
+                = pkg.parent_package.date_created
+
+          %dt
+            {% trans "Created" %}:
+          %dd
+            = pkg.date_created
+
+          %dt
+            {% trans "Size" %}:
+          %dd
+            = pkg.bytes|filesizeformat
+
+          %dt
+            {% trans "Builder" %}:
+          %dd
+            = pkg.builder
+
+          - if pkg.task
+            %dt
+              {% trans "Task" %}:
+            %dd
+              %a{'href':'{% url "app_task_details" pkg.task.safe_id %}'}
+                = pkg.task.safe_id
+
+          %br/
+
+          %dt
+            {% trans "Interpreter name" %}:
+          %dd
+            = pkg.interpreter_name
+
+          %dt
+            {% trans "Interpreter version" %}:
+          %dd
+            = pkg.interpreter_version
+
+          %br/
+
+          %dt
+            {% trans "Distribution name" %}:
+          %dd
+            = pkg.distro_name
+
+          %dt
+            {% trans "Distribution version" %}:
+          %dd
+            = pkg.distro_version
+
+          %dt
+            {% trans "Architecture" %}:
+          %dd
+            = pkg.distro_arch
+
+      - if pkg.revision_id
+        #revision.tab-pane
+          %dl.dl-horizontal
+
+            %dt
+              {% trans "Id" %}:
+            %dd
+              = pkg.revision_id
+
+            %dt
+              {% trans "Author" %}:
+            %dd
+              - if pkg.revision_author
+                = pkg.revision_author
+              - else
+                - trans "N/A"
+
+            %dt
+              {% trans "Date" %}:
+            %dd
+              - if pkg.revision_date
+                = pkg.revision_date
+              - else
+                - trans "N/A"
+
+            %dt
+              {% trans "Description" %}:
+            %dd
+              - if pkg.revision_description
+                = pkg.revision_description
+              - else
+                - trans "N/A"
+
+            - if pkg.revision_changelog
+              %dt
+                {% trans "Changelog" %}:
+              %dd
+                %pre.upaas-metadata-textarea<
+                  = pkg.revision_changelog
+
+      #metadata.tab-pane
+        %p
+          - if metadiff
+            {% trans "Package metadata differs from current application metadata" %}:
+          - else
+            {% trans "Package metadata is identical to current application metadata" %}:
+        %pre.upaas-metadata-textarea<
+          = pkg.metadata
+
+        .well
+          .row
+            - if metadiff
+              .col-md-6
+                .pull-left
+                  %a.btn.btn-primary{'href':'{% url "app_meta_from_pkg" pkg.safe_id %}'}
+                    %i.fa.fa-undo
+                    - trans "Set as app metadata"
+              .col-md-6
+                .pull-right
+                  %a.btn.btn-default{'href':'{% url "app_metadata_yml" app.safe_id %}'}
+                    %i.fa.fa-download
+                    - trans "Download metadata"
+            - else
+              .col-md-12
+                .pull-right
+                  %a.btn.btn-default{'href':'{% url "app_metadata_yml" app.safe_id %}'}
+                    %i.fa.fa-download
+                    - trans "Download metadata"
+
+      - if metadiff
+        #metadiff.tab-pane
+          %p
+            {% trans "Differences between package and current application metadata" %}:
+            %pre.upaas-metadata-textarea<
+              {% for line in metadiff %}{{ line }}{% endfor %}
+          %p
+          %a.btn.btn-primary{'href':'{% url "app_meta_from_pkg" pkg.safe_id %}'}
+            %i.fa.fa-undo
+            - trans "Set as app metadata"

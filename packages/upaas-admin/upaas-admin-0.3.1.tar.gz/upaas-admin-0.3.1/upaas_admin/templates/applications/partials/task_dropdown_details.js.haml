@@ -1,0 +1,45 @@
+:plain
+  <script type="text/haml-template" id="upaas-tasks-dropdown-details">
+  - var task_header_id = 'upaas-task-menu-header-' + task.id;
+  - var task_header_li_class = 'dropdown-header';
+  - var task_header_timestamp_id = 'upaas-task-menu-timestamp-' + task.id;
+  - var task_body_li_class = 'upaas-task-link';
+  - if (task.is_failed) {
+    - task_header_li_class += ' upaas-task-failed';
+    - task_body_li_class += ' upaas-task-failed';
+
+  %li{role: "presentation", class: task_header_li_class, id: task_header_id}
+    - if (task.is_finished) {
+      = gettext("Finished")
+      :
+      = moment(task.date_finished).fromNow()
+    - else {
+      = gettext("Started")
+      !
+      %span{id: task_header_timestamp_id}
+        = moment(task.date_created).fromNow()
+
+  - var task_body_id = 'upaas-task-menu-item-' + task.id;
+  %li{class: task_body_li_class, id: task_body_id}
+    %a{href: Django.url('app_task_details', task.id)}
+      %i{class: task.icon_class}
+      = application.name
+      ! -
+      = task.title
+      - var progressbar_class = 'progress upaas-task-progressbar';
+      - if (!task.is_finished) {
+        - progressbar_class += ' active progress-striped';
+      %div{class: progressbar_class}
+        - var bar_style = "width: " + task.progress + "%;";
+        - var bar_class = "progress-bar-default";
+        - if (task.is_successful) {
+          - bar_class = "progress-bar-success";
+        - else if (task.is_failed) {
+          - bar_class = "progress-bar-danger";
+        .progress-bar{class: bar_class, role: "progressbar",  "aria-valuenow": task.progress, "aria-valuemin": 0, "aria-valuemax": 100, style: bar_style}
+  </script>
+
+  <script type="text/haml-template" id="upaas-tasks-dropdown-divider">
+  - var task_divider_id = 'upaas-task-menu-divider-' + task.id;
+  %li{role: "presentation", class: "divider", id: task_divider_id}
+  </script>
