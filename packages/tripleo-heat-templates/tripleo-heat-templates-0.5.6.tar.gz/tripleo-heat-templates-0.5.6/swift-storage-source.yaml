@@ -1,0 +1,75 @@
+HeatTemplateFormatVersion: '2012-12-12'
+Description: 'Common Swift Storage Configuration'
+Parameters:
+  SwiftStorageImage:
+    Type: String
+    Default: overcloud-swift-storage
+  OvercloudSwiftStorageFlavor:
+    Default: baremetal
+    Description: Flavor for Swift storage nodes to request when deploying.
+    Type: String
+  NeutronNetworkType:
+    Type: String
+    Default: 'gre'
+  NeutronEnableTunnelling:
+    Type: String
+    Default: True
+Resources:
+  SwiftStorage0:
+    Type: OS::Nova::Server
+    Properties:
+      image:
+        {Ref: SwiftStorageImage}
+      flavor: {Ref: OvercloudSwiftStorageFlavor}
+      key_name: {Ref: KeyName}
+  SwiftStorage0Deploy:
+    Type: OS::Heat::StructuredDeployment
+    Properties:
+      server: {Ref: SwiftStorage0}
+      config: {Ref: SwiftConfig}
+      input_values:
+        neutron_local_ip: {"Fn::Select": [ 0, {"Fn::Select": [ "ctlplane", {"Fn::GetAtt": [SwiftStorage0, networks]} ]} ] }
+        swift_devices:
+          Fn::Join:
+          - ', '
+          - - Fn::Join:
+              - ''
+              - - 'r1z1-'
+                - {"Fn::Select": [ 0, {"Fn::Select": [ "ctlplane", {"Fn::GetAtt": [controller0, networks]} ]} ] }
+                - ':%PORT%/d1'
+            - Fn::Join:
+              - ', '
+              - Merge::Map:
+                  SwiftStorage0:
+                    Fn::Join:
+                    - ''
+                    - - 'r1z1-'
+                      - Fn::Select:
+                        - 0
+                        - Fn::Select:
+                          - 'ctlplane'
+                          - Fn::GetAtt:
+                            - SwiftStorage0
+                            - networks
+                      - ':%PORT%/d1'
+        swift_proxy_memcache:
+          Fn::Join:
+          - ', '
+          - - Fn::Join:
+              - ''
+              - - {"Fn::Select": [ 0, {"Fn::Select": [ "ctlplane", {"Fn::GetAtt": [controller0, networks]} ]} ] }
+                - ':11211'
+            - Fn::Join:
+              - ', '
+              - Merge::Map:
+                  SwiftStorage0:
+                    Fn::Join:
+                    - ''
+                    - - Fn::Select:
+                        - 0
+                        - Fn::Select:
+                          - 'ctlplane'
+                          - Fn::GetAtt:
+                            - SwiftStorage0
+                            - networks
+                      - ':11211'
