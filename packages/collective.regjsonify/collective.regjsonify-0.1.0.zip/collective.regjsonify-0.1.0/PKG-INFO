@@ -1,0 +1,59 @@
+Metadata-Version: 1.1
+Name: collective.regjsonify
+Version: 0.1.0
+Summary: Export Plone registry content to a JSON compatible Python structure
+Home-page: http://github.com/keul/collective.regjsonify
+Author: keul
+Author-email: luca@keul.it
+License: GPL
+Description: Introduction
+        ============
+        
+        Quickly export the content of a Plone registry configuration (defined by an interface) in a Python
+        structure compatible with JSON format:
+        
+        .. code-block:: python
+        
+            import json
+            from collective.regjsonify.interfaces import IJSONifier
+            from plone.registry.interfaces import IRegistry
+            from zope.component import queryUtility
+            
+            registry = queryUtility(IRegistry)
+            settings = registry.forInterface(IYouInterfaceSettings)
+            python_data = IJSONifier(settings).json()
+            json_data = json.dumps(python_data)
+        
+        Extending
+        =========
+        
+        The package came with a default set of know data types that cover common fields used in Plone registry.
+        However this set can be not complete if you are saving in the registry an unknown custom type.
+        
+        During export operation unknown data are ignored.
+        
+        If you want to export other types you must manually provide the proper ``IJSONFieldDumper`` adapter:
+        
+        .. code-block:: xml
+        
+            <adapter
+              factory="your.package.YouExportAdapter"
+              provides="collective.regjsonify.interfaces.IJSONFieldDumper"
+              for="your.package.interfaces.IYourFieldType"
+              />
+        
+        Changelog
+        =========
+        
+        0.1.0 (2014-05-02)
+        ------------------
+        
+        - Initial release
+        
+Keywords: plone registry json export
+Platform: UNKNOWN
+Classifier: Framework :: Plone
+Classifier: Framework :: Zope3
+Classifier: Intended Audience :: Developers
+Classifier: Programming Language :: Python
+Classifier: License :: OSI Approved :: GNU General Public License (GPL)
