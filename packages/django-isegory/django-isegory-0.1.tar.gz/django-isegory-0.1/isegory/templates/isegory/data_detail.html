@@ -1,0 +1,54 @@
+{% extends "isegory/navigation.html" %}
+
+{% block content %}
+<h2>{{ data.name }}</h2>
+<p>
+  <span><a href="{% url 'power_detail' data.triad.power.slug %}">{{ data.triad.power.name }}</a> &raquo; {{ data.triad.get_name_display }}</span>
+</p>
+<p>
+  <strong>Descripción del archivo</strong>:<br /> 
+  {{ data.description }}
+</p>
+<p>
+  <a href="{{ data.url_result_file }}">{{ data.url_result_file }}</a>
+</p>
+<p>
+  <span>Fecha de actualización del archivo: {{ data.updated|date:"d-m-Y H:m" }}</span>
+</p>
+{% if data.source_set.all %}
+<h3>Fuentes:</h3>
+<ol>
+  {% for item in data.source_set.all %}
+  <li>
+    {{ item.description }}<br />
+    <a href="{{ item.url_source }}">{{ item.url_source }}</a><br />
+    {% if item.howto_process %}
+    {{ item.howto_process }}
+    {% endif %}
+    <br />
+    {% if item.manual %}
+    Esta fuente se procesa manualmente.<br />
+    {% endif %}
+    <br />
+    {% if not item.manual %}
+    Este archivo se obtiene automatizadamente mediante el uso del
+    siguiente script:
+    <a href="{{ item.url_script }}">{{ item.url_script }}</a><br />
+    {% endif %}
+    <p>
+      <span>Fecha de actualización de esta fuente: {{ item.updated|date:"d-m-Y H:m" }}</span><br />
+    </p>
+  </li>
+{% endfor %}
+</ol>
+{% endif %}
+
+{% if data.url_ckan %}
+<h3>Opengov.es</h3>
+<p>
+  Esta información dispone de una entrada en Opengov.es (Directorio CKAN -Common Knowledge Archive Network-).<br />
+  <a href="{{ data.url_ckan }}">{{ data.url_ckan }}</a>
+</p>
+{% endif %}
+
+{% endblock %}
