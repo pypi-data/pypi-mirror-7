@@ -1,0 +1,121 @@
+Metadata-Version: 1.0
+Name: cell-acceptance
+Version: 0.2.3
+Summary: LibreOffice Calc Calculation Engine
+Home-page: https://bitbucket.org/MalucoMarinero/cellacceptance
+Author: James Rakich
+Author-email: james@fullandbydesign.com.au
+License: MIT License
+Description: # Cell Acceptance
+        *built on top of https://github.com/lfagundes/oosheet -- with adjustments for compatibility with Python 3*
+        
+        **The Problem:** You have complex computations that you want to generatively test, and you can't test for correctness.
+        
+        **The Solution:** Use an LibreOffice Calc Spreadsheet as your 'obviously correct' calculation engine, and test your computations in a format that even your clients will be familiar with.
+        
+        Sounds crazy, but think more on it. A Spreadsheet is one of the most powerful ways to visualise number crunching, and pretty much everyone knows how to use it. If you have a reliable spreadsheet that accepts input data, and outputs data, you have yourself a testable computation that the client can understand.
+        
+        ## Installation
+        
+        Get started by installing ``cell_acceptance``, on the Python version that Libre Office is compiled against. For recent versions of Ubuntu you'll need Python 3. Test which version will support it by loading up the Python REPL and trying to ``import uno``. If it succeeds, that's your correct version. You way need to install ``python3-uno`` or ``python2-uno`` depending on your distribution.
+        
+        ``
+        pip install cell_acceptance
+        ``
+        
+        ## Usage
+        
+        Start up Libreoffice with it's socket open:
+        ```
+        cell-acceptance-load-calc
+        ```
+        
+        This is just a helper for:
+        ```
+        libreoffice --calc --accept="socket,host=localhost,port=2002;urp;StarOffice.ServiceManager" --norestore
+        ```
+        
+        
+        ```
+        import cell_acceptance
+        
+        cell_acceptance.calc(
+            'absolute/filename.ods',
+            {'a2': [[5, 5], [2, 3]]},
+            ['a4']
+        )
+        ```
+        First argument: absolute path to the ods file to be used.
+        
+        Second Argument: A dictionary of input data. The keys represent start cells, and the values are 2d lists which specify the input data. In the above example, you would have the following inputs:
+        
+        ```
+        a2: 5           b2: 5
+        a3: 2           b3: 3
+        ```
+        
+        Third Argument: Cells to return the results from. Singular cells (``a3``) will return single values, whereas Cell Ranges (``a3:a8``) will return a 2d tuple.
+        
+        
+        ## Cell Acceptance As A Server
+        
+        Not communicating from Python? No Problem, run the server with the shell command:
+        
+        ``
+        cell-acceptance
+        ``
+        
+        Now you'll have a simple JSON service accessible at port 5000, send it a request such as:
+        
+        ```
+        / POST or GET
+        {
+          "url": "http://some.public.file/hello.ods",
+          "inputs": {
+            "a2": [[2, 5], [5, 5]]
+          },
+          "results": ["a5:a7"]
+        }
+        ```
+        
+        ## Credits
+        ### Cell Acceptance
+        Developed by James Rakich
+        
+        ### OOSheet
+        OOSheet was created by Luis Fagundes and sponsored by hacklab/.
+        
+        Fudge project also take credits for a good documentation structure, on which this one was based.
+        
+        Oscar Garcia suggested the user selection feature, implemented in v0.9.4.
+        
+        Thomas Lundqvist sent implementation of data_array property, implemented in v0.9.6.
+        
+        Luc Jean sent patch that allows OOSheet to run on Windows Vista with default Python interpreter, v0.9.7
+        
+        
+        
+        
+        ## Available under the MIT License (MIT)
+        
+        Copyright (c) 2014 Full and By Design
+        
+        Permission is hereby granted, free of charge, to any person obtaining a copy
+        of this software and associated documentation files (the "Software"), to deal
+        in the Software without restriction, including without limitation the rights
+        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+        copies of the Software, and to permit persons to whom the Software is
+        furnished to do so, subject to the following conditions:
+        
+        The above copyright notice and this permission notice shall be included in
+        all copies or substantial portions of the Software.
+        
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+        THE SOFTWARE.
+Keywords: testing
+Platform: UNKNOWN
