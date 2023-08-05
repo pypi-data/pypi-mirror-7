@@ -1,0 +1,113 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+rural
+~~~~~
+Simple command line utility for uploading local files to Amazon Web Services
+(AWS) Simple Storage Service (S3).
+"""
+import click
+from xerox import copy
+from boto.s3.connection import S3Connection
+from boto.s3.key import Key
+from boto.s3.bucket import Bucket
+
+class RuralSession(object):
+    aws_access_key_id = None
+    aws_secret_access_key = None
+    connection = None
+    bucket = None
+    bucket_name = None
+    url = None
+
+    def __init__(self, aws_access_key_id, aws_secret_access_key, bucket_name):
+        self.aws_access_key_id = aws_access_key_id
+        self.aws_secret_access_key = aws_secret_access_key
+        self.bucket_name = bucket_name
+        self._check_config()
+
+    def _check_config(self):
+        if self.aws_access_key_id and self.aws_secret_access_key and self.bucket_name:
+            self._connect()
+        else:
+            raise EnvironmentError("Rural object configuration incomplete")
+
+    def _connect(self):
+        self.connection = S3Connection(
+            aws_access_key_id=self.aws_access_key_id,
+            aws_secret_access_key=self.aws_secret_access_key
+        )
+        self.bucket = Bucket(self.connection, self.bucket_name)
+
+    def upload(self, filename, cb=None):
+        """
+        Upload a local file to a pre-specified S3 bucket.
+
+        :type fh: file handle
+        :param fh: file handle to upload to S3
+        """
+        self._check_config()
+        self.key = Key(self.bucket)
+        self.key.key = filename
+        self.key.set_contents_from_filename(filename, cb=cb)
+
+    def publicize(self):
+        self.key.make_public()
+        self.url = self.key.generate_url(86400)
+        self.url = ''.join(self.url.split('?')[:-1])
+
+
+def _cb_progressbar(uploaded_bytes, total_bytes):
+    """Callback function that outputs a progressbar to stderr based on what's
+    up"""
+    import sys
+    pbw = 80 # progress bar width 
+    progress_percent = float(uploaded_bytes) / float(total_bytes)
+    sys.stderr.write("\r[%s%s] %d%%" % (
+        '=' * int(progress_percent * pbw / 2),
+        ' ' * (pbw / 2- int(progress_percent * pbw / 2)),
+        int(progress_percent * 100)))
+    if progress_percent == 1:
+        sys.stderr.write("\n")
+
+
+@click.command()
+@click.option('--aws-access-key-id', envvar='AWS_ACCESS_KEY_ID',
+        help='AWS Access Key ID for the AWS API')
+@click.option('--aws-secret-access-key', envvar='AWS_SECRET_ACCESS_KEY',
+        help='AWS Secret Access Key for the AWS API')
+@click.option('--bucket-name', '-b', envvar='RURAL_BUCKET_NAME',
+        help='bucket name to which to upload/link files', required=True)
+@click.option('--verbose', '-v', count=True)
+@click.argument('filename', required=True)
+def upload_copy(aws_access_key_id, aws_secret_access_key, bucket_name, 
+        verbose, filename):
+    """
+    Uploads a local file to AWS S3 and copy a publicly accessible link to the
+    file to the clipboard.
+
+    Environment variables can be set to configure this script, namely:
+
+        AWS_ACCESS_KEY_ID
+        AWS_SECRET_ACCESS_KEY_ID
+        RURAL_BUCKET_NAME
+
+    """
+    cb = None
+    if verbose > 0:
+        cb = _cb_progressbar
+        if verbose > 1:
+            print("AWS Access Key ID:\t{}".format(aws_access_key_id))
+            print("AWS Secret Access Key:\t{}".format(aws_secret_access_key))
+            print("Bucket:\t{}".format(bucket_name))
+    rural_session = RuralSession(
+            aws_access_key_id=aws_access_key_id,
+            aws_secret_access_key=aws_secret_access_key,
+            bucket_name=bucket_name)
+    rural_session.upload(filename, cb=cb)
+    rural_session.publicize()
+    copy(rural_session.url)
+    print rural_session.url
+
+if __name__ == '__main__':
+    upload_copy()
