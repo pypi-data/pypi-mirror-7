@@ -1,0 +1,201 @@
+Metadata-Version: 1.1
+Name: django_broker
+Version: 0.0.6
+Summary: A simple Django app to facilitate currency conversions.
+Home-page: http://github.com/parsenz/django-broker
+Author: Seiyifa Tawari
+Author-email: seiyifa.tawari@gmail.com
+License: BSD License
+Description: =============
+        Django Broker
+        =============
+        
+        This extremely simple and straightforward Django application facilitates the retrieval of exchange rates using the `Open Exchange Rates API` available at http://openexchangerates.org.
+        
+        
+        Quick Start
+        ===========
+        
+        1. Install easily with pip::
+        
+        	    pip install django_broker
+        
+        2. Add Django Broker to your installed apps::
+        
+        	    INSTALLED_APPS = (
+        
+        		    ...
+        		    'exchange',
+        		    ...
+        
+        	    )
+        
+        2. Import the RateFetchClient object in your modules and use as shown below
+        
+        3. Enjoy
+        
+        
+        Synopsis
+        ========
+        
+        This application has one major object which retrieves the exchange rates by
+        making an API call to the Open Exchange API endpoints.
+        
+        
+        Required Settings
+        -----------------
+        
+        This application requires a set of standard settings configurations to get its job done.
+        
+        
+        settings.OPENEXCHANGERATES_PAID_CX
+        **********************************
+        This is a boolean value which lets the application know if the customer account is a paid account or not. It should be set to `True` or `False` accordingly in your project `settings.py` file.
+        
+        
+        settings.OPENEXCHANGERATES_APP_ID
+        *********************************
+        This is a string which stores the API_KEY for your application as provisioned by the Open Exchange Rates API.
+        
+        
+        
+        RateFetchClient
+        ---------------
+        
+        Main object for retrieving exchange rates. This object simply inherits from the python `object`. It is initialized by passing in your Open Exchange App_ID as the singular parameter to the initializer.
+        ::
+        
+        	fetcher = RateFetchClient('APP_ID')
+        
+        
+        Note that the `APP_ID` does not have to be passed into this constructor. If you have set up the APP_ID project wide, then you do not need it here.
+        That's it!
+        
+        You now have a new RateFetchClient object. This object has a couple methods which present the full functionality of the Open Exchange Rates API.
+        
+        
+        
+        query_rates(self, [base])
+        *************************
+        
+        This method takes an optional `base` parameter. When specified, this parameter instructs the Open Exchange Rates API on the currency to be used as the...well, base! This means that all currency rates are provided relative to the selected base. When a base currency is not specified, the `US Dollar` is assumed as the default.
+        ::
+        
+        	fetcher = RateFetchClient('APP_ID')
+        
+        	# Now we can make a query on this object
+        	rates = fetcher.query_rates()
+        
+        
+        Or:
+        ::
+        
+        	fetcher = RateFetchClient('APP_ID')
+        	rates = fetcher.query_rates(base='CAD')
+        
+        
+        This method returns a dictionary of exchange rates. The keys of this dictionary represent the currency codes and the values are the exchange rates relative to the base currency. Sample values will look like:
+        ::
+        
+        	{
+        		'DZD': Decimal('79.04391'),
+        		'NAD': Decimal('10.36218'),
+        		'GHS': Decimal('2.90095'),
+        		'EGP': Decimal('7.113293'),
+        		'BGN': Decimal('1.426792'),
+        		...
+        	}
+        
+        
+        restrict_rates(self, [base, symbols])
+        *************************************
+        
+        This method takes two optional parameters.
+        
+        The `base` parameter is the same as that described above.
+        The `symbols` parameter, when supplied, is a list of strings which represent the currencies we are interested in. This ensures that instead of receiving a massive dictionary of 160+ exchange rates, we only get back the currencies that we are interested in.
+        
+        It bears noting, however, that only users who have signed up for Enterprise/Unlimited accounts have access to some of the higher level functions, this one included. An example of the use of this function is shown below:
+        ::
+        
+        	fetcher = RateFetchClient('APP_ID')
+        	symbols = ['USD', 'GBP', 'CAD']
+        	rates = fetcher.restrict_rates(symbols=symbols)
+        
+        
+        The dictionary returned by this method is exactly identical in format to that shown above, only shorter
+        
+        
+        
+        query_currency(self)
+        ********************
+        
+        This method is somewhat similar to the `query_rates` method. It takes no parameters and returns a dictionary of all currencies provided by the Open Exchange Rates API.
+        ::
+        
+        	fetcher = RateFetchClient('APP_ID')
+        	rates = fetcher.query_currency()
+        
+        
+        The returned dictionay looks like:
+        ::
+        
+        	{
+        		u'DZD': u'Algerian Dinar',
+        		u'NAD': u'Namibian Dollar',
+        		u'GHS': u'Ghanaian Cedi',
+        		u'EGP': u'Egyptian Pound',
+        		u'BGN': u'Bulgarian Lev',
+        		u'PAB': u'Panamanian Balboa',
+        		u'BOB': u'Bolivian Boliviano',
+        		u'DKK': u'Danish Krone',
+        		...
+        	}
+        
+        
+        
+        exchange_currency(self, amount, _from, _to, [rate=False])
+        *********************************************************
+        
+        This method uses the currency rates obtained from the `query_rates` method in converting one to the other. As the method signature shows above, it accepts 3 mandatory parameters and one optional.
+        
+        The `amount` parameter is the amount to be changed in the `_from` currency.
+        The `_from` parameter is the currency from which the amount is being converted.
+        The `_to` parameter is the currency to which the amount is converted.
+        The optional `rate` parameter determines whether or not the conversion rate is returned alongside the converted amount.
+        
+        When the `rate` flag is set to True, a tuple is returned containing both the conversion rate and the converted amount. When it is set to False, only the converted amount is returned. This is set to False by default.
+        ::
+        
+        	amount = decimal.Decimal('20.00')
+        	_from = 'EUR'
+        	_to = 'CAD'
+        	rate = True
+        	conv_amount, conv_rate = fetcher.exchange_currency(amount, _from, _to, rate)
+        
+        And without the rate:
+        ::
+        
+        	...
+        	conv_amount = fetcher.exchange_currency(amount, _from, _to)
+        
+        
+        And that's all folks!
+        
+Keywords: django exchange rates currency
+Platform: UNKNOWN
+Classifier: Environment :: Web Environment
+Classifier: Framework :: Django
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.6
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.3
+Classifier: Topic :: Internet :: WWW/HTTP
+Classifier: Topic :: Internet :: WWW/HTTP :: Dynamic Content
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: Software Development :: Libraries :: Application Frameworks
