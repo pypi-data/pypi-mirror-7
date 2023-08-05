@@ -1,0 +1,67 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+import os.path as p
+from landmarkerioserver.api import app_for_mesh_adapter, app_for_image_adapter
+from landmarkerioserver.menpoadapter import (MeshMenpoAdapter,
+                                             CachingMeshMenpoAdapter,
+                                             ImageMenpoAdapter,
+                                             CachingImageMenpoAdapter)
+import webbrowser
+
+
+def main(mode, asset_dir, landmark_dir=None, template_dir=None, cache=False):
+    r"""
+
+    """
+    asset_dir = p.abspath(p.expanduser(asset_dir))
+
+    if landmark_dir is None:
+        landmark_dir = p.join(asset_dir, 'landmarks')
+    else:
+        landmark_dir = p.abspath(p.expanduser(landmark_dir))
+
+    gzip = False  # halves payload, increases server workload
+    dev = True
+
+    if mode == 'image':
+        if cache:
+            adapter = CachingImageMenpoAdapter(asset_dir, landmark_dir,
+                                               template_dir)
+        else:
+            adapter = ImageMenpoAdapter(asset_dir, landmark_dir, template_dir)
+        app = app_for_image_adapter(adapter, gzip=gzip, dev=dev)
+    elif mode == 'mesh':
+        if cache:
+            adapter = CachingMeshMenpoAdapter(asset_dir, landmark_dir,
+                                              template_dir)
+        else:
+            adapter = MeshMenpoAdapter(asset_dir, landmark_dir, template_dir)
+        app = app_for_mesh_adapter(adapter, gzip=gzip, dev=dev)
+    else:
+        raise ValueError("first argument must be 'image' or 'mesh'")
+    # webbrowser.open("http://www.landmarker.io")
+    # webbrowser.open("http://localhost:8080")
+    app.run()
+
+
+if __name__ == "__main__":
+    from argparse import ArgumentParser
+    parser = ArgumentParser(
+        description=r"""
+        Serve landmarks and assets for landmarker.io through Menpo.
+
+        """)
+    parser.add_argument("mode", help="image or mesh")
+    parser.add_argument("path", help="path that will be searched for assets")
+    parser.add_argument("-l", "--landmarks",
+                        help="The directory containing the landmarks. "
+                             "If None provided taken as path/landmarks")
+    parser.add_argument("-t", "--templates",
+                        help="The directory containing the template files. "
+                             "If None provided taken as path/templates")
+    parser.add_argument("--cache", action='store_true',
+                        help="Import all meshes at the start. Faster serving, "
+                             "higher server memory usage.")
+    ns = parser.parse_args()
+    main(ns.mode, ns.path, ns.landmarks, ns.templates, ns.cache)
