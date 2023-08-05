@@ -1,0 +1,99 @@
+Metadata-Version: 1.1
+Name: DeepDesk
+Version: 0.1.2
+Summary: Flexible data storage, with indexing, templates and validation
+Home-page: https://bitbucket.org/Domino_Marama/deepdesk
+Author: Domino Marama
+Author-email: domino@dominodesigns.info
+License: UNKNOWN
+Description: DeepDesk is a framework designed for a common database across multiple applications.
+        
+        It features the following submodules:
+        
+        data: json file based database system with indexing, full text search, record templates, validation, navigation aliases and more!
+        
+        >>> from deepdesk import *
+        >>> root=data.Root('./root')
+        >>> template=root.Record(
+        ...         "template/user",
+        ...         {
+        ...             'email':data.Index(data.Validate("", 'email'), "user/email"),
+        ...             'profile':data.Key('profile/')
+        ...         })
+        >>> template.hash = True
+        >>> template.version = 1
+        >>> template.save()
+        
+        By setting template.hash to True, we are telling deepdesk to
+        include the hash and salt fields in records created from this
+        template. These are automatically included if a password is
+        set, but by doing this now we can use it later to display a
+        password field for records that have a hash attribute.
+        
+        As we might alter templates and need a history of changes for
+        managing data updates, set version to 1 to enable versioning
+        on the record.
+        
+        We can now use this template to create a user. A trailing back slash
+        ("/") on the key tells deepdesk that there is a template for this record
+        and it will generate a uuid for the rest of the location.
+        
+        >>> user=root.Record("user/", {'email':"domino@@example.com"})
+        >>> user['email'].isvalid
+        False
+        >>> user['email'] = "domino.marama@example.com"
+        >>> user['email'].isvalid
+        True
+        >>> user.password = "example.password"
+        >>> user.save()
+        
+        Now we haved saved the user, we can find it from the "user/email" index.
+        
+        >>> indexfile = root.IndexFile("user/email")
+        >>> indexfile.lookup("domino.marama@example.com")
+        'user/ae4df406/f166/4a75/be34/c0742a029f24'
+        >>> test = root.Record('user/ae4df406/f166/4a75/be34/c0742a029f24')
+        >>> test.password == "another.password"
+        False
+        >>> test.password == "example.password"
+        True
+        >>> test.password
+        <password._HashedPassword object at 0x7fa70467cb10>
+        >>> test.base
+        'template/user.0001'
+        >>> str(test)
+        "{'email': Index(Validate('domino.marama@example.com', 'email'), 'user/email'), 'profile': Key('profile/')}"
+        
+        As well as Index, there are Alias, Collect, Group, Search and Include
+        field wrappers which you can use to help navigate the database.
+        
+        >>> root.init()
+        
+        This imports schema.org to the database, check the code for the
+        field wrappers used :-)
+        
+        >>> root.search("about")
+        {'schema.org/AboutPage', 'schema.org/about'}
+        >>> root.browse("menu/schema.org")
+        ['Data Type', 'Thing', 'Data Type.json', 'Thing.json']
+        >>> root.browse("menu/schema.org/Data Type")
+        ['Time.json', 'Text.json', 'Date.json', 'Number.json', 'Number', 'Date Time.json', 'Boolean.json', 'Text']
+        >>> t = root.Record("menu/schema.org/Data Type/Time.json")
+        >>> t.key
+        Key('schema.org/Time')
+        >>> t.fields.keys()
+        dict_keys(['supertypes', 'ancestors', 'specific_properties', 'id', 'url', 'subtypes', 'properties', 'comment', 'comment_plain', 'label'])
+        >>> t['url']
+        'http://schema.org/Time'
+        
+Keywords: deepdesk json index validate storage database
+Platform: UNKNOWN
+Classifier: Development Status :: 2 - Pre-Alpha
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Programming Language :: Python :: 3.3
+Classifier: Topic :: Database :: Database Engines/Servers
+Classifier: Topic :: Text Processing
+Classifier: Topic :: Text Processing :: Indexing
