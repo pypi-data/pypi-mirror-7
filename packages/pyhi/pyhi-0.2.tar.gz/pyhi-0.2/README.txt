@@ -1,0 +1,98 @@
+Readme for PyHI module
+======================
+
+0. Introduction
+===============
+
+This is a Python client for HistoricalInvestor.com server, a financial training tool and trading strategy tester application.
+
+
+1. Using PyHI client
+====================
+
+a. Log in to HI account using a supported browser (manually) and presuming you have some financial instruments bought, click:
+
+Autosys | REST API
+
+This window contains credentials for your HI client:
+
+
+REST ID:
+REST Password:
+
+Copy those credentials to your trading automaton configuration.
+
+
+The window also lists the symbols of available financial instruments you can trade using the client API.
+
+
+
+b. In your program, import the HiData class from "pyhi" module:
+
+from pyhi import HiData, maybe_pretty
+
+
+
+c. Create main instance of the HiData class that will be a HI client, for instance
+
+hd = HiData(restid, restpasswd, 'AUDJPY', resolution='D1', initialTime=1245803300000, baseurl='http://historicalinvestor.com')
+
+The client attempts to open the session to the HI server automatically on creation. It remembers specified parameters like session token, restId and restPassword.
+
+
+You can call object methods to operate on the virtual market session: getting data, placing orders and closing session.
+
+
+Example of getting data:
+
+print '\n\nDATA acquired:', maybe_pretty(hd.get_data(1245803500000, 5))
+
+
+Placing order for 1 lot of AUDJPY:
+
+print '\n\nOrder:', maybe_pretty(hd.order(1245803500000, 1))
+
+
+
+d. Transactions
+
+To buy, use positive values (long position) in "volume" parameter.
+
+To sell, use negative values (long position) in "volume" parameter.
+
+
+
+e. close the session with .finish
+
+or else the transactions will not be visible
+
+
+
+f. open executed session in web UI:
+
+- click Autosys | automaton name (e.g. "MyAutomaton" in "test.py" example) | date and time of the session.
+
+
+g. click Results button to view the trade results.
+
+
+Button Trades turns on buy/sell transaction labels on the main chart.
+
+
+
+4. Example
+==========
+
+
+A complete client use example is available in a file "example.py" located in "doc " subdirectory.
+
+
+
+5. Important issues
+===================
+
+Remember to close the session with "finish" method of HiData instance - otherwise the session with transactions done will not be shown in web UI!
+
+
+
+
