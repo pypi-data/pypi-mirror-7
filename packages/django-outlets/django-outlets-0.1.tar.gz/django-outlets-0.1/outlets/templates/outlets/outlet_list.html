@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block main %}
+    <div class="row">
+        <div class="col-md-3">
+            <ul class="list-unstyled" id="outletCountryList">
+                {% for country in all_countries %}
+                    <li><a href="{% url "outlets_list" slug=country.slug %}">{{ country.name }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="col-md-9">
+            <div class="row">
+                <div class="col-md-12">
+                    <div id="googleMapWrapper">
+                        {# This data-id "outletsGoogleMap" defines the div, that holds the actual map. The other id attribute is just for styling and reference. #}
+                        <div id="outletsGoogleMap" data-id="outletsGoogleMap"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <h2>{{ country.name }}</h2>
+                    <div class="row" id="outletsList">
+                        {% for outlet in object_list %}
+                            {# NOTE! data-class is required for the map to work. Keep it on the element above the lat/lon inputs to have markers visible on the map. #}
+                            <div class="col-md-3 outletDetails" data-class="outletDetails">
+                                <h3>{{ outlet.name }}</h3>
+                                <p>{{ outlet.street}}</p>
+                                <p>{{ outlet.city }}{{ outlet.zip }}</p>
+                                {% if outlet.phone %}
+                                    <p>{% trans "Tel" %}.: {{ outlet.phone}}</p>
+                                {% endif %}
+                                <input type="hidden" name="lat" value={{ outlet.lat }}>
+                                <input type="hidden" name="lon" value={{ outlet.lon }}>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

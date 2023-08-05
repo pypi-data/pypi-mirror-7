@@ -1,0 +1,86 @@
+Django Outlets
+==============
+
+A reusable Django app that allows you to manage and display your stores.
+
+If you e.g. have different outlets, where you sell your products and those
+scattered across the world's surface, you can provide easy access to the
+customer about where they can find them.
+
+The app includes simple management of countries and outlets and a google map
+integration. For integration into the great ``django-cms``, see `cmsplugin-django-outlets <https://github.com/bitmazk/cmsplugin-django-outlets>`_.
+
+Installation
+------------
+
+To get the latest stable release from PyPi
+
+.. code-block:: bash
+
+    pip install django-outlets
+
+    # optional if you want cms integration
+    pip install cmsplugin-django-outlets
+
+To get the latest commit from GitHub
+
+.. code-block:: bash
+
+    pip install -e git+git://github.com/bitmazk/django-outlets.git#egg=outlets
+
+Add ``outlets`` to your ``INSTALLED_APPS``
+
+.. code-block:: python
+
+    INSTALLED_APPS = (
+        ...,
+        'outlets',
+        # again just if you want cms integration add the following
+        'cmsplugin_outlets',
+    )
+
+Add the ``outlets`` URLs to your ``urls.py``
+
+.. code-block:: python
+
+    urlpatterns = patterns('',
+        ...
+        url(r'^outlets/', include('outlets.urls')),
+    )
+
+Don't forget to migrate your database
+
+.. code-block:: bash
+
+    ./manage.py migrate outlets
+    # and another optional line. You guessed it. Only if you require it to work
+    # in django-cms.
+    ./manage.py migrate cmsplugin_outlets
+
+
+Usage
+-----
+
+TODO 1: Describe usage or point to docs. Also describe available settings and
+templatetags. Describe CMS integration, which is entirely optional, you know?
+TODO 2: ???
+TODO 3: Profit!
+
+
+Contribute
+----------
+
+If you want to contribute to this project, please perform the following steps
+
+.. code-block:: bash
+
+    # Fork this repository
+    # Clone your fork
+    mkvirtualenv -p python2.7 django-outlets
+    make develop
+
+    git co -b feature_branch master
+    # Implement your feature and tests
+    git add . && git commit
+    git push -u origin feature_branch
+    # Send us a pull request for your feature branch
