@@ -1,0 +1,43 @@
+===========
+Pysickle
+===========
+
+**pysickle.py** will try to remove sequences that cause misalignments from a multiple sequence alignment (MSA). It reads a given MSA in multi-fasta format and removes sequences with the highest penalty scores, then builds the next MSA without those sequences. This process is repeated until a user-specified cuttoff is reached or less than three sequences are left to be aligned.
+
+Usage::
+
+    ######################################
+    # pysickle.py
+    ######################################
+    usage:
+        pysickle.py -f multifasta alignment
+    options:
+        -f, --fasta=FILE    multifasta alignment (eg "align.fas")
+        OR
+        -F, --fasta_dir=DIR directory with multifasta files (needs -s SUFFIX)
+        -s, --suffix=SUFFIX will try to work with files that end with SUFFIX
+                            (eg ".fas")
+
+        -a, --msa_tool=STR  supported: "mafft" [default:"mafft"]
+        -i, --max_iterations=NUM    force stop after NUM iterations
+        -n, --num_threads=NUM   max number of threads to be executed in 
+                                parallel [default: 1]
+
+        -h, --help      prints this
+
+
+Currently supported multiple sequence aligners:
+
+- mafft (Katoh, Standley 2013 (Molecular Biology and Evolution 30:772-780) MAFFT multiple sequence alignment software version 7: improvements in performance and usability. http://mafft.cbrc.jp/alignment/software/)
+
+
+Requirements
+============
+* matplotlib
+* numpy
+
+External Programs
+-----------------
+* mafft
+
+
