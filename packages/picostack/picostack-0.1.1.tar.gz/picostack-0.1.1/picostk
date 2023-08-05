@@ -1,0 +1,435 @@
+#!/usr/bin/env python
+'''***picostk*** is a command-line interface for **picostack** - a complete
+minimalistic KVM virtualization manager suitable for single linux-based host
+system.
+
+Copyright (c) 2014 Yauhen Yakimovich
+
+The MIT License (MIT). Read a copy of LICENSE distributed with this code.
+
+See README and project page at https://github.com/ewiger/picostack
+'''
+import os
+import sys
+import argparse
+import logging
+from functools import partial
+from daemoncxt.runner import DaemonRunner, DaemonRunnerStopFailureError
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "picostack.settings")
+sys.path.append(os.path.dirname(__file__))
+
+from picostack.deamon_app import get_picostack_app
+from picostack.vms.models import (VmImage, VmInstance, Flavour, VM_IS_RUNNING,
+                                  VM_IS_TERMINATING)
+from picostack import __version__ as PICOSTACK_VERSION
+from picostack.errors import PicoStackError
+from picostack.vm_builder import VmBuilder
+from picostack.settings import DATABASE_LOCATION
+from picostack.logging_util import (fork_me_socket_logging,
+                                    set_interactive_logging,
+                                    create_example_logging_config)
+from picostack.process_spawn import ProcessUtil
+
+
+USER_HOME_DIR = os.path.expanduser('~/')
+VM_MANAGER = 'KVM'
+APP_NAME = 'picostk'
+CONFIG_NAME = APP_NAME + '.conf'
+CONFIG_DIR = os.path.join(USER_HOME_DIR, '.picostack')
+DEBUG = True
+APP_DIR = os.path.dirname(os.path.abspath(__file__))
+logger = logging.getLogger('picostack')  # Match logging qualification name.
+is_interactive = False
+LINE_WIDTH = 80
+CONFIG_VARS = {
+    'config_name': CONFIG_NAME,
+    'manager_name': VM_MANAGER,
+    'default_statepath': CONFIG_DIR,
+}
+
+
+def format_text(text):
+    lines = text.split('\n')
+    lines = [line.lstrip() for line in lines]
+    if len(lines[0].strip()) == 0:
+        lines.pop(0)
+    return '\n'.join(lines)
+    #lines = textwrap.wrap(textwrap.dedent(text), width=LINE_WIDTH,
+    #                      break_on_hyphens=False, break_long_words=False)
+    #return '\n'.join(lines)
+
+
+class MissingCliArgs(PicoStackError):
+    '''Error of parsing command-line arguments.'''
+
+
+class PicoStackIOError(PicoStackError):
+    '''Similar to IOError but relates to PicoStack logic.'''
+
+
+class PicoStack(object):
+
+    def __init__(self, options):
+        self.options = options
+        self.logging_server_pid = None
+
+    def list_images(self):
+        if len(VmImage.objects.all()) == 0:
+            print 'There are no VM images found. Maybe you should add some?'
+            exit()
+        print 'Listing all VM images..'
+        for index, vm_image in enumerate(VmImage.objects.all()):
+            print '-' * LINE_WIDTH
+            print format_text('''
+                VM image #%(index)d
+
+                name: %(name)s
+                ''' % {
+                'index': index,
+                'name': vm_image.name,
+            })
+
+    def list_instances(self):
+        if len(VmInstance.objects.all()) == 0:
+            print 'There are no VM instances found.'
+            exit()
+        print 'Listing all VM instances..'
+        for index, vm_instance in enumerate(VmInstance.objects.all()):
+            print '-' * LINE_WIDTH
+            print format_text('''
+                VM instance #%(index)d
+
+                name: %(name)s
+                status: %(status)s
+                ''' % {
+                'index': index,
+                'name': vm_instance.name,
+                'status': vm_instance.status,
+            })
+
+    def shutdown_instances(self, vm_manager):
+        instances = VmInstance.objects.filter(current_state=VM_IS_RUNNING)
+        logger.info('Shutting down all running VM instances..')
+        if not instances.exists():
+            logger.info('Nothing to stop..')
+            return
+        for machine in instances:
+            logger.info('Terminating machine "%s"' % machine.name)
+            machine.change_state(VM_IS_TERMINATING)
+            vm_manager.stop_machine(machine)
+
+    def init_config(self):
+        '''
+        Initialize configuration in <CONFIG_DIR>/config file. Create
+        default settings and other expected folders and files.
+        '''
+        if os.path.exists(CONFIG_DIR):
+            raise PicoStackIOError('Abort. Config location already exists: '
+                                   '%s' % CONFIG_DIR)
+        os.mkdir(CONFIG_DIR)
+        config_path = os.path.join(CONFIG_DIR, CONFIG_NAME)
+        print 'Putting default configuration into %s' % config_path
+        # Get app with config defaults.
+        picostack_app = get_picostack_app(
+            app_name=APP_NAME,
+            config_vars=CONFIG_VARS,
+            config_dir=CONFIG_DIR,
+            is_interactive=True,
+            is_debug=DEBUG,
+            only_defaults=True,
+        )
+        # Write defaults.
+        with open(config_path, 'w+') as config_file:
+            picostack_app.config.write(config_file)
+        # Make missing folders. Can be later symlinked to a different location.
+        missing_folders = [
+            picostack_app.config.get('vm_manager', 'vm_image_path'),
+            picostack_app.config.get('vm_manager', 'vm_disk_path'),
+            picostack_app.config.get('app', 'log_path'),
+            picostack_app.config.get('app', 'pidfiles_path'),
+        ]
+        for missing_folder in missing_folders:
+            print 'Creating missing folder: %s' % missing_folder
+            os.mkdir(missing_folder)
+        create_example_logging_config(picostack_app.config.get(
+                                      'app', 'logging_config_path'))
+
+    def init_db(self):
+        '''Initialize django DB'''
+        if not os.getuid() == 0:
+            raise MissingCliArgs('Please run this command with effective uid 0'
+                                 ', e.g. `sudo picostk init db`')
+
+        def get_wwwuser_uid_gid():
+            import pwd
+            import grp
+            www_users = [
+                ('www-data', 'www-data'),
+                #('nobody', 'nogroup'),
+            ]
+            uid = None
+            gid = None
+            for username, groupname in www_users:
+                try:
+                    uid = pwd.getpwnam(username).pw_uid
+                    gid = grp.getgrnam(groupname).gr_gid
+                except KeyError:
+                    print 'Web user not found: %s, %s' % (username, groupname)
+                    continue
+            if not uid or not gid:
+                raise PicoStackError('Failed to discover the web server '
+                                     'uid,gid.')
+            return (uid, gid)
+
+        # Create a var folder for the django database if missing.
+        db_folder = os.path.dirname(DATABASE_LOCATION)
+        if not os.path.exists(db_folder):
+            os.makedirs(db_folder)
+            uid, gid = get_wwwuser_uid_gid()
+            os.chown(db_folder, uid, gid)
+            import stat
+            os.chmod(db_folder, stat.S_IRWXU + stat.S_IRWXG)
+            # Populate new empty DB with SQL, create an admin.
+            from django.core import management
+            # Allow asking user for input.
+            management.call_command('syncdb', interactive=True, verbosity='1')
+            # Finally, set www permissions and ownership.
+            os.chown(DATABASE_LOCATION, uid, gid)
+            os.chmod(DATABASE_LOCATION, stat.S_IRWXU + stat.S_IRWXG)
+        else:
+            print 'DB path already exists in folder: "%s". Remove it to ' \
+                'reinitialize DB from scratch.' % db_folder
+
+    def build_jeos(self):
+        vm_builder = VmBuilder()
+        vm_builder.build_jeos()
+
+    @staticmethod
+    def run_as_daemon(args, subparser):
+        # Has user defined an action.
+        if not args.action:
+            subparser.print_help()
+            return
+        # Get app that can do {start, stop, restart}.
+        picostack_app = get_picostack_app(
+            app_name=APP_NAME,
+            config_vars=CONFIG_VARS,
+            config_dir=CONFIG_DIR,
+            is_interactive=is_interactive,
+            is_debug=DEBUG,
+        )
+        picostack = PicoStack(picostack_app.config)
+        if not is_interactive and args.action == 'start':
+            # Django as well as python has no locking for logging.
+            # Fork logging server next to the daemon process to handle logging
+            # in parallel.
+            logging_config_filename = picostack_app.config.get(
+                'app', 'logging_config_path')
+            picostack.logging_server_pid = fork_me_socket_logging(
+                logging_config_filename)
+        if args.action == 'start' and is_interactive:
+            picostack_app.run()
+            return
+        if args.action == 'stop' or args.action == 'restart':
+            # Stop all VMs.
+            picostack.shutdown_instances(picostack_app.vm_manager)
+        # Note: picostack daemon app will find pid and kill the process or
+        # start a new one. We just need to pass the action.
+        app_argv = [sys.argv[0], args.action]
+        daemon_runner = DaemonRunner(picostack_app, app_argv)
+        # Trap to run overridden daemon termination.
+        daemon_runner.daemon_context.default_terminate = \
+            daemon_runner.daemon_context.terminate
+        daemon_runner.daemon_context.terminate = partial(
+            PicoStack.terminate_daemon,
+            daemon_context=daemon_runner.daemon_context,
+            picostack=picostack,
+        )
+        # Pass action to be performed.
+        try:
+            daemon_runner.do_action()
+        except DaemonRunnerStopFailureError as err:
+            print 'No picostack daemon is running. %s' % str(err)
+
+    @staticmethod
+    def terminate_daemon(signal_number, stack_frame, daemon_context,
+                         picostack):
+        # Close all db connections.
+        from django.db import connection
+        connection.close()
+        # Kill logging server.
+        ProcessUtil.kill_process_pid(picostack.logging_server_pid)
+        # Finally call original method.
+        daemon_context.default_terminate(signal_number, stack_frame)
+
+    @staticmethod
+    def process_image_cmds(args, subparser):
+        instance = PicoStack(args)
+        if args.list:
+            instance.list_images()
+        else:
+            subparser.print_help()
+
+    @staticmethod
+    def process_instance_cmds(args, subparser):
+        instance = PicoStack(args)
+        if args.list:
+            instance.list_instances()
+        elif args.build_from_image:
+            # vm name
+            if not args.vm_name:
+                raise MissingCliArgs('Missing vm_name in --vm-name.')
+            vm_name = args.vm_name
+            # image name
+            if not args.build_from_image:
+                raise MissingCliArgs('Missing image name in '
+                                     '--build-from-image.')
+            image_name = args.build_from_image
+            # flavour name
+            if not args.flavour:
+                raise MissingCliArgs('Missing flavour name in --flavour.')
+            flavour_name = args.flavour
+            # Do actual work. Exceptions are handled by calling functions.
+            sys.stdout.write('Trying to start building a new VM instance "%s"'
+                             ' from image "%s"..' % (vm_name, image_name))
+            VmInstance.build_vm(vm_name, image_name, flavour_name)
+            sys.stdout.write('OK, new VM instance is in cloning now.')
+
+        else:
+            subparser.print_help()
+
+    @staticmethod
+    def process_init_cmds(args, subparser):
+        instance = PicoStack(args)
+        if args.target == 'config':
+            instance.init_config()
+        elif args.target == 'jeos':
+            instance.build_jeos()
+        elif args.target == 'db':
+            instance.init_db()
+        else:
+            subparser.print_help()
+
+    def clean_log_files(self, config):
+        log_path = config.get('app', 'log_path')
+        for filename in os.listdir(log_path):
+            file_path = os.path.join(log_path, filename)
+            logger.info('Removing log: %s' % file_path)
+            os.unlink(file_path)
+
+    def clean_pid_files(self, config):
+        pidfiles_path = config.get('app', 'pidfiles_path')
+        for filename in os.listdir(pidfiles_path):
+            file_path = os.path.join(pidfiles_path, filename)
+            logger.info('Removing pid file: %s' % file_path)
+            os.unlink(file_path)
+
+    @staticmethod
+    def clean(args, subparser):
+        '''Try to clean all states, shutdown instances, remove logs, etc.'''
+        if args.target == 'all':
+            picostack_app = get_picostack_app(
+                app_name=APP_NAME,
+                config_vars=CONFIG_VARS,
+                config_dir=CONFIG_DIR,
+                is_interactive=is_interactive,
+                is_debug=DEBUG,
+            )
+
+            picostack = PicoStack(args)
+            picostack.shutdown_instances(picostack_app.vm_manager)
+            picostack.clean_log_files(picostack_app.config)
+            picostack.clean_pid_files(picostack_app.config)
+            # Also kill all VM processes on the host.
+            picostack_app.vm_manager.kill_all_machines()
+        else:
+            subparser.print_help()
+
+
+class ArgumentParser(argparse.ArgumentParser):
+
+    def error(self, message):
+        self.print_help(sys.stderr)
+        self.exit(2, '%s: error: %s\n' % (self.prog, message))
+
+
+if __name__ == '__main__':
+    parser = ArgumentParser(description='Command-line interface for picostack '
+                            + ' - a minimalistic KVM manager.')
+    parser.add_argument('-i', '--interactive', action='store_true',
+                        default=False)
+    parser.add_argument("-v", "--verbosity", action="count", default=1,
+                        help='Increase logging verbosity (-v WARN, -vv INFO, '
+                        '-vvv DEBUG)')
+    parser.add_argument('--version', action='version',
+                        version='%(prog)s ' + PICOSTACK_VERSION)
+
+    subparsers = parser.add_subparsers()
+
+    # initialization routines
+    init_parser = subparsers.add_parser('init')
+    init_parser.add_argument('target', choices=['config', 'jeos', 'db'])
+    init_parser.set_defaults(handler=partial(
+        PicoStack.process_init_cmds, subparser=init_parser))
+
+    # daemon
+    daemon_parser = subparsers.add_parser('daemon')
+    daemon_parser.add_argument('action', choices=['start', 'stop', 'restart'])
+    daemon_parser.set_defaults(handler=partial(
+        PicoStack.run_as_daemon, subparser=daemon_parser))
+
+    # images
+    images_parser = subparsers.add_parser('images')
+    images_parser.set_defaults(handler=partial(
+        PicoStack.process_image_cmds, subparser=images_parser))
+    images_parser.add_argument('--list', action='store_true', default=False,
+                               help='List images and their states')
+
+    # instances
+    instances_parser = subparsers.add_parser('instances')
+    instances_parser.set_defaults(handler=partial(
+        PicoStack.process_instance_cmds, subparser=instances_parser))
+
+    instances_parser.add_argument('--vm-name',
+                                  help='Unique name of VM instance.')
+
+    instances_parser.add_argument('--flavour',
+                                  help='Unique name of existing VM flavour.')
+
+    instances_parser.add_argument('--list', action='store_true', default=False,
+                                  help='List instances and their states.')
+    instances_parser.add_argument('--build-from-image',
+                                  help='Build a new VM from image.')
+    instances_parser.add_argument('--destroy',
+                                  help='Completely remove VM and its files.')
+    instances_parser.add_argument('--start', dest='start_vm',
+                                  help='Start VM instance.')
+    instances_parser.add_argument('--stop',
+                                  help='Stop VM instance.')
+
+    # state cleaning routines
+    clean_parser = subparsers.add_parser('clean')
+    clean_parser.add_argument('target', choices=['all'])
+    clean_parser.set_defaults(handler=partial(
+        PicoStack.clean, subparser=clean_parser))
+
+    # Parse arguments.
+    args = parser.parse_args()
+    # On error this will print help and cause exit with explanation message.
+    is_interactive = args.interactive
+
+    # Configure logging.
+    if is_interactive:
+        set_interactive_logging(args.verbosity)
+
+    try:
+        if args.handler:
+            args.handler(args)
+        else:
+            parser.print_help()
+    except PicoStackError as pico_error:
+        print 'Failed.'
+        if type(pico_error) is MissingCliArgs:
+            print 'Missing one of the required command-line arguments.'
+        print 'Error message: "%s"' % str(pico_error)
