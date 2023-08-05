@@ -1,0 +1,323 @@
+**Installing, Setting-up, and using DeCiDa**
+============================================
+
+Installing under Enthought Canopy
+---------------------------------
+
+* install in the Canopy Python User Virtual Environment
+
+    refer to: `Installing packages into Canopy <https://support.enthought.com/entries/23389761-Installing-packages-into-Canopy-User-Python-from-the-command-line/>`_, `Canopy python default <https://support.enthought.com/entries/23646538-Make-Canopy-s-Python-be-your-default-Python-i-e-on-the-PATH->`_
+
+* be sure that User python is in your path::
+
+    python
+    >>> import sys; sys.prefix
+
+  you should see a path like one of the following::
+
+    /Users/<user>/Library/Enthought/Canopy_32bit/User (MacOs)
+
+    /home/<user>/Enthought/Canopy_32bit/User (Linux)
+
+* unzip/untar the distribution::
+
+    tar xvfz DeCiDa.1.0.0-tar.gz
+
+* cd into the distribution directory::
+
+    cd DeCiDa-1.0.0
+
+* manually modify the wrapper scripts in the distribution bin directory (run_*), to point to
+  correct tool locations.
+  
+  The wrappers have the following references to other tools.  
+  Adjust these as needed, as required by your local environment.
+
++----------------+----------------------------+
+| wrapper:       | expected tool location:    |
++================+============================+
+| run_hspice     | /tools/hspice/bin/hspice   |
++----------------+----------------------------+
+| run_matlab     | /tools/matlab/bin/matlab   |
++----------------+----------------------------+
+| run_ngspice    | /opt/local/bin/ngspice     |
++----------------+----------------------------+
+| run_irun       | /tools/cds/bin/irun        |
++----------------+----------------------------+
+| run_ncsim      | /tools/cds/bin/ncsim       |
++----------------+----------------------------+
+| run_ncverilog  | /tools/cds/bin/ncverilog   |
++----------------+----------------------------+
+| run_spectre    | /tools/cds/bin/spectre     |
++----------------+----------------------------+
+| run_viva       | /tools/cds/bin/viva        |
++----------------+----------------------------+
+| run_wavescan   | /tools/cds/bin/wavescan    |
++----------------+----------------------------+
+
+* build and install the distribution::
+
+    python setup.py build
+    python setup.py install
+
+* test the distribution with one test::
+
+    python
+    >>> import decida.test.test_Plotterx
+
+  should display a plot and equation-set text-window
+
+* list all of the tests::
+
+     python
+     >>> import decida.test
+     >>> decida.test.test_list()
+
+  should print all of the tests
+
+* do all of the tests::
+
+     python
+     >>> import decida.test_all
+
+* the tests can also be run directly in the unzipped/tarred (pre-install) directory::
+
+     cd DeCiDa-1.0.0/decida/test
+     test_DataViewx_4.py
+
+  
+First-time setup
+----------------
+
+The setup description assumes the following environment.
+
+The tool wrappers are found in the python bin directory, after 
+installation (which or whence python to find the bin directory).
+They are also found uninstalled in the bin directory.
+
+etc/synthesis files
+-------------------
+
++-----------------------------------------------+---------------------------------------------+
++ file :                                        |                                             |
++===============================================+=============================================+
+| Makefile                                      | example Makefile for verilog simulations    |
++-----------------------------------------------+---------------------------------------------+
+| simvision_core.tcl                            | include file for SimVision plot setup       |
++-----------------------------------------------+---------------------------------------------+
+| make_body                                     | make include file for verilog simulations   |
++-----------------------------------------------+---------------------------------------------+
+| make.tsmc130                                  | make include file for tsmc130 technology    |
++-----------------------------------------------+---------------------------------------------+
+| make.generic                                  | make include file for generic technology    |
++-----------------------------------------------+---------------------------------------------+
+
+etc/skill files
+---------------
+
++-----------------+----------------------------------------------------+
+| skill script:   | description:                                       |
++=================+====================================================+
+| RVBmenu.il      | sets up application (schematic) menu               |
++-----------------+----------------------------------------------------+
+| RVBdcdlines.il  | (from menu) generates python decida Tckt script    |
++-----------------+----------------------------------------------------+
+| RVBvtblines.il  | (from menu) generates verilog test-bench directory |
++-----------------+----------------------------------------------------+
+| RVBcomp.il      | (from menu) generates list of schematic components |
++-----------------+----------------------------------------------------+
+| RVButil.il      | utilities used in other scripts                    |
++-----------------+----------------------------------------------------+
+| RVBdcd_help.txt | help file for generating python script             |
++-----------------+----------------------------------------------------+
+| RVBvtb_help.txt | help file for generating verilog testbench         |
++-----------------+----------------------------------------------------+
+
+These scripts also expect that the following files are available in the
+following locations.  Revise these as appropriate, prior to or after installation:
+
++-----------------------------------------------+---------------------------------------------+
++ file :                                        |                                             |
++===============================================+=============================================+
+| /tools/tsmc/tsmc130/models/spectre/models.scs | model library for Spectre simulations       |
++-----------------------------------------------+---------------------------------------------+
+| /tools/tsmc/tsmc130/stdcell/verilog/tsmc130g  | standard cell library for NCsim simulations |
++-----------------------------------------------+---------------------------------------------+
+| /tools/local/synthesis/make_body              | make include file for verilog simulations   |
++-----------------------------------------------+---------------------------------------------+
+| /tools/local/synthesis/make.tsmc130           | make include file for tsmc130 technology    |
++-----------------------------------------------+---------------------------------------------+
+| /tools/local/synthesis/make.generic           | make include file for generic technology    |
++-----------------------------------------------+---------------------------------------------+
+
++---------+------------+-----------+--------------------------------+------------------------------------+
+| project | technology | simulator | project_drive                  | scratch_drive                      |
++=========+============+===========+================================+====================================+
+| tsmc130 | tsmc130    | Spectre   | /home/projects/tsmc130/<user>  | /scratch/simulation/<user>/tsmc130 |
++---------+------------+-----------+--------------------------------+------------------------------------+
+| generic | tsmc130    | Spectre   | /home/projects/generic/<user>  | /scratch/simulation/<user>/generic |
++---------+------------+-----------+--------------------------------+------------------------------------+
+
+First-time path setup for csh or tcsh shell users
+-------------------------------------------------
+
+1. add the following to ~/.cshrc or ~/.tcshrc::
+
+       path = (/tools/local/bin $path)
+
+2. source ~/.cshrc or ~/.tcshrc::
+
+       source ~/.cshrc or source ~/.tcshrc
+
+3. re-generate the hashed command database::
+
+       rehash
+
+   the tools dataview, twin, calc, ... are now in the path
+
+First-time path setup for bash shell users
+------------------------------------------
+
+1. add the following to ~/.bashrc::
+   
+       export PATH=/tools/local/bin:$PATH
+
+2. source ~/.bashrc to get the path to change::
+
+       . ~/.bashrc
+
+   the tools dataview, twin, calc, ... are now in the path
+
+First-time setup for NGspice users
+----------------------------------
+
+First-time setup for cadence users
+----------------------------------
+
+1. set up the python resource file in your home directory::
+
+        cp dot/.pythonrc.py  ~/.
+
+2. add or modify your home (~/.cdsinit) file
+
+    if you don't have a ~/.cdsinit::
+
+        cp dot/.cdsinit ~/.
+
+    otherwise add the following lines at the bottom of the file::
+
+        setSkillPath( append( getSkillPath() list( "/tools/local/skill" )))
+        load("RVButil.il")
+        load("RVBmenu.il")
+        load("RVBdcdlines.il")
+        load("RVBvtblines.il")
+
+3. you might also want to copy over the ocean resource file if you are
+   using ocean::
+
+        cp dot/.oceanrc ~/.
+
+4. modify your project .cdsinit file
+
+   add the following lines at the bottom of the file
+   (modify to project specifics, accordingly)::
+
+        RVBproject="tsmc130"
+        RVBtechnology="tsmc130"
+        RVBsimulator="Spectre"
+        RVBscratch="/scratch/simulation/<user>/tsmc130"
+
+5. Start a cadence session. The .cdsinit files will be sourced.
+   If you're already in a cadence session, type this in the CIW::
+
+        load "~/.cdsinit"
+
+Generate a starter python script for doing spectre simulations
+--------------------------------------------------------------
+
+1. generate a starter python script:
+
+   * open a testbench schematic
+
+   * type y: --RVB-- menu button will appear at the top of the window
+
+   * select "Generate DeCiDa testpack" from the menu
+
+   * project, technology, and simulator are filled in based on the values
+     from First-time setup for cadence users
+
+   * click "OK": starter script is written to ~/. (HOME directory)
+
+2. netlist the testbench schematic:
+
+   * Schematic -> Launch -> ADE L
+
+   * ADE -> Simulation -> Netlist -> Create
+     
+3. make a project subdirectory for running the simulations::
+   
+       mkdir /projects/tsmc130/<user>/work/<circuit>
+
+4. move the python script to the subdirectory::
+
+       cd /projects/tsmc130/<user>/work/<circuit>
+       mv ~/<circuit>.py .
+   
+5. modify the test appropriately
+   change tstop is usually the only change you need to make initially
+
+6. run the python script by typing its name
+
+   if you type only the script name alone, a test selector dialog
+   is displayed with test selection boxes
+
+   if you type the script name followed by a list of tests, the
+   tests are run in the same sequence that they were defined in the script.
+
+Generate a starter verilog testbench for doing verilog simulations
+------------------------------------------------------------------
+
+1. generate a starter verilog testbench:
+
+   * open a testbench schematic
+
+   * type y: --RVB-- menu button will appear at the top of the window
+
+   * select "Generate verilog testbench" from the menu
+
+   * project, technology, and simulator are filled in based on the values
+     from First-time setup for cadence users
+
+   * if there are any wreals in the top-level testbench, then type them into
+     the "wreals" entry box
+
+   * click "OK": starter testbench directory is written to ~/. (HOME directory)
+
+2. netlist the testbench schematic:
+
+   * Schematic -> Launch -> Simulation/ncVerilog
+
+   * generate run-directory (press 1st icon)
+
+   * netlist (press 2nd icon)
+
+3. make a project subdirectory for running the simulations::
+   
+       mkdir /projects/tsmc130/<user>/work/<circuit>
+
+4. move the testbench files to the subdirectory::
+
+       cd /projects/tsmc130/<user>/work/<circuit>
+       mv ~/tb_<circuit> .
+   
+5. change to the tb_<circuit> directory and run the generate_ncsim.py script::
+
+       generate_ncsim.py
+
+   this produces the module library: ncsim_tb_<circuit>/lib_tb_<circuit>
+
+6. modify the automatically-generated testbench tb_<circuit>.v appropriately
+
+7. run ncsim (ncs-pre means ncsim, pre-synthesis, type "make" to find out other options)::
+
+       make ncs-pre

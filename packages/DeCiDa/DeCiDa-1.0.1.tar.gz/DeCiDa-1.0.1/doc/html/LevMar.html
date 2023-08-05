@@ -1,0 +1,399 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>LevMar &mdash; decida 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="decida 1.0.1 documentation" href="index.html" />
+    <link rel="up" title="DeCiDa classes" href="decida_classes.html" />
+    <link rel="next" title="Document string from the mpfit module" href="LevMar_mpfit.html" />
+    <link rel="prev" title="ItclObjectx" href="ItclObjectx.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="LevMar_mpfit.html" title="Document string from the mpfit module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="ItclObjectx.html" title="ItclObjectx"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">decida 1.0.1 documentation</a> &raquo;</li>
+          <li><a href="decida_classes.html" accesskey="U"><strong>DeCiDa classes</strong></a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="levmar">
+<h1>LevMar<a class="headerlink" href="#levmar" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="decida.LevMar.LevMar">
+<em class="property">class </em><tt class="descclassname">decida.LevMar.</tt><tt class="descname">LevMar</tt><big>(</big><em>function</em>, <em>parobj</em>, <em>dataobj</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#decida.LevMar.LevMar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ItclObjectx.html#decida.ItclObjectx.ItclObjectx" title="decida.ItclObjectx.ItclObjectx"><tt class="xref py py-class docutils literal"><span class="pre">decida.ItclObjectx.ItclObjectx</span></tt></a></p>
+<p>Levenberg-Marquardt linear least-squares minimization.</p>
+<p><strong>synopsis</strong>:</p>
+<p>LevMar performs linear least-squares minimization.
+It is used to fit a specified model equation set to data, by adjusting
+parameter values in the equation set.  LevMar uses the <em>Parameters</em>
+class to manage the parameter set.</p>
+<p>LevMar is adapted from the mpfit module, which is based on MINPACK-1.
+The document strings from mpfit, and the MINPACK-1 source-code
+are referenced at the bottom of this page.
+These are more detailed than the documentation shown here.</p>
+<p>LevMar is still under development.</p>
+<p>The <em>Fitter</em> class is a wrapper around LevMar, which makes its use
+somewhat easier.</p>
+<p><strong>constructor arguments</strong>:</p>
+<blockquote>
+<div><dl class="option">
+<dt>
+<tt class="descname">function (function)</tt></dt>
+<dd><p>A function which includes the model to fit.
+The required arguments to function are a <em>Parameters</em> object
+and a <em>Data</em> object.  Each used parameter current value
+is available by indexing the <em>Parameters</em> object by the parameter
+name.  The <em>Data</em> object must contain a column with the 
+data points to be fit: the data column is specified by the
+&#8220;meast_col&#8221; configuration option to <em>LevMar</em>.  The function 
+generates a model column and an error column.</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">parobj (Parameters object)</tt></dt>
+<dd><p>The <em>Parameters</em> object which manages the parameter values.</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">dataobj(Data object)</tt></dt>
+<dd><p>The <em>Data</em> object which manages the measurement, model, and error
+values.</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">**kwargs (dict)</tt></dt>
+<dd><p>keyword=value specifications:
+configuration-options</p>
+</dd></dl>
+
+</div></blockquote>
+<p><strong>configuration options</strong>:</p>
+<blockquote>
+<div><dl class="option">
+<dt>
+<tt class="descname">debug      (bool, default=False)</tt></dt>
+<dd><p>enable debug mode, which prints out more information
+during minimization.</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">quiet      (bool, default=False)</tt></dt>
+<dd><p>disable printing of information during minimization.</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">meast_col  (string, default=&quot;&quot;)</tt></dt>
+<dd><p>The data column which contains the data to be fitted.</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">model_col  (string, default=&quot;&quot;)</tt></dt>
+<dd><p>The data column which is to be created to fit the meast_col data.</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">error_col  (string, default=&quot;&quot;)</tt></dt>
+<dd><p>The relative or absolute error between the model_col
+and meast_col data.</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">ftol (float, default=1e_10)</tt></dt>
+<dd><p>Relative sum-of-squares error tolerance for convergence.</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">xtol (float, default=1e_10)</tt></dt>
+<dd><p>Relative approximate solution error tolerance for convergence.</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">gtol (float, default=1e_10)</tt></dt>
+<dd><p>Minimum value of the gradient norm:
+measure of the orthogonality between parameter
+Jacobian and function for convergence.</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">maxiter    (int, default=200)</tt></dt>
+<dd><p>Maximum number of Levenberg-Marquardt iterations.</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">factor     (float, default=100.0)</tt></dt>
+<dd><p>Parameter-step scaling factor.</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">damp       (float, default=0.0)</tt></dt>
+<dd><p>Parameter-step damping factor.</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">nprint     (int, default=1)</tt></dt>
+<dd><p>Number of iterations to skip before printing information.</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">iterfunct  (function, default=None)</tt></dt>
+<dd><p>Specify a different iteration function to print values of the
+parameters at each Levenberg-Marquart iteration.
+The required parameters of the iteration function are:</p>
+<blockquote>
+<div><dl class="option">
+<dt>
+<tt class="descname">parobj</tt></dt>
+<dd><p>The <em>Parameters</em> object.</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">iter</tt></dt>
+<dd><p>The iteration number.</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">fnorm2</tt></dt>
+<dd><p>The current sum-of-squares norm.</p>
+</dd></dl>
+
+</div></blockquote>
+<p>Other parameters are passed as keyword=value pairs, specified in
+the iterkw configuration option.</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">iterkw     (dict, default={})</tt></dt>
+<dd><p>Keyword options for the user-defined iteration function.</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">nocovar    (bool, default=False)</tt></dt>
+<dd><p>Disable covarianace calculation (if performed in user function).</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">fastnorm   (bool, default=False)</tt></dt>
+<dd><p>Use a faster calculation of error norma.</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">rescale    (bool, default=False)</tt></dt>
+<dd><p>Use the tuple specified in the diag configuration option
+to rescale.</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">autoderiv  (bool, default=True)</tt></dt>
+<dd><p>If True, compute Jacobian numerically.</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">diag       (tuple, default=None)</tt></dt>
+<dd><p>Set of values to rescale error.</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">epsfcn     (float, default=None)</tt></dt>
+<dd><p>Used to determine numerical derivative step.</p>
+</dd></dl>
+
+</div></blockquote>
+<p><strong>example</strong> (from test_LevMar):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">decida.LevMar</span> <span class="kn">import</span> <span class="n">LevMar</span>
+<span class="kn">from</span> <span class="nn">decida.Parameters</span> <span class="kn">import</span> <span class="n">Parameters</span>
+<span class="kn">from</span> <span class="nn">decida.Data</span> <span class="kn">import</span> <span class="n">Data</span>
+
+<span class="k">def</span> <span class="nf">lcfunc</span><span class="p">(</span><span class="n">parobj</span><span class="p">,</span> <span class="n">dataobj</span><span class="p">):</span>
+    <span class="n">L</span>  <span class="o">=</span> <span class="n">parobj</span><span class="p">[</span><span class="s">&quot;L&quot;</span><span class="p">]</span>
+    <span class="n">Co</span> <span class="o">=</span> <span class="n">parobj</span><span class="p">[</span><span class="s">&quot;Co&quot;</span><span class="p">]</span>
+    <span class="n">Cu</span> <span class="o">=</span> <span class="n">parobj</span><span class="p">[</span><span class="s">&quot;Cu&quot;</span><span class="p">]</span>
+    <span class="n">C1</span> <span class="o">=</span> <span class="n">parobj</span><span class="p">[</span><span class="s">&quot;C1&quot;</span><span class="p">]</span>
+    <span class="n">C2</span> <span class="o">=</span> <span class="n">parobj</span><span class="p">[</span><span class="s">&quot;C2&quot;</span><span class="p">]</span>
+    <span class="n">a2</span> <span class="o">=</span> <span class="n">C2</span><span class="o">*</span><span class="mf">16.0</span>
+    <span class="n">c2</span> <span class="o">=</span> <span class="p">(</span><span class="n">C2</span><span class="o">-</span><span class="n">C1</span><span class="p">)</span><span class="o">*</span><span class="mf">8.0</span>
+    <span class="n">b2</span> <span class="o">=</span> <span class="p">(</span><span class="n">C2</span><span class="o">-</span><span class="n">C1</span><span class="p">)</span><span class="o">*</span><span class="mf">24.0</span>
+    <span class="n">dataobj</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;Cc = (floor(vc/4.0)+fmod(vc,4)*0.25)*$Cu&quot;</span><span class="p">)</span>
+    <span class="n">dataobj</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;Cf = $a2 - $b2*vf + $c2*vf^2&quot;</span><span class="p">)</span>
+    <span class="n">dataobj</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;Ct = $Co + Cc + Cf&quot;</span><span class="p">)</span>
+    <span class="n">dataobj</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;fhat = 1.0/(2*pi*sqrt($L*Ct))&quot;</span><span class="p">)</span>
+    <span class="n">dataobj</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;residual = fhat - freq&quot;</span><span class="p">)</span>
+
+<span class="n">parobj</span> <span class="o">=</span> <span class="n">Parameters</span><span class="p">(</span><span class="n">specs</span><span class="o">=</span><span class="p">(</span>
+   <span class="p">(</span><span class="s">&quot;L&quot;</span> <span class="p">,</span> <span class="mf">2400e-12</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span>  <span class="bp">True</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+   <span class="p">(</span><span class="s">&quot;Co&quot;</span><span class="p">,</span>  <span class="mf">250e-15</span><span class="p">,</span>  <span class="bp">True</span><span class="p">,</span>  <span class="bp">True</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+   <span class="p">(</span><span class="s">&quot;Cu&quot;</span><span class="p">,</span>   <span class="mf">60e-15</span><span class="p">,</span>  <span class="bp">True</span><span class="p">,</span>  <span class="bp">True</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+   <span class="p">(</span><span class="s">&quot;C1&quot;</span><span class="p">,</span>   <span class="mf">23e-15</span><span class="p">,</span>  <span class="bp">True</span><span class="p">,</span>  <span class="bp">True</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+   <span class="p">(</span><span class="s">&quot;C2&quot;</span><span class="p">,</span>   <span class="mf">27e-15</span><span class="p">,</span>  <span class="bp">True</span><span class="p">,</span>  <span class="bp">True</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+<span class="p">))</span>
+
+<span class="n">dataobj</span> <span class="o">=</span> <span class="n">Data</span><span class="p">()</span>
+<span class="n">dataobj</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s">&quot;lcdata.col&quot;</span><span class="p">)</span>
+
+<span class="n">optobj</span> <span class="o">=</span> <span class="n">LevMar</span><span class="p">(</span><span class="n">lcfunc</span><span class="p">,</span> <span class="n">parobj</span><span class="p">,</span> <span class="n">dataobj</span><span class="p">,</span>
+    <span class="n">meast_col</span><span class="o">=</span><span class="s">&quot;freq&quot;</span><span class="p">,</span> <span class="n">model_col</span><span class="o">=</span><span class="s">&quot;fhat&quot;</span><span class="p">,</span> <span class="n">error_col</span><span class="o">=</span><span class="s">&quot;residual&quot;</span><span class="p">,</span>
+    <span class="n">quiet</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="bp">False</span>
+<span class="p">)</span>
+<span class="n">optobj</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+<span class="k">print</span> <span class="n">optobj</span><span class="o">.</span><span class="n">status</span><span class="p">()</span>
+<span class="k">print</span> <span class="s">&quot;parameters = &quot;</span><span class="p">,</span> <span class="n">parobj</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><strong>public methods</strong>:</p>
+<blockquote>
+<div><ul class="simple">
+<li>public methods from <em>ItclObjectx</em></li>
+</ul>
+</div></blockquote>
+<dl class="method">
+<dt id="decida.LevMar.LevMar.fit">
+<tt class="descname">fit</tt><big>(</big><big>)</big><a class="headerlink" href="#decida.LevMar.LevMar.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>fit model to data.</p>
+<p><strong>results</strong>:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Fits model to specified data.</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="decida.LevMar.LevMar.status">
+<tt class="descname">status</tt><big>(</big><big>)</big><a class="headerlink" href="#decida.LevMar.LevMar.status" title="Permalink to this definition">¶</a></dt>
+<dd><p>return optimizer status.</p>
+<p><strong>results</strong>:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Returns the optimizer status message.</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<p><strong>more documentation</strong>:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="LevMar_mpfit.html">Document string from the <em>mpfit</em> module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="LevMar_minpack.html">Original FORTRAN documentation</a></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="ItclObjectx.html"
+                        title="previous chapter">ItclObjectx</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="LevMar_mpfit.html"
+                        title="next chapter">Document string from the <em>mpfit</em> module</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/LevMar.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="LevMar_mpfit.html" title="Document string from the mpfit module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="ItclObjectx.html" title="ItclObjectx"
+             >previous</a> |</li>
+        <li><a href="index.html">decida 1.0.1 documentation</a> &raquo;</li>
+          <li><a href="decida_classes.html" ><strong>DeCiDa classes</strong></a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Richard Booth.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

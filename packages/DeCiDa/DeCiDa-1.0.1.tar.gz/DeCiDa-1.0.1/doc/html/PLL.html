@@ -1,0 +1,496 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>PLL &mdash; decida 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="decida 1.0.1 documentation" href="index.html" />
+    <link rel="up" title="DeCiDa classes" href="decida_classes.html" />
+    <link rel="next" title="PLLphaseNoise" href="PLLphaseNoise.html" />
+    <link rel="prev" title="NGspice" href="NGspice.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="PLLphaseNoise.html" title="PLLphaseNoise"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="NGspice.html" title="NGspice"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">decida 1.0.1 documentation</a> &raquo;</li>
+          <li><a href="decida_classes.html" accesskey="U"><strong>DeCiDa classes</strong></a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="pll">
+<h1>PLL<a class="headerlink" href="#pll" title="Permalink to this headline">¶</a></h1>
+<img alt="_images/PLL.jpg" src="_images/PLL.jpg" />
+<dl class="class">
+<dt id="decida.PLL.PLL">
+<em class="property">class </em><tt class="descclassname">decida.PLL.</tt><tt class="descname">PLL</tt><big>(</big><em>parent=None</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#decida.PLL.PLL" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ItclObjectx.html#decida.ItclObjectx.ItclObjectx" title="decida.ItclObjectx.ItclObjectx"><tt class="xref py py-class docutils literal"><span class="pre">decida.ItclObjectx.ItclObjectx</span></tt></a>, <tt class="xref py py-class docutils literal"><span class="pre">Tkinter.Frame</span></tt></p>
+<p>Phase-Locked Loop small-signal model.</p>
+<p><strong>synopsis</strong>:</p>
+<p><em>PLL</em> calculates the S-domain and Z-domain jitter transfer characteristics
+of a PLL.  Both open-loop and closed-loop characteristics are
+calculated.  The transfer function magnitude and phase are plotted
+and several characteristic PLL metrics are printed out, such as
+damping-factor, bandwidth and phase-margin.</p>
+<p><em>PLL</em> has two modes of use.  The first is an interactive mode, with a
+graphical user-interface.  In the interactive mode, the user changes
+an input PLL parameter value in the entry box and presses &lt;Return&gt;
+to cause a new set of calculations to be performed and displayed.</p>
+<p>In the non-interactive mode, <em>PLL</em> can be embedded in a script involving
+one or more loops of calculations.  In this mode, use the <em>recalculate</em>
+user method.  After re-calculation, PLL metrics can be reported to a
+file.</p>
+<p>The DeCiDa application <em>pllss</em> simply instantiates one <em>PLL</em> object.</p>
+<p><strong>constructor arguments</strong>:</p>
+<blockquote>
+<div><dl class="option">
+<dt>
+<tt class="descname">parent (Tkinter handle) (default=None)</tt></dt>
+<dd><p>handle of frame or other widget to pack PLL in.
+if this is not specified, top-level is created.</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">**kwargs (dict)</tt></dt>
+<dd><p>keyword=value specifications:
+configuration-options</p>
+</dd></dl>
+
+</div></blockquote>
+<p><strong>configuration options</strong>:</p>
+<blockquote>
+<div><dl class="option">
+<dt>
+<tt class="descname">verbose        (bool, default=False)</tt></dt>
+<dd><p>Enable/disable verbose mode.</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">gui            (bool, default=True)</tt></dt>
+<dd><p>If gui is True, display interactive graphical-user interface.
+Otherwise, perform the calculations without any user interaction.</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">plot_width     (string, default=&quot;5in&quot;)</tt></dt>
+<dd><p>Width of plot window (Tk inch or pixel specification)</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">plot_height    (string, default=&quot;5in&quot;)</tt></dt>
+<dd><p>Height of plot window (Tk inch or pixel specification)</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">plot_style     (int, default=0)</tt></dt>
+<dd><p>The style of the plot:</p>
+<blockquote>
+<div><ul class="simple">
+<li>0 : plot Hol(s) Hcl(s) Hcl(z)</li>
+<li>1 : plot Hol(s) Hol(z)</li>
+<li>2 : plot Hol(s) Hcl(s)</li>
+<li>3 : plot Hol(z) Hcl(z)</li>
+<li>4 : plot Htr(s) Htr(z) (dB and Phase)</li>
+<li>5 : plot Htr(s) Htr(z) (dB only)</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">plot_orient    (str, default=&quot;horizontal&quot;)</tt></dt>
+<dd><p>One of &#8220;horizontal&#8221; or &#8220;vertical&#8221;.  If horizontol,
+parameter selection and plot panes are side-by-side.
+If vertical, parameter selection pane is over plot pane.</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">plot_title     (str, default=&quot;&quot;)</tt></dt>
+<dd><p>Main plot title</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">npts           (int, default=1000)</tt></dt>
+<dd><p>Number of frequency points to sample (logarithmic sampliing).</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">fmax           (float, default=1e10)</tt></dt>
+<dd><p>The maximum frequency to sample.</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">fmin           (float, default=1e2)</tt></dt>
+<dd><p>The minimum frequency to sample.</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">rf             (float, default=10e3)</tt></dt>
+<dd><p>Loop filter resistor value [ohm]</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">cf             (float, default=500e_12)</tt></dt>
+<dd><p>Loop filter capacitor value [F]</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">cd             (float, default=5e_12)</tt></dt>
+<dd><p>Loop filter ripple-bypass capacitor value [F]</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">mp             (float, default=40.0)</tt></dt>
+<dd><p>Feed-back divider value.</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">icp            (float, default=100e_6)</tt></dt>
+<dd><p>Charge-pump current value. [A]</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">kvco           (float, default=700e6)</tt></dt>
+<dd><p>VCO total gain. [Hz/V]</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">fv2i           (float, default=100e9)</tt></dt>
+<dd><p>Voltage to current converter pole. [Hz]</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">fref           (float, default=350e6)</tt></dt>
+<dd><p>Reference frequency. [Hz]</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">fb_delay       (float, default=0.0)</tt></dt>
+<dd><p>Feedback divider delay. [s]</p>
+</dd></dl>
+
+<dl class="option">
+<dt>
+<tt class="descname">ph_offset      (float, default=0.0)</tt></dt>
+<dd><p>Excess phase-offset between reference and
+output of feedback divider. [s]</p>
+</dd></dl>
+
+</div></blockquote>
+<p><strong>example</strong> (from test_PLL):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">decida.PLL</span> <span class="kn">import</span> <span class="n">PLL</span>
+<span class="n">PLL</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><strong>public methods</strong>:</p>
+<blockquote>
+<div><ul class="simple">
+<li>public methods from <em>ItclObjectx</em></li>
+</ul>
+</div></blockquote>
+<dl class="method">
+<dt id="decida.PLL.PLL.get">
+<tt class="descname">get</tt><big>(</big><em>par</em><big>)</big><a class="headerlink" href="#decida.PLL.PLL.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>get a PLL parameter or metric.</p>
+<p><strong>arguments</strong>:</p>
+<blockquote>
+<div><dl class="option">
+<dt>
+<tt class="descname">par (string)</tt></dt>
+<dd><p>PLL configuration option or one of the following  metrics:</p>
+<ul class="simple">
+<li>lpll  : PLL inductance, mp/(Kvco*Icp)</li>
+<li>zo    : PLL characteristic impedance, sqrt(lpll/cf)</li>
+<li>zeta  : PLL damping coefficient</li>
+<li>Q     : PLL quality factor</li>
+<li>wn    : PLL natural frequency [rad/s]</li>
+<li>wb    : PLL bandwidth [rad/s]</li>
+<li>wz    : PLL zero frequency [rad/s]</li>
+<li>wp    : PLL peak frequency [rad/s]</li>
+<li>wh    : PLL high zeta frequency [rad/s]</li>
+<li>wv    : PLL V to I converter frequency [rad/s]</li>
+<li>peak  : PLL peak closed-loop jitter transfer value [dB]</li>
+<li>zeth  : PLL high-frequency damping factor</li>
+<li>fn    : PLL natural frequency [Hz]</li>
+<li>fb    : PLL bandwidth [Hz]</li>
+<li>fz    : PLL zero frequency [Hz]</li>
+<li>fp    : PLL peak frequency [Hz]</li>
+<li>fh    : PLL high frequency [Hz]</li>
+<li>beta  : Z-domain parameter</li>
+<li>a0    : Z-domain parameter</li>
+<li>b0    : Z-domain parameter</li>
+<li>c0    : Z-domain parameter</li>
+<li>d0    : Z-domain parameter</li>
+<li>fbs   : S-domain 3db bandwidth</li>
+<li>fxs   : S-domain unity-gain bandwidth</li>
+<li>pm    : S-domain phase-margin</li>
+<li>pos   : S-domain number of cycles to match phase-response</li>
+<li>pk    : S-domain peaking</li>
+<li>fk    : frequency of S-domain peaking</li>
+<li>ihcl  : integration of closed-loop S-domain jitter transfer function</li>
+<li>ihtr  : integration of closed-loop S-domain tracking jitter transfer function</li>
+<li>fbz   : Z-domain 3-dB bandwdth</li>
+<li>fxz   : Z-domain unity-gain bandwidth</li>
+<li>pmz   : Z-domain phase-margin</li>
+<li>pkz   : Z-domain peaking</li>
+<li>fkz   : frequency of Z-domain peaking</li>
+<li>rjz   : rejection: loop-gain at fref/2</li>
+<li>ihclz : integration of closed-loop Z-domain jitter transfer function</li>
+<li>ihtrz : integration of closed-loop Z-domain tracking transfer function</li>
+</ul>
+</dd></dl>
+
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="decida.PLL.PLL.plot">
+<tt class="descname">plot</tt><big>(</big><em>new=False</em><big>)</big><a class="headerlink" href="#decida.PLL.PLL.plot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="decida.PLL.PLL.recalculate">
+<tt class="descname">recalculate</tt><big>(</big><big>)</big><a class="headerlink" href="#decida.PLL.PLL.recalculate" title="Permalink to this definition">¶</a></dt>
+<dd><p>recalculate transfer functions.</p>
+<p><strong>results</strong>:</p>
+<blockquote>
+<div><ul class="simple">
+<li>S-domain and Z-domain open-loop and closed loop jitter transfer
+functions are re-calculated.  For non-gui applications, several
+metrics are also calculated, such as damping-factor,
+bandwidth and phase-margin.</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="decida.PLL.PLL.report">
+<tt class="descname">report</tt><big>(</big><em>style=1</em><big>)</big><a class="headerlink" href="#decida.PLL.PLL.report" title="Permalink to this definition">¶</a></dt>
+<dd><p>return a formated PLL parameters report.</p>
+<p><strong>arguments</strong>:</p>
+<blockquote>
+<div><dl class="option">
+<dt>
+<tt class="descname">style (int, default=1)</tt></dt>
+<dd><p>The style of the report to generate:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>verbose</li>
+<li>brief</li>
+</ol>
+</div></blockquote>
+</dd></dl>
+
+</div></blockquote>
+<p><strong>results</strong>:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Returns a formatted PLL report with various parameters and
+metrics.</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="decida.PLL.PLL.write_data">
+<tt class="descname">write_data</tt><big>(</big><em>file=None</em><big>)</big><a class="headerlink" href="#decida.PLL.PLL.write_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>write the calculated data to a file.</p>
+<p><strong>arguments</strong>:</p>
+<blockquote>
+<div><dl class="option">
+<dt>
+<tt class="descname">file (str, default=None)</tt></dt>
+<dd><p>Specify the file to write.  If not specified, use file dialog
+to specify the file.</p>
+</dd></dl>
+
+</div></blockquote>
+<p><strong>results</strong>:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Writes space-separated value format file with the calculated
+transfer functions.</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="decida.PLL.PLL.write_plot">
+<tt class="descname">write_plot</tt><big>(</big><em>file=None</em><big>)</big><a class="headerlink" href="#decida.PLL.PLL.write_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>write a PostScript plot to a file.</p>
+<p><strong>arguments</strong>:</p>
+<blockquote>
+<div><dl class="option">
+<dt>
+<tt class="descname">file (str, default=None)</tt></dt>
+<dd><p>Specify the file to write.  If not specified, use file dialog
+to specify the file.</p>
+</dd></dl>
+
+</div></blockquote>
+<p><strong>results</strong>:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Writes a PostScript file with the current plot.</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="decida.PLL.PLL.write_report">
+<tt class="descname">write_report</tt><big>(</big><em>file=None</em><big>)</big><a class="headerlink" href="#decida.PLL.PLL.write_report" title="Permalink to this definition">¶</a></dt>
+<dd><p>write PLL report to a file.</p>
+<p><strong>arguments</strong>:</p>
+<blockquote>
+<div><dl class="option">
+<dt>
+<tt class="descname">file (str, default=None)</tt></dt>
+<dd><p>Specify the file to write.  If not specified, use file dialog
+to specify the file.</p>
+</dd></dl>
+
+</div></blockquote>
+<p><strong>results</strong>:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Writes a formatted PLL report to the file.</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="decida.PLL.PLL.write_script">
+<tt class="descname">write_script</tt><big>(</big><em>file=None</em><big>)</big><a class="headerlink" href="#decida.PLL.PLL.write_script" title="Permalink to this definition">¶</a></dt>
+<dd><p>write an executable PLL script with the current parameter set.</p>
+<p><strong>arguments</strong>:</p>
+<blockquote>
+<div><dl class="option">
+<dt>
+<tt class="descname">file (str, default=None)</tt></dt>
+<dd><p>Specify the file to write.  If not specified, use file dialog
+to specify the file.</p>
+</dd></dl>
+
+</div></blockquote>
+<p><strong>results</strong>:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Writes executable script, which when run displays the PLL
+transfer functions for the last set of PLL parameters.</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="NGspice.html"
+                        title="previous chapter">NGspice</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="PLLphaseNoise.html"
+                        title="next chapter">PLLphaseNoise</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/PLL.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="PLLphaseNoise.html" title="PLLphaseNoise"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="NGspice.html" title="NGspice"
+             >previous</a> |</li>
+        <li><a href="index.html">decida 1.0.1 documentation</a> &raquo;</li>
+          <li><a href="decida_classes.html" ><strong>DeCiDa classes</strong></a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Richard Booth.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

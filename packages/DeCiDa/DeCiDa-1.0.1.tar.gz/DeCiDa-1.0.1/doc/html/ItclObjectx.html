@@ -1,0 +1,317 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ItclObjectx &mdash; decida 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="decida 1.0.1 documentation" href="index.html" />
+    <link rel="up" title="DeCiDa classes" href="decida_classes.html" />
+    <link rel="next" title="LevMar" href="LevMar.html" />
+    <link rel="prev" title="Histogramx" href="Histogramx.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="LevMar.html" title="LevMar"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Histogramx.html" title="Histogramx"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">decida 1.0.1 documentation</a> &raquo;</li>
+          <li><a href="decida_classes.html" accesskey="U"><strong>DeCiDa classes</strong></a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="itclobjectx">
+<h1>ItclObjectx<a class="headerlink" href="#itclobjectx" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="decida.ItclObjectx.ItclObjectx">
+<em class="property">class </em><tt class="descclassname">decida.ItclObjectx.</tt><tt class="descname">ItclObjectx</tt><a class="headerlink" href="#decida.ItclObjectx.ItclObjectx" title="Permalink to this definition">¶</a></dt>
+<dd><p>base class to provide configuration option capability.</p>
+<p><strong>synopsis</strong>:</p>
+<p>ItclObjectx is modeled after the [incr Tcl] configuration paradigm.
+Each derived class can add a number of configuration options.
+These options are class attributes which are treated specially.
+An instance of the derived class is configured when created, and
+can be reconfigured after creation.  The configuration/reconfiguration
+causes a call-back (if specified) to be called.  The type of the
+configuration is also checked with the established type.</p>
+<p>ItclObjectx also provides message, warning, error, and fatal
+methods, which print messages and react in different ways.</p>
+<p><strong>adding options</strong>:</p>
+<blockquote>
+<div><ul class="simple">
+<li>derived classes use the _add_options protected method to
+add configuration options.  The argument to _add_options is
+a dictionary with the option name as the index, and
+a list of default configuration option value and callback
+as the value of the dictionary index.</li>
+</ul>
+</div></blockquote>
+<p><strong>example</strong>: (from PlotBase derived-class constructor)</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="p">:</span>
+    <span class="n">ItclObjectx</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_add_options</span><span class="p">({</span>
+        <span class="s">&quot;plot_background&quot;</span>   <span class="p">:</span> <span class="p">[</span><span class="s">&quot;GhostWhite&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_plot_background_callback</span><span class="p">],</span>
+        <span class="s">&quot;legend_background&quot;</span> <span class="p">:</span> <span class="p">[</span><span class="s">&quot;AntiqueWhite2&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_legend_background_callback</span><span class="p">],</span>
+        <span class="s">&quot;colors&quot;</span>            <span class="p">:</span> <span class="p">[</span><span class="n">colors</span><span class="p">,</span> <span class="bp">None</span><span class="p">],</span>
+    <span class="p">})</span>
+</pre></div>
+</div>
+<p><strong>public methods</strong>:</p>
+<blockquote>
+<div><ul>
+<li><p class="first">indexing:</p>
+<blockquote>
+<div><ul class="simple">
+<li>&lt;instance&gt;[&#8220;&lt;config_option&gt;&#8221;] returns the
+value of the configuration option named &lt;config_option&gt;</li>
+<li>&lt;instance&gt;[&#8220;&lt;config_option&gt;&#8221;]=&lt;value&gt; sets the
+value of the configuration option named &lt;config_option&gt;
+to &lt;value&gt;.  If the configuration option callback returns
+false, the option is set back to the previous value.</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+<dl class="method">
+<dt id="decida.ItclObjectx.ItclObjectx.config_options">
+<tt class="descname">config_options</tt><big>(</big><big>)</big><a class="headerlink" href="#decida.ItclObjectx.ItclObjectx.config_options" title="Permalink to this definition">¶</a></dt>
+<dd><p>return configuration option names.</p>
+<p><strong>results</strong>:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Returns list of configuration option names, in no
+particular order.</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="decida.ItclObjectx.ItclObjectx.cshow">
+<tt class="descname">cshow</tt><big>(</big><em>key=None</em><big>)</big><a class="headerlink" href="#decida.ItclObjectx.ItclObjectx.cshow" title="Permalink to this definition">¶</a></dt>
+<dd><p>show all configuration option values.</p>
+<p><strong>arguments</strong>:</p>
+<blockquote>
+<div><dl class="option">
+<dt>
+<tt class="descname">key (string) (optional, default=None)</tt></dt>
+<dd><p>configuration option key.</p>
+</dd></dl>
+
+</div></blockquote>
+<p><strong>results</strong>:</p>
+<blockquote>
+<div><ul class="simple">
+<li>if key is not specified, display all configuration
+option values.  if key is specified,</li>
+<li>if key is specified, display its current configuration value.</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="decida.ItclObjectx.ItclObjectx.error">
+<tt class="descname">error</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#decida.ItclObjectx.ItclObjectx.error" title="Permalink to this definition">¶</a></dt>
+<dd><p>print error message, raise exception, exit.</p>
+<p><strong>arguments</strong>:</p>
+<blockquote>
+<div><dl class="option">
+<dt>
+<tt class="descname">*args (tuple of strings)</tt></dt>
+<dd><p>message or parts of message to print.</p>
+</dd></dl>
+
+</div></blockquote>
+<p><strong>results</strong>:</p>
+<blockquote>
+<div><ul class="simple">
+<li>print &#8220;error&#8221;, the class, the method, and the
+joined argument list.</li>
+<li>raise a RuntimeError <strong>taken out</strong></li>
+<li>exit</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="decida.ItclObjectx.ItclObjectx.fatal">
+<tt class="descname">fatal</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#decida.ItclObjectx.ItclObjectx.fatal" title="Permalink to this definition">¶</a></dt>
+<dd><p>print fatal error message, raise exception, exit.</p>
+<p><strong>arguments</strong>:</p>
+<blockquote>
+<div><dl class="option">
+<dt>
+<tt class="descname">*args (tuple of strings)</tt></dt>
+<dd><p>message or parts of message to print.</p>
+</dd></dl>
+
+</div></blockquote>
+<p><strong>results</strong>:</p>
+<blockquote>
+<div><ul class="simple">
+<li>print &#8220;error&#8221;, the class, the method, and the
+joined argument list.</li>
+<li>raise a RuntimeError <strong>taken out</strong></li>
+<li>exit</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="decida.ItclObjectx.ItclObjectx.message">
+<tt class="descname">message</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#decida.ItclObjectx.ItclObjectx.message" title="Permalink to this definition">¶</a></dt>
+<dd><p>print message.</p>
+<p><strong>arguments</strong>:</p>
+<blockquote>
+<div><dl class="option">
+<dt>
+<tt class="descname">*args (tuple of strings)</tt></dt>
+<dd><p>message or parts of message to print.</p>
+</dd></dl>
+
+</div></blockquote>
+<p><strong>results</strong>:</p>
+<blockquote>
+<div><ul class="simple">
+<li>print the class, the method, and the joined argument list.</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="decida.ItclObjectx.ItclObjectx.warning">
+<tt class="descname">warning</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#decida.ItclObjectx.ItclObjectx.warning" title="Permalink to this definition">¶</a></dt>
+<dd><p>print warning message.</p>
+<p><strong>arguments</strong>:</p>
+<blockquote>
+<div><dl class="option">
+<dt>
+<tt class="descname">*args (tuple of strings)</tt></dt>
+<dd><p>message or parts of message to print.</p>
+</dd></dl>
+
+</div></blockquote>
+<p><strong>results</strong>:</p>
+<blockquote>
+<div><ul class="simple">
+<li>print &#8220;warning&#8221;, the class, the method, and the
+joined argument list.</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="decida.ItclObjectx.ItclObjectx.was_configured">
+<tt class="descname">was_configured</tt><big>(</big><em>key</em><big>)</big><a class="headerlink" href="#decida.ItclObjectx.ItclObjectx.was_configured" title="Permalink to this definition">¶</a></dt>
+<dd><p>return true if configuration option was configured.</p>
+<p><strong>arguments</strong>:</p>
+<blockquote>
+<div><dl class="option">
+<dt>
+<tt class="descname">key (string)</tt></dt>
+<dd><p>configuration option key</p>
+</dd></dl>
+
+</div></blockquote>
+<p><strong>results</strong>:</p>
+<blockquote>
+<div><ul class="simple">
+<li>return True if configuration option was configured, or
+False if it was never configured.</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="Histogramx.html"
+                        title="previous chapter">Histogramx</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="LevMar.html"
+                        title="next chapter">LevMar</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/ItclObjectx.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="LevMar.html" title="LevMar"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Histogramx.html" title="Histogramx"
+             >previous</a> |</li>
+        <li><a href="index.html">decida 1.0.1 documentation</a> &raquo;</li>
+          <li><a href="decida_classes.html" ><strong>DeCiDa classes</strong></a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Richard Booth.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
