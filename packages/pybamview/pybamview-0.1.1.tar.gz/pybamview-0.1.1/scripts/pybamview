@@ -1,0 +1,275 @@
+#!/usr/bin/env python
+"""
+The MIT License (MIT)
+
+Copyright (c) 2014 Melissa Gymrek <mgymrek@mit.edu>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+"""
+
+import argparse
+import errno
+import pybamview
+import pyfasta
+from flask import Flask, request, send_from_directory, render_template, url_for, Response
+import os
+from os.path import join
+import pkg_resources
+import random
+import re
+import socket
+import sys
+import tempfile
+
+SPREFIX = pkg_resources.resource_filename("pybamview","")
+
+app = Flask(__name__, static_folder="%s/"%SPREFIX, \
+                static_path="%s/"%SPREFIX,\
+                template_folder=join(SPREFIX, "templates"))
+
+BAMDIR = "."
+REFFILE = None
+TARGETFILE = None
+PORT = 5000
+NUMCHAR = 500
+HOST = "127.0.0.1"
+PORT_RETRIES = 50
+BAMFILE_TO_BAMVIEW = {}
+TARGET_LIST = []
+SETTINGS = {}
+
+NUC_TO_COLOR = {
+    "A": "red",
+    'a': "red",
+    "C": "blue",
+    "c": "blue",
+    "G": "green",
+    "g": "green",
+    "T": "orange",
+    "t": "orange",
+    "N": "gray",
+    "n": "gray",
+    "-": "white",
+    ".": "gray",
+}
+
+PROGRESS = 0
+WARNING = 1
+ERROR = 2
+
+def MESSAGE(msg, msgtype=PROGRESS):
+    if msgtype == PROGRESS:
+        msg = "[PROGRESS]: " + msg
+        sys.stderr.write(msg.strip() + "\n")
+    elif msgtype == WARNING:
+        msg = "[WARNING]: " + msg
+        sys.stderr.write(msg.strip() + "\n")
+    elif msgtype == ERROR:
+        msg = "[ERROR]: " + msg
+        sys.stderr.write(msg.strip() + "\n")
+        sys.exit(1)
+    else: sys.stderr.write(msg.strip())
+
+def random_ports(port, n):
+    """Generate a list of n random ports near the given port.
+
+    The first 5 ports will be sequential, and the remaining n-5 will be
+    randomly selected in the range [port-2*n, port+2*n].
+    (copied from IPython notebookapp.py)
+    """
+    for i in range(min(5, n)):
+        yield port + i
+    for i in range(n-5):
+        yield max(1, port + random.randint(-2*n, 2*n))    
+
+def isnuc(x):
+    return str(x).upper() in ["A","C","G","T"]
+
+def ParseTargets(targetfile):
+    """ Return list of targets, each is dict with region and name """
+    x = []
+    with open(targetfile, "r") as f:
+        for line in f:
+            items = line.strip().split("\t")
+            if len(items) != 4:
+                MESSAGE("invalid target file. should have 4 columns", ERROR)
+            chrom, start, end, name = items
+            region = "%s:%s"%(chrom, start)
+            x.append({"name": name, "region": region})
+        line = f.readline()
+    f = open(targetfile, "r")
+    line = f.readline()
+    f.close()
+    return x
+
+# Apparently all applications should have an icon
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(join(SPREFIX, 'static'),
+                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
+@app.route("/")
+def listsamples(methods=['POST','GET']):
+    bamfiles = request.args.getlist("bamfiles")
+    samples = request.args.getlist("samples")
+    if len(bamfiles) > 0 and len(samples) > 0:
+        return display_bam(samples)
+    try:
+        files = os.listdir(BAMDIR)
+    except OSError: files = []
+    bamfiles = [f for f in files if re.match(".*.bam$", f) is not None]
+    bamfiles = [f for f in bamfiles if f+".bai" in files]
+    try:
+        samplesToBam = pybamview.GetSamplesFromBamFiles([os.path.join(BAMDIR, b) for b in bamfiles])
+    except ValueError, e:
+        return render_template("error.html", message="Problem parsing BAM file: %s"%e, title="PyBamView - %s"%BAMDIR)
+    return render_template("index.html", samplesToBam=samplesToBam, title="PyBamView - %s"%BAMDIR)
+
+@app.route('/bamview', methods=['POST', 'GET'])
+def display_bam():
+    samplebams = request.args.getlist("samplebams")
+    if len(samplebams) == 0:
+        samples_toinclude = list(set(request.args.getlist("samples")))
+        bamfiles_toinclude = list(set(request.args.getlist("bamfiles")))
+    else:
+        samples_toinclude = []
+        bamfiles_toinclude = []
+        for s in samplebams:
+            s.replace("%3A",":")
+            s.replace("%2","/")
+            samples_toinclude.append(s.split(":")[0])
+            bamfiles_toinclude.extend(s.split(":")[1:])
+    region = request.args.get("region","None:0")
+    region.replace("%3A",":")
+    return display_bam_region(list(set(bamfiles_toinclude)), samples_toinclude, region)
+
+def display_bam_region(bamfiles, samples, region):
+    for bam in bamfiles:
+        if not os.path.exists(join(BAMDIR,bam)):
+            MESSAGE("bam file %s does not exist"%join(BAMDIR, bam), WARNING)
+    if ";".join(bamfiles) not in BAMFILE_TO_BAMVIEW:
+        bv = pybamview.BamView([join(BAMDIR, bam) for bam in bamfiles], REFFILE)
+        BAMFILE_TO_BAMVIEW[";".join(bamfiles)] = bv
+    else: bv = BAMFILE_TO_BAMVIEW[";".join(bamfiles)]
+    try:
+        chrom, pos = region.split(":")
+        pos = int(pos)
+    except: 
+        try:
+            chrom, pos = sorted(bv.reference.keys())[0], 0
+        except: chrom, pos = "None", 0
+    bv.LoadAlignmentGrid(chrom, pos, _samples=samples, _settings=SETTINGS)
+    positions = bv.GetPositions(pos)
+    region = "%s:%s"%(chrom, pos)
+    return render_template("bamview.html", title="PyBamView - %s"%region, BAM_FILES=bamfiles,\
+                               REF_FILE=REFFILE, REGION=region, SAMPLES=samples,\
+                               REFERENCE=bv.GetReferenceTrack(pos), ALIGNMENTS=bv.GetAlignmentTrack(pos),\
+                               POSITIONS=positions, NUC_TO_COLOR=NUC_TO_COLOR, CHROM=chrom, TARGET_LIST=TARGET_LIST)
+
+@app.route('/snapshot', methods=['POST', 'GET'])
+def snapshot():
+    samples = request.form.getlist("samples")
+    alignments_by_sample = {}
+    for s in samples:
+        alignments_by_sample[s] = request.form["alignment_%s"%s]
+    region = request.form["region"]
+    region.replace("%3A",":")
+    startpos = request.form["startpos"]
+    reference = request.form["reference"]
+    chrom, start = region.split(":")
+    region = "%s-%s"%(max(int(start)-5,0), int(start)+105)
+    return render_template("snapshot.html", title="Pybamview - take snapshot", SAMPLES=samples, \
+                               CHROM=chrom, REGION=region, MINSTART=int(start)-NUMCHAR/2, MAXEND=int(start)+NUMCHAR/2,\
+                               REFERENCE_TRACK=reference, ALIGN_BY_SAMPLE=alignments_by_sample, STARTPOS=startpos)
+
+@app.route('/export', methods=["POST"])
+def export():
+    svg_xml = request.form.get("data", "Invalid data")
+    input_file = tempfile.NamedTemporaryFile(delete=False)
+    input_file.write(svg_xml)
+    input_file.close()
+    filename = request.form.get("filename", "pybamview_snapshot.pdf")
+    output_file_name = os.path.join("/tmp", filename)
+    cmd = "rsvg-convert -o %s -f pdf %s"%(output_file_name, input_file.name)
+    os.system(cmd)
+    if os.path.exists(output_file_name):
+        pdf_data = open(output_file_name, "r").read()
+    else: pdf_data = ""
+    response = Response(pdf_data, mimetype="application/x-pdf")
+    response.headers["Content-Disposition"] = "attachment; filename=%s"%filename
+    return response
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='pybamview: An Python-based BAM alignment viewer.')
+    parser.add_argument('--bamdir', help='Directory to look for bam files. Bam files must be indexed.', type=str, required=True)
+    parser.add_argument('--ref', help='Path to reference fasta file. If no reference is given, the reference track is displayed as "N"\'s', type=str)
+    parser.add_argument('--ip', help='Host IP. 127.0.0.1 for local host (default). 0.0.0.0 to have the server available externally.', type=str)
+    parser.add_argument('--targets', help='Bed file with chrom, start, end, and name. Allows you to easily jump to these targets.', type=str)
+    parser.add_argument('--port', help='The port of the webserver. Defaults to 5000.', type=int)
+    parser.add_argument('--buffer', help='How many nucleotides to load into memory. Default: 500. Buffering more allows you to scroll farther. Buffering less is faster.', type=int)
+    parser.add_argument('--debug', help='Run PyBamView in Flask debug mode', action="store_true")
+    args = parser.parse_args()
+    # Get args
+    BAMDIR = args.bamdir
+    REFFILE = args.ref
+    TARGETFILE = args.targets
+    if args.port is not None: PORT = args.port
+    if args.ip is not None: HOST = args.ip
+    if args.buffer is not None: NUMCHAR = args.buffer
+    SETTINGS["NUMCHAR"] = NUMCHAR
+    app.debug = args.debug
+    # Load reference
+    if REFFILE is None:
+        REFFILE = "No reference loaded"
+    elif not os.path.exists(REFFILE):
+        MESSAGE("Could not find reference file %s"%REFFILE, WARNING)
+        REFFILE = "Could not find reference file %s"%REFFILE
+    else:
+        try:
+            x = pyfasta.Fasta(REFFILE) # Make sure we can open the fasta file
+        except:
+            MESSAGE("Invalid reference fasta file %s"%REFFILE, WARNING)
+            REFFILE = "Invalid fasta file %s"%REFFILE
+    # Parse targets
+    if TARGETFILE is not None:
+        if not os.path.exists(TARGETFILE):
+            MESSAGE("Target file %s does not exist"%TARGETFILE, WARNING)
+            TARGETFILE = None
+        else:
+            TARGET_LIST = ParseTargets(TARGETFILE)
+    # Start app
+    app.jinja_env.filters.update({'isnuc': isnuc})
+    success = False
+    for port in random_ports(PORT, PORT_RETRIES+1):
+        try:
+            app.run(port=port, host=HOST)
+            success = True
+        except socket.error as e:
+            if e.errno == errno.EADDRINUSE:
+                MESSAGE("Port %s is already in use. Tyring another port"%port, WARNING)
+                continue
+            elif e.errno in (errno.EACCES, getattr(errno, "WSEACCES", errno.EACCES)):
+                MESSAGE("Permission denied to listen on port %s. Trying another port"%port, WARNING)
+                continue
+            else: raise
+        except OverflowError:
+            MESSAGE("Invalid port specified (%s)."%port, ERROR)
+        else: break
+    if not success:
+        MESSAGE("PyBamView could not find an available port. Quitting", ERROR)
