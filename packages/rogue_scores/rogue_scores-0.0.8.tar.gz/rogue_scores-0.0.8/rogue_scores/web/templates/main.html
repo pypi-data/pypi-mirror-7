@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="language" content="en" />
+    <title>Rogue Scores</title>
+    <meta name="author" content="Baptiste Fontaine" />
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+    <style>
+    .table td.num, .table th.num { text-align: right; padding-right: 14px; }
+    td.num { width: 12ex; }
+    </style>
+  </head>
+  <body class="app">
+    <div class="container">
+      <h1>Rogue Scores</h1>
+
+      <table class="table table-striped">
+        <tr>
+          <th>#</th>
+          <th class="num">Score</th>
+          <th class="num">Level</th>
+          <th>User</th>
+          <th>Status</th>
+          <th>Cause</th></tr>
+        {% for s in scores %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td class="num">{{ s.score }}</td>
+          <td class="num">{{ s.level }}</td>
+          <td>{{ s.user }}</td>
+          <td>{{ s.status }}</td>
+          <td>{{ s.cause|default('-') }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% if stats %}
+      <h2>Stats</h2>
+      <table class="table">
+        <tr><th>Most active player</th><td>{{ stats.most_active }}</td></tr>
+        <tr><th>Max level</th><td>{{ stats.max_level }}</td></tr>
+        <tr><th>Best killer</th><td>{{ stats.best_killer }}</td></tr>
+      </table>
+      {% endif %}
+      <h2>Help</h2>
+      <h3>Install Rogue</h3>
+      <h4>On GNU/Linux</h4>
+      <pre><code>wget http://rogue.rogueforge.net/files/rogue5.4/rogue5.4.4-src.tar.gz
+tar xzf rogue5.4.4-src.tar.gz &amp;&amp; cd rogue5.4.4
+./configure --disable-debug --disable-dependency-tracking
+[sudo] make install</code></pre>
+      <p>You might want to patch <code>config.h</code> before running
+      <code>make</code> to change the scores file’s path.</p>
+      <h4>On OS X</h4>
+      <pre><code>brew install rogue
+mkdir -p /usr/local/var/rogue</code></pre>
+      <h3>Upload your scores</h3>
+      <p>To upload your scores, install the local script:</p>
+      <pre><code>pip install rogue_scores</code></pre>
+      <p>and run it:</p>
+      <pre><code>rogue_scores</code></pre>
+      <p>It’ll ask you which server to use the first time, enter
+         <code>{{ hostname }}</code>. You can then run it periodically to
+         update your scores.</p>
+
+    </div>
+  </body>
+</html>
