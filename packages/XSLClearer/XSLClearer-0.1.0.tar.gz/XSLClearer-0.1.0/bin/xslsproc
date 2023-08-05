@@ -1,0 +1,44 @@
+#!/usr/bin/env python3
+
+from subprocess import call
+import sys
+import os
+import tempfile
+import xslclearer
+
+def main():
+    # Copy the parameters without the command name
+    parameters = sys.argv[1:]
+
+    # Find the XSLS file in the parameters
+    xsls_index = None
+    for index in range(len(parameters)):
+        if parameters[index][-5:] == '.xsls':
+            xsls_index = index
+            break
+
+    if xsls_index == None:
+        # File not found
+        pass
+
+    input_file = parameters[xsls_index]
+        
+    # Compile the XSLS input
+    code, output = xslclearer.xsls_compile(open(input_file))
+
+    if code != 0:
+        print(output, file=sys.stderr)
+        sys.exit(code)
+
+    xslt_file = tempfile.NamedTemporaryFile(delete=False)
+    xslt_file.write(bytes(output, 'UTF-8'))
+    xslt_file.close()
+
+    parameters[xsls_index] = xslt_file.name
+    
+    call(["xsltproc"] + parameters)
+
+    os.remove(xslt_file.name)
+
+if __name__ == "__main__":
+    main()
