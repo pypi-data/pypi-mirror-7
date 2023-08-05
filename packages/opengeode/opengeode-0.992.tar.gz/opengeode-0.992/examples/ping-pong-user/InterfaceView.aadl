@@ -1,0 +1,115 @@
+PACKAGE interfaceview::IV
+PUBLIC
+WITH DataView;
+WITH interfaceview::FV;
+WITH Taste;
+
+---------------------------------------------------
+-- TASTE Interface View 
+---------------------------------------------------
+
+  SYSTEM interfaceview
+  END interfaceview;
+
+  SYSTEM IMPLEMENTATION interfaceview.others
+    SUBCOMPONENTS
+      ping: SYSTEM interfaceview::IV::ping.others
+        { Taste::Coordinates => "573 417 1182 954"; };
+      pong: SYSTEM interfaceview::IV::pong.others
+        { Taste::Coordinates => "1635 421 2346 972"; };
+    CONNECTIONS
+      obj491 : SUBPROGRAM ACCESS pong.RECV_PING_obj107  -> ping.SND_PING_obj86 
+        { Taste::Coordinates => "1182 566 1459 566 1459 569 1635 569"; };
+  END interfaceview.others;
+
+  ---------------------------------------------------
+  -- TASTE Function: interfaceview::IV::ping
+  ---------------------------------------------------
+
+  SYSTEM ping
+    FEATURES
+      ACTIVATION_obj75 : PROVIDES SUBPROGRAM ACCESS interfaceview::FV::ACTIVATION_obj75.others
+        { Taste::Coordinates => "573 529";
+          Taste::RCMoperationKind => cyclic;
+          Taste::RCMperiod => 1000 ms;
+          Taste::Deadline => 0 ms;
+          Taste::Importance => MEDIUM ;};
+      SND_PING_obj86 : REQUIRES SUBPROGRAM ACCESS interfaceview::FV::RECV_PING_obj107.others 
+        { Taste::Coordinates => "1182 566";
+          Taste::RCMoperationKind => sporadic;};
+    PROPERTIES
+      Source_Language => C;
+      Taste::Instance_Name => "Function0";
+  END ping;
+
+  SYSTEM IMPLEMENTATION ping.others
+    SUBCOMPONENTS
+      ACTIVATION_obj75_impl : SUBPROGRAM interfaceview::FV::ACTIVATION_obj75.others
+        { Compute_Execution_Time => 0ms..0ms ;};
+    CONNECTIONS
+      SUBPROGRAM ACCESS ACTIVATION_obj75_impl  -> ACTIVATION_obj75;
+  END ping.others;
+
+  ---------------------------------------------------
+  -- TASTE Function: interfaceview::IV::pong
+  ---------------------------------------------------
+
+  SYSTEM pong
+    FEATURES
+      RECV_PING_obj107 : PROVIDES SUBPROGRAM ACCESS interfaceview::FV::RECV_PING_obj107.others
+        { Taste::Coordinates => "1635 569";
+          Taste::RCMoperationKind => sporadic;
+          Taste::RCMperiod => 0 ms;
+          Taste::Deadline => 0 ms;
+          Taste::Importance => MEDIUM ;};
+    PROPERTIES
+      Source_Language => C;
+      Taste::Instance_Name => "Function1";
+  END pong;
+
+  SYSTEM IMPLEMENTATION pong.others
+    SUBCOMPONENTS
+      debug_obj275 : DATA DataView::TASTE_Directive 
+        { Taste::FS_Default_Value => "compiler-option:""-DOPENGEODEDEBUG"""; };
+      RECV_PING_obj107_impl : SUBPROGRAM interfaceview::FV::RECV_PING_obj107.others
+        { Compute_Execution_Time => 0ms..0ms ;};
+    CONNECTIONS
+      DATA ACCESS debug_obj275 -> RECV_PING_obj107_impl.debug_obj275;
+      SUBPROGRAM ACCESS RECV_PING_obj107_impl  -> RECV_PING_obj107;
+  END pong.others;
+
+
+
+PROPERTIES
+  Taste::Coordinates => "0 0 2970 2100";
+  Taste::dataView => ("DataView");
+  Taste::dataViewPath => ("DataView.aadl");
+
+END interfaceview::IV;
+
+PACKAGE interfaceview::FV
+PUBLIC
+
+WITH DataView;
+WITH TASTE;
+
+  SUBPROGRAM ACTIVATION_obj75
+  END ACTIVATION_obj75;
+
+  SUBPROGRAM IMPLEMENTATION ACTIVATION_obj75.others
+  END ACTIVATION_obj75.others;
+
+  SUBPROGRAM RECV_PING_obj107
+    FEATURES
+      param : IN PARAMETER DataView::T_INTEGER
+        { Taste::encoding => NATIVE; };
+      debug_obj275 : REQUIRES DATA ACCESS DataView::TASTE_Directive;
+    PROPERTIES
+      Taste::Associated_Queue_Size => 1;
+  END RECV_PING_obj107;
+
+  SUBPROGRAM IMPLEMENTATION RECV_PING_obj107.others
+  END RECV_PING_obj107.others;
+
+END interfaceview::FV;
+
