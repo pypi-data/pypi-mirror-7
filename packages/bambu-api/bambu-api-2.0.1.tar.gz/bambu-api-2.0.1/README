@@ -1,0 +1,85 @@
+Bambu API
+=========
+
+Quickly expose your models to a JSON or XML API, authenticated via HTTP
+or OAuth.
+
+About Bambu API
+---------------
+
+This package allows you to easily expose Django models to RESTful
+endpoints which can send data in XML or JSON format.
+
+About Bambu Tools 2.0
+---------------------
+
+This is part of a toolset called Bambu Tools. It's being moved from a
+namespace of ``bambu`` to its own 'root-level' package, along with all
+the other tools in the set. If you're upgrading from a version prior to
+2.0, please make sure to update your code to use ``bambu_api`` rather
+than ``bambu.api``.
+
+Installation
+------------
+
+Install the package via Pip:
+
+::
+
+    pip install bambu-api
+
+Add it to your ``INSTALLED_APPS`` list:
+
+::
+
+    INSTALLED_APPS = (
+        ...
+        'bambu_api'
+    )
+
+Add ``bambu_api.urls`` to your URLconf:
+
+::
+
+    urlpatterns = patterns('',
+        ...
+        url(r'^', include('bambu_api.urls')),
+    )
+
+The prefix should be kept blank, as the package exposes two main URL
+stems: ``/api/``, wherein the RESTful endpoints live, and ``/docs/``
+where auto-generated documentation for each endpoint is found.
+
+Basic usage
+-----------
+
+You define API endpoints like Django admins, and register them in a
+similar way.
+
+Teka the Django 'polls' app as an example. Within the polls directory,
+you'd create a file called api.py. A simple API endpoint would be
+defined like this:
+
+::
+
+    from bambu_api import ModelAPI, site
+    from myproject.polls.models import Question
+
+    class QuestionAPI(ModelAPI):
+        pass
+
+    site.register(Question, QuestionAPI)
+
+This registers the ``QuestionAPI`` endpoint for the ``Question`` model.
+The endpoint is then accessible at ``/api/polls/question.json``.
+
+Full documentation
+------------------
+
+Full documentation can be found at
+`ReadTheDocs <http://bambu-api.readthedocs.org/>`_.
+
+Questions or suggestions?
+-------------------------
+
+Find me on Twitter (@iamsteadman) or `visit my blog <http://steadman.io/>`_.
