@@ -1,0 +1,73 @@
+{% macro render_input(field, inline=False) -%}
+<div class="form-group{{ " has-error has-feedback" if field.errors }}">
+  {% if inline %}
+  {{ field.label(class="sr-only") }}
+  {{ field(class="form-control", placeholder=field.label.text) }}
+  {% else %}
+    {% if field.widget.input_type == 'submit' %}
+      {{ field(class="btn btn-default") }}
+    {% else %}
+      {% if field.iter_choices is defined %}
+        {% if field.iter_choices()|list|length == 1 %}
+          {{ field(style="display: none;") }}
+        {% else %}
+          {{ field.label }}
+          {{ field(class="form-control") }}
+        {% endif %}
+      {% else %}
+        {% if field.widget.input_type != 'hidden' -%}
+          {{ field.label }}
+        {% endif %}
+        {{ field(class="form-control") }}
+        {% if field.description %}
+          <span class="help-block">{{ field.description }}</span>
+          {% endif %}
+        {% if field.errors %}
+          <i class="fa fa-times form-control-feedback"></i>
+          {% for error in field.errors %}
+            {% if error is iterable %}
+              <ul class="help-block">
+              {% for sub_error in error %}
+              <li>{{ sub_error }}</li>
+              {% endfor %}
+              </ul>
+            {% else %}
+              <span class="help-block">{{ error }}</span>
+            {% endif %}
+          {% endfor %}
+        {% endif %}
+      {% endif %}
+    {% endif %}
+  {% endif %}
+</div>
+{%- endmacro %}
+
+{% macro render_form(form, inline=False) -%}
+<form class="form" method="post">
+  {% for field in form -%}
+  {{ render_input(field, inline) }}
+  {%- endfor %}
+</form>
+{%- endmacro %}
+
+{% macro navbar_button(text, view=None) %}
+{% if view %}
+{% with url = url_for(view) %}
+<li{{ ' class="active"'|safe if url == request.path }}><a href="{{ url }}">{{ text }}</a></li>
+{% endwith %}
+{% else %}
+<li><a href="#">{{ text }}</a></li>
+{% endif %}
+{% endmacro %}
+
+{% macro status_color(state_string) %}
+{%- if state_string == 'evaluating' -%}
+warning
+{%- elif state_string == 'approved' -%}
+info
+{%- elif state_string == 'paid' -%}
+success
+{%- elif state_string == 'incomplete' or state_string == 'rejected' -%}
+danger
+{%- endif -%}
+{% endmacro %}
