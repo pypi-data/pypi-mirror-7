@@ -1,0 +1,71 @@
+		\subsection{Cas particulier: le tenseur d'ordre 4}
+
+\noindent Le tenseur d'ordre $2$ ne permet pas de modéliser des profils de diffusion hétérogènes avec plusieurs orientations privilégiées. Or, ce type de profil est fréquemment observé au niveau des croisements de faisceaux de fibres. Les tenseurs d'ordre supérieur (en particulier ici d'ordre $4$) permettent de s'affranchir de cette limitation. Lorsque $l=4$, le tenseur de diffusion est représenté par une matrice $3 \times 3 \times 3 \times 3$ symétrique définie positive $\textbf{D}$. Elle contient $15$ éléments distincts $(d_{1111},d_{2222},d_{3333},d_{1112},d_{1113},d_{2221},d_{2223},d_{3331},\-d_{3332},d_{1122},d_{1133},d_{2233},d_{1123},d_{2213},d_{3312})$ de multiplicité $\mu=(1,1,1,4,4,4,4,4,4,6,6,6,12\-,12,12)$. Malheureusement, l'algèbre des tenseurs d'ordre $4$ est peu développée dans la littérature et quasi inexistante dans les librairies numériques actuelles. Ainsi, l'extension de notions classiques utilisées pour les tenseurs d'ordre 2 telles que la défini-positivité, l'inversion ou la diagonalisation demande réflexion. De plus, il est difficile de se représenter des objets de dimension supérieure à $3$. Pour ces raisons, il est usuel d'introduire une matrice $\textbf{M}$ de taille $6 \times 6$ équivalente au tenseur d'ordre $4$ \cite{Tarantola2000, Neeman2009}:
+
+\begin{equation}
+\textbf{M} = 
+\begin{pmatrix}
+d_{1111} & d_{1122} & d_{1133} & \sqrt{2} d_{1112} & \sqrt{2} d_{1113} & \sqrt{2} d_{1123} \\
+*        & d_{2222} & d_{2233} & \sqrt{2} d_{2221} & \sqrt{2} d_{2213} & \sqrt{2} d_{2223} \\
+*        & *        & d_{3333} & \sqrt{2} d_{3312} & \sqrt{2} d_{3331} & \sqrt{2} d_{3332} \\
+*        & *        & *        & 2 d_{1122}        & 2 d_{1123}        & 2 d_{2213}        \\
+*        & *        & *        & *                 & 2 d_{1133}        & 2 d_{3312}        \\
+*        & *        & *        & *                 & *                 & 2 d_{2233} 
+\end{pmatrix}
+\label{MatriceHOT}
+\end{equation} 
+
+\noindent où les $*$ représentent les éléments symétriques. Notons qu'il y a $21$ termes au lieu des $15$ éléments distincts du tenseur d'ordre 4. Ceci vient du fait que certains éléments de symétrie n'apparaissent pas (par exemple $d_{1122}$ et $d_{2211}$).
+
+
+\subsubsection{Les indices scalaires caractérisant un tenseur d'ordre 4} 
+
+\noindent Comme pour les tenseurs d'ordre $2$, des indices scalaires ont été proposés pour résumer l'information contenue dans les $15$ paramètres indépendants du tenseurs d'ordre $4$. Les deux indices importants sont la carte d'ADC moyenne (ou diffusion moyenne) et une carte mesurant l'anisotropie en chaque voxel de l'image. La carte d'ADC moyenne est obtenue de manière analogue au tenseur d'ordre $2$ en considérant un cinquième de la trace de chaque tenseur d'ordre $4$ dans sa représentation $6 \times 6$, $trace(\textbf{M})/5=(d_{1111}+d_{2222}+d_{3333}+2(d_{1122}+d_{1133}+d_{2233}))/5$ \cite{Ozarslan2005} (cf. figure \ref{GA_MD}). Comme expliqué précédemment, il n'est pas possible d'utiliser les valeurs propres de $\textbf{M}$ pour définir une mesure d'anisotropie, ces dernières n'ayant pas d'interprétation physique au regard de l'organisation des micro-structures locales. Dans \cite{Ozarslan2005}, l'anisotropie est exprimée comme la variance des valeurs de diffusion normalisées $D_N(\vec{g})$, où la normalisation se fait via l'expression:
+
+\begin{equation}
+    D_N(\vec{g}) = \frac{d(\vec{g})}{<d(\vec{g})>}
+\end{equation} 
+
+\noindent On peut ensuite écrire la variance $V$ du signal normalisé:
+
+\begin{eqnarray}
+    V & = & <D_N(\vec{g})^2> - <D_N(\vec{g})>^2 \nonumber \\
+      & = & \frac{1}{9} \left( \frac{dist(\textbf{D},\textbf{0})}{<\textbf{D}>^2}-1 \right)
+\end{eqnarray} 
+
+\noindent où $<\textbf{D}>$ représente la diffusion moyenne et avec \cite{BarmpoutisNeuro2009}:
+
+\begin{eqnarray}
+    dist(\mathbf{D_1},\mathbf{D_2})^2 & = & \frac{1}{4\pi} \int_S (d_1(\vec{g})-d_2(\vec{g}))^2 d\vec{g} \nonumber \\
+	                                  & = & d \left( \Delta_{400} + \Delta_{040} + \Delta_{004} + \Delta_{220} + \Delta_{022} + \Delta_{202} \right)^2 \nonumber \\
+									  & + & d \left(  \Delta_{211} +  \Delta_{031} +  \Delta_{013} \right)^2 + d \left(  \Delta_{121} +  \Delta_{301} +  \Delta_{103} \right)^2  \nonumber\\
+	                                  & + & d \left(  \Delta_{112} +  \Delta_{310} +  \Delta_{130} \right)^2 + (b-d) \left( \Delta_{400} + \Delta_{040}+ \Delta_{004} \right)^2 \nonumber \\
+									  & + & (b-d) \left( (\Delta_{310} + \Delta_{130})^2 + (\Delta_{301} + \Delta_{103})^2 + (\Delta_{031} + \Delta_{013})^2 \right) \nonumber \\
+									  & + & (c-d) \left( (\Delta_{400} + \Delta_{220})^2 + (\Delta_{400} + \Delta_{202})^2 \right) \nonumber \\
+									  & + & (c-d) \left( (\Delta_{040} + \Delta_{220})^2 + (\Delta_{400} + \Delta_{022})^2 \right) \nonumber \\
+									  & + & (c-d) \left( (\Delta_{004} + \Delta_{022})^2 + (\Delta_{004} + \Delta_{202})^2 \right) \nonumber \\
+									  & + & (c-b) \left(  \Delta_{310}^2 + \Delta_{301}^2 + \Delta_{130}^2 + \Delta_{031}^2 + \Delta_{103}^2 + \Delta_{013}^2 \right) \nonumber \\
+									  & + & (a-b-2(c-d)) \left( \Delta_{400}^2 + \Delta_{040}^2 + \Delta_{004}^2 \right) \nonumber \\
+									  & + & (b-d-2(c-d)) \left( \Delta_{220}^2 + \Delta_{022}^2 + \Delta_{202}^2 \right) 
+\end{eqnarray}
+
+\noindent où $\mathbf{D_1}$ et $\mathbf{D_2}$ sont deux tenseurs d'ordre $4$, $a=1/9$, $b=1/105$, $c=1/63$, $d=1/315$ et $\Delta_{i,j,k}= d_{2;1^{i}2^{j}3^{k}}-d_{1;1^{i}2^{j}3^{k}}$. Il a été montré dans \cite{Ozarslan2005} que pour un tenseur d'ordre $l$, la borne supérieure de la variance $V$ est donnée par:
+
+\begin{equation}
+    sup(V) = \frac{l^2}{9(2l+1)}
+\end{equation} 
+
+\noindent Ainsi, $lim_{l \rightarrow +\infty} sup(V) = +\infty$. Il est alors d'usage d'appliquer une fonction monotone de $V : [0,+\infty[$ dans $[0,1[$ \cite{Ozarslan2005}. L'anisotropie généralisée (GA) s'écrit alors (cf. figure \ref{GA_MD}):
+
+\begin{equation}
+    GA = 1 - \frac{1}{1+(k_1 V)^{\epsilon(V)}}
+\label{GA}
+\end{equation}
+
+\noindent avec:
+
+\begin{equation}
+    \epsilon(V) = 1 + \frac{1}{1+k_2 V}
+\end{equation}
+
+\noindent où $k_1$ et $k_2$ sont deux coefficients d'échelle. Pour un tenseur d'ordre $4$, les paramètres optimaux valent $250$ et $5000$ respectivement \cite{Ozarslan2005}. Cet indice peut également être calculé pour des tenseurs d'ordre 2 ou plus généralement pour tout tenseur de diffusion, mais son obtention reste empirique puisqu'il faut fixer les valeurs de $k_1$ et $k_2$. \newline

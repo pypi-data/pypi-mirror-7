@@ -1,0 +1,112 @@
+**Second Order Tensor Scalar Parameters**
+
+At each voxel and from the six independant second order tensor parameters,
+an ellipsoid (or a peanut) can be ploted. Such a visualization is quite complex and hard to
+interpret.
+Therefore, a wide range of scalar measurements can be computed to reduce
+the six parameters of the diffusion tensor. The two most popular scalar maps
+are the fractional anisotropy (FA) map and the mean diffusivity (MD) map.
+
+The MD map is calculated from the three eigenvalues
+:math:`\lambda_1 \ge \lambda_2 \ge \lambda_3` of the diffusion tensor as
+follows:
+
+.. math::
+
+    md = \frac{\lambda_1 + \lambda_2 + \lambda_3}{3}
+
+The MD is invariant under tensor rotation and allows the characterization of
+the diffusivity of the medium: the greater the diffusion is restrain, the lower
+is the MD value (in the white matter for instance) and vice versa, the less the
+diffusion is restrain, the greater is the MD value (in the cerebrospinal fluid
+for instance).
+
+The anisotropy can be characterized in several ways. It is interesting to
+access this parameter since it is directly related to the degree of tissue
+organization. The simplest way is to consider the ratio between the
+maximum and minimum eigenvalues :math:`\lambda_1 / \lambda_3`. When the
+ellipse is elongated this measure increases. Unfortunately, this measure
+is sensitive to measurement noise and do not take into account the second
+eigenvalue. Another way to characterize the anisotropy is based on the
+difference of the three eigenvalues,
+:math:`(\lambda_1-\lambda_2)^2+(\lambda_1-\lambda_3)^2+(\lambda_2-\lambda_3)^2`.
+This measure is zero for a sphere (:math:`\lambda_1=\lambda_2=\lambda_3`) and
+increases when the sphere is distorted. When this measure is normalized
+between 0 and 1 the FA is obtained:
+
+.. math::
+
+    fa = \sqrt{\frac{1}{2}\frac{(\lambda_1-\lambda_2)^2+(\lambda_2-
+               \lambda_3)^2+(\lambda_3-\lambda_1)^2}{\lambda_1^2+
+               \lambda_2^2+\lambda_3^2}}
+
+However, there are many other ways to represent the anisotropy of diffusion
+tensor. Westin and al. proposed to classify the diffusion tensor into three
+subcategorie:
+
+* **Linear case** (:math:`\lambda_1 \gg \lambda_2 \approx \lambda_3`): the
+  diffusion is mainly in the direction of the eigenvector associated with the
+  largest eigenvalue.
+
+.. math::
+
+    \mathbf{D} \approx \lambda_1 \mathbf{D_l} = \lambda_1 \vec{e_1} \vec{e_1}^t
+
+* **Planar case** (:math:`\lambda_1 \approx \lambda_2 \gg \lambda_3`): the
+  diffusion is in the plane defined by the two eigenvectors corresponding to the
+  two largest eigenvalues.
+
+.. math::
+
+    \mathbf{D} \approx \lambda_1 \mathbf{D_p} = 
+    \lambda_1 (\vec{e_1} \vec{e_1}^t + \vec{e_2} \vec{e_2}^t)
+
+* **Spheric case** (:math:`\lambda_1 \approx \lambda_2\approx \lambda_3`): the
+  diffusion is isotropic.
+
+.. math::
+
+    \mathbf{D} \approx \lambda_1 \mathbf{D_s} = 
+    \lambda_1 (\vec{e_1} \vec{e_1}^t + \vec{e_2} \vec{e_2}^t + \vec{e_3} \vec{e_3}^t)
+
+A diffusion tensor :math:`\mathbf{D}` can be represented by combination of
+these three cases:
+
+.. math::
+
+    \textbf{D} &= \lambda_1\vec{e_1} \vec{e_1}^t +
+                     \lambda_2\vec{e_2} \vec{e_2}^t +
+                     \lambda_3\vec{e_3} \vec{e_3}^t \nonumber \\
+               &= (\lambda_1 - \lambda_2)\vec{e_1} \vec{e_1}^t +
+                     (\lambda_2 - \lambda_3)(\vec{e_1} \vec{e_1}^t +
+                     \vec{e_2} \vec{e_2}^t) +
+                     \lambda_3(\vec{e_1} \vec{e_1}^t+\vec{e_2} \vec{e_2}^t+
+                     \vec{e_3} \vec{e_3}^t) \nonumber \\
+               &= (\lambda_1 - \lambda_2)\mathbf{D_l} +
+                      (\lambda_2 - \lambda_3)\mathbf{D_p} +\lambda_3 \mathbf{D_s}
+
+where :math:`(\lambda_1 - \lambda_2)`, :math:`(\lambda_2 - \lambda_3)` and
+:math:`\lambda_3` are the coordinates of :math:`\mathbf{D}` in the
+tensor basis :math:`[\mathbf{D_l}, \mathbf{D_p}, \mathbf{D_s}]`. This
+relationship between the eigenvalues of the diffusion tensor enables the
+classification of the diffusion tensor from its geometric shape. Using this
+new decomposition, it is possible to quantify the similarity to the linear,
+planar and spherical cases. The coefficients obtained are normalized as follows:
+
+.. math::
+
+    c_l &= \frac{\lambda_1-\lambda_2}{\sqrt{\lambda_1^2+\lambda_2^2+
+                                            \lambda_3^2}}  \nonumber \\
+    c_p  &= \frac{2(\lambda_2-\lambda_3)}{\sqrt{\lambda_1^2+\lambda_2^2+
+                                                \lambda_3^2}} \nonumber \\
+    c_s &= \frac{3 \lambda_3}{\sqrt{\lambda_1^2+\lambda_2^2+
+                                            \lambda_3^2}} 
+
+We have :math:`c_l + c_p + c_s = 1`. These three factors provide additional
+information characterizing the shape of a tensor. Finally, the anisotropy can
+be measured as a difference with the spherical case:
+
+.. math::
+
+    c_a = c_l + c_p = 1 - c_s = 1 - \frac{3 \lambda_3}{\sqrt{\lambda_1^2+\lambda_2^2+
+                                            \lambda_3^2}}

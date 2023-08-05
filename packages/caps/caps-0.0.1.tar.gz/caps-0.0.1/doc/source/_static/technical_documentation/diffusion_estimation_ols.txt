@@ -1,0 +1,139 @@
+**Ordinary Least Sqaure Tensor Estimation: Diffusivity Modelisation**
+
+Notations:
+
+* :math:`S_i(TE)` is the diffsuion signal in the direction :math:`\vec{g_i}`
+  and is denoted :math:`S_i`.
+* :math:`S(TE)_{g=0}` is the signal without diffusion weighted and is denoted
+  :math:`S_0`. 
+
+The signal attenuation can be modeled using the Stejskal-Tanner equation.
+Taking the logarithm of this equation:
+
+.. math::
+    -\frac{1}{b}ln\left(\frac{S_i}{S_0}\right)=\vec{g}^TD\vec{g}
+
+For a second order tensor (a 3 by 3 symmetric positive-definite matrix), 
+
+.. math::
+
+    \mathbf{D} =
+    \begin{pmatrix}
+    d_{11} & d_{12} & d_{13} \\
+    *      & d_{22} & d_{23}\\
+    *      &*       & d_{33}
+    \end{pmatrix}
+
+solving the Stejskal-Tanner for more than 6 gradient
+directions results in an overdetermined linear system:
+
+.. math::
+    
+    \vec{y}
+    =
+    \begin{pmatrix}
+    -\frac{1}{b}ln\left(\frac{S_1}{S_0}\right) \\
+    \vdots \\
+    -\frac{1}{b}ln\left(\frac{S_i}{S_0}\right) \\
+    \vdots \\
+    -\frac{1}{b}ln\left(\frac{S_N}{S_0}\right) \\
+    \end{pmatrix}
+    =
+    \begin{pmatrix}
+    g_{1;1}^2 & g_{1;2}^2 & g_{1;3}^2 & 2g_{1;1} g_{1;2} & 2g_{1;1} g_{1;3} &
+    2 g_{1;2} g_{1;3} \\
+    \vdots & \vdots & \vdots & \vdots & \vdots & \vdots \\
+    g_{i;1}^2 & g_{i;2}^2 & g_{i;3}^2 & 2g_{i;1} g_{i;2} & 2g_{i;1} g_{i;3} &
+    2 g_{i;2} g_{i;3} \\
+    \vdots & \vdots & \vdots & \vdots & \vdots & \vdots \\
+    g_{N;1}^2 & g_{N;2}^2 & g_{N;3}^2 & 2g_{N;1} g_{N;2} & 2g_{N;1} g_{N;3} &
+    2 g_{N;2} g_{N;3} 
+    \end{pmatrix}
+    \begin{pmatrix}
+    d_{11} \\
+    d_{22} \\
+    d_{33} \\
+    d_{12} \\
+    d_{13} \\
+    d_{23}
+    \end{pmatrix}
+
+
+Where N is the number of gradient measures, and :math:`g_{i;j}` is the jth
+component of the ithe gradient direction :math:`\vec{g_i}`. 
+
+Similarly, for a fouth order tensor, the linear system to solved can be written:
+
+
+.. math::
+
+    \vec{y}
+    =
+    \begin{pmatrix}
+    -\frac{1}{b}ln\left(\frac{S_1}{S_0}\right) \\
+    \vdots \\
+    -\frac{1}{b}ln\left(\frac{S_i}{S_0}\right) \\
+    \vdots \\
+    -\frac{1}{b}ln\left(\frac{S_N}{S_0}\right) \\
+    \end{pmatrix}
+    =
+    \begin{pmatrix}
+    g_{1;1}^4 & g_{1;2}^4 & g_{1;3}^4 & 4 g_{1;1}^3 g_{1;2} &
+    \ldots & 12 g_{1;2}^2 g_{1;1} g_{1;3} & 12 g_{1;3}^2 g_{1;1} g_{1;2} \\
+    \vdots   & \vdots   & \vdots   & \vdots   & \vdots   & \vdots  & \vdots \\
+    g_{i;1}^4 & g_{i;2}^4 & g_{i;3}^4 & 4 g_{i;1}^3 g_{i;2} &
+    \ldots & 12 g_{i;2}^2 g_{i;1} g_{i;3} & 12 g_{i;3}^2 g_{i;1} g_{i;2} \\
+    \vdots   & \vdots   & \vdots   & \vdots   & \vdots   & \vdots  & \vdots \\
+    g_{N;1}^4 & g_{N;2}^4 & g_{N;3}^4 & 4 g_{N;1}^3 g_{N;2} &
+    \ldots & 12 g_{N;2}^2 g_{N;1} g_{N;3} & 12 g_{N;3}^2 g_{N;1} g_{N;2} 
+    \end{pmatrix}
+    \begin{pmatrix}
+    d_{1111} \\
+    d_{2222} \\
+    d_{3333} \\
+    d_{1112} \\
+    d_{1113} \\
+    d_{2221} \\
+    d_{2223} \\
+    d_{3331} \\
+    d_{3332} \\
+    d_{1122} \\
+    d_{1133} \\
+    d_{2233} \\
+    d_{1123} \\
+    d_{2213} \\
+    d_{3312}
+    \end{pmatrix}
+
+Finally,the linear system to solve has the form
+
+.. math::
+
+    \vec{y}=\mathbf{A}\vec{x}
+
+To estimate the 6 parameters of a second order tensor, :math:`N \ge 6`
+directions are required.
+To estimate the 15 parameters of the fourth order tensor, :math:`N \ge 15`
+directions are required.
+Solving this system using a least square strategy leads us to find 
+:math:`\vec{x}` (the independant elements of :math:`\textbf{D}`) minimizing
+the estimation error :math:`||\vec{r}||^2 = ||\vec{y}-\mathbf{A}\vec{x}||^2`,
+where each row of :math:`\mathbf{A}` contains the :math:`N_l` diffusion
+tensor monoms. The solution is then given by:
+
+.. math::
+    \vec{x} = (\mathbf{A}^T\mathbf{A})^{-1}\mathbf{A}^T \vec{y}
+
+Such estimation minimize the quadratic error between the measure and the
+estimate (prediction). It has been shown that the least square solution is the
+best maximum likelihood estimator for an additive gaussian noise on the
+observations :math:`\vec{y}` (in our case a gaussian noise on the ADC).
+
+.. warning::
+
+    This noise model do not correspond to the acquisition noise which is Rician.
+    On top of that, the positive nature of a diffusion tensor is not taking
+    into account during the estimation: negative eigenvalues are often set to
+    an arbitrary small positive value.
+    To overcome this limitation, complex (often non linear) sytem has to be
+    soved.

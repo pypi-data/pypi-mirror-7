@@ -1,0 +1,134 @@
+\subsection{Modélisation de la probabilité de déplacement: la fonction de distribution des orientations}
+
+\begin{figure}[tbp]
+\centering
+	\includegraphics[scale=1.0]{./ima/odf_diff}
+	\caption{Visualisation de la probabilité de déplacement, du signal de diffusion (cette image a été tournée de 90° par rapport à la configuration du croisement de fibres) et de la diffusivité pour un croisement de fibre à $90$ degrés.}
+	\label{ODF_DIFF}
+\end{figure}
+
+			\subsubsection{Introduction}
+
+\noindent A l'intérieur d'un voxel, les fibres peuvent avoir des orientations hétérogènes. Dans un premier temps, nous montrons que la  modélisation de la diffusivité n'est pas le reflet direct de l'organisation des structures sous-jacentes (\cad la direction de diffusivité maximale ne correspond pas nécessairement avec l'orientation des faisceaux de fibres). Pour ce faire, considérons deux faisceaux orthogonaux $a$ et $b$ qui se croisent, chacun d'entre eux occupant une fraction $f$ et $(1-f)$ du volume du voxel. Soient $\mathbf{D_a}$ et $\mathbf{D_b}$ les tenseurs de diffusion correspondant à chacun des faisceaux et $P_a(\vec{R},\tau)$ et $P_b(\vec{R},\tau)$ les propagateurs associés. La probabilité, d'une molécule d'eau choisie aléatoirement de parcourir une distance $\vec{R}$ pendant un temps $\tau$ s'écrit \cite{Minati2007}:
+
+\begin{equation}
+    P(\vec{R},\tau) = fP_a(\vec{R},\tau) + (1-f)P_b(\vec{R},\tau)
+\label{Plinear}
+\end{equation}
+
+\noindent Si on fait l'hypothèse que les signaux s'ajoutent indépendamment, on obtient \cite{Minati2007}:
+
+\begin{equation}
+    S(\vec{g},b) = f exp(-b\vec{g}^T \mathbf{D_a} \vec{g}) + (1-f) exp(-b\vec{g}^T \mathbf{D_b} \vec{g}) = exp(-bd(\vec{g}))
+\end{equation}
+
+\noindent Et donc:
+
+\begin{equation}
+    d(\vec{g}) = -\frac{1}{b} ln \left[ f exp(-b\vec{g}^T\mathbf{D_a}\vec{g}) + (1-f) exp(-b\vec{g}^T\mathbf{D_b}\vec{g}) \right]
+\label{Dnlinear}
+\end{equation}
+
+\noindent La figure \ref{ODF_DIFF}-A présente la probabilité de déplacement $P(\vec{R},\tau)$ pour $||R||=constant$. La figure \ref{ODF_DIFF}-B donne la mesure de diffusivité $d(\vec{g})$ en fonction de la direction. On remarque que les maxima de la probabilité de déplacement sont alignés avec les directions des faisceaux de fibres passant dans le voxel alors que la diffusivité ne l'est pas. En effet, les diffusivités des deux compartiments sont combinées en appliquant une fonction non linéaire \eqref{Dnlinear}, alors que les probabilités de déplacement sont combinées en appliquant une fonction linéaire \eqref{Plinear}. \newline
+
+\noindent Jusqu'à présent, les méthodes présentées estimaient les paramètres d'un modèle de la diffusivité. Pour les raisons évoquées précédemment, il est essentiel d'introduire une modélisation du propagateur dont les maxima sont alignés avec les directions des faisceaux de fibres de la substance blanche: la fonction de distribution des orientations (ou en angais Orientational Distribution Function: ODF).
+
+
+
+			\subsubsection{La fonction de distribution des orientations (ODF)}
+
+\noindent Nous venons de voir que les maxima d'un tenseur d'ordre 4, modélisant la diffusivité, ne sont pas alignés avec les directions de diffusion des molécules d'eau dans le milieu, d'où la nécessité d'introduire une nouvelle modélisation. Il est possible de modéliser le signal contenu dans chaque voxel de différentes façons. Le propagateur peut être calculé en remarquant que le signal mesuré est relié au propagateur par une transformée de Fourier notée $\mathcal{F}$ \cite{Wedeen2005}:
+
+\begin{equation}
+	\frac{S_i}{S_0}= \mathcal{F}[P(\vec{r},\tau)] 
+\end{equation}
+
+\noindent Intuitivement, on remarque qu'il faut échantillonner $S$ le long d'un grand nombre de directions $\vec{g_i}$ pour différentes valeurs de $b$. Cette technique requiert donc un temps d'acquisition très long. Une alternative consiste à calculer la fonction de distribution des orientations (ODF). Deux méthodes permettent de retrouver cette information. La première considère la projection radiale du propagateur $P$ \cite{Tuch2004}:
+
+\begin{equation}
+	\psi(\vec{u}) = \int_{0}^{\infty} P(r \vec{u}, \tau) dr
+\end{equation}
+
+\noindent où $\vec{u}$ est un vecteur unité. On parle alors d'ODF de diffusion. La deuxième méthode considère le signal observé comme une convolution sphérique de l'ODF $\psi$ avec la réponse impulsionnelle d'une seule fibre $R$ \cite{Tournier2004}:
+
+\begin{equation}
+	S(\theta,\phi) = \psi(\theta,\phi) \otimes R(\theta)
+\end{equation}
+
+\noindent où $\theta$ est l'élévation en coordonnées sphériques. On parle alors d'ODF de fibres.
+
+
+			\subsubsection{Extension de la méthode des quartiques}
+
+\noindent La méthode des quartiques permet d'estimer des tenseurs définis positifs modélisant la diffusivité. L'extension de cette méthode permet d'estimer une ODF de fibres également définie positive. Une première approche estime l'ODF de fibre à partir du signal de diffusion. Ce dernier est alors modélisé en utilisant une reconstruction multi-fibres \cite{Weldeselassie2010}:
+
+\begin{equation}
+    \frac{S(\vec{g},b)}{S_0} = \int_{S_2} \sum_{j=1}^{M'} \underbrace{\lambda_j p(v_1,v_2,v_3;\vec{c_j})^2}_{w(\vec{v})} B(\vec{v},\vec{g},b) d\vec{v}
+\end{equation}
+
+\noindent où $S_2$ représente la sphère unité, $v_1$, $v_2$ et $v_3$ les trois composantes du vecteur unitaire $\vec{v}$, $B(\vec{v},\vec{g},b)$ une fonction de base, et $w(\vec{v})$ est une fonction sphérique non-négative assimilable à une fonction de pondération du mélange. La fonction d'énergie à minimiser lors de l'estimation s'écrit alors:
+
+\begin{equation}
+     E(\lambda_1,...,\lambda_{M'}) = \sum_{i=1}^N \left( S_i/S_0 - \sum_{j=1}^{M'} \int_{S_2} \lambda_j p(v_1,v_2,v_3;\vec{c_j})^2 B(\vec{v},\vec{g_i},b) d\vec{v} \right)^2
+\end{equation}
+
+\noindent Dans \cite{Weldeselassie2010}, un noyau gaussien est proposé pour le choix de $B(\vec{v},\vec{g_i},b)$ afin de refléter l'atténuation du signal induit par la réponse d'une fibre unique orientée dans la direction $\vec{v}$ (ce noyau modélise donc le processus de diffusion):
+
+\begin{equation}
+     B(\vec{v},\vec{g},b) = exp(-\delta(\vec{v}^T\vec{g})^2)
+\end{equation}
+
+\noindent où $\delta$ est fixé à $200$ et n'influe que très peu le résultat \cite{Weldeselassie2010}. Cette modélisation donne un maximum (respectivement un minimum) du signal de diffusion pour un gradient dans une direction perpendiculaire (respectivement parallèle) à l'orientation des fibres sous-jacente $\vec{v}$, ce qui est en accord avec l'acquisition. Finalement, l'estimation se fait en résolvant le système de la forme $\vec{y} = \mathbf{B} \vec{x}$ en utilisant un algorithme NNLS pour garantir la positivité des paramètres estimés. La matrice $\mathbf{B}$ est de taille $N \times M'$ et de terme général $b_{i,j}(\vec{g_i},\vec{c_j}) = \int_{S_2} p(v_1,v_2,v_3;c_j)^2 B(\vec{v},\vec{g_i},b) d\vec{v}$. Le système s'écrit:
+
+\begin{equation}
+\begin{pmatrix}
+\frac{S_1}{S_0} \\
+\vdots \\
+\frac{S_i}{S_0}\\
+\vdots \\
+\frac{S_N}{S_0} \\
+\end{pmatrix}
+=
+\begin{pmatrix}
+b_{1,1}(\vec{g_1};\vec{c_1}) & \ldots    &  b_{1,M'}(\vec{g_1};\vec{c_{M'}}) \\
+\vdots           &  \vdots   & \vdots            \\
+\ldots       & b_{i,j}(\vec{g_i};\vec{c_j}) & \ldots \\
+\vdots           & \vdots    & \vdots            \\
+b_{N,1}(\vec{g_N};\vec{c_1}) & \ldots    &  b_{N,M'}(\vec{g_N};\vec{c_{M'}})
+\end{pmatrix}
+\begin{pmatrix}
+\lambda_1 \\
+\vdots\\
+\lambda_{M'} 
+\end{pmatrix}
+\label{nnls_quartic}
+\end{equation}
+
+\noindent Comme avec la méthode des quartiques, les $N_l$ coefficients de l'ODF de fibres d'ordre $l$ définis positifs $d_k$ ($k \in [1,\dots, N_l]$) sont donnés par la relation $\mathbf{C} \vec{x}$. La deuxième façon de faire estime l'ODF de fibres à partir des $N_l$ coefficients du tenseur d'ordre $l$ modélisant la diffusivité. Ces coefficients sont placés dans un vecteur $\vec{t}$. Avec les notations introduites précédemment, le système à résoudre s'écrit $\vec{y} = \mathbf{B} \vec{x}$ avec $\vec{y}=exp(-b \mathbf{G} \vec{t})$:
+
+\begin{equation}
+\begin{pmatrix}
+y_1 \\
+\vdots \\
+y_i\\
+\vdots \\
+y_N \\
+\end{pmatrix}
+=
+\begin{pmatrix}
+b_{1,1}(\vec{g_1};\vec{c_1}) & \ldots    &  b_{1,M'}(\vec{g_1};\vec{c_{M'}}) \\
+\vdots           &  \vdots   & \vdots            \\
+\ldots       & b_{i,j}(\vec{g_i};\vec{c_j}) & \ldots \\
+\vdots           & \vdots    & \vdots            \\
+b_{N,1}(\vec{g_N};\vec{c_1}) & \ldots    &  b_{N,M'}(\vec{g_N};\vec{c_{M'}})
+\end{pmatrix}
+\begin{pmatrix}
+\lambda_1 \\
+\vdots\\
+\lambda_{M'} 
+\end{pmatrix}
+\label{nnls_quartic}
+\end{equation}
+
+\noindent Finalement, les $N_l$ coefficients de l'ODF de fibres d'ordre $l$ $d_k$ ($k \in [1,\dots, N_l]$) sont donnés par la relation $\mathbf{C} \vec{x}$.
+

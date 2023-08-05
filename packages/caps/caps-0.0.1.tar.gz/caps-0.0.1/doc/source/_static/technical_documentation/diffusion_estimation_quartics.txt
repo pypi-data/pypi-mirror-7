@@ -1,0 +1,96 @@
+\subsection{La méthode des quartiques: modélisation de la diffusivité}
+
+\noindent Lors de l'estimation des tenseurs de diffusion, il est souhaitable d'imposer une contrainte de positivité sur les tenseurs. La paramétrisation des tenseurs d'ordre pairs définis positifs présentée dans \cite{Barmpoutis2010} permet de prendre en compte cette contrainte de positivité.
+
+ 			\subsubsection{Paramétrisation des tenseurs de diffusion}
+
+\noindent Un tenseur de diffusion est représenté par un profil de diffusion pouvant être vu comme un polynôme positif sur la sphère unité (équation \eqref{GProfil}).
+ Tout polynôme positif peut s'écrire comme une somme de polynômes d'ordres inférieurs élevés au carré \cite{Berg1987, Rudin2000}. Ainsi, en imagerie de diffusion, tout polynôme homogène positif d'ordre $l$ pair de $3$ variables peut s'écrire comme la somme au carré de polynômes homogènes $p(g_1,g_2,g_3;\vec{c})$ d'ordre $l/2$, où $\vec{c}$ est un vecteur contenant les coefficients du polynôme:
+
+\begin{equation}
+    d(\vec{g},\vec{c_1}, ..., \vec{c_M}) = \sum_{i=1}^M p(g_1,g_2,g_3;\vec{c_i})^2
+\label{quartics}
+\end{equation}
+
+\noindent Le nombre de termes dans la sommation a comme borne supérieure le nombre de monômes uniques d'un polynôme homogène d'ordre $l/2$ à $3$ variables, M: $$M \le \frac{(2+l/2)!}{2(l/2)!}$$ Par exemple, un tenseur d'ordre $2$ peut s'écrire comme la somme de $M \le 3$ polynômes d'ordre $1$ au carré. De même, un tenseur d'ordre $4$ pourra s'écrire comme une somme de $M \le 6$ polynômes d'ordre $2$ au carré. Ceci est en accord avec le théorème d'Hilbert qui énonce que $M=3$ polynômes sont suffisants dans l'équation \eqref{quartics} pour un polynôme d'ordre $4$ \cite{Hilbert1888}. La paramétrisation dans l'équation \eqref{quartics} permet de générer tout l'espace des polynômes homogènes positifs avec pour seule contrainte que l'ordre du polynôme soit pair. Les inconnues sont les coefficients $\vec{c_i}$ des polynômes $p(.)$ dont le nombre est borné par: $$\frac{1}{8} \left( \frac{(2+l/2)!}{(l/2)!} \right)^2 + \frac{(2+l/2)!}{4(l/2)!},$$ soient $6$ et $21$ coefficients pour $l=2$ et $l=4$.
+
+		\subsubsection{Formulation du problème d'optimisation}
+
+\noindent L'estimation d'un tenseur de diffusion défini positif se fait en minimisant la fonction d'énergie suivante par rapport aux coefficients polynômiaux \cite{Barmpoutis2010}:
+
+\begin{equation}
+    E(\vec{c_1},...,\vec{c_M}) = \sum_{i=1}^N ( S_i/S_0 - exp(-bd(\vec{g_i},\vec{c_1},...,\vec{c_M})) )^2
+\label{energy}
+\end{equation}
+
+\noindent où $d(\vec{g},\vec{c_1},...,\vec{c_M})$ est donné par \eqref{quartics}. Le problème d'optimisation ainsi posé est non contraint, mais également non linéaire en fonction des paramètres $(\vec{c_1},...,\vec{c_M})$. Il est possible de se ramener à un problème linéaire avec une contrainte de positivité sur les paramètres à estimer en réécrivant $d(\vec{g},\vec{c_1},...,\vec{c_M})$ comme une convolution sphérique \cite{Barmpoutis2010}:
+
+\begin{equation}
+    d(\vec{g},\lambda(.)) = \int_{S_{(M-1)}} \lambda(\vec{c})p(g_1,g_2,g_3;\vec{c})^2 d\vec{c}
+\label{Sconvolution}
+\end{equation}
+
+\noindent où $\lambda(\vec{c})$ est une fonction réelle non-négative. Ainsi, le profil de diffusion $d(\vec{g})$ n'est plus paramétré par l'ensemble des coefficients polynomiaux $(\vec{c_1},...,\vec{c_M})$, mais par la fonction $\lambda(\vec{c})$. Dès lors, en injectant \eqref{Sconvolution} dans \eqref{energy}, le problème d'optimisation revient à déterminer la fonction $\lambda(\vec{c})$ qui minimise $E$. Pour permettre une résolution numérique de ce problème, on approche l'intégrale \eqref{Sconvolution} sur la sphère en considérant un jeu de $M'$ vecteurs unitaires $(\vec{c_1},...,\vec{c_{M'}})$ \cite{Barmpoutis2010}:
+
+\begin{equation}
+    d(\vec{g},\lambda_1, ...,\lambda_{M'}) = \sum_{i=1}^{M'} \lambda_i p(g_1,g_2,g_3;\vec{c_i})^2 
+\label{SconvolutionD}
+\end{equation}
+
+\noindent où les $\lambda_i$ sont des nombres réels positifs. L'équation \eqref{SconvolutionD} approxime l'espace des tenseurs d'ordre $l$ positifs avec une précision contrôlée par $M'$.
+
+			\subsubsection{Estimation des paramètres} 
+
+\noindent En présence d'un fort rapport signal à bruit sur les images, les tenseurs de diffusion définis positifs peuvent être calculés en minimisant une version log-linéaire de \eqref{energy}. Cela revient à résoudre un système linéaire contraint de telle sorte que les estimées ne contiennent aucun élément négatif. Le système est de la forme $\vec{y} = \mathbf{P} \vec{x}$:
+
+\begin{equation}
+\begin{pmatrix}
+-\frac{1}{b}ln\left(\frac{S_1}{S_0}\right) \\
+\vdots \\
+-\frac{1}{b}ln\left(\frac{S_i}{S_0}\right) \\
+\vdots \\
+-\frac{1}{b}ln\left(\frac{S_N}{S_0}\right) \\
+\end{pmatrix}
+=
+\begin{pmatrix}
+p(\vec{g_1};\vec{c_1}) & \ldots    &  p(\vec{g_1};\vec{c_{M'}}) \\
+\vdots           &  \vdots   & \vdots            \\
+\ldots       & p(\vec{g_i};\vec{c_j}) & \ldots \\
+\vdots           & \vdots    & \vdots            \\
+p(\vec{g_N};\vec{c_1}) & \ldots    &  p(\vec{g_N};\vec{c_{M'}})
+\end{pmatrix}
+\begin{pmatrix}
+\lambda_1 \\
+\vdots\\
+\lambda_{M'} 
+\end{pmatrix}
+\label{nnls_quartic}
+\end{equation}
+
+\noindent %Le rang de P est égal au nombre de coefficients uniques du tenseur d'ordre K, $rang(P) \le N_K$. 
+$\mathbf{P}$ peut s'écrire comme le produit d'une matrice $\mathbf{G}$ de taille $N \times N_l$ contenant les monômes construits à partir des directions d'acquisition $\vec{g_i}$:
+
+\begin{equation}
+\mathbf{G}
+=
+\begin{pmatrix}
+ (g_{1;1})^{n_1^l(1)} (g_{1;2})^{n_2^l(1)} (g_{1;3})^{n_3^l(1)}        & \ldots    &   (g_{1;1})^{n_1^l(N_l)} (g_{1;2})^{n_2^l(N_l)} (g_{1;3})^{n_3^l(N_l)} \\
+\vdots           &     & \vdots            \\
+ (g_{N;1})^{n_1^l(1)} (g_{N;2})^{n_2^l(1)} (g_{N;3})^{n_3^l(1)}        & \ldots    &   (g_{N;1})^{n_1^l(N_l)} (g_{N;2})^{n_2^l(N_l)} (g_{N;3})^{n_3^l(N_l)} \\
+\end{pmatrix}
+\end{equation}
+
+\noindent et d'une matrice $\mathbf{C}$ de taille $N_l \times M'$ contenant seulement les monômes construits avec les éléments des vecteurs $\vec{c_j}$:
+
+\begin{equation}
+\mathbf{C}
+=
+\begin{pmatrix}
+ \mu_1^l (c_{1;1})^{n_1^l(1)} (c_{1;2})^{n_2^l(1)} (c_{1;3})^{n_3^l(1)}        & \ldots    &    \mu_{N_l}^l (c_{1;1})^{n_1^l(N_l)} (c_{1;2})^{n_2^l(N_l)} (c_{1;3})^{n_3^l(N_l)} \\
+\vdots           &     & \vdots            \\
+  \mu_1^l (c_{M';1})^{n_1^l(1)} (c_{M';2})^{n_2^l(1)} (c_{M';3})^{n_3^l(1)}        & \ldots    &   \mu_{N_l}^l (c_{M';1})^{n_1^l(N_l)} (c_{M';2})^{n_2^l(N_l)} (c_{M';3})^{n_3^l(N_l)} \\
+\end{pmatrix}^T
+\end{equation}
+
+\noindent Pour résoudre ce système en imposant que tous les $\lambda_j$ soient positifs, un algorithme NNLS (Non-Negative Least Square) est mis en oeuvre \cite{Lawson1974}. La solution obtenue contient au plus $rang(\mathbf{P})$ éléments non nuls. Il est intéressant de remarquer qu'un tenseur positif peut être estimé à partir des équations \eqref{ols_2} et \eqref{ols_4} en définissant un problème d'optimisation sous contraintes. Dans ce cas, la contrainte n'est pas triviale (il faut estimer des valeurs et les contraindre pour obtenir un tenseur symétrique défini positif). Ici, après reformulation du problème d'optimisation, il suffit d'imposer une simple contrainte de positivité directement sur les paramètres estimés. Les $N_l$ coefficients du tenseur d'ordre $l$ $d_k$ ($k \in [1,\dots, N_l]$) sont donnés par la relation $\mathbf{C} \vec{x}$.
+
