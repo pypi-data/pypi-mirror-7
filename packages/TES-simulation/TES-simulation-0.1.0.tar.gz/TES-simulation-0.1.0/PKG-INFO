@@ -1,0 +1,134 @@
+Metadata-Version: 1.1
+Name: TES-simulation
+Version: 0.1.0
+Summary: Simulates a Token Exchange System (TES, a token--dollar local economy)
+Home-page: https://www.PrincipledSocietiesProject.org
+Author: John Boik
+Author-email: john.boik@PrincipledSocietiesProject.org
+License: GPL v3
+Description: ****************************
+        “TES-simulation” Users Guide
+        ****************************
+        
+        :Author: John C. Boik
+        :Version: 0.1.0 of May, 2014 
+        :Email: john.boik@PrincipledSocietiesProject.org
+        
+        
+        Introduction
+        ============
+        
+        This document is a users guide for the python package ``TES-simulation``, which simulates a Token Exchange System (TES), a type of complementary currency system that is described in the book *Economic Direct Democracy*.\ [JCB14]_ The local electronic currency is called the *token*. Together with the dollar, it defines a local token--dollar economy. A Local Economic Direct Democracy Association (LEDDA)---a membership-based, community-benefit corporation---implements a TES. 
+        
+        The simulation tracks the flows of tokens and dollars in a U.S. county economy over a period of years, in annual steps. To understand the package, one should read “First Microsimulation Model of a LEDDA Community Currency--Dollar Economy,” by John Boik, available as a working paper from the IDEAS repository.\ [JCB14b]_ The paper was submitted in 2014 to a peer-reviewed journal for publication. This Users Guide provides information about the ``TES-simulation`` package that was not contained in the paper or the paper's appendix.\ [JCB14c]_
+        
+        
+        Modules and Classes
+        ===================
+        
+        Modules for this package are listed below. Each module describes a single class. 
+        
+        1. Module ``Class_CBFS`` describes the CBFS class. 
+        
+        2. Module ``Class_County`` describes the COUNTY class. 
+        
+        3. Module ``Class_Gov`` describes the GOVERNMENT class. 
+        
+        4. Module ``Class_Ledda`` describes the LEDDA class. 
+        
+        5. Module ``Class_Org`` describes the ORGANIZATIONS class. 
+        
+        6. Module ``Class_Persons`` describes the PERSONS class. 
+        
+        7. Module ``Class_Roc`` describes the ROC (Rest-of-Counties) class. 
+        
+        8. Module ``Config`` holds configuration information and serves as a common container for data objects. 
+        
+        9. Module ``InitializeFx`` holds functions that initialize objects at the start of the simulation. 
+        
+        10. Module ``MiscFx`` holds miscellaneous functions. Most of these are graphing and printing functions.
+        
+        11. Module ``Debug`` holds a function that starts pdb (python debugger) when an exception is raised and not otherwise caught. It is a useful aid during code development. Import of this module can be commented out from all package files, if desired.
+        
+        The main script is ``run_simulation.py``.
+        
+        
+        Requirements
+        ============
+        
+        ``TES-simulation`` requires python and the following python packages: ``numpy``, ``scipy``, ``pytables``, and ``pylab``. To make animated gifs, the python library ``wand`` is required (it is a binding for the ImageMagick library). 
+        
+        ``TES-simulation`` is tested on a Linux operating system using:
+        
+        - ubuntu 13.04 (raring)
+        - python 2.7.4
+        - numpy 1.9.0.dev-6a7830b
+        - scipy 0.14.0.dev-70fd6ff
+        - pytables 3.0.0
+        - wand 0.3.5
+        
+        While ``TES-simulation`` can be installed via pip, use of ``pip install TES-simulation`` does not install the requirements. It is assumed that they are already installed in your system python environment. Numerous tutorials are available on the Web if you need to install these packages.
+        
+        
+        Installation
+        ============
+        
+        The recommended location for installation of this package is a virtual environment. These instructions pertain to a Linux operating system. Some adjustments might be necessary for the Windows operating system. 
+        
+        1. If your system does not already have virtualenv, install it using: ``sudo pip install virtualenv``
+        
+        2. Change directory to your chosen working directory, for example, ``./home/myname/mysimulation`` .
+        
+        3. Open a terminal window, if one is not already open. To create a new virtual environment, type: ``virtualenv --system-site-packages env`` . Here, the virtual environment is called ``env`` . It is located in the working directory. Run with the ``--no-site-packages`` flag if you do not want to use packages that are installed in your system python environment. In this case, you would have to install ``numpy``, ``scipy``, ``pytables``, ``pylab``, and ``wand`` packages in the virtual environment. Doing so for ``pylab`` can be tricky. 
+        
+        4. Activate the virtual environment: ``source env/bin/activate`` . 
+        
+        5. Install ``TES-simulation`` in the virtual environment: ``pip install TES-simulation``
+        
+        To deactivate the virtual environment, type: ``deactivate`` ; to remove it entirely, deactivate it and then type: ``rm -rf env`` .
+        
+        
+        How to Run a Simulation
+        =========================
+        
+        The four steps to run a simulation are:
+        
+        1. Open a terminal window and change directory into your working directory (see previous). You may need to edit the configuration file (``Config.py``) before running a simulation. This file, and other package files, will be located in, for example, ``./env/local/lib/python2.7/site-packages/tes-simulation/`` . Set a population size for ``Config.adult_county_population``, set a results folder name for ``Config.results_folder_name``, and set any other parameters as desired. 
+        
+        2. Set ``Config.create_new_HDF5=True`` in order to create a new "master" pytables file (``LEDDA_simulation_master.hdf5``) in the results folder that holds income and other data for individuals and families. If you change the population size, you will need to set this flag to ``True`` again to create a new master pytables file. After setting the flag, run by typing: ``python ./env/local/lib/python2.7/site-packages/tes-simulation/run_simulation.py`` (or use a different path to ``run_simulation.py`` , if appropriate). If there is an error during runtime, the Python debugger will start. To exit the debugger, type: ``q`` . Answer ``Y`` to question about overwriting files. A log of results is saved in the ``./HDF5_log.txt`` file in the results folder.
+        
+        3. Set ``Config.create_new_HDF5=False``, and set ``Config.preliminary_graphs_Option_1=True``. Run as noted in Step 2. Answer ``Y`` to question about overwriting files. This will create some preliminary graphs and printout, which you should check. See ``Initialize.examineOption1()`` for more information. The screen results from ``Initialize.examineOption1()`` will provide suggested values for some parameters contained in the ``Config.py`` file. Results will be saved to the results folder. A log of results is saved in the ``./Opt1_log.txt`` file in the results folder. Graphs are saved in ``./figs/Option_1/`` of the results folder.
+        
+        4. Set ``Config.preliminary_graphs_Option_1=False``, and change other parameters in ``Config.py`` as suggested or as desired. After setting all parameters, run the simulation as noted in Step 2. The simulation will now run for as many years as specified in ``Config.simulation_period`` . Results will be saved to the results folder. A new "current" HDF5 file (``LEDDA_simulation_current.hdf5``) will be created in ``./data/`` in the results folder, based on information in the master HDF5 file. The master HDF5 will not be overwritten with each new simulation run (unless the flag to create a new file is set to ``True``), but the current HDF5 table will be overwritten. A log of results is saved in the ``./data/general_log.txt`` file in the results folder.
+        
+        Example results for a population of size 10,000 can be viewed in the package's ``examples`` folder. The results used in the submitted paper are available from the author on request. 
+        
+        If you need to run a saved simulation for additional years, set ``Config.simulation_period`` using a higher number and then set ``Config.start_simulation_year`` to the year you wish to begin the continued simulation. You might want to save a copy of your current results folder prior to running the continued simulation, just in case something goes wrong. Note that the Year shown in the graphs is not the same as the Year used in the simulation; the former is calculated as ``Year - Config.Config.burn_in_period + 1``. 
+        
+        For information on acronyms, parameters, and variables, see the docstring of each class (module). This information will be helpful for understanding the labels on graphs, for example.
+        
+        References
+        ==========
+        
+        .. [JCB14] John C. Boik. Economic Direct Democracy: A Framework to End Poverty and Maximize Well-Being. SiteForChange: Houston; 2014. URL: http://www.PrincipledSocietiesProject.org. 
+        
+        .. [JCB14b] John C. Boik. First Microsimulation Model of a LEDDA Community Currency--Dollar Economy. Working Paper 0001, Principled Societies Project. 2014. URL: http://ideas.repec.org/p/psp/wpaper/0001.html
+        
+        .. [JCB14c] John C. Boik. Appendix to "First Microsimulation Model of a LEDDA Community Currency--Dollar Economy". Working Paper 0002, Principled Societies Project. 2014. URL: http://ideas.repec.org/p/psp/wpaper/0002.html
+        
+        
+        
+        0.1.0 (May, 2014)
+        =================
+        - Initial release.
+        
+Platform: UNKNOWN
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+Classifier: Natural Language :: English
+Classifier: Operating System :: OS Independent
+Classifier: Development Status :: 3 - Alpha
+Classifier: Environment :: Console
+Classifier: Intended Audience :: Science/Research
+Classifier: Topic :: Scientific/Engineering
