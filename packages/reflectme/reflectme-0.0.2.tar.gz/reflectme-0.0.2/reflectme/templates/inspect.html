@@ -1,0 +1,38 @@
+{% extends "master.html" %}
+{% block content %}
+<h1>Inspecting <em>/{{path.location}}</em></h1>
+
+<div class="row">
+    <div class="col-sm-12">
+        <div class="panel panel-primary">
+            <div class="panel-heading">
+                <h3 class="panel-title">Responding with...</h3>
+            </div>
+            <div class="panel-body">
+                {{ formatted_response | safe }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<h3>Record Count: {{ path.records | count}}</h3>
+
+<div class="panel-group" id="accordion">
+    {% for record in path.records %}
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h4 class="panel-title">
+                <a data-toggle="collapse" data-parent="#accordion" href="#path_{{record.id}}">
+                    Request from <strong>{{record.request_ip}}</strong> @ <em>{{record.visited}}</em>
+                </a>
+            </h4>
+        </div>
+        <div id="path_{{record.id}}" class="panel-collapse collapse {% if loop.first %}in{% endif %}">
+            <div class="panel-body">
+                {{ record.request_content | safe }}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
