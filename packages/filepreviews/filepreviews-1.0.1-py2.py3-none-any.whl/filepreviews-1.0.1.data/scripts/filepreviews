@@ -1,0 +1,47 @@
+#!/Users/jpadilla/.virtualenvs/filepreviews-python3/bin/python
+"""FilePreviews.io CLI
+
+Usage:
+  filepreviews <url> [--debug] [--metadata=<metadata>] [--width=<width>] [--height=<height>]
+  filepreviews (-h | --help)
+  filepreviews --version
+
+Options:
+  --metadata=ocr,psd   Possible values are 'ocr', 'psd', 'exif', and 'all'.
+  --width=100          Specifies maximum value of thumbnail width.
+  --height=200         Specifies maximum value of thumbnail height.
+  --debug              Turns on logging.
+  -h --help            Show this screen.
+  --version            Show version.
+
+"""
+import json
+
+from docopt import docopt
+from filepreviews import FilePreviews, VERSION
+
+
+if __name__ == '__main__':
+    version = 'FilePreviews.io CLI {}'.format(VERSION)
+    arguments = docopt(__doc__, version=version)
+
+    previews = FilePreviews(debug=arguments['--debug'])
+    options = {}
+    metadata = arguments['--metadata']
+    width = arguments['--width']
+    height = arguments['--height']
+
+    if metadata:
+        options['metadata'] = metadata.split(',')
+
+    if width:
+        size = options.setdefault('size', {})
+        options['size']['width'] = width
+
+    if height:
+        size = options.setdefault('size', {})
+        options['size']['height'] = height
+
+    results = previews.generate(arguments['<url>'], **options)
+
+    print(json.dumps(results))
