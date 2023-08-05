@@ -1,0 +1,192 @@
+
+ReproZip currently supports Linux distributions.
+
+If you want to use ReproZip to pack experiments (packing step), your
+Linux distribution must be supported by SystemTap and MongoDB, which are the
+packages used for the packing step.
+If you want to use ReproZip to unpack a reproducible package,
+you do not need to have SystemTap and MongoDB.
+
+How to install ReproZip:
+
+1) Download the latest version at https://pypi.python.org/pypi/reprozip
+
+2) After extracting the package, use the following command (you may need root
+   privileges):
+   
+   python setup.py install
+
+3) If you want to use ReproZip to pack experiments, you also need to install
+   both SystemTap and MongoDB.
+   For Ubuntu (9.10 or higher), Debian and Fedora, ReproZip has a script that
+   tries to automatically install these dependencies (not fully tested though).
+   Just use the following command:
+   
+   reprozip-dep
+   
+   If you're not using any of these distributions, please run the script anyway so
+   the log directories and the configuration file can be correctly created.
+   
+   Note that installing the kernel packages for SystemTap and making it work
+   can be tricky. So, the script does not guarantee that SystemTap will be
+   correctly installed - errors may occur.
+   We suggest you to also take a look at the installation instructions in this
+   file and follow the links there for additional information.
+   
+   Automatic installation of dependencies for other distributions is coming.
+   Please, send an email to fchirigati@nyu.edu if you want to have an automatic
+   installation feature for your favorite Linux distribution in the future, so
+   we can put it in our TO-DO list :)
+   
+   Problems while installing SystemTap or MongoDB?
+   Contact Fernando Chirigati at fchirigati@nyu.edu to see if he can help you!
+   Using Google may also help a lot :)
+   
+ReproZip is in a beta version, so please, if you have any bugs while installing
+the tool (and dependencies), send an email to fchirigati@nyu.edu
+   
+********************************************************************************
+ 
+Manually installing the dependencies on Ubuntu 9.10 or higher:
+--------------------------------------------------------------
+ 
+- Install SystemTap
+  
+  . sudo apt-get install systemtap
+  
+  . sudo apt-get install linux-headers-generic gcc libcap-dev
+  
+  . sudo apt-get install pkg-create-dbgsym
+  
+  . create file /etc/apt/sources.list.d/ddebs.list
+  
+  . include the following lines in /etc/apt/sources.list.d/ddebs.list
+  
+    deb http://ddebs.ubuntu.com $(lsb_release -cs) main restricted universe multiverse
+    deb http://ddebs.ubuntu.com $(lsb_release -cs)-updates main restricted universe multiverse
+    deb http://ddebs.ubuntu.com $(lsb_release -cs)-security main restricted universe multiverse
+    deb http://ddebs.ubuntu.com $(lsb_release -cs)-proposed main restricted universe multiverse
+    
+  . sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys ECDCAD72428D7C01
+  
+  . sudo apt-get update
+  
+  . sudo apt-get install linux-image-$(uname -r)-dbgsym
+
+  . Now, it should be installed! Try the following scripts:
+  
+    sudo stap -ve 'probe begin { log("hello world") exit () }'
+    sudo stap -v -e 'probe vfs.read {printf("read performed\n"); exit()}'
+    
+  . For more information on how to install SystemTap on Ubuntu, please refer to
+    the following links:
+    
+    http://sourceware.org/systemtap/wiki/SystemtapOnUbuntu
+    https://lists.ubuntu.com/archives/ubuntu-users/2010-October/229714.html
+    http://sourceware.org/systemtap/wiki/SystemtapOnUbuntu
+
+
+- Create log directory
+
+  . mkdir $HOME/.reprozip
+
+
+- Install MongoDB
+
+  . Follow instructions at the official website:
+  
+    http://docs.mongodb.org/manual/tutorial/install-mongodb-on-ubuntu/#install-mongodb
+
+  . create the database directory
+  
+    . mkdir $HOME/.reprozip/mongodb
+
+********************************************************************************
+
+Manually installing the dependencies on Debian:
+-----------------------------------------------
+ 
+- Install SystemTap
+  
+  . sudo apt-get install systemtap
+  
+  . sudo apt-get install linux-image-$(uname -r)-dbg
+  
+  . sudo apt-get install linux-headers-$(uname -r)
+  
+  . Now, it should be installed! Try the following scripts:
+  
+    sudo stap -ve 'probe begin { log("hello world") exit () }'
+    sudo stap -v -e 'probe vfs.read {printf("read performed\n"); exit()}'
+    
+  . For more information on how to install SystemTap on Debian, please refer to
+    the following link:
+    
+    http://sourceware.org/systemtap/wiki/SystemtapOnDebian
+
+
+- Create log directory
+
+  . mkdir $HOME/.reprozip
+
+
+- Install MongoDB
+
+  . Follow instructions at the official website:
+  
+    http://docs.mongodb.org/manual/tutorial/install-mongodb-on-debian/#install-mongodb
+
+  . create the database directory
+  
+    . mkdir $HOME/.reprozip/mongodb
+
+********************************************************************************
+
+Manually installing the dependencies on Fedora:
+-----------------------------------------------
+
+- Install SystemTap
+ 
+  . sudo yum install systemtap systemtap-runtime
+  
+  . sudo yum install kernel-devel
+  
+    Note that your kernel version may NOT be listed by 'yum' because it is in
+    an older tree (you can see your kernel version by running 'uname -r'). 
+    In this case, you can download it manually in the following website
+    and install it using 'rpm':
+    
+    http://koji.fedoraproject.org/koji/packageinfo?packageID=8
+    
+    Another option is to update your kernel, reboot your system, and
+    use 'yum' again.
+    
+    Make sure you have the kernel-develfor your kernel version.
+    'yum' may install the kernel-devel for a newer kernel version, even if
+    your version is different.
+  
+  . sudo debuginfo-install kernel
+  
+  . For more information on how to install SystemTap on Fedora, please refer to
+    the following link:
+
+    http://sourceware.org/systemtap/wiki/SystemtapOnFedora
+    http://sourceware.org/systemtap/SystemTap_Beginners_Guide/using-systemtap.html#using-setup
+
+
+- Create log directory
+
+  . mkdir $HOME/.reprozip
+
+
+- Install MongoDB
+
+  . Follow instructions at the official website:
+  
+    http://docs.mongodb.org/manual/tutorial/install-mongodb-on-red-hat-centos-or-fedora-linux/#install-mongodb
+
+  . create the database directory
+  
+    . mkdir $HOME/.reprozip/mongodb
+
+
