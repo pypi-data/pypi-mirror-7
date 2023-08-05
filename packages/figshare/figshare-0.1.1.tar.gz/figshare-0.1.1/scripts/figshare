@@ -1,0 +1,130 @@
+#!/usr/bin/env python
+"""Simple command line client for the figshare API. Can be used to upload files.
+"""
+
+from __future__ import print_function
+import os
+import sys
+import argparse
+import textwrap
+import itertools
+from pprint import pprint
+from figshare.utils import strip_html
+from figshare.figshare import Figshare, consumer_key, consumer_secret
+from figshare.oauth_dance import oauth_dance, read_token_file
+
+ACTIONS = {}
+def register_action(name):
+    def wrapper(f):
+        ACTIONS[name] = f
+        return f
+    return wrapper
+
+
+def connect(args):
+    if not os.path.exists(args.oauth_filename):
+        access_token, access_token_secret = oauth_dance('figshare-python',
+            consumer_key, consumer_secret, token_filename=args.oauth_filename)
+    else:
+        access_token, access_token_secret = read_token_file(args.oauth_filename)
+
+    figshare = Figshare(consumer_key, consumer_secret,
+                        access_token, access_token_secret)
+    return figshare
+
+
+
+def build_parser():
+    parser = argparse.ArgumentParser(description=__doc__,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--oauth_filename', default='~/.figshare-token',
+        help='''Path to file storing oauth credentials''',
+        type=os.path.expanduser)
+
+    subparsers = parser.add_subparsers(title='commands', dest='command')
+
+    list_articles = subparsers.add_parser('list_articles',
+        help='List articles')
+
+    create_article = subparsers.add_parser('create_article',
+        help='Create a new article (draft)')
+    create_article.add_argument('--title', required=True)
+    create_article.add_argument('--description', required=True)
+    create_article.add_argument('--defined_type', default='fileset',
+        choices=['fileset', 'dataset', 'media', 'figure', 'paper', 'poster'])
+
+    upload_file = subparsers.add_parser('upload_file',
+        help='Upload a new file into an article')
+    upload_file.add_argument('--article_id', required=True)
+    upload_file.add_argument('--file', required=True)
+
+    delete_file = subparsers.add_parser('delete_file',
+        help='Delete a file from an article')
+    delete_file.add_argument('--article_id', required=True)
+    delete_file.add_argument('--file_id', required=True)
+
+    return parser
+
+###############################################################################
+# Individual actions. functions that get called when the user selects the
+# corresponding subcommand
+###############################################################################
+
+@register_action('list_articles')
+def list_articles(figshare, args):
+    articles = figshare.articles()
+    for item in articles['items']:
+        lines = [item['title']]
+        lines += ['-'*len(lines[-1])]
+        lines += ['article_id: {}'.format(item['article_id'])]
+
+        description = textwrap.wrap('description: {}'.format(strip_html(item['description'])))
+        if len(description) > 3:
+            description = description[:3]
+            description[-1] += '...'
+        lines += description
+
+        lines += ['total size: {}'.format(item['total_size'])]
+        lines += ['Files:']
+        file_lines = []
+        for file in item['files']:
+            file_lines += ['\t{}\t\t\t{}'.format(file['name'], file['size'])]
+        if len(file_lines) > 3:
+            file_lines = file_lines[:3] + ['\t... more ...']
+        lines += file_lines
+
+        print(os.linesep.join(lines + ['']))
+
+
+@register_action('create_article')
+def create_article(figshare, args):
+    pprint(figshare.create_article(args.title, args.description, args.defined_type))
+
+
+@register_action('upload_file')
+def upload_file(figshare, args):
+    print('uploading...', end='')
+    sys.stdout.flush()
+    pprint(figshare.upload_file(args.article_id, args.file))
+
+
+@register_action('delete_file')
+def delete_file(figshare, args):
+    pprint(figshare.delete_file(args.article_id, args.file_id))
+
+###############################################################################
+# main entry point
+###############################################################################
+
+def main():
+    parser = build_parser()
+    args = parser.parse_args()
+    figshare = connect(args)
+    try:
+        ACTIONS[args.command](figshare, args)
+    except KeyError:
+        parser.print_help()
+        parser.exit(1)
+
+if __name__ == '__main__':
+    main()
