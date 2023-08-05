@@ -1,0 +1,1 @@
+0{rep(remedge(U,V))}1 :- not mandatory(U,V), obs_elabel(U,V,S).

@@ -1,0 +1,1 @@
+vlabel(E,X,S) :- obs_vlabel(E,X,S), input(E,X).
