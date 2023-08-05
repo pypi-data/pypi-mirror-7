@@ -1,0 +1,326 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>6.10. Analysis Tables &mdash; steelscript  documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+    <link rel="top" title="steelscript  documentation" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">steelscript  documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-steelscript.appfwk.apps.datasource.modules.analysis">
+<span id="analysis-tables"></span><h1>6.10. Analysis Tables<a class="headerlink" href="#module-steelscript.appfwk.apps.datasource.modules.analysis" title="Permalink to this headline">¶</a></h1>
+<p>The <tt class="xref py py-class docutils literal"><span class="pre">AnalyisTable</span></tt> allows for fully custom data collection
+and analysis.</p>
+<ul class="simple">
+<li>leverage pre-requisite tables from other data sources as input</li>
+<li>idenify related table definitions for columns and running additional queries</li>
+<li>define custom table fields to allow run-time changes in behaviour by the user</li>
+</ul>
+<p>This section will walk you through the
+<tt class="xref py py-class docutils literal"><span class="pre">ClippedWaveTable</span></tt> from the Wave sample plugin.</p>
+<div class="section" id="clippedwavetable">
+<h2>6.10.1. <tt class="xref py py-class docutils literal"><span class="pre">ClippedWaveTable</span></tt><a class="headerlink" href="#clippedwavetable" title="Permalink to this headline">¶</a></h2>
+<p>Description:</p>
+<ul class="simple">
+<li>Define criteria fields <tt class="docutils literal"><span class="pre">min</span></tt> and <tt class="docutils literal"><span class="pre">max</span></tt> that define the upper and lower
+clipping bounds</li>
+<li>Take a single input table labeled <tt class="docutils literal"><span class="pre">waves</span></tt> that defines one or more
+time-series data columns (in addition to a <tt class="docutils literal"><span class="pre">time</span></tt> column)</li>
+<li>For each input wave column, produce an output wave column that is clipped
+at the user defined <tt class="docutils literal"><span class="pre">min</span></tt> and <tt class="docutils literal"><span class="pre">max</span></tt></li>
+</ul>
+<div class="section" id="using-the-table-in-a-report">
+<h3>6.10.1.1. Using the table in a report<a class="headerlink" href="#using-the-table-in-a-report" title="Permalink to this headline">¶</a></h3>
+<p>In order to use the clipped table, we need to define an input table:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">table</span> <span class="o">=</span> <span class="n">wave</span><span class="o">.</span><span class="n">WaveTable</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s">&#39;wave-table&#39;</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="s">&#39;15min&#39;</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="s">&#39;1s&#39;</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+<span class="n">table</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s">&#39;time&#39;</span><span class="p">,</span> <span class="s">&#39;Time&#39;</span><span class="p">,</span> <span class="n">datatype</span><span class="o">=</span><span class="n">Column</span><span class="o">.</span><span class="n">DATATYPE_TIME</span><span class="p">,</span> <span class="n">iskey</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">table</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s">&#39;sin1&#39;</span><span class="p">,</span> <span class="s">&#39;Sine Wave 1&#39;</span><span class="p">,</span> <span class="n">func</span><span class="o">=</span><span class="s">&#39;sin&#39;</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="s">&#39;5min&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">table</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s">&#39;sin2&#39;</span><span class="p">,</span> <span class="s">&#39;Sine Wave 2&#39;</span><span class="p">,</span> <span class="n">func</span><span class="o">=</span><span class="s">&#39;sin&#39;</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="s">&#39;8min&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">table</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s">&#39;cos&#39;</span><span class="p">,</span>  <span class="s">&#39;Cosine Wave&#39;</span><span class="p">,</span> <span class="n">func</span><span class="o">=</span><span class="s">&#39;cos&#39;</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="s">&#39;3min&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">2.5</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We now have a new <tt class="docutils literal"><span class="pre">WaveTable</span></tt> with 3 waves defined stored in the
+variable <tt class="docutils literal"><span class="pre">table</span></tt>.   Now we can define our <em>clipped</em> version of that
+table:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">clipped_table</span> <span class="o">=</span> <span class="n">wave</span><span class="o">.</span><span class="n">ClippedWaveTable</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s">&#39;clipped-wave-table&#39;</span><span class="p">,</span> <span class="n">tables</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;waves&#39;</span><span class="p">:</span> <span class="n">table</span><span class="p">},</span>
+    <span class="nb">min</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <tt class="docutils literal"><span class="pre">tables</span></tt> argument to the <tt class="docutils literal"><span class="pre">create</span></tt> method is a dictionary of
+input table references.  The label <tt class="docutils literal"><span class="pre">waves</span></tt> is specified by the
+<tt class="docutils literal"><span class="pre">ClippedWaveTable</span></tt>.  The labels become important when there are two
+or more input tables.</p>
+<p>Notice that no columns are defined &#8211; this is because the function
+performed by this analysis table is to replicate the same number of
+columns as the input.  In some cases it will be necessary to add
+columns, but often the output column set is a function of the input
+column set.</p>
+</div>
+<div class="section" id="defining-the-clippedwavetable">
+<h3>6.10.1.2. Defining the ClippedWaveTable<a class="headerlink" href="#defining-the-clippedwavetable" title="Permalink to this headline">¶</a></h3>
+<p>Now let&#8217;s look at the code behind that last
+<tt class="docutils literal"><span class="pre">ClippedWaveTable.create()</span></tt> call above:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">ClippedWaveTable</span><span class="p">(</span><span class="n">AnalysisTable</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span> <span class="n">proxy</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="n">_query_class</span> <span class="o">=</span> <span class="s">&#39;ClippedWaveQuery&#39;</span>
+
+    <span class="n">FIELD_OPTIONS</span> <span class="o">=</span> <span class="p">{</span> <span class="s">&#39;min&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                      <span class="s">&#39;max&#39;</span><span class="p">:</span> <span class="mi">7</span> <span class="p">}</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">process_options</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">table_options</span><span class="p">):</span>
+        <span class="n">table_options</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">ClippedWaveTable</span><span class="p">,</span> <span class="n">cls</span><span class="p">)</span><span class="o">.</span><span class="n">process_options</span><span class="p">(</span><span class="n">table_options</span><span class="p">)</span>
+
+        <span class="c"># Verify that the user defined a &#39;waves&#39; input table</span>
+        <span class="n">tables</span> <span class="o">=</span> <span class="n">table_options</span><span class="p">[</span><span class="s">&#39;tables&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">tables</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">tables</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="s">&#39;waves&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tables</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Tables must contain only a dependent table &quot;</span>
+                             <span class="s">&quot;named &#39;waves&#39;&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">table_options</span>
+
+    <span class="k">def</span> <span class="nf">post_process_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_options</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ClippedWaveTable</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">post_process_table</span><span class="p">(</span><span class="n">field_options</span><span class="p">)</span>
+
+        <span class="c"># Add a custom field for &#39;min&#39;</span>
+        <span class="n">TableField</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">obj</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">keyword</span><span class="o">=</span><span class="s">&#39;min&#39;</span><span class="p">,</span>  <span class="n">label</span><span class="o">=</span><span class="s">&#39;Min value&#39;</span><span class="p">,</span>
+                          <span class="n">initial</span><span class="o">=</span><span class="n">field_options</span><span class="p">[</span><span class="s">&#39;min&#39;</span><span class="p">],</span>
+                          <span class="n">help_text</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;Clip all wave forms at this minimum value&#39;</span><span class="p">),</span>
+                          <span class="n">required</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+        <span class="c"># Add a custom field for &#39;max&#39;</span>
+        <span class="n">TableField</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">obj</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">keyword</span><span class="o">=</span><span class="s">&#39;max&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;Max value&#39;</span><span class="p">,</span>
+                          <span class="n">initial</span><span class="o">=</span><span class="n">field_options</span><span class="p">[</span><span class="s">&#39;max&#39;</span><span class="p">],</span>
+                          <span class="n">help_text</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;Clip all wave forms at this maximum value&#39;</span><span class="p">),</span>
+                          <span class="n">required</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+        <span class="n">tables</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s">&#39;tables&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">copy_columns</span><span class="p">(</span><span class="n">tables</span><span class="p">[</span><span class="s">&#39;waves&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Stepping through this in more detial:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">ClippedWaveTable</span><span class="p">(</span><span class="n">AnalysisTable</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span> <span class="n">proxy</span> <span class="o">=</span> <span class="bp">True</span>
+</pre></div>
+</div>
+<p>All analysis tables must be subclassed from the base
+<tt class="xref py py-class docutils literal"><span class="pre">AnalysisTable</span></tt>.  The next line is a bit of Django
+magic that is required to indicate that this is class is a proxy
+for the base <tt class="docutils literal"><span class="pre">Table</span></tt> model.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">_query_class</span> <span class="o">=</span> <span class="s">&#39;ClippedWaveQuery&#39;</span>
+</pre></div>
+</div>
+<p>This class method indicates what class will actually implement the
+query function when this table is run.  We will run through the
+<tt class="xref py py-class docutils literal"><span class="pre">ClippedWaveQuery</span></tt> below.</p>
+<p>The next few lines define default fields values that will be used
+for custom fields.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">FIELD_OPTIONS</span> <span class="o">=</span> <span class="p">{</span> <span class="s">&#39;min&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                  <span class="s">&#39;max&#39;</span><span class="p">:</span> <span class="mi">7</span> <span class="p">}</span>
+</pre></div>
+</div>
+<p>The <tt class="docutils literal"><span class="pre">process_options</span></tt> class method below is called after table
+options have been pre-processed but before the table is actually
+created.  This is an opportunity to tweak table options, or in this
+case verify that the user properly included a <tt class="docutils literal"><span class="pre">waves</span></tt> input table.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@classmethod</span>
+<span class="k">def</span> <span class="nf">process_options</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">table_options</span><span class="p">):</span>
+    <span class="n">table_options</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">ClippedWaveTable</span><span class="p">,</span> <span class="n">cls</span><span class="p">)</span><span class="o">.</span><span class="n">process_options</span><span class="p">(</span><span class="n">table_options</span><span class="p">)</span>
+
+    <span class="c"># Verify that the user defined a &#39;waves&#39; input table</span>
+    <span class="n">tables</span> <span class="o">=</span> <span class="n">table_options</span><span class="p">[</span><span class="s">&#39;tables&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">tables</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">tables</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="s">&#39;waves&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tables</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Tables must contain only a dependent table &quot;</span>
+                         <span class="s">&quot;named &#39;waves&#39;&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">table_options</span>
+</pre></div>
+</div>
+<p>Note that this is a class method because the table object has not yet
+been created.  In addition we must make sure to call the parent class&#8217;
+<tt class="docutils literal"><span class="pre">process_options</span></tt> method and return whatever value it returned.</p>
+<p>The <tt class="docutils literal"><span class="pre">post_process_table</span></tt> method is invoked <em>after</em> the table has
+been created and saved to the database.  This is our chance
+to add columns and custom fields:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">post_process_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_options</span><span class="p">):</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">ClippedWaveTable</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">post_process_table</span><span class="p">(</span><span class="n">field_options</span><span class="p">)</span>
+
+    <span class="c"># Add a custom field for &#39;min&#39;</span>
+    <span class="n">TableField</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">obj</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">keyword</span><span class="o">=</span><span class="s">&#39;min&#39;</span><span class="p">,</span>  <span class="n">label</span><span class="o">=</span><span class="s">&#39;Min value&#39;</span><span class="p">,</span>
+                      <span class="n">initial</span><span class="o">=</span><span class="n">field_options</span><span class="p">[</span><span class="s">&#39;min&#39;</span><span class="p">],</span>
+                      <span class="n">help_text</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;Clip all wave forms at this minimum value&#39;</span><span class="p">),</span>
+                      <span class="n">required</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+    <span class="c"># Add a custom field for &#39;max&#39;</span>
+    <span class="n">TableField</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">obj</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">keyword</span><span class="o">=</span><span class="s">&#39;max&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&#39;Max value&#39;</span><span class="p">,</span>
+                      <span class="n">initial</span><span class="o">=</span><span class="n">field_options</span><span class="p">[</span><span class="s">&#39;max&#39;</span><span class="p">],</span>
+                      <span class="n">help_text</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;Clip all wave forms at this maximum value&#39;</span><span class="p">),</span>
+                      <span class="n">required</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Again, we must call the parent class&#8217; <tt class="docutils literal"><span class="pre">post_process_table</span></tt> method
+first, then we add our two custom fields for <tt class="docutils literal"><span class="pre">min</span></tt> and <tt class="docutils literal"><span class="pre">max</span></tt>.
+Note here taht we set the initial value to <tt class="docutils literal"><span class="pre">field_options['min']</span></tt>.
+This will be either the value defined above in the <tt class="docutils literal"><span class="pre">FIELD_OPTIONS</span></tt>
+dictionary, or any override specified on the <tt class="docutils literal"><span class="pre">create</span></tt> line.  Above
+in the previous section the table was created with <tt class="docutils literal"><span class="pre">min=3</span></tt>, so that
+will be used as the initial value.  Note that the user can still
+change the min at run time, this merely specifies the <em>default</em> value
+of the form control when the report is loaded.</p>
+<p>Finally:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">tables</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s">&#39;tables&#39;</span><span class="p">]</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">copy_columns</span><span class="p">(</span><span class="n">tables</span><span class="p">[</span><span class="s">&#39;waves&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>This copies all columns from the input <tt class="docutils literal"><span class="pre">waves</span></tt> table.  This ensures
+that whatever columsn were provided on input will show up on output as
+well.</p>
+</div>
+<div class="section" id="clippedwavequery">
+<h3>6.10.1.3. <tt class="xref py py-class docutils literal"><span class="pre">ClippedWaveQuery</span></tt><a class="headerlink" href="#clippedwavequery" title="Permalink to this headline">¶</a></h3>
+<p>The final missing piece is the <tt class="docutils literal"><span class="pre">ClippedWaveQuery</span></tt> which actually
+performs the clipping function at run time:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">ClippedWaveQuery</span><span class="p">(</span><span class="n">AnalysisQuery</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">post_run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">assert</span><span class="p">(</span><span class="s">&#39;waves&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tables</span><span class="p">)</span>
+
+        <span class="c"># Grab the incoming &#39;waves&#39; table, which will have already been</span>
+        <span class="c"># run prior to this call.  The result is a pandas DataFrame</span>
+        <span class="n">waves</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tables</span><span class="p">[</span><span class="s">&#39;waves&#39;</span><span class="p">]</span>
+
+        <span class="c"># Index on &#39;time&#39; -- this allows the next operation to proceed</span>
+        <span class="c"># only the remaining columns</span>
+        <span class="n">waves</span> <span class="o">=</span> <span class="n">waves</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s">&#39;time&#39;</span><span class="p">)</span>
+
+        <span class="c"># Apply lower and upper limits to all data columns</span>
+        <span class="n">criteria</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">job</span><span class="o">.</span><span class="n">criteria</span>
+        <span class="n">waves</span> <span class="o">=</span> <span class="n">waves</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">lower</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">criteria</span><span class="o">.</span><span class="n">min</span><span class="p">),</span> <span class="n">upper</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">criteria</span><span class="o">.</span><span class="n">max</span><span class="p">))</span>
+
+        <span class="c"># Reset the index before returning</span>
+        <span class="n">waves</span> <span class="o">=</span> <span class="n">waves</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+
+        <span class="c"># Save the result and return success</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">waves</span>
+        <span class="k">return</span> <span class="bp">True</span>
+</pre></div>
+</div>
+<p>This class is based on <tt class="xref py py-class docutils literal"><span class="pre">AnalysisQuery</span></tt>.  When the report is
+run, the base class will run all necessary input tables and store the
+results in <tt class="docutils literal"><span class="pre">self.tables</span></tt>.  This dictionary will have the same labels
+as defined above to the <tt class="docutils literal"><span class="pre">tables</span></tt> argument.  The results here will be
+Pandas DataFrames.</p>
+<p>User input criteria is accessible via <tt class="docutils literal"><span class="pre">self.job.criteria</span></tt>.  This is
+where we get the run time values for <tt class="docutils literal"><span class="pre">min</span></tt> and <tt class="docutils literal"><span class="pre">max</span></tt> to use.</p>
+<p>On success, the function will save the result in <tt class="docutils literal"><span class="pre">self.data</span></tt> and
+return True.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/rb-ss-logo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="overview.html">SteelScript Application Framework</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">6.10. Analysis Tables</a><ul>
+<li><a class="reference internal" href="#clippedwavetable">6.10.1. <tt class="docutils literal"><span class="pre">ClippedWaveTable</span></tt></a><ul>
+<li><a class="reference internal" href="#using-the-table-in-a-report">6.10.1.1. Using the table in a report</a></li>
+<li><a class="reference internal" href="#defining-the-clippedwavetable">6.10.1.2. Defining the ClippedWaveTable</a></li>
+<li><a class="reference internal" href="#clippedwavequery">6.10.1.3. <tt class="docutils literal"><span class="pre">ClippedWaveQuery</span></tt></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/appfwk/analysis.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>
+<a href="../license.html">License</a>
+</h3>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">steelscript  documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014 Riverbed Technology, Inc..
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

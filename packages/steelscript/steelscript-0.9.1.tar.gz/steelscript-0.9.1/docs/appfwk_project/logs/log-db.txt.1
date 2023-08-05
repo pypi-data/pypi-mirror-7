@@ -1,0 +1,459 @@
+2014-05-28 20:57:23,738 [DEBUG] django.db.backends: (0.000) 
+            SELECT name FROM sqlite_master
+            WHERE type='table' AND NOT name='sqlite_sequence'
+            ORDER BY name; args=()
+2014-05-28 20:57:23,742 [DEBUG] django.db.backends: (0.001) CREATE TABLE "auth_permission" (
+    "id" integer NOT NULL PRIMARY KEY,
+    "name" varchar(50) NOT NULL,
+    "content_type_id" integer NOT NULL,
+    "codename" varchar(100) NOT NULL,
+    UNIQUE ("content_type_id", "codename")
+)
+;; args=()
+2014-05-28 20:57:23,743 [DEBUG] django.db.backends: (0.001) CREATE TABLE "auth_group_permissions" (
+    "id" integer NOT NULL PRIMARY KEY,
+    "group_id" integer NOT NULL,
+    "permission_id" integer NOT NULL REFERENCES "auth_permission" ("id"),
+    UNIQUE ("group_id", "permission_id")
+)
+;; args=()
+2014-05-28 20:57:23,745 [DEBUG] django.db.backends: (0.001) CREATE TABLE "auth_group" (
+    "id" integer NOT NULL PRIMARY KEY,
+    "name" varchar(80) NOT NULL UNIQUE
+)
+;; args=()
+2014-05-28 20:57:23,747 [DEBUG] django.db.backends: (0.001) CREATE TABLE "django_content_type" (
+    "id" integer NOT NULL PRIMARY KEY,
+    "name" varchar(100) NOT NULL,
+    "app_label" varchar(100) NOT NULL,
+    "model" varchar(100) NOT NULL,
+    UNIQUE ("app_label", "model")
+)
+;; args=()
+2014-05-28 20:57:23,749 [DEBUG] django.db.backends: (0.002) CREATE TABLE "django_session" (
+    "session_key" varchar(40) NOT NULL PRIMARY KEY,
+    "session_data" text NOT NULL,
+    "expire_date" datetime NOT NULL
+)
+;; args=()
+2014-05-28 20:57:23,752 [DEBUG] django.db.backends: (0.002) CREATE TABLE "admin_tools_menu_bookmark" (
+    "id" integer NOT NULL PRIMARY KEY,
+    "user_id" integer NOT NULL,
+    "url" varchar(255) NOT NULL,
+    "title" varchar(255) NOT NULL
+)
+;; args=()
+2014-05-28 20:57:23,754 [DEBUG] django.db.backends: (0.002) CREATE TABLE "admin_tools_dashboard_preferences" (
+    "id" integer NOT NULL PRIMARY KEY,
+    "user_id" integer NOT NULL,
+    "data" text NOT NULL,
+    "dashboard_id" varchar(100) NOT NULL,
+    UNIQUE ("user_id", "dashboard_id")
+)
+;; args=()
+2014-05-28 20:57:23,756 [DEBUG] django.db.backends: (0.001) CREATE TABLE "django_admin_log" (
+    "id" integer NOT NULL PRIMARY KEY,
+    "action_time" datetime NOT NULL,
+    "user_id" integer NOT NULL,
+    "content_type_id" integer REFERENCES "django_content_type" ("id"),
+    "object_id" text,
+    "object_repr" varchar(200) NOT NULL,
+    "action_flag" smallint unsigned NOT NULL,
+    "change_message" text NOT NULL
+)
+;; args=()
+2014-05-28 20:57:23,758 [DEBUG] django.db.backends: (0.002) CREATE TABLE "datasource_tablefield" (
+    "id" integer NOT NULL PRIMARY KEY,
+    "keyword" varchar(100) NOT NULL,
+    "label" varchar(100),
+    "help_text" varchar(400),
+    "initial" text,
+    "required" bool NOT NULL,
+    "hidden" bool NOT NULL,
+    "field_cls" text,
+    "field_kwargs" text,
+    "parent_keywords" text,
+    "pre_process_func" text,
+    "dynamic" bool NOT NULL,
+    "post_process_func" text,
+    "post_process_template" varchar(500)
+)
+;; args=()
+2014-05-28 20:57:23,761 [DEBUG] django.db.backends: (0.002) CREATE TABLE "datasource_table_fields" (
+    "id" integer NOT NULL PRIMARY KEY,
+    "table_id" integer NOT NULL,
+    "tablefield_id" integer NOT NULL REFERENCES "datasource_tablefield" ("id"),
+    UNIQUE ("table_id", "tablefield_id")
+)
+;; args=()
+2014-05-28 20:57:23,763 [DEBUG] django.db.backends: (0.002) CREATE TABLE "datasource_table" (
+    "id" integer NOT NULL PRIMARY KEY,
+    "name" varchar(200) NOT NULL,
+    "module" varchar(200) NOT NULL,
+    "datasource" varchar(200) NOT NULL,
+    "namespace" varchar(100) NOT NULL,
+    "sourcefile" varchar(200) NOT NULL,
+    "sortcols" text,
+    "sortdir" text,
+    "rows" integer NOT NULL,
+    "filterexpr" varchar(400),
+    "resample" bool NOT NULL,
+    "options" text,
+    "criteria" text,
+    "criteria_handle_func" text,
+    "cacheable" bool NOT NULL
+)
+;; args=()
+2014-05-28 20:57:23,765 [DEBUG] django.db.backends: (0.001) CREATE TABLE "datasource_column" (
+    "id" integer NOT NULL PRIMARY KEY,
+    "table_id" integer NOT NULL REFERENCES "datasource_table" ("id"),
+    "name" varchar(300) NOT NULL,
+    "label" varchar(300),
+    "position" decimal NOT NULL,
+    "options" text,
+    "iskey" bool NOT NULL,
+    "synthetic" bool NOT NULL,
+    "ephemeral_id" integer,
+    "compute_post_resample" bool NOT NULL,
+    "compute_expression" varchar(300) NOT NULL,
+    "resample_operation" varchar(300) NOT NULL,
+    "datatype" integer NOT NULL,
+    "units" integer NOT NULL
+)
+;; args=()
+2014-05-28 20:57:23,767 [DEBUG] django.db.backends: (0.002) CREATE TABLE "datasource_job" (
+    "id" integer NOT NULL PRIMARY KEY,
+    "created" datetime NOT NULL,
+    "touched" datetime NOT NULL,
+    "refcount" integer NOT NULL,
+    "ischild" bool NOT NULL,
+    "parent_id" integer,
+    "table_id" integer NOT NULL REFERENCES "datasource_table" ("id"),
+    "criteria" text,
+    "actual_criteria" text,
+    "handle" varchar(100) NOT NULL,
+    "status" integer NOT NULL,
+    "message" text NOT NULL,
+    "progress" integer NOT NULL,
+    "remaining" integer
+)
+;; args=()
+2014-05-28 20:57:23,769 [DEBUG] django.db.backends: (0.001) CREATE TABLE "devices_device" (
+    "id" integer NOT NULL PRIMARY KEY,
+    "name" varchar(200) NOT NULL,
+    "module" varchar(200) NOT NULL,
+    "host" varchar(200) NOT NULL,
+    "port" integer NOT NULL,
+    "username" varchar(100) NOT NULL,
+    "password" varchar(100) NOT NULL,
+    "enabled" bool NOT NULL
+)
+;; args=()
+2014-05-28 20:57:23,770 [DEBUG] django.db.backends: (0.001) CREATE TABLE "report_report_fields" (
+    "id" integer NOT NULL PRIMARY KEY,
+    "report_id" integer NOT NULL,
+    "tablefield_id" integer NOT NULL REFERENCES "datasource_tablefield" ("id"),
+    UNIQUE ("report_id", "tablefield_id")
+)
+;; args=()
+2014-05-28 20:57:23,793 [DEBUG] django.db.backends: (0.022) CREATE TABLE "report_report" (
+    "id" integer NOT NULL PRIMARY KEY,
+    "title" varchar(200) NOT NULL,
+    "position" decimal NOT NULL,
+    "enabled" bool NOT NULL,
+    "slug" varchar(50) NOT NULL UNIQUE,
+    "namespace" varchar(100) NOT NULL,
+    "sourcefile" varchar(200) NOT NULL,
+    "field_order" text,
+    "hidden_fields" text,
+    "hide_criteria" bool NOT NULL,
+    "reload_minutes" integer NOT NULL
+)
+;; args=()
+2014-05-28 20:57:23,797 [DEBUG] django.db.backends: (0.003) CREATE TABLE "report_section_fields" (
+    "id" integer NOT NULL PRIMARY KEY,
+    "section_id" integer NOT NULL,
+    "tablefield_id" integer NOT NULL REFERENCES "datasource_tablefield" ("id"),
+    UNIQUE ("section_id", "tablefield_id")
+)
+;; args=()
+2014-05-28 20:57:23,800 [DEBUG] django.db.backends: (0.002) CREATE TABLE "report_section" (
+    "id" integer NOT NULL PRIMARY KEY,
+    "report_id" integer NOT NULL REFERENCES "report_report" ("id"),
+    "title" varchar(200) NOT NULL,
+    "position" decimal NOT NULL
+)
+;; args=()
+2014-05-28 20:57:23,802 [DEBUG] django.db.backends: (0.002) CREATE TABLE "report_sectionfieldmode" (
+    "id" integer NOT NULL PRIMARY KEY,
+    "section_id" integer NOT NULL REFERENCES "report_section" ("id"),
+    "keyword" varchar(200) NOT NULL,
+    "mode" integer NOT NULL
+)
+;; args=()
+2014-05-28 20:57:23,806 [DEBUG] django.db.backends: (0.003) CREATE TABLE "report_widget_tables" (
+    "id" integer NOT NULL PRIMARY KEY,
+    "widget_id" integer NOT NULL,
+    "table_id" integer NOT NULL REFERENCES "datasource_table" ("id"),
+    UNIQUE ("widget_id", "table_id")
+)
+;; args=()
+2014-05-28 20:57:23,809 [DEBUG] django.db.backends: (0.002) CREATE TABLE "report_widget" (
+    "id" integer NOT NULL PRIMARY KEY,
+    "section_id" integer NOT NULL REFERENCES "report_section" ("id"),
+    "title" varchar(100) NOT NULL,
+    "row" integer NOT NULL,
+    "col" integer NOT NULL,
+    "width" integer NOT NULL,
+    "height" integer NOT NULL,
+    "rows" integer NOT NULL,
+    "options" text,
+    "module" varchar(100) NOT NULL,
+    "uiwidget" varchar(100) NOT NULL,
+    "uioptions" text
+)
+;; args=()
+2014-05-28 20:57:23,812 [DEBUG] django.db.backends: (0.002) CREATE TABLE "report_widgetjob" (
+    "id" integer NOT NULL PRIMARY KEY,
+    "widget_id" integer NOT NULL REFERENCES "report_widget" ("id"),
+    "job_id" integer NOT NULL REFERENCES "datasource_job" ("id")
+)
+;; args=()
+2014-05-28 20:57:23,814 [DEBUG] django.db.backends: (0.002) CREATE TABLE "geolocation_location" (
+    "id" integer NOT NULL PRIMARY KEY,
+    "name" varchar(200) NOT NULL,
+    "latitude" real NOT NULL,
+    "longitude" real NOT NULL
+)
+;; args=()
+2014-05-28 20:57:23,815 [DEBUG] django.db.backends: (0.001) CREATE TABLE "geolocation_locationip" (
+    "id" integer NOT NULL PRIMARY KEY,
+    "location_id" integer NOT NULL REFERENCES "geolocation_location" ("id"),
+    "address" char(15) NOT NULL,
+    "mask" char(15) NOT NULL
+)
+;; args=()
+2014-05-28 20:57:23,818 [DEBUG] django.db.backends: (0.002) CREATE TABLE "preferences_portaluser_groups" (
+    "id" integer NOT NULL PRIMARY KEY,
+    "portaluser_id" integer NOT NULL,
+    "group_id" integer NOT NULL REFERENCES "auth_group" ("id"),
+    UNIQUE ("portaluser_id", "group_id")
+)
+;; args=()
+2014-05-28 20:57:23,819 [DEBUG] django.db.backends: (0.001) CREATE TABLE "preferences_portaluser_user_permissions" (
+    "id" integer NOT NULL PRIMARY KEY,
+    "portaluser_id" integer NOT NULL,
+    "permission_id" integer NOT NULL REFERENCES "auth_permission" ("id"),
+    UNIQUE ("portaluser_id", "permission_id")
+)
+;; args=()
+2014-05-28 20:57:23,822 [DEBUG] django.db.backends: (0.002) CREATE TABLE "preferences_portaluser" (
+    "id" integer NOT NULL PRIMARY KEY,
+    "password" varchar(128) NOT NULL,
+    "last_login" datetime NOT NULL,
+    "is_superuser" bool NOT NULL,
+    "username" varchar(30) NOT NULL UNIQUE,
+    "first_name" varchar(30) NOT NULL,
+    "last_name" varchar(30) NOT NULL,
+    "email" varchar(75) NOT NULL,
+    "is_staff" bool NOT NULL,
+    "is_active" bool NOT NULL,
+    "date_joined" datetime NOT NULL,
+    "timezone" varchar(50) NOT NULL,
+    "timezone_changed" bool NOT NULL,
+    "profile_seen" bool NOT NULL
+)
+;; args=()
+2014-05-28 20:57:23,823 [DEBUG] django.db.backends: (0.001) CREATE TABLE "preferences_systemsettings" (
+    "id" integer NOT NULL PRIMARY KEY,
+    "ignore_cache" bool NOT NULL,
+    "developer" bool NOT NULL,
+    "maps_version" varchar(30) NOT NULL,
+    "maps_api_key" varchar(100)
+)
+;; args=()
+2014-05-28 20:57:23,849 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = permission  AND "django_content_type"."app_label" = auth ); args=('permission', u'auth')
+2014-05-28 20:57:23,850 [DEBUG] django.db.backends: (0.000) INSERT INTO "django_content_type" ("name", "app_label", "model") VALUES (permission, auth, permission); args=[u'permission', u'auth', 'permission']
+2014-05-28 20:57:23,855 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = group  AND "django_content_type"."app_label" = auth ); args=('group', u'auth')
+2014-05-28 20:57:23,855 [DEBUG] django.db.backends: (0.000) INSERT INTO "django_content_type" ("name", "app_label", "model") VALUES (group, auth, group); args=[u'group', u'auth', 'group']
+2014-05-28 20:57:23,860 [DEBUG] django.db.backends: (0.000) SELECT "auth_permission"."content_type_id", "auth_permission"."codename" FROM "auth_permission" INNER JOIN "django_content_type" ON ("auth_permission"."content_type_id" = "django_content_type"."id") WHERE "auth_permission"."content_type_id" IN (1, 2) ORDER BY "django_content_type"."app_label" ASC, "django_content_type"."model" ASC, "auth_permission"."codename" ASC; args=(1, 2)
+2014-05-28 20:57:23,861 [DEBUG] django.db.backends: (0.000) INSERT INTO "auth_permission" ("name", "content_type_id", "codename") SELECT Can add permission AS "name", 1 AS "content_type_id", add_permission AS "codename" UNION ALL SELECT Can change permission, 1, change_permission UNION ALL SELECT Can delete permission, 1, delete_permission UNION ALL SELECT Can add group, 2, add_group UNION ALL SELECT Can change group, 2, change_group UNION ALL SELECT Can delete group, 2, delete_group; args=(u'Can add permission', 1, u'add_permission', u'Can change permission', 1, u'change_permission', u'Can delete permission', 1, u'delete_permission', u'Can add group', 2, u'add_group', u'Can change group', 2, u'change_group', u'Can delete group', 2, u'delete_group')
+2014-05-28 20:57:23,863 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE "django_content_type"."app_label" = auth  ORDER BY "django_content_type"."name" ASC; args=(u'auth',)
+2014-05-28 20:57:23,865 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = contenttype  AND "django_content_type"."app_label" = contenttypes ); args=('contenttype', u'contenttypes')
+2014-05-28 20:57:23,865 [DEBUG] django.db.backends: (0.000) INSERT INTO "django_content_type" ("name", "app_label", "model") VALUES (content type, contenttypes, contenttype); args=[u'content type', u'contenttypes', 'contenttype']
+2014-05-28 20:57:23,868 [DEBUG] django.db.backends: (0.000) SELECT "auth_permission"."content_type_id", "auth_permission"."codename" FROM "auth_permission" INNER JOIN "django_content_type" ON ("auth_permission"."content_type_id" = "django_content_type"."id") WHERE "auth_permission"."content_type_id" IN (3) ORDER BY "django_content_type"."app_label" ASC, "django_content_type"."model" ASC, "auth_permission"."codename" ASC; args=(3,)
+2014-05-28 20:57:23,869 [DEBUG] django.db.backends: (0.000) INSERT INTO "auth_permission" ("name", "content_type_id", "codename") SELECT Can add content type AS "name", 3 AS "content_type_id", add_contenttype AS "codename" UNION ALL SELECT Can change content type, 3, change_contenttype UNION ALL SELECT Can delete content type, 3, delete_contenttype; args=(u'Can add content type', 3, u'add_contenttype', u'Can change content type', 3, u'change_contenttype', u'Can delete content type', 3, u'delete_contenttype')
+2014-05-28 20:57:23,871 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE "django_content_type"."app_label" = contenttypes  ORDER BY "django_content_type"."name" ASC; args=(u'contenttypes',)
+2014-05-28 20:57:23,873 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = session  AND "django_content_type"."app_label" = sessions ); args=('session', u'sessions')
+2014-05-28 20:57:23,873 [DEBUG] django.db.backends: (0.000) INSERT INTO "django_content_type" ("name", "app_label", "model") VALUES (session, sessions, session); args=[u'session', u'sessions', 'session']
+2014-05-28 20:57:23,876 [DEBUG] django.db.backends: (0.000) SELECT "auth_permission"."content_type_id", "auth_permission"."codename" FROM "auth_permission" INNER JOIN "django_content_type" ON ("auth_permission"."content_type_id" = "django_content_type"."id") WHERE "auth_permission"."content_type_id" IN (4) ORDER BY "django_content_type"."app_label" ASC, "django_content_type"."model" ASC, "auth_permission"."codename" ASC; args=(4,)
+2014-05-28 20:57:23,876 [DEBUG] django.db.backends: (0.000) INSERT INTO "auth_permission" ("name", "content_type_id", "codename") SELECT Can add session AS "name", 4 AS "content_type_id", add_session AS "codename" UNION ALL SELECT Can change session, 4, change_session UNION ALL SELECT Can delete session, 4, delete_session; args=(u'Can add session', 4, u'add_session', u'Can change session', 4, u'change_session', u'Can delete session', 4, u'delete_session')
+2014-05-28 20:57:23,878 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE "django_content_type"."app_label" = sessions  ORDER BY "django_content_type"."name" ASC; args=(u'sessions',)
+2014-05-28 20:57:23,882 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = bookmark  AND "django_content_type"."app_label" = menu ); args=('bookmark', u'menu')
+2014-05-28 20:57:23,883 [DEBUG] django.db.backends: (0.000) INSERT INTO "django_content_type" ("name", "app_label", "model") VALUES (bookmark, menu, bookmark); args=[u'bookmark', u'menu', 'bookmark']
+2014-05-28 20:57:23,885 [DEBUG] django.db.backends: (0.000) SELECT "auth_permission"."content_type_id", "auth_permission"."codename" FROM "auth_permission" INNER JOIN "django_content_type" ON ("auth_permission"."content_type_id" = "django_content_type"."id") WHERE "auth_permission"."content_type_id" IN (5) ORDER BY "django_content_type"."app_label" ASC, "django_content_type"."model" ASC, "auth_permission"."codename" ASC; args=(5,)
+2014-05-28 20:57:23,886 [DEBUG] django.db.backends: (0.000) INSERT INTO "auth_permission" ("name", "content_type_id", "codename") SELECT Can add bookmark AS "name", 5 AS "content_type_id", add_bookmark AS "codename" UNION ALL SELECT Can change bookmark, 5, change_bookmark UNION ALL SELECT Can delete bookmark, 5, delete_bookmark; args=(u'Can add bookmark', 5, u'add_bookmark', u'Can change bookmark', 5, u'change_bookmark', u'Can delete bookmark', 5, u'delete_bookmark')
+2014-05-28 20:57:23,889 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE "django_content_type"."app_label" = menu  ORDER BY "django_content_type"."name" ASC; args=(u'menu',)
+2014-05-28 20:57:23,890 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = dashboardpreferences  AND "django_content_type"."app_label" = dashboard ); args=('dashboardpreferences', u'dashboard')
+2014-05-28 20:57:23,890 [DEBUG] django.db.backends: (0.000) INSERT INTO "django_content_type" ("name", "app_label", "model") VALUES (dashboard preferences, dashboard, dashboardpreferences); args=[u'dashboard preferences', u'dashboard', 'dashboardpreferences']
+2014-05-28 20:57:23,892 [DEBUG] django.db.backends: (0.000) SELECT "auth_permission"."content_type_id", "auth_permission"."codename" FROM "auth_permission" INNER JOIN "django_content_type" ON ("auth_permission"."content_type_id" = "django_content_type"."id") WHERE "auth_permission"."content_type_id" IN (6) ORDER BY "django_content_type"."app_label" ASC, "django_content_type"."model" ASC, "auth_permission"."codename" ASC; args=(6,)
+2014-05-28 20:57:23,893 [DEBUG] django.db.backends: (0.000) INSERT INTO "auth_permission" ("name", "content_type_id", "codename") SELECT Can add dashboard preferences AS "name", 6 AS "content_type_id", add_dashboardpreferences AS "codename" UNION ALL SELECT Can change dashboard preferences, 6, change_dashboardpreferences UNION ALL SELECT Can delete dashboard preferences, 6, delete_dashboardpreferences; args=(u'Can add dashboard preferences', 6, u'add_dashboardpreferences', u'Can change dashboard preferences', 6, u'change_dashboardpreferences', u'Can delete dashboard preferences', 6, u'delete_dashboardpreferences')
+2014-05-28 20:57:23,895 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE "django_content_type"."app_label" = dashboard  ORDER BY "django_content_type"."name" ASC; args=(u'dashboard',)
+2014-05-28 20:57:23,896 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = logentry  AND "django_content_type"."app_label" = admin ); args=('logentry', u'admin')
+2014-05-28 20:57:23,896 [DEBUG] django.db.backends: (0.000) INSERT INTO "django_content_type" ("name", "app_label", "model") VALUES (log entry, admin, logentry); args=[u'log entry', u'admin', 'logentry']
+2014-05-28 20:57:23,899 [DEBUG] django.db.backends: (0.000) SELECT "auth_permission"."content_type_id", "auth_permission"."codename" FROM "auth_permission" INNER JOIN "django_content_type" ON ("auth_permission"."content_type_id" = "django_content_type"."id") WHERE "auth_permission"."content_type_id" IN (7) ORDER BY "django_content_type"."app_label" ASC, "django_content_type"."model" ASC, "auth_permission"."codename" ASC; args=(7,)
+2014-05-28 20:57:23,899 [DEBUG] django.db.backends: (0.000) INSERT INTO "auth_permission" ("name", "content_type_id", "codename") SELECT Can add log entry AS "name", 7 AS "content_type_id", add_logentry AS "codename" UNION ALL SELECT Can change log entry, 7, change_logentry UNION ALL SELECT Can delete log entry, 7, delete_logentry; args=(u'Can add log entry', 7, u'add_logentry', u'Can change log entry', 7, u'change_logentry', u'Can delete log entry', 7, u'delete_logentry')
+2014-05-28 20:57:23,901 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE "django_content_type"."app_label" = admin  ORDER BY "django_content_type"."name" ASC; args=(u'admin',)
+2014-05-28 20:57:23,904 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = tablefield  AND "django_content_type"."app_label" = datasource ); args=('tablefield', u'datasource')
+2014-05-28 20:57:23,904 [DEBUG] django.db.backends: (0.000) INSERT INTO "django_content_type" ("name", "app_label", "model") VALUES (table field, datasource, tablefield); args=[u'table field', u'datasource', 'tablefield']
+2014-05-28 20:57:23,907 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = table  AND "django_content_type"."app_label" = datasource ); args=('table', u'datasource')
+2014-05-28 20:57:23,908 [DEBUG] django.db.backends: (0.000) INSERT INTO "django_content_type" ("name", "app_label", "model") VALUES (table, datasource, table); args=[u'table', u'datasource', 'table']
+2014-05-28 20:57:23,911 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = column  AND "django_content_type"."app_label" = datasource ); args=('column', u'datasource')
+2014-05-28 20:57:23,912 [DEBUG] django.db.backends: (0.000) INSERT INTO "django_content_type" ("name", "app_label", "model") VALUES (column, datasource, column); args=[u'column', u'datasource', 'column']
+2014-05-28 20:57:23,915 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = job  AND "django_content_type"."app_label" = datasource ); args=('job', u'datasource')
+2014-05-28 20:57:23,915 [DEBUG] django.db.backends: (0.000) INSERT INTO "django_content_type" ("name", "app_label", "model") VALUES (job, datasource, job); args=[u'job', u'datasource', 'job']
+2014-05-28 20:57:23,920 [DEBUG] django.db.backends: (0.000) SELECT "auth_permission"."content_type_id", "auth_permission"."codename" FROM "auth_permission" INNER JOIN "django_content_type" ON ("auth_permission"."content_type_id" = "django_content_type"."id") WHERE "auth_permission"."content_type_id" IN (8, 9, 10, 11) ORDER BY "django_content_type"."app_label" ASC, "django_content_type"."model" ASC, "auth_permission"."codename" ASC; args=(8, 9, 10, 11)
+2014-05-28 20:57:23,922 [DEBUG] django.db.backends: (0.000) INSERT INTO "auth_permission" ("name", "content_type_id", "codename") SELECT Can add table field AS "name", 8 AS "content_type_id", add_tablefield AS "codename" UNION ALL SELECT Can change table field, 8, change_tablefield UNION ALL SELECT Can delete table field, 8, delete_tablefield UNION ALL SELECT Can add table, 9, add_table UNION ALL SELECT Can change table, 9, change_table UNION ALL SELECT Can delete table, 9, delete_table UNION ALL SELECT Can add datasource table, 9, add_datasourcetable UNION ALL SELECT Can change datasource table, 9, change_datasourcetable UNION ALL SELECT Can delete datasource table, 9, delete_datasourcetable UNION ALL SELECT Can add column, 10, add_column UNION ALL SELECT Can change column, 10, change_column UNION ALL SELECT Can delete column, 10, delete_column UNION ALL SELECT Can add job, 11, add_job UNION ALL SELECT Can change job, 11, change_job UNION ALL SELECT Can delete job, 11, delete_job; args=(u'Can add table field', 8, u'add_tablefield', u'Can change table field', 8, u'change_tablefield', u'Can delete table field', 8, u'delete_tablefield', u'Can add table', 9, u'add_table', u'Can change table', 9, u'change_table', u'Can delete table', 9, u'delete_table', u'Can add datasource table', 9, u'add_datasourcetable', u'Can change datasource table', 9, u'change_datasourcetable', u'Can delete datasource table', 9, u'delete_datasourcetable', u'Can add column', 10, u'add_column', u'Can change column', 10, u'change_column', u'Can delete column', 10, u'delete_column', u'Can add job', 11, u'add_job', u'Can change job', 11, u'change_job', u'Can delete job', 11, u'delete_job')
+2014-05-28 20:57:23,925 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE "django_content_type"."app_label" = datasource  ORDER BY "django_content_type"."name" ASC; args=(u'datasource',)
+2014-05-28 20:57:23,926 [DEBUG] django.db.backends: (0.000) INSERT INTO "django_content_type" ("name", "app_label", "model") SELECT datasource table AS "name", datasource AS "app_label", datasourcetable AS "model"; args=(u'datasource table', u'datasource', 'datasourcetable')
+2014-05-28 20:57:23,929 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = device  AND "django_content_type"."app_label" = devices ); args=('device', u'devices')
+2014-05-28 20:57:23,929 [DEBUG] django.db.backends: (0.000) INSERT INTO "django_content_type" ("name", "app_label", "model") VALUES (device, devices, device); args=[u'device', u'devices', 'device']
+2014-05-28 20:57:23,933 [DEBUG] django.db.backends: (0.000) SELECT "auth_permission"."content_type_id", "auth_permission"."codename" FROM "auth_permission" INNER JOIN "django_content_type" ON ("auth_permission"."content_type_id" = "django_content_type"."id") WHERE "auth_permission"."content_type_id" IN (13) ORDER BY "django_content_type"."app_label" ASC, "django_content_type"."model" ASC, "auth_permission"."codename" ASC; args=(13,)
+2014-05-28 20:57:23,934 [DEBUG] django.db.backends: (0.000) INSERT INTO "auth_permission" ("name", "content_type_id", "codename") SELECT Can add device AS "name", 13 AS "content_type_id", add_device AS "codename" UNION ALL SELECT Can change device, 13, change_device UNION ALL SELECT Can delete device, 13, delete_device; args=(u'Can add device', 13, u'add_device', u'Can change device', 13, u'change_device', u'Can delete device', 13, u'delete_device')
+2014-05-28 20:57:23,936 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE "django_content_type"."app_label" = devices  ORDER BY "django_content_type"."name" ASC; args=(u'devices',)
+2014-05-28 20:57:23,937 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = report  AND "django_content_type"."app_label" = report ); args=('report', u'report')
+2014-05-28 20:57:23,937 [DEBUG] django.db.backends: (0.000) INSERT INTO "django_content_type" ("name", "app_label", "model") VALUES (report, report, report); args=[u'report', u'report', 'report']
+2014-05-28 20:57:23,940 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = section  AND "django_content_type"."app_label" = report ); args=('section', u'report')
+2014-05-28 20:57:23,940 [DEBUG] django.db.backends: (0.000) INSERT INTO "django_content_type" ("name", "app_label", "model") VALUES (section, report, section); args=[u'section', u'report', 'section']
+2014-05-28 20:57:23,943 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = sectionfieldmode  AND "django_content_type"."app_label" = report ); args=('sectionfieldmode', u'report')
+2014-05-28 20:57:23,944 [DEBUG] django.db.backends: (0.000) INSERT INTO "django_content_type" ("name", "app_label", "model") VALUES (section field mode, report, sectionfieldmode); args=[u'section field mode', u'report', 'sectionfieldmode']
+2014-05-28 20:57:23,946 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = widget  AND "django_content_type"."app_label" = report ); args=('widget', u'report')
+2014-05-28 20:57:23,946 [DEBUG] django.db.backends: (0.000) INSERT INTO "django_content_type" ("name", "app_label", "model") VALUES (widget, report, widget); args=[u'widget', u'report', 'widget']
+2014-05-28 20:57:23,948 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = widgetjob  AND "django_content_type"."app_label" = report ); args=('widgetjob', u'report')
+2014-05-28 20:57:23,949 [DEBUG] django.db.backends: (0.000) INSERT INTO "django_content_type" ("name", "app_label", "model") VALUES (widget job, report, widgetjob); args=[u'widget job', u'report', 'widgetjob']
+2014-05-28 20:57:23,951 [DEBUG] django.db.backends: (0.000) SELECT "auth_permission"."content_type_id", "auth_permission"."codename" FROM "auth_permission" INNER JOIN "django_content_type" ON ("auth_permission"."content_type_id" = "django_content_type"."id") WHERE "auth_permission"."content_type_id" IN (16, 17, 18, 14, 15) ORDER BY "django_content_type"."app_label" ASC, "django_content_type"."model" ASC, "auth_permission"."codename" ASC; args=(16, 17, 18, 14, 15)
+2014-05-28 20:57:23,953 [DEBUG] django.db.backends: (0.000) INSERT INTO "auth_permission" ("name", "content_type_id", "codename") SELECT Can add report AS "name", 14 AS "content_type_id", add_report AS "codename" UNION ALL SELECT Can change report, 14, change_report UNION ALL SELECT Can delete report, 14, delete_report UNION ALL SELECT Can add section, 15, add_section UNION ALL SELECT Can change section, 15, change_section UNION ALL SELECT Can delete section, 15, delete_section UNION ALL SELECT Can add section field mode, 16, add_sectionfieldmode UNION ALL SELECT Can change section field mode, 16, change_sectionfieldmode UNION ALL SELECT Can delete section field mode, 16, delete_sectionfieldmode UNION ALL SELECT Can add widget, 17, add_widget UNION ALL SELECT Can change widget, 17, change_widget UNION ALL SELECT Can delete widget, 17, delete_widget UNION ALL SELECT Can add widget job, 18, add_widgetjob UNION ALL SELECT Can change widget job, 18, change_widgetjob UNION ALL SELECT Can delete widget job, 18, delete_widgetjob; args=(u'Can add report', 14, u'add_report', u'Can change report', 14, u'change_report', u'Can delete report', 14, u'delete_report', u'Can add section', 15, u'add_section', u'Can change section', 15, u'change_section', u'Can delete section', 15, u'delete_section', u'Can add section field mode', 16, u'add_sectionfieldmode', u'Can change section field mode', 16, u'change_sectionfieldmode', u'Can delete section field mode', 16, u'delete_sectionfieldmode', u'Can add widget', 17, u'add_widget', u'Can change widget', 17, u'change_widget', u'Can delete widget', 17, u'delete_widget', u'Can add widget job', 18, u'add_widgetjob', u'Can change widget job', 18, u'change_widgetjob', u'Can delete widget job', 18, u'delete_widgetjob')
+2014-05-28 20:57:23,955 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE "django_content_type"."app_label" = report  ORDER BY "django_content_type"."name" ASC; args=(u'report',)
+2014-05-28 20:57:23,956 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = location  AND "django_content_type"."app_label" = geolocation ); args=('location', u'geolocation')
+2014-05-28 20:57:23,956 [DEBUG] django.db.backends: (0.000) INSERT INTO "django_content_type" ("name", "app_label", "model") VALUES (location, geolocation, location); args=[u'location', u'geolocation', 'location']
+2014-05-28 20:57:23,959 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = locationip  AND "django_content_type"."app_label" = geolocation ); args=('locationip', u'geolocation')
+2014-05-28 20:57:23,959 [DEBUG] django.db.backends: (0.000) INSERT INTO "django_content_type" ("name", "app_label", "model") VALUES (location ip, geolocation, locationip); args=[u'location ip', u'geolocation', 'locationip']
+2014-05-28 20:57:23,962 [DEBUG] django.db.backends: (0.000) SELECT "auth_permission"."content_type_id", "auth_permission"."codename" FROM "auth_permission" INNER JOIN "django_content_type" ON ("auth_permission"."content_type_id" = "django_content_type"."id") WHERE "auth_permission"."content_type_id" IN (19, 20) ORDER BY "django_content_type"."app_label" ASC, "django_content_type"."model" ASC, "auth_permission"."codename" ASC; args=(19, 20)
+2014-05-28 20:57:23,963 [DEBUG] django.db.backends: (0.000) INSERT INTO "auth_permission" ("name", "content_type_id", "codename") SELECT Can add location AS "name", 19 AS "content_type_id", add_location AS "codename" UNION ALL SELECT Can change location, 19, change_location UNION ALL SELECT Can delete location, 19, delete_location UNION ALL SELECT Can add location ip, 20, add_locationip UNION ALL SELECT Can change location ip, 20, change_locationip UNION ALL SELECT Can delete location ip, 20, delete_locationip; args=(u'Can add location', 19, u'add_location', u'Can change location', 19, u'change_location', u'Can delete location', 19, u'delete_location', u'Can add location ip', 20, u'add_locationip', u'Can change location ip', 20, u'change_locationip', u'Can delete location ip', 20, u'delete_locationip')
+2014-05-28 20:57:23,965 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE "django_content_type"."app_label" = geolocation  ORDER BY "django_content_type"."name" ASC; args=(u'geolocation',)
+2014-05-28 20:57:23,966 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = portaluser  AND "django_content_type"."app_label" = preferences ); args=('portaluser', u'preferences')
+2014-05-28 20:57:23,967 [DEBUG] django.db.backends: (0.000) INSERT INTO "django_content_type" ("name", "app_label", "model") VALUES (user, preferences, portaluser); args=[u'user', u'preferences', 'portaluser']
+2014-05-28 20:57:23,969 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = systemsettings  AND "django_content_type"."app_label" = preferences ); args=('systemsettings', u'preferences')
+2014-05-28 20:57:23,969 [DEBUG] django.db.backends: (0.000) INSERT INTO "django_content_type" ("name", "app_label", "model") VALUES (system settings, preferences, systemsettings); args=[u'system settings', u'preferences', 'systemsettings']
+2014-05-28 20:57:23,973 [DEBUG] django.db.backends: (0.000) SELECT "auth_permission"."content_type_id", "auth_permission"."codename" FROM "auth_permission" INNER JOIN "django_content_type" ON ("auth_permission"."content_type_id" = "django_content_type"."id") WHERE "auth_permission"."content_type_id" IN (21, 22) ORDER BY "django_content_type"."app_label" ASC, "django_content_type"."model" ASC, "auth_permission"."codename" ASC; args=(21, 22)
+2014-05-28 20:57:23,974 [DEBUG] django.db.backends: (0.000) INSERT INTO "auth_permission" ("name", "content_type_id", "codename") SELECT Can add user AS "name", 21 AS "content_type_id", add_portaluser AS "codename" UNION ALL SELECT Can change user, 21, change_portaluser UNION ALL SELECT Can delete user, 21, delete_portaluser UNION ALL SELECT Can add system settings, 22, add_systemsettings UNION ALL SELECT Can change system settings, 22, change_systemsettings UNION ALL SELECT Can delete system settings, 22, delete_systemsettings; args=(u'Can add user', 21, u'add_portaluser', u'Can change user', 21, u'change_portaluser', u'Can delete user', 21, u'delete_portaluser', u'Can add system settings', 22, u'add_systemsettings', u'Can change system settings', 22, u'change_systemsettings', u'Can delete system settings', 22, u'delete_systemsettings')
+2014-05-28 20:57:23,976 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE "django_content_type"."app_label" = preferences  ORDER BY "django_content_type"."name" ASC; args=(u'preferences',)
+2014-05-28 20:57:23,984 [DEBUG] django.db.backends: (0.003) CREATE INDEX "auth_permission_37ef4eb4" ON "auth_permission" ("content_type_id");; args=()
+2014-05-28 20:57:23,987 [DEBUG] django.db.backends: (0.003) CREATE INDEX "auth_group_permissions_5f412f9a" ON "auth_group_permissions" ("group_id");; args=()
+2014-05-28 20:57:23,989 [DEBUG] django.db.backends: (0.001) CREATE INDEX "auth_group_permissions_83d7f98b" ON "auth_group_permissions" ("permission_id");; args=()
+2014-05-28 20:57:23,990 [DEBUG] django.db.backends: (0.001) CREATE INDEX "django_session_b7b81f0c" ON "django_session" ("expire_date");; args=()
+2014-05-28 20:57:24,010 [DEBUG] django.db.backends: (0.020) CREATE INDEX "admin_tools_menu_bookmark_6340c63c" ON "admin_tools_menu_bookmark" ("user_id");; args=()
+2014-05-28 20:57:24,013 [DEBUG] django.db.backends: (0.003) CREATE INDEX "admin_tools_dashboard_preferences_6340c63c" ON "admin_tools_dashboard_preferences" ("user_id");; args=()
+2014-05-28 20:57:24,016 [DEBUG] django.db.backends: (0.002) CREATE INDEX "django_admin_log_6340c63c" ON "django_admin_log" ("user_id");; args=()
+2014-05-28 20:57:24,018 [DEBUG] django.db.backends: (0.001) CREATE INDEX "django_admin_log_37ef4eb4" ON "django_admin_log" ("content_type_id");; args=()
+2014-05-28 20:57:24,019 [DEBUG] django.db.backends: (0.001) CREATE INDEX "datasource_table_fields_80be7a7a" ON "datasource_table_fields" ("table_id");; args=()
+2014-05-28 20:57:24,021 [DEBUG] django.db.backends: (0.002) CREATE INDEX "datasource_table_fields_1dbab651" ON "datasource_table_fields" ("tablefield_id");; args=()
+2014-05-28 20:57:24,024 [DEBUG] django.db.backends: (0.003) CREATE INDEX "datasource_column_80be7a7a" ON "datasource_column" ("table_id");; args=()
+2014-05-28 20:57:24,026 [DEBUG] django.db.backends: (0.002) CREATE INDEX "datasource_column_8ec080e5" ON "datasource_column" ("ephemeral_id");; args=()
+2014-05-28 20:57:24,028 [DEBUG] django.db.backends: (0.002) CREATE INDEX "datasource_job_410d0aac" ON "datasource_job" ("parent_id");; args=()
+2014-05-28 20:57:24,031 [DEBUG] django.db.backends: (0.002) CREATE INDEX "datasource_job_80be7a7a" ON "datasource_job" ("table_id");; args=()
+2014-05-28 20:57:24,032 [DEBUG] django.db.backends: (0.001) CREATE INDEX "report_report_fields_ae85b46e" ON "report_report_fields" ("report_id");; args=()
+2014-05-28 20:57:24,033 [DEBUG] django.db.backends: (0.001) CREATE INDEX "report_report_fields_1dbab651" ON "report_report_fields" ("tablefield_id");; args=()
+2014-05-28 20:57:24,035 [DEBUG] django.db.backends: (0.001) CREATE INDEX "report_section_fields_b402b60b" ON "report_section_fields" ("section_id");; args=()
+2014-05-28 20:57:24,037 [DEBUG] django.db.backends: (0.002) CREATE INDEX "report_section_fields_1dbab651" ON "report_section_fields" ("tablefield_id");; args=()
+2014-05-28 20:57:24,039 [DEBUG] django.db.backends: (0.001) CREATE INDEX "report_section_ae85b46e" ON "report_section" ("report_id");; args=()
+2014-05-28 20:57:24,041 [DEBUG] django.db.backends: (0.002) CREATE INDEX "report_sectionfieldmode_b402b60b" ON "report_sectionfieldmode" ("section_id");; args=()
+2014-05-28 20:57:24,043 [DEBUG] django.db.backends: (0.001) CREATE INDEX "report_widget_tables_fa9c8217" ON "report_widget_tables" ("widget_id");; args=()
+2014-05-28 20:57:24,044 [DEBUG] django.db.backends: (0.001) CREATE INDEX "report_widget_tables_80be7a7a" ON "report_widget_tables" ("table_id");; args=()
+2014-05-28 20:57:24,047 [DEBUG] django.db.backends: (0.002) CREATE INDEX "report_widget_b402b60b" ON "report_widget" ("section_id");; args=()
+2014-05-28 20:57:24,049 [DEBUG] django.db.backends: (0.002) CREATE INDEX "report_widgetjob_fa9c8217" ON "report_widgetjob" ("widget_id");; args=()
+2014-05-28 20:57:24,052 [DEBUG] django.db.backends: (0.002) CREATE INDEX "report_widgetjob_218f3960" ON "report_widgetjob" ("job_id");; args=()
+2014-05-28 20:57:24,053 [DEBUG] django.db.backends: (0.001) CREATE INDEX "geolocation_locationip_afbb987d" ON "geolocation_locationip" ("location_id");; args=()
+2014-05-28 20:57:24,055 [DEBUG] django.db.backends: (0.002) CREATE INDEX "preferences_portaluser_groups_7f53b992" ON "preferences_portaluser_groups" ("portaluser_id");; args=()
+2014-05-28 20:57:24,057 [DEBUG] django.db.backends: (0.001) CREATE INDEX "preferences_portaluser_groups_5f412f9a" ON "preferences_portaluser_groups" ("group_id");; args=()
+2014-05-28 20:57:24,058 [DEBUG] django.db.backends: (0.001) CREATE INDEX "preferences_portaluser_user_permissions_7f53b992" ON "preferences_portaluser_user_permissions" ("portaluser_id");; args=()
+2014-05-28 20:57:24,061 [DEBUG] django.db.backends: (0.002) CREATE INDEX "preferences_portaluser_user_permissions_83d7f98b" ON "preferences_portaluser_user_permissions" ("permission_id");; args=()
+2014-05-28 20:57:24,393 [DEBUG] django.db.backends: (0.001) SELECT (1) AS "a" FROM "preferences_portaluser" WHERE "preferences_portaluser"."id" = 1  LIMIT 1; args=(1,)
+2014-05-28 20:57:24,393 [DEBUG] django.db.backends: (0.000) INSERT INTO "preferences_portaluser" ("id", "password", "last_login", "is_superuser", "username", "first_name", "last_name", "email", "is_staff", "is_active", "date_joined", "timezone", "timezone_changed", "profile_seen") SELECT 1 AS "id", pbkdf2_sha256$10000$DRfFnvmvOCxY$DRVJBUbUPYYP8k6JQiqkTk1UYwCNOWRhkd6tE9b7FlQ= AS "password", 2014-04-15 19:35:41.909000 AS "last_login", True AS "is_superuser", admin AS "username",  AS "first_name",  AS "last_name", admin@test.com AS "email", True AS "is_staff", True AS "is_active", 2014-04-15 19:19:49.027000 AS "date_joined", US/Eastern AS "timezone", False AS "timezone_changed", True AS "profile_seen"; args=(1, u'pbkdf2_sha256$10000$DRfFnvmvOCxY$DRVJBUbUPYYP8k6JQiqkTk1UYwCNOWRhkd6tE9b7FlQ=', u'2014-04-15 19:35:41.909000', True, u'admin', u'', u'', u'admin@test.com', True, True, u'2014-04-15 19:19:49.027000', u'US/Eastern', False, True)
+2014-05-28 20:57:24,395 [DEBUG] django.db.backends: (0.000) DELETE FROM "preferences_portaluser_user_permissions" WHERE "preferences_portaluser_user_permissions"."portaluser_id" = 1 ; args=(1,)
+2014-05-28 20:57:24,396 [DEBUG] django.db.backends: (0.000) DELETE FROM "preferences_portaluser_groups" WHERE "preferences_portaluser_groups"."portaluser_id" = 1 ; args=(1,)
+2014-05-28 20:57:24,397 [DEBUG] django.db.backends: (0.000) SELECT (1) AS "a" FROM "devices_device" WHERE "devices_device"."id" = 1  LIMIT 1; args=(1,)
+2014-05-28 20:57:24,397 [DEBUG] django.db.backends: (0.000) INSERT INTO "devices_device" ("id", "name", "module", "host", "port", "username", "password", "enabled") SELECT 1 AS "id", cam-pro101 AS "name", netprofiler AS "module", cam-pro101.lab.nbttech.com AS "host", 443 AS "port", admin AS "username",  AS "password", True AS "enabled"; args=(1, u'cam-pro101', u'netprofiler', u'cam-pro101.lab.nbttech.com', 443, u'admin', u'', True)
+2014-05-28 20:57:24,398 [DEBUG] django.db.backends: (0.000) SELECT (1) AS "a" FROM "devices_device" WHERE "devices_device"."id" = 3  LIMIT 1; args=(3,)
+2014-05-28 20:57:24,399 [DEBUG] django.db.backends: (0.000) INSERT INTO "devices_device" ("id", "name", "module", "host", "port", "username", "password", "enabled") SELECT 3 AS "id", cam-shark9 AS "name", netshark AS "module", cam-shark9.lab.nbttech.com AS "host", 443 AS "port", admin AS "username",  AS "password", True AS "enabled"; args=(3, u'cam-shark9', u'netshark', u'cam-shark9.lab.nbttech.com', 443, u'admin', u'', True)
+2014-05-28 20:57:24,399 [DEBUG] django.db.backends: (0.000) SELECT sql FROM sqlite_master WHERE tbl_name = preferences_portaluser AND type = table; args=[u'preferences_portaluser', 'table']
+2014-05-28 20:57:24,400 [DEBUG] django.db.backends: (0.000) SELECT sql FROM sqlite_master WHERE tbl_name = preferences_portaluser AND type = table; args=[u'preferences_portaluser', 'table']
+2014-05-28 20:57:24,400 [DEBUG] django.db.backends: (0.000) SELECT sql FROM sqlite_master WHERE tbl_name = devices_device AND type = table; args=[u'devices_device', 'table']
+2014-05-28 20:57:24,400 [DEBUG] django.db.backends: (0.000) SELECT sql FROM sqlite_master WHERE tbl_name = devices_device AND type = table; args=[u'devices_device', 'table']
+2014-05-28 20:57:24,403 [DEBUG] django.db.backends: (0.001) SELECT "preferences_systemsettings"."id", "preferences_systemsettings"."ignore_cache", "preferences_systemsettings"."developer", "preferences_systemsettings"."maps_version", "preferences_systemsettings"."maps_api_key" FROM "preferences_systemsettings"; args=()
+2014-05-28 20:57:24,404 [DEBUG] django.db.backends: (0.000) SELECT (1) AS "a" FROM "preferences_systemsettings" WHERE "preferences_systemsettings"."id" = 1  LIMIT 1; args=(1,)
+2014-05-28 20:57:24,404 [DEBUG] django.db.backends: (0.000) INSERT INTO "preferences_systemsettings" ("id", "ignore_cache", "developer", "maps_version", "maps_api_key") SELECT 1 AS "id", False AS "ignore_cache", False AS "developer", OPEN_STREET_MAPS AS "maps_version", None AS "maps_api_key"; args=(1, False, False, u'OPEN_STREET_MAPS', None)
+2014-05-28 20:57:24,456 [DEBUG] django.db.backends: (0.000) 
+            SELECT name FROM sqlite_master
+            WHERE type='table' AND NOT name='sqlite_sequence'
+            ORDER BY name; args=()
+2014-05-28 20:57:24,458 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = permission  AND "django_content_type"."app_label" = auth ); args=('permission', u'auth')
+2014-05-28 20:57:24,459 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = group  AND "django_content_type"."app_label" = auth ); args=('group', u'auth')
+2014-05-28 20:57:24,460 [DEBUG] django.db.backends: (0.000) SELECT "auth_permission"."content_type_id", "auth_permission"."codename" FROM "auth_permission" INNER JOIN "django_content_type" ON ("auth_permission"."content_type_id" = "django_content_type"."id") WHERE "auth_permission"."content_type_id" IN (1, 2) ORDER BY "django_content_type"."app_label" ASC, "django_content_type"."model" ASC, "auth_permission"."codename" ASC; args=(1, 2)
+2014-05-28 20:57:24,461 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE "django_content_type"."app_label" = auth  ORDER BY "django_content_type"."name" ASC; args=(u'auth',)
+2014-05-28 20:57:24,462 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = contenttype  AND "django_content_type"."app_label" = contenttypes ); args=('contenttype', u'contenttypes')
+2014-05-28 20:57:24,463 [DEBUG] django.db.backends: (0.000) SELECT "auth_permission"."content_type_id", "auth_permission"."codename" FROM "auth_permission" INNER JOIN "django_content_type" ON ("auth_permission"."content_type_id" = "django_content_type"."id") WHERE "auth_permission"."content_type_id" IN (3) ORDER BY "django_content_type"."app_label" ASC, "django_content_type"."model" ASC, "auth_permission"."codename" ASC; args=(3,)
+2014-05-28 20:57:24,464 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE "django_content_type"."app_label" = contenttypes  ORDER BY "django_content_type"."name" ASC; args=(u'contenttypes',)
+2014-05-28 20:57:24,465 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = session  AND "django_content_type"."app_label" = sessions ); args=('session', u'sessions')
+2014-05-28 20:57:24,466 [DEBUG] django.db.backends: (0.000) SELECT "auth_permission"."content_type_id", "auth_permission"."codename" FROM "auth_permission" INNER JOIN "django_content_type" ON ("auth_permission"."content_type_id" = "django_content_type"."id") WHERE "auth_permission"."content_type_id" IN (4) ORDER BY "django_content_type"."app_label" ASC, "django_content_type"."model" ASC, "auth_permission"."codename" ASC; args=(4,)
+2014-05-28 20:57:24,467 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE "django_content_type"."app_label" = sessions  ORDER BY "django_content_type"."name" ASC; args=(u'sessions',)
+2014-05-28 20:57:24,471 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = bookmark  AND "django_content_type"."app_label" = menu ); args=('bookmark', u'menu')
+2014-05-28 20:57:24,472 [DEBUG] django.db.backends: (0.000) SELECT "auth_permission"."content_type_id", "auth_permission"."codename" FROM "auth_permission" INNER JOIN "django_content_type" ON ("auth_permission"."content_type_id" = "django_content_type"."id") WHERE "auth_permission"."content_type_id" IN (5) ORDER BY "django_content_type"."app_label" ASC, "django_content_type"."model" ASC, "auth_permission"."codename" ASC; args=(5,)
+2014-05-28 20:57:24,473 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE "django_content_type"."app_label" = menu  ORDER BY "django_content_type"."name" ASC; args=(u'menu',)
+2014-05-28 20:57:24,474 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = dashboardpreferences  AND "django_content_type"."app_label" = dashboard ); args=('dashboardpreferences', u'dashboard')
+2014-05-28 20:57:24,475 [DEBUG] django.db.backends: (0.000) SELECT "auth_permission"."content_type_id", "auth_permission"."codename" FROM "auth_permission" INNER JOIN "django_content_type" ON ("auth_permission"."content_type_id" = "django_content_type"."id") WHERE "auth_permission"."content_type_id" IN (6) ORDER BY "django_content_type"."app_label" ASC, "django_content_type"."model" ASC, "auth_permission"."codename" ASC; args=(6,)
+2014-05-28 20:57:24,476 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE "django_content_type"."app_label" = dashboard  ORDER BY "django_content_type"."name" ASC; args=(u'dashboard',)
+2014-05-28 20:57:24,477 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = logentry  AND "django_content_type"."app_label" = admin ); args=('logentry', u'admin')
+2014-05-28 20:57:24,478 [DEBUG] django.db.backends: (0.000) SELECT "auth_permission"."content_type_id", "auth_permission"."codename" FROM "auth_permission" INNER JOIN "django_content_type" ON ("auth_permission"."content_type_id" = "django_content_type"."id") WHERE "auth_permission"."content_type_id" IN (7) ORDER BY "django_content_type"."app_label" ASC, "django_content_type"."model" ASC, "auth_permission"."codename" ASC; args=(7,)
+2014-05-28 20:57:24,479 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE "django_content_type"."app_label" = admin  ORDER BY "django_content_type"."name" ASC; args=(u'admin',)
+2014-05-28 20:57:24,482 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = tablefield  AND "django_content_type"."app_label" = datasource ); args=('tablefield', u'datasource')
+2014-05-28 20:57:24,482 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = table  AND "django_content_type"."app_label" = datasource ); args=('table', u'datasource')
+2014-05-28 20:57:24,483 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = column  AND "django_content_type"."app_label" = datasource ); args=('column', u'datasource')
+2014-05-28 20:57:24,484 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = job  AND "django_content_type"."app_label" = datasource ); args=('job', u'datasource')
+2014-05-28 20:57:24,486 [DEBUG] django.db.backends: (0.000) SELECT "auth_permission"."content_type_id", "auth_permission"."codename" FROM "auth_permission" INNER JOIN "django_content_type" ON ("auth_permission"."content_type_id" = "django_content_type"."id") WHERE "auth_permission"."content_type_id" IN (8, 9, 10, 11) ORDER BY "django_content_type"."app_label" ASC, "django_content_type"."model" ASC, "auth_permission"."codename" ASC; args=(8, 9, 10, 11)
+2014-05-28 20:57:24,486 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE "django_content_type"."app_label" = datasource  ORDER BY "django_content_type"."name" ASC; args=(u'datasource',)
+2014-05-28 20:57:24,487 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = device  AND "django_content_type"."app_label" = devices ); args=('device', u'devices')
+2014-05-28 20:57:24,489 [DEBUG] django.db.backends: (0.000) SELECT "auth_permission"."content_type_id", "auth_permission"."codename" FROM "auth_permission" INNER JOIN "django_content_type" ON ("auth_permission"."content_type_id" = "django_content_type"."id") WHERE "auth_permission"."content_type_id" IN (13) ORDER BY "django_content_type"."app_label" ASC, "django_content_type"."model" ASC, "auth_permission"."codename" ASC; args=(13,)
+2014-05-28 20:57:24,489 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE "django_content_type"."app_label" = devices  ORDER BY "django_content_type"."name" ASC; args=(u'devices',)
+2014-05-28 20:57:24,490 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = report  AND "django_content_type"."app_label" = report ); args=('report', u'report')
+2014-05-28 20:57:24,491 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = section  AND "django_content_type"."app_label" = report ); args=('section', u'report')
+2014-05-28 20:57:24,492 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = sectionfieldmode  AND "django_content_type"."app_label" = report ); args=('sectionfieldmode', u'report')
+2014-05-28 20:57:24,493 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = widget  AND "django_content_type"."app_label" = report ); args=('widget', u'report')
+2014-05-28 20:57:24,494 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = widgetjob  AND "django_content_type"."app_label" = report ); args=('widgetjob', u'report')
+2014-05-28 20:57:24,495 [DEBUG] django.db.backends: (0.000) SELECT "auth_permission"."content_type_id", "auth_permission"."codename" FROM "auth_permission" INNER JOIN "django_content_type" ON ("auth_permission"."content_type_id" = "django_content_type"."id") WHERE "auth_permission"."content_type_id" IN (16, 17, 18, 14, 15) ORDER BY "django_content_type"."app_label" ASC, "django_content_type"."model" ASC, "auth_permission"."codename" ASC; args=(16, 17, 18, 14, 15)
+2014-05-28 20:57:24,496 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE "django_content_type"."app_label" = report  ORDER BY "django_content_type"."name" ASC; args=(u'report',)
+2014-05-28 20:57:24,497 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = location  AND "django_content_type"."app_label" = geolocation ); args=('location', u'geolocation')
+2014-05-28 20:57:24,498 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = locationip  AND "django_content_type"."app_label" = geolocation ); args=('locationip', u'geolocation')
+2014-05-28 20:57:24,499 [DEBUG] django.db.backends: (0.000) SELECT "auth_permission"."content_type_id", "auth_permission"."codename" FROM "auth_permission" INNER JOIN "django_content_type" ON ("auth_permission"."content_type_id" = "django_content_type"."id") WHERE "auth_permission"."content_type_id" IN (19, 20) ORDER BY "django_content_type"."app_label" ASC, "django_content_type"."model" ASC, "auth_permission"."codename" ASC; args=(19, 20)
+2014-05-28 20:57:24,500 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE "django_content_type"."app_label" = geolocation  ORDER BY "django_content_type"."name" ASC; args=(u'geolocation',)
+2014-05-28 20:57:24,501 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = portaluser  AND "django_content_type"."app_label" = preferences ); args=('portaluser', u'preferences')
+2014-05-28 20:57:24,502 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE ("django_content_type"."model" = systemsettings  AND "django_content_type"."app_label" = preferences ); args=('systemsettings', u'preferences')
+2014-05-28 20:57:24,503 [DEBUG] django.db.backends: (0.000) SELECT "auth_permission"."content_type_id", "auth_permission"."codename" FROM "auth_permission" INNER JOIN "django_content_type" ON ("auth_permission"."content_type_id" = "django_content_type"."id") WHERE "auth_permission"."content_type_id" IN (21, 22) ORDER BY "django_content_type"."app_label" ASC, "django_content_type"."model" ASC, "auth_permission"."codename" ASC; args=(21, 22)
+2014-05-28 20:57:24,504 [DEBUG] django.db.backends: (0.000) SELECT "django_content_type"."id", "django_content_type"."name", "django_content_type"."app_label", "django_content_type"."model" FROM "django_content_type" WHERE "django_content_type"."app_label" = preferences  ORDER BY "django_content_type"."name" ASC; args=(u'preferences',)
+2014-05-28 20:57:24,517 [DEBUG] django.db.backends: (0.001) SELECT "report_report"."id", "report_report"."title", "report_report"."position", "report_report"."enabled", "report_report"."slug", "report_report"."namespace", "report_report"."sourcefile", "report_report"."field_order", "report_report"."hidden_fields", "report_report"."hide_criteria", "report_report"."reload_minutes" FROM "report_report"; args=()
+2014-05-28 20:57:24,520 [DEBUG] django.db.backends: (0.000) 
+            SELECT name FROM sqlite_master
+            WHERE type='table' AND NOT name='sqlite_sequence'
+            ORDER BY name; args=()
+2014-05-28 20:57:24,521 [DEBUG] django.db.backends: (0.000) SELECT "datasource_job"."id", "datasource_job"."created", "datasource_job"."touched", "datasource_job"."refcount", "datasource_job"."ischild", "datasource_job"."parent_id", "datasource_job"."table_id", "datasource_job"."criteria", "datasource_job"."actual_criteria", "datasource_job"."handle", "datasource_job"."status", "datasource_job"."message", "datasource_job"."progress", "datasource_job"."remaining" FROM "datasource_job"; args=()
+2014-05-28 20:57:24,521 [DEBUG] django.db.backends: (0.000) SELECT "report_report"."id", "report_report"."title", "report_report"."position", "report_report"."enabled", "report_report"."slug", "report_report"."namespace", "report_report"."sourcefile", "report_report"."field_order", "report_report"."hidden_fields", "report_report"."hide_criteria", "report_report"."reload_minutes" FROM "report_report"; args=()
+2014-05-28 20:57:24,522 [DEBUG] django.db.backends: (0.000) SELECT "report_section"."id", "report_section"."report_id", "report_section"."title", "report_section"."position" FROM "report_section"; args=()
+2014-05-28 20:57:24,523 [DEBUG] django.db.backends: (0.000) DELETE FROM "report_sectionfieldmode"; args=()
+2014-05-28 20:57:24,524 [DEBUG] django.db.backends: (0.000) SELECT "report_widget"."id", "report_widget"."section_id", "report_widget"."title", "report_widget"."row", "report_widget"."col", "report_widget"."width", "report_widget"."height", "report_widget"."rows", "report_widget"."options", "report_widget"."module", "report_widget"."uiwidget", "report_widget"."uioptions" FROM "report_widget"; args=()
+2014-05-28 20:57:24,525 [DEBUG] django.db.backends: (0.000) SELECT "report_widgetjob"."id", "report_widgetjob"."widget_id", "report_widgetjob"."job_id" FROM "report_widgetjob"; args=()
+2014-05-28 20:57:24,525 [DEBUG] django.db.backends: (0.000) SELECT "datasource_tablefield"."id", "datasource_tablefield"."keyword", "datasource_tablefield"."label", "datasource_tablefield"."help_text", "datasource_tablefield"."initial", "datasource_tablefield"."required", "datasource_tablefield"."hidden", "datasource_tablefield"."field_cls", "datasource_tablefield"."field_kwargs", "datasource_tablefield"."parent_keywords", "datasource_tablefield"."pre_process_func", "datasource_tablefield"."dynamic", "datasource_tablefield"."post_process_func", "datasource_tablefield"."post_process_template" FROM "datasource_tablefield"; args=()
+2014-05-28 20:57:24,526 [DEBUG] django.db.backends: (0.000) SELECT "datasource_table"."id", "datasource_table"."name", "datasource_table"."module", "datasource_table"."datasource", "datasource_table"."namespace", "datasource_table"."sourcefile", "datasource_table"."sortcols", "datasource_table"."sortdir", "datasource_table"."rows", "datasource_table"."filterexpr", "datasource_table"."resample", "datasource_table"."options", "datasource_table"."criteria", "datasource_table"."criteria_handle_func", "datasource_table"."cacheable" FROM "datasource_table"; args=()
+2014-05-28 20:57:24,527 [DEBUG] django.db.backends: (0.000) SELECT "datasource_table"."id", "datasource_table"."name", "datasource_table"."module", "datasource_table"."datasource", "datasource_table"."namespace", "datasource_table"."sourcefile", "datasource_table"."sortcols", "datasource_table"."sortdir", "datasource_table"."rows", "datasource_table"."filterexpr", "datasource_table"."resample", "datasource_table"."options", "datasource_table"."criteria", "datasource_table"."criteria_handle_func", "datasource_table"."cacheable" FROM "datasource_table"; args=()
+2014-05-28 20:57:24,527 [DEBUG] django.db.backends: (0.000) DELETE FROM "datasource_column"; args=()
+2014-05-28 20:57:24,529 [DEBUG] django.db.backends: (0.000) SELECT "datasource_job"."id", "datasource_job"."created", "datasource_job"."touched", "datasource_job"."refcount", "datasource_job"."ischild", "datasource_job"."parent_id", "datasource_job"."table_id", "datasource_job"."criteria", "datasource_job"."actual_criteria", "datasource_job"."handle", "datasource_job"."status", "datasource_job"."message", "datasource_job"."progress", "datasource_job"."remaining" FROM "datasource_job"; args=()
+2014-05-28 20:57:24,532 [INFO] django.db.backends: *** rolling db log ***
