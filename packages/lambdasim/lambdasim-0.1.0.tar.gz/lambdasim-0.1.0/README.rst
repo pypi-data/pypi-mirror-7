@@ -1,0 +1,53 @@
+.. image:: pics/angled-muffler.png
+
+=========
+lambdasim
+=========
+
+Python library to interact with Lambda_ (FDTD acoustic simulations)
+
+* Free software: BSD license
+
+Features
+--------
+
+* Read and write simulations
+* Create complex simulation setups using vector shapes
+* Embed sampled sources in a simulation
+* Convert sensor data to audio
+* Calculate real-world dimensions of simulation
+* Preset shapes like tubes, bells, resonators
+* Precalculation of dead nodes to speed-up calculations
+
+Installation
+------------
+
+1. Install Lambda. Download binaries_ or install from source_
+2. Clone this repo:
+
+```
+$ git clone https://github.com/gesellkammer/lambdasim
+```
+
+3. Install it:
+
+```
+$ pip install -r requirements.txt
+$ python setup.py install
+```
+
+Dependencies
+------------
+
+* shapely_
+* shapelib_
+* bpf4_
+* sndfileio_
+
+.. _Lambda: https://github.com/gesellkammer/lambda
+.. _binaries: https://github.com/gesellkammer/lambda/tree/master/dist
+.. _source: https://github.com/gesellkammer/lambda
+.. _shapely: https://github.com/sgillies/shapely
+.. _shapelib: https://github.com/gesellkammer/shapelib
+.. _bpf4: https://github.com/gesellkammer/bpf4
+.. _sndfileio: https://github.com/gesellkammer/sndfileio
