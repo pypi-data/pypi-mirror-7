@@ -1,0 +1,39 @@
+#!/usr/bin/env python
+ 
+import os
+import supplescroll
+from docopt import docopt
+
+
+__doc__ = """
+Creates HTML from markdown with auto-generated TOC, figure list
+and supple scrolling.
+
+Usage: supplescroll [-o <html>] <markdown> [<theme>]
+
+Options:
+ <theme>     Theme for HTML page. See below for available themes.
+ -o <html>   Output HTML filename
+
+Themes:
+%s
+
+""" % '\n'.join(' - '+t for t in supplescroll.themes)
+
+
+if __name__ == "__main__":
+  arg = docopt(__doc__)
+  in_markdown = arg['<markdown>']
+  theme = 'lucid'
+  if arg['<theme>']:
+    theme = arg['<theme>']
+  if arg['-o']:
+    html = arg['-o']
+  else:
+    html = os.path.splitext(arg['<markdown>'])[0] + '.html'
+  print html
+  supplescroll.make_html(theme, in_markdown, html)
+
+
+
+
