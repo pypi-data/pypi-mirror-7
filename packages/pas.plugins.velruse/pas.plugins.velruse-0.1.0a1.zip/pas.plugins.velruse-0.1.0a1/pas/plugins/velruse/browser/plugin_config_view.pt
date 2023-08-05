@@ -1,0 +1,214 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:metal="http://xml.zope.org/namespaces/metal"
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+      lang="en"
+      metal:use-macro="here/prefs_main_template/macros/master"
+      i18n:domain="pas.plugins.velruse">
+
+    <metal:head fill-slot="top_slot"
+                tal:define="dummy python:request.set('disable_border',1)" />
+<body>
+  <div metal:fill-slot="prefs_configlet_main"
+       tal:define="template_id string:velruse-plugin-config;
+                  errors options/errors|nothing;">
+
+      <a href=""
+         id="setup-link"
+         tal:attributes="href string:$portal_url/@@velruse-settings"
+         i18n:translate="">
+        Back to general Velruse settings
+      </a>
+    
+      <h1 class="documentFirstHeading"
+          i18n:translate="velruse_plugin_config">
+          <tal:name i18n:name="plugin_name" tal:content="here/title" /> Settings
+      </h1>
+      <form name="plugin_settings"
+            method="post"
+            class="VelrusePluginSettings"
+            tal:attributes="action string:${here/absolute_url}/${template_id}">
+        <div class="field"
+             tal:define="error errors/velruse_server_host| nothing"
+             tal:attributes="class python:error and 'field error' or 'field'">
+          <label for="velruse_server_host" i18n:translate="velruse_server_host_label">
+            Velruse server host
+          </label>
+          <span class="fieldRequired" title="Required"
+                  i18n:domain="plone"
+                  i18n:attributes="title title_required;"
+                  i18n:translate="label_required">(Required)</span>
+
+          <div class="formHelp" i18n:translate="velruse_server_host_help">
+            Set the server host address where Velruse is listening
+          </div>
+
+          <input type="text" 
+                 id="velruse_server_host"
+                 name="velruse_server_host"
+                 size="40"
+                 tal:attributes="value here/velruse_server_host|nothing"
+                 />
+        </div>
+        <div class="field"
+             tal:define="error errors/velruse_auth_info_path| nothing"
+             tal:attributes="class python:error and 'field error' or 'field'">
+          <label for="velruse_auth_info_path" i18n:translate="velruse_auth_info_path_label">
+            Velruse auth info path
+          </label>
+          <span class="fieldRequired" title="Required"
+                  i18n:domain="plone"
+                  i18n:attributes="title title_required;"
+                  i18n:translate="label_required">(Required)</span>
+
+          <div class="formHelp" i18n:translate="velruse_auth_info_path_help">
+            Set the auth info path
+          </div>
+
+          <input type="text" 
+                 id="velruse_auth_info_path"
+                 name="velruse_auth_info_path"
+                 size="40"
+                 tal:attributes="value here/velruse_auth_info_path|nothing"
+                 />
+        </div>
+        <div class="field">
+          <label for="given_roles" i18n:translate="given_roles_label">
+            User roles
+          </label>
+          <div class="formHelp" i18n:translate="given_roles_help">
+            A set of roles this plugin will automatically gives to authenticated members
+          </div>
+          <textarea
+                 id="given_roles"
+                 name="given_roles:lines"
+                 rows="5"
+                 cols="20"
+                 style="width:auto;"
+                 tal:content="python:'\n'.join(here.given_roles)" />
+        </div>
+        <input type="submit"
+               class="context"
+               name="form.button.Save"
+               value="Save"
+               i18n:domain="plone"
+               i18n:attributes="value label_save;"
+               />
+      </form>
+      
+      <a name="usersearch"></a><h2 i18n:translate="">Users management</h2>
+
+      <p class="discreet" i18n:translate="user_management_help">
+          From this section you can search for users stored in this plugin.
+          This mean: users that logged in using this Velruse backend.
+          You can delete user's data stored and/or blacklist users.
+          Blacklisted users are not able to authenticate anymore (can be useful to block spammer/trolling
+          people).
+      </p>
+      
+      <form class="enableAutoFocus" method="post" action="" id="searchVelruseUsers"
+              tal:attributes="action string:${context/absolute_url}/@@${view/__name__}"
+              tal:define="search_result view/search_results;
+                          form_submitted python:request.get('form.submitted');
+                          empty_search python:not search_result and form_submitted;">
+            <fieldset>
+                <legend>Users data in the plugin</legend>
+
+                <input type="hidden" value="1" name="form.submitted" />
+                <table class="listing">
+                    <thead>
+                        <tr><th colspan="3" class="nosort">
+                            <label for="query" i18n:translate="">Search for Velruse users</label>
+                            <input type="text" name="query" value="" id="query" />
+                            <input type="submit" class="searchButton" name="search" value="Search"
+                                   i18n:attributes="value"/>
+                        </th></tr>
+                        <tr tal:condition="python:form_submitted and not empty_search">
+                            <th scope="col" i18n:translate="">Name</th>
+                            <th scope="col" class="nosort" i18n:translate="">Remove user</th>
+                            <th scope="col" class="nosort" i18n:translate="">Blacklisted?</th>
+                        </tr>
+                    </thead>
+                    
+                    <tbody>
+                        <tr tal:repeat="user view/search_results">
+                            <td>
+                                <span tal:replace="user/id">Username</span>
+                                <span tal:condition="user/title"
+                                      tal:content="string:(${user/title})">(name)</span>
+                                <input type="hidden" name="user.id:records" value=""
+                                       tal:attributes="value user/id" />
+                            </td>
+                            <td><input type="checkbox" name="user.delete:records:boolean"
+                                       value="True" /></td>
+                            <td><input type="checkbox" name="user.blacklist:records:boolean"
+                                       value="True" tal:attributes="checked python:view.is_blacklisted(user.get('id'))"/></td>
+                        </tr>
+                        <tr tal:condition="python: empty_search and form_submitted">
+                            <td colspan="3" i18n:translate="">No results</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <input type="submit" class="context" name="apply" value="Save"
+                       i18n:translate=""
+                       tal:condition="view/search_results" />
+
+            </fieldset>
+
+      </form>
+
+      <h2 i18n:translate="">Blacklist management</h2>
+
+      <p class="discreet" i18n:translate="blacklist_management_help">
+          If you deleted a blacklisted user you are not able to find it from the section above.
+          Use this form for cleaning up old blacklisted entries 
+      </p>
+      
+      <form method="post" action="" id="handleVelruseBlacklist"
+              tal:attributes="action string:${context/absolute_url}/@@${view/__name__}"
+              tal:define="search_result view/load_blacklist;
+                          form_submitted python:request.get('form.blacklist.loaded');
+                          empty_search python:not search_result and form_submitted;">
+            <fieldset>
+                <legend>Blacklist content</legend>
+
+                <input type="hidden" value="1" name="form.blacklist.loaded" />
+                <table class="listing">
+                    <thead>
+                        <tr><th colspan="2" class="nosort">
+                            <input type="submit" name="load" value="Load blacklist"
+                                    i18n:attributes="value"/>
+                        </th></tr>
+                        <tr tal:condition="python:form_submitted and not empty_search">
+                            <th scope="col" i18n:translate="">Name</th>
+                            <th scope="col" class="nosort" i18n:translate="">Remove?</th>
+                        </tr>
+                    </thead>
+                    
+                    <tbody>
+                        <tal:beforeload condition="python: form_submitted and not empty_search">
+                            <tr tal:repeat="user search_result">
+                                <td tal:content="user" i18n:translate="">Username</td>
+                                <td><input type="checkbox" name="remove_from_blacklist:list"
+                                           value=""
+                                           tal:attributes="value user" /></td>
+                            </tr>
+                        </tal:beforeload>
+                        <tr tal:condition="python: form_submitted and empty_search">
+                            <td colspan="2" i18n:translate="">No entries in the blacklist</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <input type="submit" class="context" name="remove" value="Remove selected"
+                       i18n:attributes="value"
+                       tal:condition="python: form_submitted and search_result" />
+
+            </fieldset>
+
+        </form>
+
+  </div>
+</body>
+</html>
