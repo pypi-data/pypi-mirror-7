@@ -1,0 +1,19 @@
+{% load i18n satchmo_category satchmo_google satchmo_util satchmo_currency satchmo_discounts app_plugins normalize_decimal %}
+{% comment %}
+
+	You can use these possible variables:
+		- site_url: if we use link to category on other site, domain name will be there
+		- parent_slugs: string for URL, where is defined all category parents. Useful for using on other site.
+		- instance.category_url_path: depends on Satchmo settings - it's derived from SATCHMO_BASE and PRODUCT_SLUG
+		- instance.category: standard Satchmo category instance
+		- instance.title: some aditional varchar defined in admin (e.g. if you want use string "View this super category" and not the original category name)
+		- instance.style: for some CSS cusomization
+
+{% endcomment %}
+{% with category=instance.category title=instance.title url_path=instance.category_url_path style=instance.style %}
+<h3{% if style %} class="{{ style }}"{% endif %}>{% if title %}{{ title }}{% else %}{{ category.translated_name|capfirst }}{% endif %}</h3>
+<p>
+	{{ category.translated_short_description|safe }}
+	<a href="{% if site_url %}{{ site_url }}{{ url_path }}{{ parent_slugs }}{{ category.slug }}/{% else %}{{ category.get_absolute_url }}{% endif %}" title="More">More</a>
+</p>
+{% endwith %}
