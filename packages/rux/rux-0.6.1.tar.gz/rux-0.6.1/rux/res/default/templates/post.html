@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+{% block css_this_page %}post.css{% endblock %}
+{% block title %}{{post.title}}{% endblock %}
+{% block content %}
+  {% if post.title_pic %}
+  <div class="title-pic-container">
+    <img src="/{{blog.theme}}/static/images/spinner-circle-fade.gif" class="loader"/>
+    <a href="{{post.title_pic}}" title="{{post.title}}">
+      <img src="{{post.title_pic}}" alt="{{post.title}}" class="title-pic"/>
+    </a>
+  </div>
+  {% endif %}
+  <h1 class="title">{{post.title}}</h1>
+  <div class="post-html">
+    {{post.html}}
+  </div>
+  <p class="date">written on {{post.datetime.strftime("%b  %d, %y")}} </p>
+
+  <div class="posts-nav">
+   {% if post.prev %}
+   <a class="prev" href="/post/{{post.prev.name}}.html">
+      <i class="icon-arrow-left"></i>
+      <span>{{post.prev.title}}</span>
+   </a>
+   {% endif %}
+   {% if post.next %}
+   <a class="next" href="/post/{{post.next.name}}.html">
+       <span>{{post.next.title}}</span>
+       <i class="icon-arrow-right"></i>
+   </a>
+   {% endif %}
+ </div>
+
+  {% if config.disqus.enable %}
+    <!-- Disqus Begin-->
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+      /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+      var disqus_shortname = '{{config.disqus.shortname}}'; // required: replace example with your forum shortname
+      /* * * DON'T EDIT BELOW THIS LINE * * */
+      (function() {
+          var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+          dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+          (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+    <!-- Disqus End-->
+  {% endif %}
+{% endblock %}
