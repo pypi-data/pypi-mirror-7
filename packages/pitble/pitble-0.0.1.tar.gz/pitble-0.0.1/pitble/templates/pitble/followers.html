@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <!-- Custom styles for this template -->
+    <link href="{{ STATIC_URL }}styles/followers.css" rel="stylesheet">
+{% endblock %}
+
+{% block extra_js %}
+    {{ block.super }}
+    <script src="{{ STATIC_URL }}js/followers.js"></script>
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+             <div class="col-xs-8 col-xs-offset-2">
+                <h1>Followers</h1>
+            </div>
+        </div>
+    </div>
+    <!-- Snippet "Dropdown userlist plus administration fully responsive"
+        http://bootsnipp.com/snippets/featured/dropdown-userlist-plus-administration
+    -->
+    <div class="container">
+        <div class="row">
+            {% for follower in followers %}
+                <div class="well col-xs-8 col-xs-offset-2">
+                    <div class="row user-row">
+                        <div class="col-xs-3 col-sm-2 col-md-1">
+                            <img class="img-circle"
+                                src="https://lh5.googleusercontent.com/-b0-k99FZlyE/AAAAAAAAAAI/AAAAAAAAAAA/eu7opA4byxI/photo.jpg?sz=50"
+                                alt="User Pic">
+                        </div>
+                        <div class="col-xs-8 col-sm-9 col-md-10">
+                            <strong>{{ follower.get_full_name }}</strong><br>
+                            <span class="text-muted">@{{ follower.username }}</span>
+                        </div>
+                        <div class="col-xs-1 addfollower">
+                            <a href="#" data-toggle="tooltip" title="Follow this user!"><i class="glyphicon glyphicon-plus text-muted"></i></a>
+                        </div>
+                        <div class="col-xs-1 dropdown-user" data-for=".{{ follower.username }}">
+                            <i class="glyphicon glyphicon-chevron-down text-muted"></i>
+                        </div>
+                    </div>
+                    <div class="row user-infos {{ follower.username }}">
+                        <div class="col-xs-12 col-md-10 col-xs-offset-0 col-md-offset-1">
+                            <div class="panel panel-primary">
+                                <div class="panel-heading">
+                                    <h3 class="panel-title">Info & Actions</h3>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="row">
+                                        <div class="col-md-3 hidden-xs hidden-sm">
+                                            <img class="img-circle"
+                                                src="https://lh5.googleusercontent.com/-b0-k99FZlyE/AAAAAAAAAAI/AAAAAAAAAAA/eu7opA4byxI/photo.jpg?sz=100"
+                                                alt="User Pic">
+                                        </div>
+                                        <div class="col-xs-2 hidden-md hidden-lg">
+                                            <img class="img-circle"
+                                                src="https://lh5.googleusercontent.com/-b0-k99FZlyE/AAAAAAAAAAI/AAAAAAAAAAA/eu7opA4byxI/photo.jpg?sz=50"
+                                                alt="User Pic">
+                                        </div>
+                                        <div class="col-xs-10 hidden-md hidden-lg">
+                                            <strong>{{ follower.username }}</strong><br>
+                                            <dl>
+                                                <dt></dt>
+                                                <dd>{{ follower.email }}</dd>
+                                            </dl>
+                                            <dl>
+                                                <dt>Followings:</dt>
+                                                <dd>{% for following in follower.followings.all %}@{{ following.username }}{% endfor %}</dd>
+                                            </dl>
+
+                                        </div>
+                                        <div class=" col-md-9 hidden-xs hidden-sm">
+                                            <strong>{{ follower.username }}</strong><br>
+                                            <table class="table table-user-information">
+                                                <tbody>
+                                                <tr>
+                                                    <td colspan="2">{{ follower.email }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Followings:</td>
+                                                    <td>{% for following in follower.followings.all %}@{{ following.username }}{% endfor %}</td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="panel-footer">
+                                    <button class="btn btn-sm btn-primary" type="button"
+                                            data-toggle="tooltip"
+                                            data-original-title="Send message to user"><i class="glyphicon glyphicon-envelope"></i>
+                                    </button>
+                                    <span class="pull-right">
+                                        <button class="btn btn-sm btn-danger" type="button"
+                                                data-toggle="tooltip"
+                                                data-original-title="Ban this followed"><i class="glyphicon glyphicon-ban-circle"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" type="button"
+                                                data-toggle="tooltip"
+                                                data-original-title="Report this followed"><i class="glyphicon glyphicon-thumbs-down"></i>
+                                        </button>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    <!-- End Snippet -->
+{% endblock %}
