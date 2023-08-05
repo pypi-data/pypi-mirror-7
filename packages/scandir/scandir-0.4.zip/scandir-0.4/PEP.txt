@@ -1,0 +1,88 @@
+PEP: XXX
+Title: os.scandir() function -- a better and faster directory iterator
+Version: $Revision$
+Last-Modified: $Date$
+Author: Ben Hoyt <benhoyt@gmail.com>
+Status: Draft
+Type: Standards Track
+Content-Type: text/x-rst
+Created: 30-May-2014
+Python-Version: 3.5
+Post-History: ***
+
+
+Abstract
+========
+
+This PEP proposes including a new directory iteration function,
+``os.scandir()``, in the standard library. This new function adds
+useful functionality and increases the speed of ``os.walk()`` by 2-10
+times (depending on the platform and file system) by significantly
+reducing the number of times ``stat()`` has to be called.
+
+
+Rationale
+=========
+
+Python's built-in ``os.walk()`` is significantly slower than it needs
+to be, because -- in addition to calling ``os.listdir()`` on each
+directory -- it calls ``os.stat()`` on each file to determine whether
+the filename is a directory or not. But both ``FindFirstFile`` /
+``FindNextFile`` on Windows and `readdir` on Linux and OS X already
+tell you whether the files returned are directories or not, so no
+further ``stat`` system calls are needed. In short, you can reduce the number of system calls from about 2N to N, where N is the total number of files and directories in the tree.
+
+**In practice, removing all those extra system calls makes
+``os.walk()`` about 8-9 times as fast on Windows, and about 2-3
+times as fast on Linux and Mac OS X.** So we're not talking about
+micro-optimizations. See more benchmarks [here].
+
+Somewhat relatedly, many people [1] have also asked for a version of
+``os.listdir()`` that yields filenames as it iterates instead of returning them as one big list. This improves memory efficiency for iterating very large directories.
+
+So as well as providing a ``scandir()`` iterator function for other uses, Python's existing ``os.walk()`` function would be sped up a great deal.
+
+
+Proposal for inclusion
+======================
+
+
+Use in the wild
+===============
+
+
+Previous discussion
+===================
+
+
+Open Issues
+===========
+
+* 
+
+
+References
+==========
+
+.. [1] PEP 1, PEP Purpose and Guidelines, Warsaw, Hylton
+   (http://www.python.org/dev/peps/pep-0001)
+
+.. [2] PEP 9, Sample Plaintext PEP Template, Warsaw
+   (http://www.python.org/dev/peps/pep-0009)
+
+
+Copyright
+=========
+
+This document has been placed in the public domain.
+
+
+
+..
+   Local Variables:
+   mode: indented-text
+   indent-tabs-mode: nil
+   sentence-end-double-space: t
+   fill-column: 70
+   coding: utf-8
+   End:
