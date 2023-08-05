@@ -1,0 +1,325 @@
+Metadata-Version: 1.1
+Name: udiskie
+Version: 1.0.0
+Summary: Removable disk automounter for udisks
+Home-page: https://github.com/coldfix/udiskie
+Author: Thomas Gläßle
+Author-email: t_glaessle@gmx.de
+License: MIT
+Description: =======
+        udiskie
+        =======
+        
+        |Version| |Downloads| |License|
+        
+        *udiskie* is a simple daemon that uses UDisks_ to automatically mount
+        removable storage devices. This daemon comes with optional mount
+        notifications and GTK tray icon. It also provides a user level CLI for
+        mount and unmount operations.
+        
+        
+        Usage
+        -----
+        
+        Start the automount and notification daemon:
+        
+        .. code-block:: bash
+        
+            # the optional tray icon requires PyGTK
+            udiskie --tray  
+        
+        Mount or unlock a specific device manually:
+        
+        .. code-block:: bash
+        
+            udiskie-mount /dev/sdb1
+        
+        Unmount or remove a specific device manually:
+        
+        .. code-block:: bash
+        
+            udiskie-umount /media/<device-name>
+        
+        See the man page for further instructions
+        
+        
+        Dependencies
+        ------------
+        
+        Unfortunately, *udiskie* has dependencies that can not be automatically
+        downloaded and installed from PyPI:
+        
+        - UDisks_ (either UDisks1 or UDisks2 is fine)
+        - PyGObject_ (GTK3+)
+        - PyYAML_ (builds from PyPI)
+        - docopt_ (builds from PyPI)
+        
+        .. _UDisks: http://www.freedesktop.org/wiki/Software/udisks
+        .. _PyGObject: https://wiki.gnome.org/action/show/Projects/PyGObject
+        .. _PyYAML: https://pypi.python.org/pypi/PyYAML
+        .. _docopt: http://docopt.org/
+        
+        
+        Permissions
+        -----------
+        
+        *udiskie* requires permission for the following PolicyKit_ actions:
+        
+        .. _PolicyKit: http://www.freedesktop.org/wiki/Software/PolicyKit
+        
+        - ``org.freedesktop.udisks.filesystem-mount`` for mounting and unmounting
+        - ``org.freedesktop.udisks.luks-unlock`` to unlock LUKS devices
+        - ``org.freedesktop.udisks.drive-eject`` to eject drives
+        - ``org.freedesktop.udisks.drive-detach`` to detach drives
+        
+        These are usually granted when using a desktop environment. If your login
+        session is not properly activated you may need to customize your PolicyKit
+        settings. Create the file
+        ``/etc/polkit-1/localauthority/50-local.d/10-udiskie.pkla`` with the
+        following contents:
+        
+        .. code-block:: cfg
+        
+            [udiskie]
+            Identity=unix-group:storage
+            Action=org.freedesktop.udisks.filesystem-mount;org.freedesktop.udisks.luks-unlock;org.freedesktop.udisks.drive-eject;org.freedesktop.udisks.drive-detach
+            ResultAny=yes
+        
+        This configuration allows all members of the *storage* group to run udiskie.
+        
+        Alternatively, change the setting for ``allow_inactive`` to *yes* in the
+        file ``/usr/share/polkit-1/actions/org.freedesktop.udisks.policy``:
+        
+        .. code-block:: xml
+        
+            <action id="org.freedesktop.udisks.filesystem-mount">
+                ...
+                <allow_inactive>yes</allow_inactive>
+                ...
+            </action>
+        
+            ...
+        
+        Do this for all relevant actions.
+        
+        Note that UDisks2 uses another set of permissions, see
+        ``/usr/share/polkit-1/actions/org.freedesktop.udisks2.policy``.
+        
+        
+        GTK icons
+        ---------
+        
+        *udiskie* comes with a set of themeable custom Tango-style GTK icons for its
+        tray icon menu. The installer tries to install the icons into GTK's default
+        hicolor theme. Typically this is located in ``/usr/share/icons/hicolor``. If
+        you have any problems with this or you need a custom path you can manually do
+        it like so:
+        
+        .. code-block:: bash
+        
+            cp ./icons/scalable /usr/share/icons/hicolor -r
+            gtk-update-icon-cache /usr/share/icons/hicolor
+        
+        When doing a local installation, for example in a virtualenv, you can
+        manually change the installation prefix for the icon data files like so:
+        
+        .. code-block:: bash
+        
+            python setup.py install --install-data ~/.local
+        
+        The icons roughly follow the `Tango style guidelines`_. Some icons incorporate
+        the CDROM icon of the base icon theme of the `Tango desktop project`_
+        (released into the public domain).
+        
+        .. _`Tango style guidelines`: http://tango.freedesktop.org/Tango_Icon_Theme_Guidelines
+        .. _`Tango desktop project`: http://tango.freedesktop.org/Tango_Desktop_Project
+        
+        
+        Contributing
+        ------------
+        
+        *udiskie* is developed on github_. Feel free to contribute patches as pull
+        requests here.
+        
+        Try to be consistent with the PEP8_ guidelines. Add `unit tests`_ for all
+        non-trivial functionality if possible. `Dependency injection`_ is a great
+        pattern to keep modules flexible and testable.
+        
+        Commits should be reversible, independent units if possible. Use descriptive
+        titles and also add an explaining commit message unless the modification is
+        trivial. See also: `A Note About Git Commit Messages`_.
+        
+        .. _github: https://github.com/coldfix/udiskie
+        .. _PEP8: http://www.python.org/dev/peps/pep-0008/
+        .. _`unit tests`: http://docs.python.org/2/library/unittest.html
+        .. _`Dependency injection`: http://www.youtube.com/watch?v=RlfLCWKxHJ0
+        .. _`A Note About Git Commit Messages`: http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
+        
+        
+        Contact
+        -------
+        
+        You can use the `github issues`_ to report any issues you encounter, ask
+        general questions or suggest new features. There is also a public `mailing
+        list`_ on sourceforge if you prefer email.
+        
+        .. _`github issues`: https://github.com/coldfix/udiskie/issues
+        .. _`mailing list`: https://lists.sourceforge.net/lists/listinfo/udiskie-users
+        
+        
+        .. |Version| image:: https://pypip.in/v/udiskie/badge.png
+           :target: https://pypi.python.org/pypi/udiskie/
+           :alt: Latest Version
+        
+        .. |Downloads| image:: https://pypip.in/d/udiskie/badge.png
+           :target: https://pypi.python.org/pypi/udiskie/
+           :alt: Downloads
+        
+        .. |License| image:: https://pypip.in/license/udiskie/badge.png
+           :target: https://pypi.python.org/pypi/udiskie/
+           :alt: License
+        
+        CHANGELOG
+        ---------
+        
+        1.0.0 (in preparation)
+        ~~~~~~~~~~~~~~~~~~~~~~
+        
+        - port to PyGObject, removing dependencies on pygtk, zenity, dbus-python,
+          python-notify
+        - use a PyGObject based password dialog
+        - remove --password-prompt parameter
+        - rename command line parameters
+        - add negations for all command line parameters
+        
+        
+        0.8.0
+        ~~~~~
+        
+        - remove the '--filters' parameter for good
+        - change config format to YAML
+        - change default config path to $XDG_CONFIG_HOME/udiskie/config.yml
+        - separate ignore filters from mount option filters
+        - allow to match multiple attributes against a device (AND-wise)
+        - allow to overwrite udiskies default handleability settings
+        - raise exception if --config file doesn't exist
+        - add --options parameter for udiskie-mount
+        - simplify local installations
+        
+        
+        0.7.0
+        ~~~~~
+        
+        There are some backward incompatible changes, hence the version break:
+        
+        - command line parameter '-f'/'--filters' renamed to '-C'/'--config'
+        - add sections in config file to disable individual mount notifications and
+          set defaults for some program options (udisks version, prompt, etc)
+        - refactor ``udiskie.cli``, ``udiskie.config`` and ``udiskie.tray``
+        - revert 'make udiskie a namespace package'
+        - add 'Browse folder' action to tray menu
+        - add 'Browse folder' action button to mount notifications
+        - add '--no-automounter' command line option to disable automounting
+        - add '--auto-tray' command line option to use a tray icon that
+          automatically disappears when no actions are available
+        - show notifications when devices dis-/appear (can be disabled via config
+          file)
+        - show 'id_label' in tray menu, if available (instead of mount path or
+          device path)
+        - add 'Job failed' notifications
+        - add 'Retry' button to failed notifications
+        - remove automatic retries to unlock LUKS partitions
+        - pass only device name to external password prompt
+        - add '--quiet' command line option
+        - ignore devices ignored by udev rules
+        
+        
+        0.6.4
+        ~~~~~
+        
+        - fix logging in setup.py
+        - more verbose log messages (with time) when having -v on
+        - fix mounting devices that are added as 'external' and later changed to
+          'internal' [udisks1] (applies to LUKS devices that are opened by an udev
+          rule for example)
+        
+        
+        0.6.3 (bug fix)
+        ~~~~~~~~~~~~~~~
+        
+        - fix exception in Mounter.detach_device if unable to detach
+        - fix force-detach for UDisks2 backend
+        - automatically use UDisks2 if UDisks1 is not available
+        - mount unlocked devices only once, removes error message on UDisks2
+        - mention __ignore__ in man page
+        
+        0.6.2 (aesthetic)
+        ~~~~~~~~~~~~~~~~~
+        
+        - add custom icons for the context menu of the system tray widget
+        
+        
+        0.6.1 (bug fix)
+        ~~~~~~~~~~~~~~~
+        
+        - fix udisks2 external device detection bug: all devices were considered
+          external when using ``Sniffer`` (as done in the udiskie-mount and
+          udiskie-umount tools)
+        
+        
+        0.6.0 (udisks2 support, bug fix)
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
+        - cache device states to avoid some race conditions
+        - show filesystem label in mount/unmount notifications
+        - retry to unlock LUKS devices when wrong password was entered twice
+        - show 'eject' only if media is available (udisks1 ejects only in this case)
+        - (un-) mount/lock notifications shown even when operations failed
+        - refactor internal API
+        - experimental support for udisks2
+        
+        
+        0.5.3 (feature, bug fix)
+        ~~~~~~~~~~~~~~~~~~~~~~~~
+        
+        - add '__ignore__' config file option to prevent handling specific devices
+        - delay notifications until termination of long operations
+        
+        
+        0.5.2 (tray icon)
+        ~~~~~~~~~~~~~~~~~
+        
+        - add tray icon (pygtk based)
+        - eject / detach drives from command line
+        
+        
+        0.5.1 (mainly internal changes)
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
+        - use setuptools entry points to create the executables
+        - make udiskie a namespace package
+        
+        
+        0.5.0 (LUKS support)
+        ~~~~~~~~~~~~~~~~~~~~
+        
+        - support for LUKS devices (using zenity for password prompt)
+        - major refactoring
+        - use setuptools as installer
+        
+        
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Environment :: Console
+Classifier: Environment :: X11 Applications
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: End Users/Desktop
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3.3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Topic :: Desktop Environment
+Classifier: Topic :: Software Development
+Classifier: Topic :: System :: Filesystems
+Classifier: Topic :: System :: Hardware
+Classifier: Topic :: Utilities
