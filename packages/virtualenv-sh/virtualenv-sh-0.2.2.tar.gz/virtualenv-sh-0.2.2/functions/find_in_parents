@@ -1,0 +1,25 @@
+#!/bin/sh
+
+# Bonus function: searches the current directory and all parents for a
+# filesystem item with a name matching any argument.
+#
+# e.g. find_in_parents .git .hg .svn
+
+if [ -n "${ZSH_VERSION:-}" ]; then
+    local dir
+fi
+
+dir="${PWD}"
+
+while [ -d "${dir}" ]; do
+    for target in "$@"; do
+        if [ -e "${dir}/${target}" ]; then
+            echo "${dir}/${target}"
+            return 0
+        fi
+    done
+
+    dir="${dir}/.."
+done
+
+return 1
