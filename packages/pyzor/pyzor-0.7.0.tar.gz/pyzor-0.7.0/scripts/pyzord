@@ -1,0 +1,312 @@
+#! /usr/bin/env python
+
+"""A front-end interface to the pyzor daemon."""
+
+import os
+import sys
+import optparse
+import traceback
+import ConfigParser
+
+import pyzor.config
+import pyzor.server
+import pyzor.engines
+
+def detach(stdout="/dev/null", stderr=None, stdin="/dev/null", pidfile=None):
+    """This forks the current process into a daemon.
+
+    The stdin, stdout, and stderr arguments are file names that
+    will be opened and be used to replace the standard file descriptors
+    in sys.stdin, sys.stdout, and sys.stderr.
+    These arguments are optional and default to /dev/null.
+    Note that stderr is opened unbuffered, so if it shares a file with
+    stdout then interleaved output may not appear in the order that you
+    expect."""
+    # Do first fork.
+    try:
+        pid = os.fork()
+        if pid > 0:
+            # Exit first parent.
+            sys.exit(0)
+    except OSError as err:
+        print >> sys.stderr, "Fork #1 failed: (%d) %s" % \
+              (err.errno, err.strerror)
+        sys.exit(1)
+
+    # Decouple from parent environment.
+    os.chdir("/")
+    os.umask(0)
+    os.setsid()
+
+    # Do second fork.
+    try:
+        pid = os.fork()
+        if pid > 0:
+            # Exit second parent.
+            sys.exit(0)
+    except OSError as err:
+        print >> sys.stderr, "Fork #2 failed: (%d) %s" % \
+              (err.errno, err.strerror)
+        sys.exit(1)
+
+    # Open file descriptors and print start message.
+    if not stderr:
+        stderr = stdout
+    stdi = open(stdin, "r")
+    stdo = open(stdout, "a+")
+    stde = open(stderr, "a+", 0)
+    pid = str(os.getpid())
+    if pidfile:
+        open(pidfile, "w+").write("%s\n" % pid)
+
+    # Redirect standard file descriptors.
+    os.dup2(stdi.fileno(), sys.stdin.fileno())
+    os.dup2(stdo.fileno(), sys.stdout.fileno())
+    os.dup2(stde.fileno(), sys.stderr.fileno())
+
+
+def load_configuration():
+    """Load the configuration for the server.
+
+    The configuration comes from three sources: the default values, the
+    configuration file, and command-line options."""
+    # Work out the default directory for configuration files.
+    # If $HOME is defined, then use $HOME/.pyzor, otherwise use /etc/pyzor.
+    userhome = os.getenv("HOME")
+    if userhome:
+        homedir = os.path.join(userhome, '.pyzor')
+    else:
+        homedir = os.path.join("/etc", "pyzor")
+
+    # Configuration defaults.  The configuration file overrides these, and
+    # then the command-line options override those.
+    defaults = {
+        "Port" : "24441",
+        "ListenAddress" : "0.0.0.0",
+
+        "Engine" : "gdbm",
+        "DigestDB" : "pyzord.db",
+        "CleanupAge" : str(60 * 60 * 24 * 30 * 4),  # approximately 4 months
+
+        "Threads": "False",
+        "MaxThreads": "0",
+        "Processes": "False",
+        "MaxProcesses": "40",
+        "DBConnections": "0",
+        "Gevent": "False",
+
+        "PasswdFile" : "pyzord.passwd",
+        "AccessFile" : "pyzord.access",
+        "LogFile" : "",
+        "UsageLogFile": "",
+        "PidFile": "pyzord.pid"
+    }
+
+    # Process any command line options.
+    description = "Listen for and process incoming Pyzor connections."
+    opt = optparse.OptionParser(description=description)
+    opt.add_option("-n", "--nice", dest="nice", type="int",
+                   help="'nice' level", default=0)
+    opt.add_option("-d", "--debug", action="store_true", default=False,
+                   dest="debug", help="enable debugging output")
+    opt.add_option("--homedir", action="store", default=homedir,
+                   dest="homedir", help="configuration directory")
+    opt.add_option("-a", "--address", action="store", default=None,
+                   dest="ListenAddress", help="listen on this IP")
+    opt.add_option("-p", "--port", action="store", type="int", default=None,
+                   dest="Port", help="listen on this port")
+    opt.add_option("-e", "--database-engine", action="store", default=None,
+                   dest="Engine", help="select database backend")
+    opt.add_option("--dsn", action="store", default=None, dest="DigestDB",
+                   help="data source name (filename for gdbm, host,user,"
+                   "password,database,table for MySQL)")
+    opt.add_option("--gevent", action="store", default=None, dest="Gevent",
+                   help="set to true to use the gevent library")
+    opt.add_option("--threads", action="store", default=None, dest="Threads",
+                   help="set to true if multi-threading should be used"
+                   " (this may not apply to all engines)")
+    opt.add_option("--max-threads", action="store", default=None, type="int",
+                   dest="MaxThreads", help="the maximum number of concurrent "
+                   "threads (defaults to 0 which is unlimited)")
+    opt.add_option("--processes", action="store", default=None,
+                   dest="Processes", help="set to true if multi-processing "
+                   "should be used (this may not apply to all engines)")
+    opt.add_option("--max-processes", action="store", default=None, type="int",
+                   dest="MaxProcesses", help="the maximum number of concurrent "
+                   "processes (defaults to 40)")
+    opt.add_option("--db-connections", action="store", default=None, type="int",
+                   dest="DBConnections", help="the number of db connections "
+                   "that will be kept by the server. This only applies if "
+                   "threads are used. Defaults to 0 which means a new "
+                   "connection is used for every thread. (this may not apply "
+                   "all engines)")
+    opt.add_option("--password-file", action="store", default=None,
+                   dest="PasswdFile", help="name of password file")
+    opt.add_option("--access-file", action="store", default=None,
+                   dest="AccessFile", help="name of ACL file")
+    opt.add_option("--cleanup-age", action="store", default=None,
+                   dest="CleanupAge",
+                   help="time before digests expire (in seconds)")
+    opt.add_option("--log-file", action="store", default=None,
+                   dest="LogFile", help="name of the log file")
+    opt.add_option("--usage-log-file", action="store", default=None,
+                   dest="UsageLogFile", help="name of the usage log file")
+    opt.add_option("--pid-file", action="store", default=None,
+                   dest="PidFile", help="save the pid in this file after the "
+                   "server is daemonized")
+    opt.add_option("--detach", action="store", default=None,
+                   dest="detach", help="daemonizes the server and redirects "
+                   "any output to the specified file")
+    opt.add_option("-V", "--version", action="store_true", default=False,
+                   dest="version", help="print version and exit")
+    options, args = opt.parse_args()
+
+    if options.version:
+        print "%s %s" % (sys.argv[0], pyzor.__version__)
+        sys.exit(0)
+
+    if len(args):
+        opt.print_help()
+        sys.exit()
+    os.nice(options.nice)
+
+    # Create the configuration directory if it doesn't already exist.
+    if not os.path.exists(options.homedir):
+        os.mkdir(options.homedir)
+
+    # Load the configuration.
+    config = ConfigParser.ConfigParser()
+    # Set the defaults.
+    config.add_section("server")
+    for key, value in defaults.iteritems():
+        config.set("server", key, value)
+    # Override with the configuration.
+    config.read(os.path.join(options.homedir, "config"))
+    # Override with the command-line options.
+    for key in defaults:
+        value = getattr(options, key)
+        if value is not None:
+            config.set("server", key, str(value))
+    return config, options
+
+
+def main():
+    """Run the pyzor daemon."""
+    # Set umask - this restricts this process from granting any world access
+    # to files/directories created by this process.
+    os.umask(0077)
+
+    config, options = load_configuration()
+
+    homefiles = ["LogFile", "UsageLogFile", "PasswdFile", "AccessFile",
+                 "PidFile"]
+
+    engine = config.get("server", "Engine")
+    database_classes = pyzor.engines.database_classes[engine]
+    use_gevent = config.get("server", "Gevent").lower() == "true"
+    use_threads = config.get("server", "Threads").lower() == "true"
+    use_processes = config.get("server", "Processes").lower() == "true"
+
+    if use_threads and use_processes:
+        print "You cannot use both processes and threads at the same time"
+        sys.exit(1)
+
+    # We prefer to use the threaded server, but some database engines
+    # cannot handle it.
+    if use_threads and database_classes.multi_threaded:
+        use_processes = False
+        database_class = database_classes.multi_threaded
+    elif use_processes and database_classes.multi_processing:
+        use_threads = False
+        database_class = database_classes.multi_processing
+    else:
+        use_threads = False
+        use_processes = False
+        database_class = database_classes.single_threaded
+
+    # If the DSN is a filename, then we make it absolute.
+    if database_class.absolute_source:
+        homefiles.append("DigestDB")
+
+    pyzor.config.expand_homefiles(homefiles, "server", options.homedir, config)
+
+    logger = pyzor.config.setup_logging("pyzord",
+                                        config.get("server", "LogFile"),
+                                        options.debug)
+    pyzor.config.setup_logging("pyzord-usage",
+                               config.get("server", "UsageLogFile"),
+                               options.debug)
+
+    db_file = config.get("server", "DigestDB")
+    passwd_fn = config.get("server", "PasswdFile")
+    access_fn = config.get("server", "AccessFile")
+    pidfile_fn = config.get("server", "PidFile")
+    address = (config.get("server", "ListenAddress"),
+               int(config.get("server", "port")))
+    cleanup_age = int(config.get("server", "CleanupAge"))
+
+    if use_gevent:
+        # Monkey patch the std libraries with gevent ones
+        try:
+            import signal
+            import gevent
+            import gevent.monkey
+        except ImportError as e:
+            logger.critical("Gevent library not found: %s", e)
+            sys.exit(1)
+        gevent.monkey.patch_all()
+        # The signal method does not get patched in patch_all
+        signal.signal = gevent.signal
+        # XXX The gevent libary might already be doing this.
+        # Enssure that all modules are reloaded so they benefit from
+        # the gevent library.
+        for module in (os, sys, pyzor, pyzor.server, pyzor.engines):
+            reload(module)
+
+    if options.detach:
+        detach(stdout=options.detach, pidfile=pidfile_fn)
+
+    if use_threads:
+        max_threads = int(config.get("server", "MaxThreads"))
+        bound = int(config.get("server", "DBConnections"))
+
+        database = database_class(db_file, "c", cleanup_age, bound)
+        if max_threads == 0:
+            logger.info("Starting multi-threaded pyzord server.")
+            server = pyzor.server.ThreadingServer(address, database, passwd_fn,
+                                                  access_fn)
+        else:
+            logger.info("Starting bounded (%s) multi-threaded pyzord server.",
+                        max_threads)
+            server = pyzor.server.BoundedThreadingServer(address, database,
+                                                         passwd_fn, access_fn,
+                                                         max_threads)
+    elif use_processes:
+        max_children = int(config.get("server", "MaxProcesses"))
+        database = database_class(db_file, "c", cleanup_age)
+        logger.info("Starting bounded (%s) multi-processing pyzord server.",
+                    max_children)
+        server = pyzor.server.ProcessServer(address, database, passwd_fn, access_fn,
+                                            max_children)
+    else:
+        database = database_class(db_file, "c", cleanup_age)
+        logger.info("Starting pyzord server.")
+        server = pyzor.server.Server(address, database, passwd_fn, access_fn)
+
+    try:
+        server.serve_forever()
+    except:
+        logger.critical("Failure: %s", traceback.format_exc())
+    finally:
+        logger.info("Server shutdown.")
+        server.server_close()
+        if options.detach and os.path.exists(pidfile_fn):
+            try:
+                os.remove(pidfile_fn)
+            except Exception as e:
+                logger.warning("Unable to remove pidfile %r: %s",
+                               pidfile_fn, e)
+
+
+if __name__ == "__main__":
+    main()
