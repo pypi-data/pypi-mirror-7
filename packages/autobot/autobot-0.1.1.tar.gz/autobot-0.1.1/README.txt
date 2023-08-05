@@ -1,0 +1,267 @@
+autobot
+=======
+
+buildbot automation
+
+
+What is autobot?
+----------------
+
+autobot is a continuous integration solution built as a front-end to
+buildbot. We have a lot of software.  We're talented, so
+usually it doesn't break.  But we're not infalliable.  Our robot ally,
+autobot, is there to test things for us.  Let's meet autobot!
+
+
+Installing autobot
+------------------
+
+autobot may be installed using the install script::
+
+ curl http://k0s.org/hg/autobot/raw-file/tip/INSTALL.sh | bash
+
+This will create a virtualenv and install autobot for development
+($VIRTUAL_ENV/src/autobot).  You can also use the script as
+instructions and install it in the same manner as any other python package.
+
+
+Setting up a buildmaster and slave
+----------------------------------
+
+Once you have autobot installed and the virtualenv activated, you'll
+want to create a buildmaster and a buildslave.
+
+You can create a master-slave pair by running ``create-autobot`` after
+activating the virtualenv. This is mostly useful for autobot
+development. The scripts ``create-autobot-master`` and
+``create-autobot-slave`` are also available and are more useful for
+production, as normally you will not want to keep the master and the
+slave on the same machine except for development and testing.  The
+scripts will prompt you for a factory or you can specify one or more
+from the commandline using ``--factory`` or ``-f``. The factories are
+from ``autobot.projects`` and its subdirectories.  You can list the
+available factories with ``create-autobot --list-factories`` (or
+``create-autobot-master --list-factories``).
+
+Running ``create-autobot --help`` will give the variables you can set
+when it makes a new bot for you (``create-autobot-master`` and
+``create-autobot-slave`` also have a ``--help``, the variables in
+``create-autobot`` being a superset of these).
+
+If you don't specify a variable, the default will be used to create
+your particular bot.  You can change these in the resultant
+configuration later.
+
+
+Using autobot
+-------------
+
+The buildmaster and buildslave are started with
+``buildbot start master`` and ``buildslave stop slave`` from the bot's
+directories. Respective ``stop`` commands also exist.  If you used the
+``create-autobot`` command the generated bot will have a
+``restart_buildbot.py`` script that will stop and start both the
+master and slave and (if debug is set) remove the log as well.
+
+The generated ``master.cfg`` file reads values from a ``master.ini``
+file in the same directory.  The master.ini contains a number of
+different sections:
+
+* ``[:master:]`` contains the top level configuration for the master
+  as well as default settings for slaves
+* sections like ``[slave:slavename]`` indicate a slave of name
+  ``slavename``
+* all other sections are construction parameters for factories
+
+The format of the ``.ini`` file is detailed in the subsequent
+section.  You may change which .ini file is used by editing the
+``master.cfg`` file, or, if for whatever reason you don't want to use
+an .ini file as a driver you can construct the appropriate
+configuration therein yourself.
+
+An overview of the build status is detailed at the waterfall display,
+by default at http://localhost:8010/waterfall . To force a build,
+click on the desired builder and there will be a force build button
+towards the bottom.
+
+It is important to remember that continuous integration is a safety
+net, not a first line of defense.  In other words, continue to check
+your code *before* sending it to autobot.
+
+
+.ini file format
+----------------
+
+As stated above, a ``master.ini`` file contains three different types
+of sections:
+
+* ``[:master:]`` contains the top level configuration for the master
+  as well as default settings for slaves
+* sections like ``[slave:slavename]`` indicate a slave of name
+  ``slavename``
+* other sections are construction parameters for factories
+
+What goes in each of these?
+
+``:master:`` The master section contains parameters appropriate to the
+buildmaster:
+
+* slaveport: which port to listen for the slaves on
+* htmlport: which port to serve the waterfall display on
+* pollInterval: how often to poll the repositories, in seconds [DEFAULT: 60]
+* treeStable: how long to wait before the tree settles down before
+  building [DEFAULT: 60]
+
+The other defaults may be seen by running ``create-autobot-master --help``.
+
+Other parameters given in the ``[:master:]`` section are used as the
+baseline defaults for each slave.  They may be overridden in each
+``slave:`` section
+
+----
+
+``slave:`` parameters for each slave:
+
+* password: each slave *must* have a password.  Unless there's a
+  reason to have a different password per slave, its probably better
+  to put this in the ``:master:`` section
+
+* factories: space-separated list of factories to run on that slave.
+  If the special value ``*`` is used, all factories will be run.  You
+  can view the factories available with
+  ``create-autobot --list-factories``. The factory name corresponds to
+  the directory (or module) name in ``autobot.projects``.  If
+  every slave is meant to run the same factories, you can put this in
+  the ``:master:`` section
+
+* os: the operating system of the slave. Should be one of ``linux``,
+  ``win``, or ``mac`` (though see TODO about future use of MozInfo
+  making this obselescent). You probably *shouldn't* have a default
+  key for this in the ``:master:`` section (though autobot won't try
+  to stop you!).
+
+----
+
+factory sections:  All other sections are used to build the factories.
+Each parameter in a factory section is used as a constructor
+(``__init__``) keyword argument when they are created in the
+``master.cfg``. So a factory section like::
+
+ [foo]
+ bar = fleem
+ baz = another parameter
+
+will invoke the foo factory (lets say it maps to ``MyFooFactory``) on
+each slave like::
+
+ MyFooFactory(**dict(bar='fleem', baz='another parameter'))
+
+In addition, if a factory has a special key, ``platform``, the slave
+will pass its platform information when instantiating a factory.
+Currently, this is a dict with a single key, ``os``, but more may be
+added as needed.  As noted in the TODO below, ideally this would be
+deprecated entirely by MozInfo but such is the interim solution.
+
+
+Sources
+-------
+
+``autobot.process.factory:SourceFactory`` is an abstract base class
+for specifying sources.  Sources live as a member on the instance, named
+(oddly) ``sources``.  This is a dict with the key being the source
+type and the value being the source to use.  Source types are
+currently "git" and "hg", though this is easily extensible.
+
+Internally, an individual source is stored as a 2-tuple with the first
+item being the URL of the source and the second item being the
+branch.  If the branch is ``None`` or not specified, this is assumed
+to equate to ``master`` for git or ``default`` for hg.  However, you
+may also use a string in the form of ``URL#branch``. In addition, you
+may specify a whitespace separated source, which ``SourceFactory``
+will split into a list of sources.
+
+The generated ``master.cfg`` polls for changes on the given source,
+then uses ``buildbot.schedulers.filter:Changefilter`` in conjunction
+with a ``Scheduler`` to trigger the appropriate builds.  This is done
+by ``GitPoller`` and ``HgPoller`` in
+``autobot.changes.poller``. Again, more pollers can be added as
+needed or the provided buildbot change sources may be utilized.
+
+While, in general, the canonical sources should be specified at the
+class level, if an appropriate argument (e.g. *hg* or *git*) is passed
+in to the ``SourceFactory`` constructor, this will override that
+source type.  This is useful for testing changes on non-canonical URLs
+and/or branches.
+
+
+Adding a New Project
+--------------------
+
+Occassionally, you'll need to add a new project to test.  You can add
+a ``__init__.py`` file to a directory under ``autobot.projects`` and,
+if you have a factory therein, autobot will find it and add it to the
+list of factories it knows about.
+
+There is also a script, ``create-autobot-project``, that can create
+this stub for you::
+
+ Usage: create-autobot-project [options] project <output>
+
+``project`` is the name of the project and ``output``, if specified,
+is the path of the file to create.  If output is not specified, it
+will find its way to a directory named for the project under
+``autobot.projects``.
+
+Several factories (``BuildFactory`` descendents) are in
+``autobot.process`` to make building a new project easier:
+
+* ``SourceFactory``: as described above, this processes the sources
+  and gives a method (``checkout()``) for downloading them.
+  ``master.cfg`` looks in each factory and gleems its needed
+  repository from its ``sources`` attribute (if any) in the internal
+  storage mechanism of ``SourceFactory`` and sets up schedulers
+  accordingly.
+
+* ``VirtualenvFactory``: inherits from ``SourceFactory``. creates a
+  python virtualenv and provides build properties ``%(virtualenv)s``,
+  ``%(python)s``, and ``%(scripts)s`` (location of ``bin`` on unix or
+  ``Scripts`` on windows with respect to the virtualenv.  It also has
+  a ``findScript()`` method which accepts the unix-style script name
+  (no extension) and returns the path to the script on the platform.
+
+* ``PythonSourceFactory``: inherits from ``VirtualenvFactory``. It
+  treats *all* (for now, can be changed) sources as sources of python
+  packages.  In addition to checking them out in
+  ``%(virtualenv)s/src``, it will also install them (using
+  ``%(python)s setup.py install``)
+
+See the ``autobot.process.factory`` file for more details.  These
+classes are intended as mix-ins (not my favorite pattern, but it seems
+to basically be what buildbot wants you to do).  More work needs to be
+done to provide for the breadth of use-cases, but what exists now is
+considered a "good start" versus a "final form".  More factories may
+be added per necessity.
+
+
+Is your autobot being feisty?
+-----------------------------
+
+Let me know! I'd like to make autobot a solution that works for all
+stake-holders, and if you're reading this, that means you!
+
+k0scist@gmail.com
+
+
+TODO
+----
+
+No software of any size is ever finished.  Here are a few things I
+would like to add:
+
+* email notifications
+
+* singular checkout of repos on slaves: the slaves should have a
+  singular master repo that is checked out once for each repo URL,
+  branch pair.  It is then updated as the slaves need and (e.g.)
+  cloned from there.  This should effectively minimize fetch time.
+
