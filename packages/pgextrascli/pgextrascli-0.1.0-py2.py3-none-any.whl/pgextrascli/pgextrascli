@@ -1,0 +1,104 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from __future__ import print_function
+
+import sys
+
+import click
+from pgextras import PgExtras
+
+COMMANDS = [
+    ('bloat', 'Table and index bloat in your database ordered by most '
+     'wasteful.'),
+    ('blocking', 'Queries holding locks other queryes are qaiting to be '
+     'releases'),
+    ('cache_hit', 'Calculates your cache hit rate (effective databases are at '
+     '99% and up).'),
+    ('calls', 'Show 10 most frequently called queries. Requires the '
+     'pg_stat_statements.'),
+    ('index_usage', 'Calculates your index hit rate (effective databases are '
+     'at 99% and up).'),
+    ('locks', 'Display queries with active locks.'),
+    ('long_running_queries', 'Show all queries longer than five minutes by '
+     'descending duration.'),
+    ('outliers', 'Show 10 queries that have longest execution time in '
+     'aggregate. Requires the pg_stat_statments.'),
+    ('ps', 'View active queries with execution time.'),
+    ('seq_scans', 'Show the count of sequential scans by table descending by '
+     'order.'),
+    ('total_table_size', 'Show the size of the tables (including indexes), '
+     'descending by size.'),
+    ('unused_indexes', 'Show unused and almost unused indexes, ordered by '
+     'their size relative to the number of index scans.'),
+    ('vacuum_stats', 'Show dead rows and whether an automatic vacuum is '
+     'expected to be triggered.'),
+    ('version', 'Get the Postgres server version.'),
+]
+
+def print_commands():
+    for cmd, help in COMMANDS:
+        print('{:30} {}'.format(cmd, help))
+
+def to_table(records):
+    table = []
+    for record in records:
+        if not table:
+            table.append(record._fields)
+        table.append(record._asdict().values())
+
+    return table
+
+
+
+@click.command()
+@click.argument('cmd', type=str, default='help', help="Command to run")
+@click.option('--list-commands', '-l', is_flag=True,
+              help="shows available commands")
+@click.option('--host', type=str, default='localhost',
+              help='database host, default: localhost')
+@click.option('--port', type=int, default=5432,
+              help='database port, default: 5432')
+@click.option('--dbname', type=str, default='template1',
+              help='database name, default: template1')
+@click.option('--user', type=str, default='postgres',
+              help='database user, default: postgres')
+@click.option('--password', type=str, default='',
+              help='database password, default: empty')
+def extras(cmd, list_commands, host, port, dbname, user, password):
+
+    if cmd == 'help':
+        list_commands = True
+
+    if list_commands:
+        print_commands()
+        raise SystemExit(0)
+
+    dsn = 'host={} port={} dbname={} user={} password={}'.format(
+        host, port, dbname, user, password
+    )
+
+    with PgExtras(dsn=dsn) as pg:
+        try:
+            command = getattr(pg, cmd)
+
+        except AttributeError:
+            print('Unknown command {}'.format(cmd), file=sys.stderr)
+            raise SystemExit(1)
+
+        records = command()
+
+        table = to_table(records)
+        widths = [max(map(len, map(str, col))) for col in zip(*table)]
+
+        for row in table:
+            print(
+                *(str(val).ljust(width) for val, width in zip(row, widths))
+                , sep=' '
+            )
+
+
+if __name__ == '__main__':
+    extras()
+
+# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:filetype=python
