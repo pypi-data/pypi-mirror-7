@@ -1,0 +1,110 @@
+@startuml
+
+package apy {
+
+    package core {
+        class Api {
+            + get_context()
+            + add() : decorator
+            ..
+            - add_function()
+            + find_functions()
+            + get_function()
+            ..
+            - add_resource()
+            + find_resources()
+            + get_resource()
+        }
+        Context <. Api : gives
+        
+        Context ..> Function : returns
+        Context ..> "Resource*" : returns
+        Api *-- Function
+        Api *-- "Resource*"
+        
+        'comment, just add these lines and 
+        'everything goes to hell
+        'Function *-- RpcCluster
+        '"Resource*" *-- "RestCluster*"
+    }
+
+    package response {
+        interface ResponseParser
+        ResponseParser <|-- JsonParser
+        'ResponseParser <|-- XmlParser
+        interface Response
+        'ResponseParser .> Response : returns
+        package base_responses {
+            Response <|-- GoodResponse
+            Response <|-- ErrorResponse
+            Response <|-- DetailsResponse
+            Response <|-- HelpResponse
+        }
+    }
+    
+    package parser {
+        interface Parser {
+        }
+        Parser <-- InteractiveParser
+        Parser <-- SysArgParser
+    }
+    
+    package server {
+      
+        class Server {
+            + add_cluster()
+        }
+        class Cluster {
+            + get_details()
+        }
+        Server *- Cluster
+        interface Cluster
+        package base_clusters {
+            Cluster <|-- TerminalCluster
+            Cluster <|-- FileCluster
+            Cluster <|-- HelpCluster
+            Cluster <|-- "RestCluster*"
+            Cluster <|-- RpcCluster
+        }
+            
+    }
+    
+    InteractiveParser <. TerminalCluster : needs
+    
+    package connection {  
+    
+        interface Connector {
+            + get_context()
+            + get_details()
+        }    
+        Connector <|-- RemoteConnector
+        Connector <|-- CliConnector
+        Connector <|-- LocalConnector
+    
+        Connector .> FarContext : gives
+        FarContext ..> FarFunction : returns
+        FarContext ..> "FarResource*" : returns
+    }
+
+    package cli_server {
+        class CliServer
+    }
+    SysArgParser <- CliServer
+    
+    
+    Connector ..> Response : returns
+    Connector ..> ResponseParser : uses
+
+    RemoteConnector ..> Cluster : connects to a
+    CliConnector ..> CliServer : connects to a
+    
+    
+    
+}
+'hide circle
+
+
+legend right 
+    - * some day it will have REST support
+endlegend
+@enduml
