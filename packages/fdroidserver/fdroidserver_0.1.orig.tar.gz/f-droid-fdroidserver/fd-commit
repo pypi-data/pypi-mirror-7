@@ -1,0 +1,89 @@
+#!/bin/bash
+#
+# fd-commit - part of the FDroid server tools
+# Commits updates to apps, allowing you to edit the commit messages
+#
+# Copyright (C) 2013 Daniel Martí <mvdan@mvdan.cc>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+commands=()
+
+if [ ! -d metadata ]; then
+	[ -d ../metadata ] && cd .. || { echo "No metadata files found!"; exit 2; }
+fi
+
+while read line; do
+	if [[ "$line" == *M*metadata/*.txt ]]; then
+		file=${line##* }
+
+		id=${file##*/}
+		id=${id%.txt*}
+		if [ $# -gt 0 ]; then
+			found=false
+			for arg in "$@"; do
+				if [ "$id" == "$arg" ]; then
+					found=true
+					break
+				fi
+			done
+			$found || continue
+		fi
+
+		[ -d metadata/$id ] && extra=metadata/$id || extra=
+
+		name= autoname=
+		while read l; do
+			if [[ "$l" == "Auto Name:"* ]]; then
+				autoname=${l##*:}
+			elif [[ "$l" == "Name:"* ]]; then
+				name=${l##*:}
+			fi
+		done < "$file"
+
+		if [ -n "$name" ]; then
+			fullname="$name ($id)"
+		elif [ -n "$autoname" ]; then
+			fullname="$autoname ($id)"
+		else
+			fullname="$id"
+		fi
+
+		newbuild=false
+		while read l; do
+			if [[ "$l" == "+Build:"* ]]; then
+				newbuild=true
+				build=${l#*:}
+				version=${build%%,*}
+				build=${build#*,}
+				vercode=${build%%,*}
+			fi
+		done < <(git diff HEAD -- "$file")
+
+		if $newbuild ; then
+			message="Update $fullname to $version ($vercode)"
+		else
+			message="$fullname:"
+		fi
+
+		message=${message//\"/\\\"}
+		commands+=("git add -- $file $extra && git commit -m \"$message\" -e -v")
+	fi
+done < <(git status --porcelain)
+
+git reset >/dev/null
+for cmd in "${commands[@]}"; do
+	eval "$cmd"
+	git reset >/dev/null
+done
