@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block head %}
+
+<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+
+<title>Stackalytics {% if page_title %}| {{ page_title }} {% endif %}</title>
+
+{% if not page_title %}
+<meta name="description" content="OpenStack contribution dashboard collects and processes development activity data such as commits, lines of code changed, and code reviews"/>
+{% else %}
+<meta name="description" content="Full commits and review statistics of {{ page_title }}"/>
+{% endif %}
+<meta name="keywords" content="openstack, contribution, community, review, commit, {{ company }}"/>
+<meta name="version" content="{{ stackalytics_version }}"/>
+<meta name="build" content="{{ stackalytics_release }}"/>
+
+<link href='http://fonts.googleapis.com/css?family=PT+Sans:400,700,400italic&subset=latin,cyrillic' rel='stylesheet' type='text/css' />
+<link href='http://fonts.googleapis.com/css?family=PT+Sans+Caption&subset=latin,cyrillic' rel='stylesheet' type='text/css' />
+<link href='http://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700&subset=latin,cyrillic' rel='stylesheet' type='text/css' />
+
+<link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}" type="image/png"/>
+
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/jquery.jqplot.min.css') }}">
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/jquery.dataTables.css') }}">
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/select2.css') }}">
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/style.css') }}">
+
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery-1.9.1.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery-ui.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery.jqplot.min.js') }}"></script>
+<!--[if lt IE 9]><script type="text/javascript" src="{{ url_for('static', filename='js/excanvas.min.js') }}"></script><![endif]-->
+<script type="text/javascript" src="{{ url_for('static', filename='js/jqplot.json2.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jqplot.pieRenderer.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jqplot.dateAxisRenderer.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jqplot.canvasTextRenderer.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jqplot.canvasAxisTickRenderer.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jqplot.cursor.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jqplot.highlighter.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/select2.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery.tmpl.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/stackalytics-ui.js') }}"></script>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        init_selectors("");
+    });
+    $(function () {
+        $(document).tooltip();
+    });
+
+</script>
+
+{% block scripts %}{% endblock %}
+
+{% endblock %}
+
+{% block body %}
+
+    <div class="page">
+    <div class="aheader">
+        <div style="float: right; margin-top: 10px; margin-right: 20px;">
+            <a href="https://wiki.openstack.org/wiki/Stackalytics">About ↗</a>
+        </div>
+        <div id="analytics_header">
+            <span id="logo"><a href="/?metric={{ metric }}&release={{ release }}&project_type={{ project_type }}">Stackalytics</a></span>
+            <span id="slogan">| community heartbeat</span>
+        </div>
+
+        <div class="drops">
+
+            <div class="drop">
+                <label for="release" title="Official releases of OpenStack">Release</label>
+                <input type="hidden" id="release" style="width: 140px" data-placeholder="Select release"/>
+            </div>
+
+            <div class="drop">
+                <label for="project_type" title="Project type groups modules of same kind: official (integrated, incubated, other) or belonging to same organization (stackforge, infra)">Project Type</label>
+                <input type="hidden" id="project_type" style="width: 140px" data-placeholder="Select project type"/>
+            </div>
+
+            <div class="drop">
+                <label for="module" title="Module represents a repo (black), official program (violet) or pre-configured group of modules (cyan)">Module</label>
+                <input type="hidden" id="module" style="width: 140px" data-placeholder="Any module" value="{{ module }}"/>
+            </div>
+
+            <div class="drop">
+                <label for="company" title="Company name">Company</label>
+                <input type="hidden" id="company" style="width: 140px" data-placeholder="Any company" value="{{ company }}"/>
+            </div>
+
+            <div class="drop">
+                <label for="user" title="Name of engineer as configured in Launchpad or default_data.json">Engineer</label>
+                <input type="hidden" id="user" style="width: 140px" data-placeholder="Any engineer" value="{{ user_id }}"/>
+            </div>
+
+            <div class="drop">
+                <label for="metric" title="One of available metrics">Metric</label>
+                <input type="hidden" id="metric" style="width: 140px" data-placeholder="Select metric"/>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="navigation">
+        <div id="timeline" style="width: 100%; height: 120px; margin-top: 15px;"></div>
+    </div>
+
+    <div>
+        {% block report_options %}{% endblock %}
+    </div>
+
+    <table style="width: 100%" cellspacing="0">
+        <tr>
+            <td style="width: 50%; vertical-align: top;">
+                <div class="body" style="margin-right: 1em;">
+                    {% block left_frame %}{% endblock %}
+                </div>
+            </td>
+            <td style="width: 50%; vertical-align: top;">
+                <div class="body" style="margin-left: 1em;">
+                    {% block right_frame %}{% endblock %}
+                </div>
+            </td>
+        </tr>
+    </table>
+
+</div>
+{% endblock %}
