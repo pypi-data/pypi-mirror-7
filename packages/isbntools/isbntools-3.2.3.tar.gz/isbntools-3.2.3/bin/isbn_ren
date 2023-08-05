@@ -1,0 +1,125 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import sys
+import logging
+from difflib import get_close_matches
+from isbntools import (canonical, clean, config, get_canonical_isbn,
+                       get_isbnlike, meta, registry, quiet_errors)
+from isbntools.dev.lab import File
+from isbntools.bouth23 import b2u3
+
+FORMAT = '%(message)s'
+logging.basicConfig(level=logging.INFO, format=FORMAT)
+
+
+def usage(wservs="wcat|goob|..."):
+    sys.stderr.write('Usage: \n\nisbn_ren [ISBN] [%s] '
+                     '[apikey] [pattern] filename\n  ' % (wservs))
+    sys.stderr.write(
+        '\n  - If no ISBN is provided, the file name will \n'
+        '    be searched for a valid ISBN.\n'
+        '  - [pattern] must be a string in quotes containing\n  '
+        '    only ASCII letters, digits and \'#\'-_.,() \'\n  '
+        '    and one or more of the following placeholders:\n  '
+        '    - {authorsFullNames}    (full names of the author(s))\n  '
+        '    - {authorsLastNames}    (last names of the author(s))\n  '
+        '    - {firstAuthorLastName} (only last name of first author)\n  '
+        '    - {year}\n  '
+        '    - {publisher}\n  '
+        '    - {title}\n  '
+        '    - {isbn}(ISBN-13) \n  '
+        '    - {language}\n  '
+        '    Author names are separated with commas, (\',\').\n  '
+        '    Default pattern is \"'
+        '{firstAuthorLastName}{year}_{title}_{isbn}\".\n\n')
+    sys.exit(1)
+
+
+def parse_args(args):
+    """Parse and return a tuple of the command line arguments."""
+    fn = args[-1]
+    service = None
+    key = None
+    isbn = None
+    pattern = None
+    if len(args) == 1:
+        return (isbn, service, key, pattern, fn)
+    isbn = get_canonical_isbn(canonical(clean(args[0])))
+    providers = list(registry.services.keys())
+    if isbn:
+        args.pop(0)
+    if args[0] != fn:
+        service = args[0]
+        match = get_close_matches(service, providers)
+        if len(match) == 1:
+            service = match[0]
+        else:
+            service = None
+            pattern = args[0]
+        key = None if args[1] == fn else args[1]
+        if key and '{' in key:
+            pattern = key
+            key = None
+        if not args[1] == fn:
+            pattern = pattern if args[2] == fn else args[2]
+    return (isbn, service, key, pattern, fn)
+
+
+def main(args):
+    from isbntools.dev.rename import checkpattern, newfilename
+    isbn, service, apikey, pattern, filename = parse_args(args)
+
+    if pattern and not checkpattern(pattern):
+        return
+
+    oldfile = File(filename)
+    name = oldfile.name
+    if not isbn:
+        isbn = canonical(get_isbnlike(name, level='normal')[0])
+        if not isbn:
+            sys.stderr.write('no ISBN found in name of file %s \n' % name)
+            return
+
+    if apikey:
+        try:
+            config.add_apikey(service, apikey)
+        except:
+            pass
+
+    if service:
+        metadata = meta(isbn, service)
+    else:
+        metadata = meta(isbn)
+
+    ext = oldfile.ext
+
+    if pattern:
+        newname = newfilename(metadata, pattern)
+    else:
+        newname = newfilename(metadata)
+
+    if newname:
+        newbasename = newname + ext
+    else:
+        sys.stderr.write('%s NOT renamed \n' % filename)
+        return
+
+    oldbasename = oldfile.basename
+    success = oldfile.baserename(b2u3(newbasename))
+    if success:
+        sys.stdout.write('%s renamed to %s \n' %
+                         (oldbasename, oldfile.basename))
+        return True
+    return
+
+
+if __name__ == "__main__":
+    sys.excepthook = quiet_errors
+    success = main(sys.argv[1:]) if len(sys.argv) > 1 else False
+    if success:
+        sys.exit(0)
+    providers = list(registry.services.keys())
+    providers.remove('default')
+    available = '|'.join(providers)
+    usage(available)
