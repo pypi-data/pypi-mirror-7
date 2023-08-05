@@ -1,0 +1,43 @@
+language: python
+python:
+  - 2.6
+  - 2.7
+  - 3.2
+  - 3.3
+matrix:
+  include:
+    - python: 2.7
+      env: SPHINX_BUILD=true
+    - python: 3.2
+      env: SPHINX_DOCTEST=false
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install m4 splint
+install:
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.2' ]]; then
+      pip install -r extra/requirements-py32.txt;
+    fi
+  # We don't want to support external fetches, but the 2.6 case is forcing it on
+  # us for argparse
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then
+      pip install --allow-external argparse -r extra/requirements-test.txt;
+    else
+      pip install -r extra/requirements-test.txt;
+    fi
+  - pip install --quiet -r extra/requirements-doc.txt
+  - pip install --quiet .
+script:
+  - nose2 -A '!no_travis' tests
+  - export BUILD_DIR=${PWD}/build/sphinx
+  - if [[ "${SPHINX_DOCTEST}" != false ]]; then
+      sphinx-build -W -b doctest -d ${BUILD_DIR}/doctrees doc
+        ${BUILD_DIR}/doctest
+        || exit 1;
+    fi
+  - if [[ "${SPHINX_BUILD}" == true ]]; then
+      sphinx-build -n -W -b html -d ${BUILD_DIR}/doctrees doc ${BUILD_DIR}/html
+        || exit 1;
+    fi
+branches:
+  except:
+    - /^play\/.*$/
