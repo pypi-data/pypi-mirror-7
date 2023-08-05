@@ -1,0 +1,288 @@
+# lib/magnetodb
+
+# Dependencies:
+# ``functions`` file
+# ``DEST``, ``STACK_USER`` must be defined
+
+# ``stack.sh`` calls the entry points in this order:
+#
+# install_magnetodb
+# configure_magnetodb
+# start_magnetodb
+# stop_magnetodb
+
+
+# Save trace setting
+XTRACE=$(set +o | grep xtrace)
+set +o xtrace
+
+
+# Defaults
+# --------
+
+# Set up default repos
+MAGNETODB_BACKEND=${MAGNETODB_BACKEND:-cassandra}
+
+MAGNETODB_REPO=${MAGNETODB_REPO:-${GIT_BASE}/stackforge/magnetodb.git}
+MAGNETODB_BRANCH=${MAGNETODB_BRANCH:-master}
+
+CCM_REPO=${CCM_REPO:-'https://github.com/pcmanus/ccm.git'}
+CCM_BRANCH=${CCM_BRANCH:-master}
+CCM_DIR=${CCM_DIR:-$DEST/ccm}
+CASSANDRA_VER=${CASSANDRA_VER:-2.0.7}
+CASSANDRA_CLUSTER_NAME=${CASSANDRA_CLUSTER_NAME:-test}
+# By default CASSANDRA_AMOUNT_NODES = 3
+# If you need more, then you need to change the number of loopback network interface aliases below
+CASSANDRA_AMOUNT_NODES=${CASSANDRA_AMOUNT_NODES:-3}
+CASSANDRA_REPL_FACTOR=${CASSANDRA_REPL_FACTOR:-3}
+
+# Set up default directories
+MAGNETODB_CONF_DIR=${MAGNETODB_CONF_DIR:-/etc/magnetodb}
+MAGNETODB_DIR=${MAGNETODB_DIR:-$DEST/magnetodb}
+MAGNETODB_LOG_DIR=${MAGNETODB_LOG_DIR:-/var/log/magnetodb}
+MAGNETODB_RUN_USER=${MAGNETODB_RUN_USER:-$STACK_USER}
+
+# Set up additional requirements
+# Use this pattern: MAGNETODB_ADDITIONAL_REQ="Requirement_1\nRequirement_2\nRequirement_N"
+# Example: MAGNETODB_ADDITIONAL_REQ="tox<1.7.0\nBabel>=0.9.6\ncassandra-driver>=1.0.0"
+MAGNETODB_ADDITIONAL_REQ=${MAGNETODB_ADDITIONAL_REQ:-"tox<1.7.0"}
+
+#Keystone variables
+MAGNETODB_USER=${MAGNETODB_USER:-magnetodb}
+MAGNETODB_SERVICE=${MAGNETODB_SERVICE:-magnetodb}
+MAGNETODB_SERVICE_HOST=${MAGNETODB_SERVICE_HOST:-$SERVICE_HOST}
+MAGNETODB_SERVICE_PORT=${MAGNETODB_SERVICE_PORT:-8480}
+MAGNETODB_SERVICE_PROTOCOL=${MAGNETODB_SERVICE_PROTOCOL:-$SERVICE_PROTOCOL}
+# Functions
+# ---------
+
+# create_magnetodb_credentials() - Set up common required magnetodb credentials
+#
+# Tenant      User       Roles
+# ------------------------------
+# service     magnetodb     admin
+function create_magnetodb_credentials() {
+    SERVICE_TENANT=$(openstack project list | awk "/ $SERVICE_TENANT_NAME / { print \$2 }")
+    ADMIN_ROLE=$(openstack role list | awk "/ admin / { print \$2 }")
+
+    MAGNETODB_USER_ID=$(openstack user create \
+        $MAGNETODB_USER \
+        --password "$SERVICE_PASSWORD" \
+        --project $SERVICE_TENANT \
+        --email $MAGNETODB_USER@example.com \
+        | grep " id " | get_field 2)
+
+    openstack role add \
+        $ADMIN_ROLE \
+        --project $SERVICE_TENANT \
+        --user $MAGNETODB_USER_ID
+
+    if [[ "$KEYSTONE_CATALOG_BACKEND" = 'sql' ]]; then
+        MAGNETODB_SERVICE=$(openstack service create \
+            $MAGNETODB_SERVICE \
+            --type=kv-storage \
+            --description="MagnetoDB Service" \
+            | grep " id " | get_field 2)
+        openstack endpoint create \
+            $MAGNETODB_SERVICE \
+            --region RegionOne \
+            --publicurl "$MAGNETODB_SERVICE_PROTOCOL://$MAGNETODB_SERVICE_HOST:$MAGNETODB_SERVICE_PORT/v1/\$(tenant_id)s" \
+            --adminurl "$MAGNETODB_SERVICE_PROTOCOL://$MAGNETODB_SERVICE_HOST:$MAGNETODB_SERVICE_PORT/v1/\$(tenant_id)s" \
+            --internalurl "$MAGNETODB_SERVICE_PROTOCOL://$MAGNETODB_SERVICE_HOST:$MAGNETODB_SERVICE_PORT/v1/\$(tenant_id)s"
+    fi
+}
+
+function install_python27() {
+    if is_ubuntu; then
+        # Ubuntu 12.04 already has python2.7
+        :
+    elif is_fedora; then
+        # Install PUIAS repository
+        # PUIAS created and maintained by members of Princeton University and the Institute for Advanced Study and it’s fully compatible with RHEL6 / CentOS6.
+        sudo wget -q http://springdale.math.ias.edu/data/puias/6/x86_64/os/RPM-GPG-KEY-puias -O /etc/pki/rpm-gpg/RPM-GPG-KEY-puias
+        sudo rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-puias
+
+        sudo sh -c "echo '[PUIAS_6_computational]
+name=PUIAS computational Base \$releasever - \$basearch
+mirrorlist=http://puias.math.ias.edu/data/puias/computational/\$releasever/\$basearch/mirrorlist
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-puias' > /etc/yum.repos.d/puias-computational.repo"
+
+        sudo yum -y install python27 python27-tools python27-setuptools python27-devel
+    fi
+    sudo easy_install-2.7 pip
+}
+
+function install_jdk() {
+     if is_ubuntu; then
+         sudo apt-get -y install openjdk-7-jdk
+         sudo update-alternatives --set java /usr/lib/jvm/java-7-openjdk-amd64/jre/bin/java
+     elif is_fedora; then
+         sudo yum -y install java-1.7.0-openjdk java-1.7.0-openjdk-devel
+         sudo update-alternatives --set java /usr/lib/jvm/jre-1.7.0-openjdk.x86_64/bin/java
+     fi
+}
+
+function install_jna() {
+    echo "---  Installing JNA  ---"
+    if is_ubuntu; then
+        sudo apt-get -y install libjna-java
+    elif is_fedora; then
+        sudo yum -y install jna
+    fi
+}
+
+function install_cassandra() {
+    # for cassandra.io.libevwrapper extension.
+    # The C extensions are not required for the driver to run, but they add support
+    # for libev and token-aware routing with the Murmur3Partitioner.
+    if is_ubuntu; then
+        sudo apt-get -y install ant libyaml-0-2 libyaml-dev python-yaml libev4 libev-dev
+    elif is_fedora; then
+        sudo yum -y install ant ant-nodeps libyaml libyaml-devel PyYAML libev libev-devel
+    fi
+
+    #install Cassandra Cluster Manager
+    git_clone $CCM_REPO $CCM_DIR $CCM_BRANCH
+
+    if is_ubuntu; then
+        sudo pip install -e $CCM_DIR
+    elif is_fedora; then
+        cd $CCM_DIR
+        sudo python setup.py install
+    fi
+
+    install_jdk
+    install_jna
+}
+
+# install_magnetodb() - Collect source and prepare
+function install_magnetodb() {
+
+    if [ "$MAGNETODB_BACKEND" == "cassandra" ]; then
+        install_cassandra
+    fi
+
+    install_python27
+
+    git_clone $MAGNETODB_REPO $MAGNETODB_DIR $MAGNETODB_BRANCH
+    echo -e $MAGNETODB_ADDITIONAL_REQ >> $MAGNETODB_DIR/requirements.txt
+    if is_ubuntu; then
+        setup_develop $MAGNETODB_DIR
+    elif is_fedora; then
+        cd $MAGNETODB_DIR
+        sudo pip2.7 install -r requirements.txt -r test-requirements.txt
+    fi
+}
+
+function create_keyspace_cassandra() {
+    local k_name=$1
+    echo "CREATE KEYSPACE $k_name WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : $CASSANDRA_REPL_FACTOR};" >> ~/.ccm/cql.txt
+    }
+
+function configure_cassandra() {
+    #allocate loopback interfaces 127.0.0.2 - its a first address for second cassandra, the first node will be use 127.0.0.1
+    n=1
+    addr=2
+    while [ $n -lt $CASSANDRA_AMOUNT_NODES ]; do
+        echo "add secondary loopback 127.0.0.${addr}/8"
+        #adding adresses only if doesnt exist
+        sudo ip addr add 127.0.0.${addr}/8 dev lo || [ $? -eq 2 ] && true
+        let addr=$addr+1
+        let n=$n+1
+    done
+
+    ccm status $CASSANDRA_CLUSTER_NAME || ccm create $CASSANDRA_CLUSTER_NAME -v $CASSANDRA_VER
+    ccm populate -n $CASSANDRA_AMOUNT_NODES || true
+
+    create_keyspace_cassandra magnetodb
+    create_keyspace_cassandra user_default_tenant
+    create_keyspace_cassandra user_$DEMO_TENANT
+
+    echo 'CREATE TABLE magnetodb.table_info(tenant text, name text, exists int, "schema" text, status text, internal_name text, PRIMARY KEY(tenant, name));' >> ~/.ccm/cql.txt
+}
+
+# configure_magnetodb() - Set config files, create data dirs, etc
+function configure_magnetodb() {
+    if [ "$MAGNETODB_BACKEND" == "cassandra" ]; then
+        configure_cassandra
+    fi
+
+    if [[ ! -d $MAGNETODB_LOG_DIR ]]; then
+        sudo mkdir -p $MAGNETODB_LOG_DIR
+    fi
+
+    if [[ ! -d $MAGNETODB_CONF_DIR ]]; then
+        sudo mkdir -p $MAGNETODB_CONF_DIR
+    fi
+    sudo chown $MAGNETODB_RUN_USER $MAGNETODB_CONF_DIR
+    sudo touch $MAGNETODB_LOG_DIR/magnetodb.log
+    sudo chown -R $MAGNETODB_RUN_USER $MAGNETODB_LOG_DIR
+    cp -r $MAGNETODB_DIR/etc/* $MAGNETODB_CONF_DIR
+
+    iniset $MAGNETODB_CONF_DIR/api-paste.ini filter:tokenauth auth_host $KEYSTONE_AUTH_HOST
+    iniset $MAGNETODB_CONF_DIR/api-paste.ini filter:tokenauth auth_port $KEYSTONE_AUTH_PORT
+    iniset $MAGNETODB_CONF_DIR/api-paste.ini filter:tokenauth auth_protocol $KEYSTONE_AUTH_PROTOCOL
+    iniset $MAGNETODB_CONF_DIR/api-paste.ini filter:tokenauth admin_tenant_name $SERVICE_TENANT_NAME
+    iniset $MAGNETODB_CONF_DIR/api-paste.ini filter:tokenauth admin_user $MAGNETODB_USER
+    iniset $MAGNETODB_CONF_DIR/api-paste.ini filter:tokenauth admin_password $SERVICE_PASSWORD
+    iniset $MAGNETODB_CONF_DIR/api-paste.ini filter:ec2authtoken auth_uri $KEYSTONE_AUTH_PROTOCOL://$KEYSTONE_AUTH_HOST:$KEYSTONE_AUTH_PORT/v2.0
+}
+
+function start_cassandra() {
+
+    echo "===  Starting Cassandra Cluster  ==="
+    ccm start
+    screen_rc 'cassandra' "n=1; addr=2; while [ \\\$n -lt $CASSANDRA_AMOUNT_NODES ]; do sudo ip addr add 127.0.0.\\\${addr}/8 dev lo || [ \\\$? -eq 2 ] && true; let addr=\\\$addr+1; let n=\\\$n+1; done; ccm start"
+    echo "===  Load cql.txt  ==="
+    timeout 120 sh -c 'while ! nc -z 127.0.0.1 9160; do sleep 1; done' || echo 'Could not login at 127.0.0.1:9160'
+    ccm node1 cqlsh -f ~/.ccm/cql.txt
+}
+
+# start_magnetodb() - Start running processes, including screen
+function start_magnetodb() {
+
+    if [ "$MAGNETODB_BACKEND" == "cassandra" ]; then
+        start_cassandra
+    fi
+
+    if is_ubuntu; then
+        use_Python="python"
+    elif is_fedora; then
+        use_Python="python2.7"
+    fi
+    screen_it magnetodb "timeout 120 sh -c 'while ! nc -z 127.0.0.1 9160; do sleep 1; done' || echo 'Could not login at 127.0.0.1:9160' && cd $MAGNETODB_DIR && $use_Python $MAGNETODB_DIR/bin/magnetodb-api-server --config-dir $MAGNETODB_CONF_DIR"
+}
+
+function stop_cassandra(){
+    # Stopping cluster
+    ccm stop $CASSANDRA_CLUSTER_NAME
+    # Kill the cassandra screen windows
+    screen -S $SCREEN_NAME -p cassandra -X kill
+}
+
+# stop_magnetodb() - Stop running processes
+function stop_magnetodb() {
+    if [ "$MAGNETODB_BACKEND" == "cassandra" ]; then
+        stop_cassandra
+    fi
+
+    # Kill the magnetodb screen windows
+    screen -S $SCREEN_NAME -p magnetodb -X kill
+}
+
+function clean_magnetodb() {
+    ccm remove $CASSANDRA_CLUSTER_NAME
+    for i in `sudo ip addr show dev lo | grep 'secondary' | awk '{print $2}'`
+        do
+            sudo ip addr del $i dev lo
+        done
+}
+
+
+# Restore xtrace
+$XTRACE
+
+# Local variables:
+# mode: shell-script
+# End:
