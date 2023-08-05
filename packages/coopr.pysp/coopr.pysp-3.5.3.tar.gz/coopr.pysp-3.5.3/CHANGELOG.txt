@@ -1,0 +1,421 @@
+======================
+ coopr.pysp CHANGELOG
+======================
+
+-------------------------------------------------------------------------------
+3.5.3
+-------------------------------------------------------------------------------
+
+- Test baseline updates.
+
+- Adding skip guards to those tests that require PyYAML.
+
+- Filtering pyro output for parallel tests
+
+- Making sure callback modules get properly reloaded from the correct
+  source file
+
+-------------------------------------------------------------------------------
+3.5.2
+-------------------------------------------------------------------------------
+
+- py3k fixes
+
+- Run svn propdel after
+
+- Adding checks when pyro is not installed
+
+-------------------------------------------------------------------------------
+3.5.1
+-------------------------------------------------------------------------------
+
+- Revising PySP tests to used compressed baseline files.
+
+-------------------------------------------------------------------------------
+3.5
+-------------------------------------------------------------------------------
+
+- Adding a loud WARNING about fixed variables being in the scenario
+  tree fix queue after the final ph solve. These fixing requests
+  likely came from a post iteration k solve plugin, but have not
+  been pushed to the instances. Doing so would likely invalidate
+  the object and cost data stored in the scenario solutions unless
+  a resolve of the scenarios takes place (which is what happens
+  when the --solve-ef or --write-ef option is used with ph)
+
+- Fixes for handling of aggregategetter callback results in order
+  to work with the chained function invocation type on the phsolverservers
+  (which is used for bundles)
+
+- A slight reorganization of ph history plugin's output file format
+  to facilitate debugging and reduced memory usage. A complete JSON
+  loadable file is now created after each iteration, which allows
+  for the capture of ph history even during unexpected failures.
+  Also adding capabilities for using the python shelve database
+  manager which can much more efficiently handle loading of large
+  ph history files.
+
+- Redesign of rhosetter and boundsetter to use callbacks rather
+  than exec. The purpose of this redesign is to allow this functionality
+  to be extensible to parallel ph where scenario instances no longer
+  live on the master node. Also adding callback for collecting
+  aggregate scenario data which requires a more expensive method
+  of transmitting data between the scenarios one after the other.
+
+- Adding a simple script to show variable history in ph
+
+- Storing scenario based parameter data (like weights, rho, etc.)
+  as well as solution data on the scenario tree Scenario object.
+  PH, as well as any plugins, modify these dictionary values after
+  analyzing the solution rather than directly modifying the instance
+  parameters.  These are subsequently pushed (or transmitted) to
+  the scenario instances just prior to the next round of solves.
+
+- Making sure we check the fixed status of variables in addition
+  to the stale flag in places like the converger. This is important
+  for ensuring the the convergence metric computed will look the
+  same whether or not we preprocess fixed variables.
+
+- Fix to warning message for when scenario tree encountered unused variables.
+
+- Fixing some issues with EF generation:
+  . We were still using individual stage costs do generate ef
+  expected cost expression. This was bad if users purposefully
+  defined the scenario objectives in some other form than summing
+  the stage cost variables.  
+  . Fixing bug in CVAR implementation whereby the scenario excess
+  constraints were being defined in the wrong inequality direction
+  when maximization models were used
+
+- Fixing scenario tree compression logic to correctly handle cases
+  where scenario probabilities equal 0.0.
+
+- Parameterizing the load_component_value phsolverserverutils
+  function to accept the allow_consistent_values_for_fixed_vars and
+  comparison_tolerance_for_fixed_vars keywords as is the case with
+  PyomoModel.load(). Also updating this function to reset stale
+  flags on variables so we can get some consistency in what the
+  stale flags look like when ph is run with the serial or phpyro
+  solver managers.
+
+- Changing how we transmit fixed variables to phsolverservers.
+  Removing the transmit_freed_variables functionality and updating
+  the transmit_fixed_variables code to just synchronize the entire
+  set of fixed variables at each node. The data transmitted now
+  includes the values of each fixed variable as well. This fixes
+  buggy behavior that occurred when the wwphextension plugin slams
+  a variable to something other than its current value (e.g., the
+  node average). The code had previously assumed variables values
+  on the worker nodes didn't need adjusting, resulting different
+  fixed values across the scenarios.
+
+- Cleaning up code where solver options are passed into the solver
+  manager. There were many cases that were not receiving the entire
+  list of options!
+
+- Various cleanup and enhancement to the PH bound extension. Main
+  functional change is that we compute the bound at the final
+  iteration, even if the interval doesn't indicate it is time to
+  do so. Also switched the interval check to 1-based. As a result,
+  in the case of a run with a bound computation interval of 5 and
+  9 iterations overall, the bound will be computed at iteration 0,
+  5, and 9.
+
+- Modifying preprocess methods in PH to take the set of fixed/freed
+  variables, as opposed to an indicator that such entities changed.
+  The details can be leveraged, e.g., in persistent solver plugins.
+
+- Moving mipgap computation / setting in WW PH extension to the
+  beginning of PH iterations
+
+- Re-working PH logic so that fixed variables do not automatically
+  trigger re-preprocessing of an instance. Preprocessing is expensive,
+  relative to the cost of just outputting the variable with fixed
+  bounds, in almost all cases. There is now an option
+  --preprocess-fixed-variables on runph that reverts behavior to
+  the prior default, i.e., preprocessing and elimination of fixed
+  variables in the course of solver interaction.
+
+- Changed the way cost "averages" are computing in pprintcosts. It
+  was using a simple average. Now it uses the scenario probabilities.
+
+-------------------------------------------------------------------------------
+3.4
+-------------------------------------------------------------------------------
+
+- ** Removing support for user defined objectives. Users must now define
+  only StageCosts and all PySP tools will autogenerate the proper objective.
+  The --objective-sense (-o) command-line option must be used to indicate the 
+  direction in which the objective should be optimized (default=minimize). **
+- Speed improvements to parallel ph by avoiding transmission of leaf-stage
+  variable values until final iteration.
+- Introducing support for the Expression component used as StageCost
+  or ScenarioTree "variables" (as apposed to using a Var with a matching
+  computing Constraint). This functionality can be used to preserve the
+  convexity of QPs when generating the extensive form. It is also much better
+  suited for nonlinear solvers.
+- No longer need ReferenceModel.dat! The reference instance has been removed
+  from PySP.
+- wwphextension configuration files (cfg) now use yaml format. The top-level
+  blocks indicate the Stage or Node name and the subkeys indicate the variable
+  matching template and the suffix value.
+- Added feature of handling archived model/scenariodata directories (zip, tar,
+  tar.gz, tar.bz2, etc.). Auto-extraction occurs into a temporary directory
+  that is destroyed at the end of each run.
+- Improved speed in variable statistics calculations.
+- Adding new extension that allows computing optimality bounds on the extensive
+  form objective while running ph:
+    - Option String: --user-defined-extension=coopr.pysp.phboundextension
+- Adding lagrangian / chance-constrained utilities.
+- Bug fix in computation of node conditional probabilities. This would have
+  affected 3-stage or higher models when using bundling.
+- Removing the PHAVG Param from ph instances (it was not being used)
+- Major restructuring to identify scenario tree variables using an integer id
+  rather than by name/index strings:
+    - Renaming all PH parameters by node name and indexing by scenario tree
+      variable ids. All tree node dictionaries are now indexed by scenario
+      tree variable id as well.
+    - Sharing the XBAR and BLEND parameters among common scenario instances
+      within a node. This should offer a significant performance improvement
+      as only one parameter update is required when updating variable
+      statistics.
+- Adding StageDerivedVariables and associated processing to the PySP scenario
+  structure model. Many stage variables are derived, in the sense that they are
+  directly computed from real / primary decision variables. And we don't want
+  to enforce non-anticipativity on these variables, for various reasons.
+- Extensive form generation improvements and bug fixes:
+    - Fixing bug in generating CVaR objective.
+    - Modifications so that instances are no longer modified when bundled into
+      an extensive form model.
+    - No longer blending StageCosts. All instance costs are now pushed to the
+      objective resulting in a much better formulation when the model has a
+      nonlinear objective and Expression components are used as StageCosts.
+- Various improvements that support using Block structured models.
+- Adding option —report-only-nonconverged-variables to runph, to accomplish
+  precisely what it sounds like it would accomplish.
+- Modifications to convergence metric base class, to not mess with discrete
+  fixed variable counts in the default case.
+
+-------------------------------------------------------------------------------
+3.3
+-------------------------------------------------------------------------------
+
+- Adding utility library for computing the VSS.
+- Fixing logic inside phsolverserver for when to warmstart.
+- Major restructuring of pysp code:
+  - Creating a ph base class that both the ProgressiveHedging class
+    and PHSolverServer are derived from.
+  - Consolidating many ph attributes onto a ProblemStates class
+- Minor performance tweaks to variable statistics computation in PH.
+- Added functionality to runph that avoids all constraint generation when running
+  using the phpyro solver manager - except when solving the extensive form 
+  following PH. The existing approach actually generated the constraints, and 
+  then dropped them - wasting time, but not memory.
+- Fixed major-but-probably-unnoticed bug in which multi-stage models with
+  heterogeneous scenario probabilities were being incorrectly handled.
+- Moving the weight computation in runph for iteration 0 to after the 
+  post-iteration 0 callbacks are invoked. Weights need to be computed after 
+  the iteration 0 callbacks are invoked, because these callbacks can compute 
+  rhos - upon which the weights depend.
+- Adding use of value() function around rho setting utilities in PH, to allow
+  users to specify expressions as input.
+- Various tweaks in the runph output format, to compact/compress volume.
+- Fixing bug in runph, in which fixed variable statistics were not being
+  output following iteration 0.
+- Modified runef and runph to allow for loading of scenario data from 
+  yaml files, specifically in support of scenario models that are specified
+  using blocks.
+- Various changes throughout pysp to support nested block scenario models.
+- Propagating option to generate symbolic solver labels to runef and runph.
+- Fixed bug involving solution reporting in runph when dealing with 
+  singleton cost variables.
+- Adding statistics for reporting sub-problem solve time statistics at each
+  iteration of runph.
+- Significant performance enhancements to runph, relating to weight and 
+  variable statistic computations.
+- Added pre-initialization callback to runph.
+- Updating test baselines involving solvers to CPLEX 12.4 and Gurobi 5.0.
+- Added capability to fire coopr.pyomo modify-instance plugins following
+- Adding support to PH solver server to free instance variables.
+  PySP instance creation - necessary to hook up connectors (in block contexts).
+- Various updates required to track changes in coopr.pyomo, e.g., 
+  relating to suffixes, 
+- Extended PH solver servers to properly deal with solver suffixes.
+- Updates of code base to support Python 3.X compatiability.  Not there yet,
+  but getting closer. 
+- Upgrading code base to rely on the six iteration package, relating to 
+  Python 3.X compatability.
+- Various minor bug fixes.
+
+-------------------------------------------------------------------------------
+3.2
+-------------------------------------------------------------------------------
+
+- Significant updates required to track changes in coopr.pyomo, primarily the 
+  change in Param to default to mutable=False. No known user-level impacts.
+
+- Numerous bug fixes and performance improvements.
+  
+-------------------------------------------------------------------------------
+3.1
+-------------------------------------------------------------------------------
+
+- Numerous bug fixes and performance improvements.
+- Updates to track Coopr changes (specifically, changes to Param).
+- Enhancements to PH solver server, to allow for propagation of solver options from the runph script,
+  warm-starts, and linearization.
+- Added --ef-solver-manager to runph, to allow for distinct routes for post-PH extensive form solves.
+- Restored functionality of async PH, which had suffered from code rot. Added associated tests.
+- Added a farmer-with-piecewise-profit, to illustrate (and test) piecewise constructs within PySP.
+
+-------------------------------------------------------------------------------
+3.0
+-------------------------------------------------------------------------------
+
+- Added examples of parallel execution scripts in the coopr.pysp/scripts sub-directory.
+- Added support for stochastic non-linear extensions, including interfaces to ipopt. 
+- Added preliminary supported for over-relaxation (a generalized version of PH).
+- Added load-from-database version of network flow test problem.
+- Added solver-io option to runph and runef, to allow for access to direct Python CPLEX and Gurobi solvers.
+- Added numerous test cases, to improve coverage and to flush out various possible solver alternatives.
+- Modified all examples to conform to the Coopr 3.0 rule convention, where the model argument comes first.
+- Added preliminary capability for scenario bundling in Progressive Hedging.
+- Re-worked extensive form implementations to leverage the new Pyomo block capabilities. 
+- Re-worked implementation of quadratic expressions in runph - internal change only.
+- Added capability for ipopt output when using runef. 
+- Added maximization test cases - capability was not correctly working.
+- Numerous performance and robustness improvements.
+- In runph, established the normalized term-diff convergence metric as the default.
+- Introduced the phsolverserver capability, to allow for minimal communication between runph and the
+  associated solver servers. Yields very large run-time improvements relative to the pyro_mip-server.
+
+-------------------------------------------------------------------------------
+ 2.8
+-------------------------------------------------------------------------------
+
+- Modified output of both runph and runef to make it very clear what
+  "the" objective function value obtained was, and under what conditions
+  it is valid. pedantic, but necessary.
+
+- Added support for slamming of continuous variables in WW PH extensions,
+  and weight oscillation detection for all variable types.
+
+- Added support to runef and related libraries for writing the extensive
+  form in NL format.
+
+- Added minimal time interval between garbage collections - currently
+  hard-coded to 5 seconds.  Saves significant time on smaller problems,
+  where PH iterations run sub-second.
+
+- Added wwph.cfg line to SEP
+
+-------------------------------------------------------------------------------
+ 2.7
+-------------------------------------------------------------------------------
+
+- Modifying PH initialization to disable all registered PH extensions, and then re-enable them on an as-needed basis.
+  Required to fix issues with PySP tests, which use WW PH extensions in some tests, but not all.
+- Added forestry EF and PH tests. 
+- Fixing various test baselines in response to recent coopr.pyomo changes.
+- Fixed a serious bug that wasn't observed "in the wild" until now - if multiple specific indices were specified for a 
+  non-anticipative variable, very bad things happened (basically, non-convergence at worst, bad solutions at best).
+- Misc reformatting to support the Pyomo book.
+- Reworked all examples to use the model-as-first-argument change introduced in coopr.pyomo.
+- First real commit of asychronous PH.
+- Updating asynch PH to allow for loading of solutions that specify consistent-with-current values for fixed variables.
+- Various documentation updates.
+- Improvement, extension, and cleanup of examples.
+- Various updates due to changes in the solution variable representation (SolutionMap to raw Python dictionaries).
+- Various test improvements, e.g., distinct Darwin and linux Gurobi baselines.
+- Fixed bug in scenario tree solution snapshotting rleated to fixed variables.
+- Added support for a --profile-memmory option for runph, which will - assuming Pympler is installed - report memory
+  statistics after each PH iteration. Intended for debugging memory leaks.
+- Improving efficiency of PH objective linearization code.
+
+-------------------------------------------------------------------------------
+ 2.6
+-------------------------------------------------------------------------------
+
+- Migrating to use entry points instead of explicit script installation.
+  This allows automatic installation and localization on MS Windows.
+
+- When constructing the scenario tree, validate that match template of the stage variables actually matches to . 1 index of the variable. 
+
+- Improving extensive form diagnostic output when the solve fails.
+
+- Added a PH warning if slamming is thwarted due to lack of suffixes
+
+- Many PySP updates due to changes in Pyomo.
+
+- Added error trapping in PH.
+
+- Various bug fixes...
+
+-------------------------------------------------------------------------------
+ 2.5
+-------------------------------------------------------------------------------
+
+- Adding PySP extensive form tests.
+
+- Adding two options to the runef and runph pysp scripts, to facilitate
+  scenario downsampling - the case where you have a big tree, but you
+  don't want to use it all.
+
+  The options are:
+    .scenario-tree-downsample-fraction=X
+    .scenario-tree-random-seed
+
+  The options are fairly self-explanatory - the only possible nuance is
+  that the downsample fraction is the fraction of scenarios retained.
+
+- Removing some older PySP test problems from the repository.
+
+- Various updates to support heteogeneous index sets in PH for different
+  nodes in the scenario tree.
+
+- Inverting order of .dat files in PySP when loading from a node
+  representation - now root-to-leaf, instead of leaf-to-root. This allows
+  for deeper-in-the-tree nodes to over-write parameter values defined
+  higher in the tree, which is a more "expected" behavior than the
+  converse.
+
+-------------------------------------------------------------------------------
+ 2.4
+-------------------------------------------------------------------------------
+
+- Addition of the --linearize-expressions option to both runph and runef. This
+  change significantly reduces the memory requirements associated with model
+  instantiation and manipulation, cutting memory in half and run-time by a 
+  quarter (on various test problems - your mileage may vary). Numerous other
+  performance enhancements to the PySP code base. Fixes to allow for use of 
+  NL solvers, to support initial deployment of stochastic NLPs
+
+-------------------------------------------------------------------------------
+ 2.3
+-------------------------------------------------------------------------------
+
+- Revisions 2247-2514.
+
+-------------------------------------------------------------------------------
+ 2.2
+-------------------------------------------------------------------------------
+
+- OLD - we forget!
+
+-------------------------------------------------------------------------------
+ 2.1
+-------------------------------------------------------------------------------
+
+- Numerous bug-fixes and enhancements, far too many to list! Highlights include the
+  extensive form generator/solver, automatic PH penalty term linearization, 
+  improvement of the various examples, the WW PH extensions, etc. 2.1 represents
+  the first truly comprehensive and robust release of PySP.
+
+-------------------------------------------------------------------------------
+ 2.0
+-------------------------------------------------------------------------------
+
+- Initial release of Coopr to create the coopr.pysp package.
+
+- See coopr.dist for previous ChangeLog information related to Coopr.
+
