@@ -1,0 +1,96 @@
+=============
+Django Taxbot
+=============
+
+This application attempts to make a little bit of sense out of the mess that is the tax landscape. 
+It uses a saved (and regularly updated and expanding) dictionary of aggregated taxes to figure out payable taxes based on a set of passed in values. 
+It bears noting that I have created this for my own use and while I intend to update is regularly, the accuracy of these values must be verified by the developer prior to use. 
+While I wait for a suitable API for tax aggregates, I have compiled my own list and based this application on that list.
+
+Presently, this application only handled taxes in Canada, parts of the US, in Great Britain and in Nigeria.
+
+
+-----------
+Quick Start
+-----------
+
+1. Install easily with pip:
+::
+
+		pip install django_taxbot
+
+
+
+2. Add to your installed apps:
+::
+
+		INSTALLED_APPS = (
+
+			...
+			'taxbot',
+
+			...
+		)
+
+
+
+3. Import the TaxClient object in your projects and use as shown
+
+
+-----------------
+Detailed Overview
+-----------------
+
+This section details the way the application can be used.
+
+To create a new ``TaxClient``, simply import and use like so:
+
+	from taxbot import TaxClient
+
+	client = TaxClient()
+
+And just like that, we now have a new TaxClient. This client is initialized as Sales Tax client by default. To get Meal tax instead, pass in the ``M`` flag when initializing the client.
+::
+
+	client = TaxClient('M')
+
+
+Now we'll go over the methods available to the client.
+
+
+
+tax_known(self, country, [region, city])
+----------------------------------------
+This method returns a Boolean value which informs us if the tax for the location is known or not. 
+It is recommended that this method is called before any actions involving tax rates. Pass in as much information as possible to get the best results from this client. 
+
+The method expects the country to be in ISO-ALPHA-2 codes. See http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2. Region codes are 2 character alphas also and cities can be spelled out. 
+
+For countries with simple tax structures (Great Britain and Nigeria for now), the region and the city may be ignored.
+
+
+
+get_tax(self, country, [region, city])
+--------------------------------------
+Same as above, this method takes in 3 parameters.
+It calls on the ``tax_known`` method and so it is not necessary to call to the former beforehand. 
+
+This method returns the tax as a Decimal or in instances where tax structure is more complicated, returns a dictionary of applicable taxes. 
+
+** Important ** Please check the type of return values from this method before using them.
+
+
+
+calculate_tax(self, amount, country, [region, city])
+----------------------------------------------------
+In addition to the parameters above, this method accepts the value on which the tax is to be calculated and returns a dictionary of all calculated taxes.
+
+
+
+create_tax(self, amount, country [region, city])
+------------------------------------------------
+In addition to the above, this method will create a ``Tax`` (and a ``CanadianTax``)object where the tax is known. Please refer to the code base in the app repository to view the fields available on the respective objects
+
+Cheers
+
+
