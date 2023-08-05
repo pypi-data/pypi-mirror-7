@@ -1,0 +1,90 @@
+#!/bin/bash
+
+###############################################################################
+#
+# Create a virtual environment suitable for building Pelican blogs from source
+#
+# Usage:
+#
+#    $ ./mkenv
+#    $ ./mkenv test.env
+#
+###############################################################################
+
+set -e
+
+if [ -n "$PYVERSION" ]; then
+    if [ "$PYVERSION" = "2" ] || [ "$PYVERSION" = "3" ]; then
+        pyversion="$PYVERSION"
+    else
+        echo "Bad PYVERSION - '$PYVERSION'"
+        exit 1
+    fi
+else
+    pyversion="3"
+fi
+
+# If a directory has been given as first parameter, set 'envdir' to its
+# absolute path. Otherwise use a default directory within the current
+# working directory
+if [ -n "$1" ]; then
+    root=$(dirname $1)
+    dir=$(basename $1)
+    envdir="$(cd $root && pwd)/$dir"
+else
+    envdir="$(pwd)/env$pyversion"
+fi
+
+# If the environment 'envdir' does not exist, create it. By default, use conda
+# if it is available, falling back to virtualenv.
+if [ ! -e "$envdir" ]; then
+    command -v conda >/dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        conda create --prefix "$envdir" --yes --mkdir python="$pyversion" numpy scipy ipython-notebook
+    else
+        command -v orb >/dev/null 2>&1
+        if [ $? -eq 0 ]; then
+            orb init"$pyversion" "$envdir"
+        else
+            command -v virtualenv >/dev/null 2>&1
+            if [ $? -eq 0 ]; then
+                virtualenv --python="python$pyversion""$envdir"
+            else
+                echo "ERROR: couldn't create environment. Install either conda or virtualenv."
+                exit 1
+            fi
+        fi
+    fi
+fi
+
+touch "$envdir/.orb"
+
+pyexe="$envdir/bin/python"
+pipexe="$envdir/bin/pip"
+
+# Install `pip` if it does not exist
+if [ ! -e "$pipexe" ]; then
+    if [ ! -e "$pyexe" ]; then
+        echo "ERROR: $pyexe not found - is $envdir a virtualenv?"
+        exit 1
+    else
+        echo "installing pip into environment $envdir"
+        getpip="https://raw.github.com/pypa/pip/master/contrib/get-pip.py"
+        wget -O get-pip.py $getpip
+        if [ ! -s get-pip.py ]; then
+            echo "ERROR: invalid or non-existent file - get-pip.py"
+            exit 1
+        fi
+        $pyexe get-pip.py
+        rm get-pip.py
+    fi
+fi
+
+# Install further requirements
+$pipexe install --find-links=$(pwd)/vendor -r requirements.txt
+#for f in $(ls vendor/*.gz); do
+#    fpath="file://$(pwd)/$f"
+#    $pipexe install $fpath
+#done
+$pipexe install -e .
+
