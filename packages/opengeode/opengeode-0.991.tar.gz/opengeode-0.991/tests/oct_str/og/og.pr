@@ -1,0 +1,150 @@
+PROCESS og;
+/* CIF TEXT (-679, -140), (298, 286) */
+-- A Demo to test octet strings
+-- using various symbols.
+
+-- check that types are case insensitive
+DCL first_msg, MSG my_octStr;
+
+DCL seq SeqOf;
+
+DCL test Some_Thing;
+/* CIF ENDTEXT */
+/* CIF START (-252, -114), (100, 50) */
+START;
+/* CIF TASK (-269, -49), (135, 47) */
+TASK for x in seq: 
+    test := test + 1
+endfor;
+/* CIF TASK (-257, 13), (110, 50) */
+TASK test := 5;
+/* CIF TASK (-304, 78), (204, 50) */
+TASK first_msg := 'Say hello first!'
+/* CIF COMMENT (-80, 78), (148, 50) */
+COMMENT 'String assignment';
+/* CIF TASK (-284, 143), (165, 50) */
+TASK seq := default_seqof,
+seq := {1,2,3}
+/* CIF COMMENT (-100, 143), (204, 50) */
+COMMENT 'default_seqof is a constant
+defined in the ASN.1 model';
+/* CIF TASK (-333, 208), (263, 50) */
+TASK seq := seq // {4, test} // default_seqof
+/* CIF COMMENT (-50, 208), (156, 50) */
+COMMENT 'Concatenate
+two SEQUENCE OF';
+/* CIF TASK (-270, 273), (137, 50) */
+TASK 'seq(1) := seq(2)';
+/* CIF TASK (-298, 338), (193, 50) */
+TASK seq := seq(1,2) // seq(4,5)
+/* CIF COMMENT (-86, 338), (166, 50) */
+COMMENT 'Remove 3rd element';
+/* CIF DECISION (-254, 403), (104, 70) */
+DECISION test in seq
+/* CIF COMMENT (-130, 418), (170, 39) */
+COMMENT 'Test the "in" operator';
+/* CIF ANSWER (-344, 493), (100, 35) */
+(TRUE):
+/* CIF PROCEDURECALL (-371, 543), (154, 50) */
+CALL writeln('All OK (1)');
+/* CIF ANSWER (-181, 493), (100, 35) */
+(FALSE):
+/* CIF PROCEDURECALL (-213, 543), (164, 50) */
+CALL writeln('NOT OK (1)');
+ENDDECISION;
+/* CIF DECISION (-252, 608), (100, 70) */
+DECISION 3 in seq;
+/* CIF ANSWER (-338, 698), (100, 35) */
+(TRUE):
+/* CIF PROCEDURECALL (-370, 748), (164, 50) */
+CALL writeln('NOT OK (2)');
+/* CIF ANSWER (-166, 698), (100, 35) */
+(FALSE):
+/* CIF PROCEDURECALL (-196, 748), (161, 50) */
+CALL writeln('All OK (2)');
+ENDDECISION;
+/* CIF NEXTSTATE (-252, 813), (100, 50) */
+NEXTSTATE Wait;
+
+
+
+/* CIF STATE (448, 11), (100, 50) */
+STATE Running;
+/* CIF INPUT (448, 81), (100, 50) */
+INPUT gO(msg);
+/* CIF DECISION (446, 146), (103, 70) */
+DECISION msg
+/* CIF COMMENT (570, 156), (111, 50) */
+COMMENT 'Switch-case
+on strings';
+/* CIF ANSWER (698, 236), (100, 35) */
+('egg'):
+/* CIF OUTPUT (673, 286), (150, 50) */
+OUTPUT rezult(default_str)
+/* CIF COMMENT (838, 284), (161, 53) */
+COMMENT 'Send a constant
+defined in the ASN.1
+model';
+/* CIF NEXTSTATE (698, 351), (100, 50) */
+NEXTSTATE Running;
+/* CIF ANSWER (122, 236), (100, 35) */
+('end'):
+/* CIF OUTPUT (116, 286), (112, 50) */
+OUTPUT rezult
+('Goodbye!');
+/* CIF NEXTSTATE (122, 353), (100, 50) */
+NEXTSTATE Wait;
+/* CIF ANSWER (286, 236), (100, 35) */
+ELSE:
+/* CIF TASK (265, 286), (141, 50) */
+TASK msg := msg // '!'
+/* CIF COMMENT (427, 286), (118, 50) */
+COMMENT 'Concatenate
+strings';
+/* CIF TASK (238, 351), (195, 50) */
+TASK msg := msg(3,4) // msg(1,2)
+/* CIF COMMENT (454, 351), (209, 53) */
+COMMENT 'Concatenate two substrings
+(can be used to remove an
+element from a list)';
+/* CIF TASK (254, 416), (163, 50) */
+TASK msg := first_msg(1, 2)
+/* CIF COMMENT (430, 413), (177, 53) */
+COMMENT 'Substring
+TODO check range
+against current Length';
+/* CIF OUTPUT (282, 481), (108, 50) */
+OUTPUT rezult(msg);
+/* CIF NEXTSTATE (286, 546), (100, 50) */
+NEXTSTATE Running;
+ENDDECISION;
+ENDSTATE;
+
+
+/* CIF STATE (-252, 813), (100, 50) */
+STATE Wait;
+/* CIF INPUT (-252, 883), (100, 50) */
+INPUT go(msg);
+/* CIF DECISION (-259, 948), (114, 70) */
+DECISION msg = 'hello'
+/* CIF COMMENT (-125, 958), (128, 50) */
+COMMENT 'Boolean test
+on string value';
+/* CIF ANSWER (-41, 1038), (100, 35) */
+(FALSE):
+/* CIF OUTPUT (-60, 1088), (139, 50) */
+OUTPUT rezult(first_msg);
+/* CIF NEXTSTATE (-41, 1153), (100, 50) */
+NEXTSTATE Wait;
+/* CIF ANSWER (-312, 1038), (100, 35) */
+(TRUE):
+/* CIF OUTPUT (-334, 1088), (145, 50) */
+OUTPUT rezult('Welcome')
+/* CIF COMMENT (-170, 1088), (95, 50) */
+COMMENT 'Send raw
+string';
+/* CIF NEXTSTATE (-312, 1153), (100, 50) */
+NEXTSTATE Running;
+ENDDECISION;
+ENDSTATE;
+ENDPROCESS og;

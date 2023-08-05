@@ -1,0 +1,179 @@
+PACKAGE interfaceview::IV
+PUBLIC
+WITH DataView;
+WITH interfaceview::FV;
+WITH Taste;
+
+---------------------------------------------------
+-- TASTE Interface View 
+---------------------------------------------------
+
+  SYSTEM interfaceview
+  END interfaceview;
+
+  SYSTEM IMPLEMENTATION interfaceview.others
+    SUBCOMPONENTS
+      orchestrator: SYSTEM interfaceview::IV::orchestrator.others
+        { Taste::Coordinates => "1889 199 2582 928"; };
+      ground: SYSTEM interfaceview::IV::ground.others
+        { Taste::Coordinates => "432 232 1338 968"; };
+      passiveFunction: SYSTEM interfaceview::IV::passiveFunction.others
+        { Taste::Coordinates => "1920 1180 2607 1814"; };
+    CONNECTIONS
+      obj553 : SUBPROGRAM ACCESS ground.housekeeping_obj119  -> orchestrator.obj476_obj98 
+        { Taste::Coordinates => "1889 722 1613 722 1613 722 1338 722"; };
+      obj715 : SUBPROGRAM ACCESS passiveFunction.computeGNC_obj600  -> orchestrator.obj621_obj621 
+        { Taste::Coordinates => "2132 928 2132 1054 2132 1054 2132 1180"; };
+      obj371 : SUBPROGRAM ACCESS orchestrator.run_obj86  -> ground.obj276_obj131 
+        { Taste::Coordinates => "1338 417 1613 417 1613 417 1889 417"; };
+  END interfaceview.others;
+
+  ---------------------------------------------------
+  -- TASTE Function: interfaceview::IV::orchestrator
+  ---------------------------------------------------
+
+  SYSTEM orchestrator
+    FEATURES
+      pulse_obj75 : PROVIDES SUBPROGRAM ACCESS interfaceview::FV::pulse_obj75.others
+        { Taste::Coordinates => "1889 312";
+          Taste::RCMoperationKind => cyclic;
+          Taste::RCMperiod => 1000 ms;
+          Taste::Deadline => 0 ms;
+          Taste::Importance => MEDIUM ;};
+      run_obj86 : PROVIDES SUBPROGRAM ACCESS interfaceview::FV::run_obj86.others
+        { Taste::Coordinates => "1889 417";
+          Taste::RCMoperationKind => sporadic;
+          Taste::RCMperiod => 0 ms;
+          Taste::Deadline => 0 ms;
+          Taste::Importance => MEDIUM ;};
+      obj476_obj98 : REQUIRES SUBPROGRAM ACCESS interfaceview::FV::housekeeping_obj119.others 
+        { Taste::Coordinates => "1889 722";
+          Taste::RCMoperationKind => sporadic;};
+      obj621_obj621 : REQUIRES SUBPROGRAM ACCESS interfaceview::FV::computeGNC_obj600.others 
+        { Taste::Coordinates => "2132 928 2132 928";
+          Taste::RCMoperationKind => unprotected;};
+    PROPERTIES
+      Source_Language => SDL;
+      Taste::Instance_Name => "Function0";
+  END orchestrator;
+
+  SYSTEM IMPLEMENTATION orchestrator.others
+    SUBCOMPONENTS
+      pulse_obj75_impl : SUBPROGRAM interfaceview::FV::pulse_obj75.others
+        { Compute_Execution_Time => 0ms..0ms ;};
+      run_obj86_impl : SUBPROGRAM interfaceview::FV::run_obj86.others
+        { Compute_Execution_Time => 0ms..0ms ;};
+    CONNECTIONS
+      SUBPROGRAM ACCESS pulse_obj75_impl  -> pulse_obj75;
+      SUBPROGRAM ACCESS run_obj86_impl  -> run_obj86;
+  END orchestrator.others;
+
+  ---------------------------------------------------
+  -- TASTE Function: interfaceview::IV::ground
+  ---------------------------------------------------
+
+  SYSTEM ground
+    FEATURES
+      housekeeping_obj119 : PROVIDES SUBPROGRAM ACCESS interfaceview::FV::housekeeping_obj119.others
+        { Taste::Coordinates => "1338 722";
+          Taste::RCMoperationKind => sporadic;
+          Taste::RCMperiod => 0 ms;
+          Taste::Deadline => 0 ms;
+          Taste::Importance => MEDIUM ;};
+      obj276_obj131 : REQUIRES SUBPROGRAM ACCESS interfaceview::FV::run_obj86.others 
+        { Taste::Coordinates => "1338 417";
+          Taste::RCMoperationKind => sporadic;};
+    PROPERTIES
+      Source_Language => GUI;
+      Taste::Instance_Name => "Function1";
+  END ground;
+
+  SYSTEM IMPLEMENTATION ground.others
+    SUBCOMPONENTS
+      housekeeping_obj119_impl : SUBPROGRAM interfaceview::FV::housekeeping_obj119.others
+        { Compute_Execution_Time => 0ms..0ms ;};
+    CONNECTIONS
+      SUBPROGRAM ACCESS housekeeping_obj119_impl  -> housekeeping_obj119;
+  END ground.others;
+
+  ---------------------------------------------------
+  -- TASTE Function: interfaceview::IV::passiveFunction
+  ---------------------------------------------------
+
+  SYSTEM passiveFunction
+    FEATURES
+      computeGNC_obj600 : PROVIDES SUBPROGRAM ACCESS interfaceview::FV::computeGNC_obj600.others
+        { Taste::Coordinates => "2132 1180";
+          Taste::RCMoperationKind => unprotected;
+          Taste::RCMperiod => 0 ms;
+          Taste::Deadline => 0 ms;
+          Taste::Importance => MEDIUM ;};
+    PROPERTIES
+      Source_Language => C;
+      Taste::Instance_Name => "Function0";
+  END passiveFunction;
+
+  SYSTEM IMPLEMENTATION passiveFunction.others
+    SUBCOMPONENTS
+      computeGNC_obj600_impl : SUBPROGRAM interfaceview::FV::computeGNC_obj600.others
+        { Compute_Execution_Time => 0ms..0ms ;};
+    CONNECTIONS
+      SUBPROGRAM ACCESS computeGNC_obj600_impl  -> computeGNC_obj600;
+  END passiveFunction.others;
+
+
+
+PROPERTIES
+  Taste::Coordinates => "0 0 2970 2100";
+  Taste::dataView => ("DataView");
+  Taste::dataViewPath => ("DataView.aadl");
+
+END interfaceview::IV;
+
+PACKAGE interfaceview::FV
+PUBLIC
+
+WITH DataView;
+WITH TASTE;
+
+  SUBPROGRAM pulse_obj75
+  END pulse_obj75;
+
+  SUBPROGRAM IMPLEMENTATION pulse_obj75.others
+  END pulse_obj75.others;
+
+  SUBPROGRAM run_obj86
+    FEATURES
+      cmd : IN PARAMETER DataView::MyInteger
+        { Taste::encoding => NATIVE; };
+    PROPERTIES
+      Taste::Associated_Queue_Size => 1;
+  END run_obj86;
+
+  SUBPROGRAM IMPLEMENTATION run_obj86.others
+  END run_obj86.others;
+
+  SUBPROGRAM housekeeping_obj119
+    FEATURES
+      hk : IN PARAMETER DataView::MyInteger
+        { Taste::encoding => NATIVE; };
+    PROPERTIES
+      Taste::Associated_Queue_Size => 1;
+  END housekeeping_obj119;
+
+  SUBPROGRAM IMPLEMENTATION housekeeping_obj119.others
+  END housekeeping_obj119.others;
+
+  SUBPROGRAM computeGNC_obj600
+    FEATURES
+      inP : in PARAMETER DataView::MyInteger
+        { Taste::encoding => NATIVE; };
+      outP : out PARAMETER DataView::MyInteger
+        { Taste::encoding => NATIVE; };
+  END computeGNC_obj600;
+
+  SUBPROGRAM IMPLEMENTATION computeGNC_obj600.others
+  END computeGNC_obj600.others;
+
+END interfaceview::FV;
+
