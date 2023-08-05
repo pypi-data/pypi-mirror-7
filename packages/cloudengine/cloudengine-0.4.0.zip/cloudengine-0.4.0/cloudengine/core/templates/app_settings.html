@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+ {% block title %}
+        Apps - CloudEngine
+ {% endblock %}
+
+
+{% block page_content %}    
+
+			<div class="row">
+                <div class="col-lg-12">
+                    <h1 class="page-header">App Settings</h1>
+                </div>
+                <!-- /.col-lg-12 -->
+            </div>
+	
+
+	
+		<div class="row">
+	           <div class="col-md-2 col-sm-4">
+	               <div class="btn-group">
+		              <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+		               {{ app.name }}&nbsp;<span class="caret"></span>
+		              </button>
+		              <ul class="dropdown-menu" role="menu">
+                      {% for myapp in apps %}
+                            {% if app.name != myapp.name %}
+                           <li>
+                                 <a style="font-size:100%;" href="{% url 'cloudengine-app-settings' myapp.name %}">{{ myapp.name }}</a>
+                            </li>
+                            {% endif %}
+                      {% endfor %}
+	                       
+			             <li><a style="font-size:100%;" href="#newAppModal" role="button" data-toggle="modal">+ Create</a></li>
+		              </ul>
+	               </div>
+	            </div>
+	     
+	    		<div id="spinner"></div> 
+	    		
+	    		<div class="col-md-10 col-sm-8">
+                
+                       <div class="tab-content stacked-content">
+                        <div class="tab-pane fade in active" id="profile-tab">
+                          
+                          <h3 class="">{{ app.name }} App Settings</h3>
+
+                          <hr />
+
+                          <br />
+                          
+                             <form id="settings-form" action="." method="post" class="form-horizontal">{% csrf_token %}
+
+
+                            <div class="form-group">
+
+                                <label class="col-md-2">API key</label>
+
+                                <div class="col-md-8">
+                                    <input type="text" name="api-key" value="{{ api_key }}" class="form-control" disabled />
+                                </div> <!-- /.col -->
+
+                            </div> <!-- /.form-group -->
+                            
+                            
+                             <div class="form-group">
+
+                                <label class="col-md-2">App key</label>
+
+                                <div class="col-md-8">
+                                    <input type="text" name="app-key"  id="id_api-key" value="{{ app.key }}" class="form-control" disabled />
+                                </div> <!-- /.col -->
+
+                            </div> <!-- /.form-group -->
+
+                            <div class="form-group">
+
+                                <label class="col-md-2">Email settings</label>
+
+                                <div class="col-md-8">
+                                
+                                {% if verify_emails %}
+                                      <div class="radio">
+			                                <label>
+			                                    <input type="radio" name="verify_emails" value="True" checked="checked" id="accounttype">
+			                                    Verify email ids of new user accounts
+			                                </label>
+			                            </div>
+			                            <div class="radio">
+			                                <label>
+			                                    <input type="radio" name="verify_emails" value="False">
+			                                    Do not verify email ids.
+			                                </label>
+			                            </div>
+			                     {% else %}
+			                             <div class="radio">
+                                            <label>
+                                                <input type="radio" name="verify_emails" value="True"  id="accounttype">
+                                                Verify email ids of new user accounts
+                                            </label>
+                                        </div>
+                                        <div class="radio">
+                                            <label>
+                                                <input type="radio" name="verify_emails" checked="checked" value="False">
+                                                Do not verify email ids.
+                                            </label>
+                                        </div>
+			                     
+			                     
+			                     {% endif %}
+			                     
+                                </div> <!-- /.col -->
+
+                            </div> <!-- /.form-group -->
+
+                           
+                            <br />
+
+                            <div class="form-group">
+
+                                <div class="col-md-8 col-md-push-2">
+                                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                                    &nbsp;
+                                    <button id="delete-app" class="btn btn-danger">Delete App</button>
+                                </div> <!-- /.col -->
+
+                            </div> <!-- /.form-group -->
+
+                          </form>
+
+
+                          </div>
+                          
+                          
+                          
+                       </div>
+                            
+                
+                </div>
+	     
+	     
+	     
+	     </div><!--  row -->
+	
+
+		
+			
+	
+{% endblock %}
+
+
+{% block scripts %}
+
+<script src="/static/core/js/apps_browser.js"></script>
+{% endblock %}
+
+
+
