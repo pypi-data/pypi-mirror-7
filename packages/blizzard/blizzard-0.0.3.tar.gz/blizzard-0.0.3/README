@@ -1,0 +1,124 @@
+Searching spreadsheets
+-------------------------
+When we search for ordinary written documents, we send words into a search
+engine and get pages of words back.
+
+What if we could search for spreadsheets
+by sending spreadsheets into a search engine and getting spreadsheets back?
+The order of the results would be determined by various specialized statistics;
+just as we use PageRank to find relevant hypertext documents, we can develop
+other statistics that help us find relevant spreadsheets.
+
+Data tables
+-------------
+I think a lot about rows and columns. When we define tables in relational
+databases, we can say reasonably well what each column means, based on
+names and types, and what a row means, based on unique indices.
+In spreadsheets, we still have column names, but we don't get everything
+else.
+
+I define a data table as a document that describes a collection of
+similar things, with similar information about each thing
+(http://www.datakind.org/blog/whats-in-a-table/).
+When we represent a data table in a grid, each row is an observation
+(a thing), and each column is a variable.
+Blizzard uses this table structure to find connections between arbitrary
+data tables.
+
+Unique indices
+----------------
+I define a unique index as a column in a datatable, or combination of columns,
+for which each row has a different value.
+
+The unique indices tell us quite a lot; they give us an idea about the
+observational unit of the table and what other tables we can nicely
+join or union with that table. So I made a package that finds unique
+indices in ordinary CSV files. ::
+
+    pip3 install special_snowflake
+
+It's called "special snowflake", but it needs a better name.
+
+If we pass the iris dataset to it, ::
+
+    "Sepal.Length","Sepal.Width","Petal.Length","Petal.Width","Species"
+    5.1,3.5,1.4,0.2,"setosa"
+    4.9,3,1.4,0.2,"setosa"
+    4.7,3.2,1.3,0.2,"setosa"
+    4.6,3.1,1.5,0.2,"setosa"
+    ...
+
+we get no unique keys ::
+
+    >>> special_snowflake.fromcsv(open('iris.csv'))                                                                  
+    set()
+
+because no combination of columns uniquely identifies the rows.
+Of course, if we add an identifier column, ::
+
+    "Id","Sepal.Length","Sepal.Width","Petal.Length","Petal.Width","Species"
+    1,5.1,3.5,1.4,0.2,"setosa"
+    2,4.9,3,1.4,0.2,"setosa"
+    3,4.7,3.2,1.3,0.2,"setosa"
+    4,4.6,3.1,1.5,0.2,"setosa"
+    ...
+
+that one gets returned. ::
+
+    >>> special_snowflake.fromcsv(open('iris.csv'))                                                                  
+    {('Id',)}
+
+For a more interesting example, let's look at chickweight.
+
+    "weight","Time","Chick","Diet"
+    42,0,"1","1"
+    51,2,"1","1"
+    59,4,"1","1"
+    64,6,"1","1"
+    76,8,"1","1"
+    ...
+
+I could read the documentation on this dataset and tell you
+what its statistical unit is (`?ChickWeight` in R), or I could
+just let `special_snowflake` figure it out for me.
+
+    >>> special_snowflake.fromcsv(open('chick.csv'))
+    {('Time', 'Chick')}
+
+The statistical unit is chicks in time. That is, something was
+observed across multiple chick, and multiple observations were
+taken from each (well, at least one) chick.
+
+Some spreadsheets are have less obvious identifiers. In this
+table of 1219 rows and 33 columns,
+
+    >>> from urllib.request import urlopen
+    >>> url = 'http://data.iledefrance.fr/explore/dataset/liste-des-points-de-contact-du-reseau-postal-dile-de-france/download/?format=csv'
+    >>> fp = urlopen(url)
+    >>> special_snowflake.fromcsv(fp, delimiter = ';')
+    {('adresse', 'code_postal'),
+     ('adresse', 'localite'),
+     ('identifiant',),
+     ('libelle_du_site',),
+     ('wgs84',)}
+
+we find five functional unique keys. Just by looking at the column names,
+I'm gussing that the first two are combinations of parts of the postal address
+and that the latter three look are formal identifiers.
+And when I do things correctly and look at the
+`data dictionary <http://data.iledefrance.fr/api/datasets/1.0/liste-des-points-de-contact-du-reseau-postal-dile-de-france/attachments/laposte_description_champs_pointdecontact_pdf/>`_,
+I come to the same interpretation.
+
+This tells me that this dataset is about postal service locations,
+with one location per row. It also gives me some ideas as to things that can
+act as unique identifiers for postal service locations.
+
+It's kind of cool to run this on individual spreadsheets, but it's even cooler
+to run this on lots of spreadsheets.
+In blizzard, I find spreadsheets with
+the same unique indices, and then I look for overlap between those spreadsheets.
+Spreadsheets with high overlap might be good to join to each other, and
+spreadsheets with low overlap might be good to union with each other.
+
+All of this is quite crude at the moment, so I'm somewhat surprised that
+anything interesting comes out.
