@@ -1,0 +1,131 @@
+#
+# Copyright John Reid 2013, 2014
+#
+
+import path ;
+import doxygen ;
+import pch ;
+import python ;
+
+
+#
+# Set up boost
+#
+if ! "$(BOOST_ROOT)" {
+  path-constant BOOST_ROOT : [ modules.peek : BOOST_ROOT ] ;
+}
+use-project /boost : $(BOOST_ROOT) ;
+
+
+#
+# Some paths
+#
+path-constant PACKAGE_DIR           : ../python/seqan ;
+path-constant RELEASE_INSTALL_DIR   : $(PACKAGE_DIR)/_release_build ;
+path-constant DEBUG_INSTALL_DIR     : $(PACKAGE_DIR)/_debug_build ;
+
+
+#
+# Project definition
+#
+project pyseqan
+    : requirements
+        <library>/boost/python//boost_python
+        <use>myrrh//myrrh
+        <use>/site-config//seqan
+        # <use>/site-config//numpy
+        <define>MS_HAS_VALGRIND
+        <toolset>gcc:<cxxflags>-Wno-deprecated
+        <toolset>gcc:<cxxflags>-Wno-unused
+        <toolset>gcc:<cxxflags>-std=c++0x
+        # <toolset>gcc:<cxxflags>-H # for seeing which files are included where : http://gamesfromwithin.com/the-care-and-feeding-of-pre-compiled-headers
+        # <toolset>gcc:<cxxflags>-MM # don't output object, write a list of include files
+        # <toolset>gcc:<cxxflags>-fno-inline # <<<<<<<<<<<<<<<<<<<<<< Don't forget to remove this !!!!!!!!!!!!!!
+        # <link>static
+        <include>.
+        <include>include
+        <include>$(BOOST_ROOT)
+        <include>boost-indexing-suite
+        <variant>release:<define>MYRRH_DISABLE_ASSERTS
+        #<variant>debug:<python-debugging>on
+    : usage-requirements
+    : default-build release
+    ;
+
+
+
+#
+# Pre-compiled header
+#
+cpp-pch pyseqan_pch
+    : pyseqan_pch.h
+    ;
+
+
+#
+# SeqAn extension
+#
+python-extension _seqan
+    : # sources
+        src/module_pyseqan.cpp
+        src/expose_simple_types.cpp
+        src/expose_strings.cpp
+        src/expose_indexes.cpp
+        $(PY_EXT_SOURCES)
+        pyseqan_pch
+    :
+        <variant>release:<linkflags>-Wl,-rpath,$(RELEASE_INSTALL_DIR)
+        <variant>debug:<linkflags>-Wl,-rpath,$(DEBUG_INSTALL_DIR)
+        <target-os>linux:<source>/site-config//rt
+    ;
+
+
+#
+# Installation
+#
+install install
+    :
+        _seqan
+        /boost/python//boost_python
+    :
+        <variant>release:<location>$(RELEASE_INSTALL_DIR)
+        <variant>debug:<location>$(DEBUG_INSTALL_DIR)
+        # <install-dependencies>off
+    ;
+
+
+# A little "rule" (function) to clean up the syntax of declaring tests
+# of these extension modules.
+local rule run-test ( test-name : sources + )
+{
+    import testing ;
+    testing.make-test run-pyd : $(sources) : : $(test-name) ;
+}
+
+#
+# Check registry code
+#
+python-extension test_registry_ext : src/module_test_registry.cpp ;
+run-test test-registry : bpl-tests/test_registry.py test_registry_ext ;
+
+#
+# Tests
+#
+TEST_REQS =
+    <define>BOOST_TEST_DYN_LINK
+    <define>BOOST_TEST_MAIN
+    ;
+#
+# Fails at moment due to seqan bugs
+# http://trac.seqan.de/ticket/1121
+# http://trac.seqan.de/ticket/1122
+#
+unit-test test-small-index : src/test/small-index.cpp /site-config//rt : $(TEST_REQS) ;
+explicit test-small-index ;
+
+unit-test test-names
+    : src/test/names.cpp /site-config//rt /site-config//python27 /site-config//z
+    : $(TEST_REQS) ;
+
+obj sandbox-range : sandbox/myrrh_boost_range.cpp myrrh//myrrh ;
+explicit sandbox-range ;
