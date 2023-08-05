@@ -1,0 +1,192 @@
+Metadata-Version: 1.1
+Name: nifty
+Version: 1.6.3
+Summary: Interactive command-line helper
+Home-page: https://yanzhengli.github.io/nifty/
+Author: Yanzheng Li
+Author-email: yanzheng819@gmail.com
+License: UNKNOWN
+Description: nifty
+        =====
+        
+        .. figure:: https://raw.github.com/yanzhengli/nifty/master/icons/icon_256x256.png
+           :alt: 
+        
+        |Build Status|
+        
+        A nifty and interactive command-line tool for efficient management and
+        execution of commands grouped in hierarchical structures.
+        
+        Install
+        -------
+        
+        ``pip install nifty --upgrade``
+        
+        `PyPI link <https://pypi.python.org/pypi/nifty/>`__ here.
+        
+        Example
+        -------
+        
+        Suppose you are working on a large project that spans multiple
+        components and touches many files in the codebase. During the
+        development process you constantly have to make changes in different
+        files and components, and each change can impact the entire project.
+        
+        In order to make sure that your changes do not break the existing
+        behavior of the system, regardless of how big or small they are, you
+        have to run your unit tests and integration tests continuously.
+        
+        However, it's not always trivial to manage and run all the tests you
+        need in a complex project. Sometimes you just want to run a subset of a
+        group of tests, but occasionally you want to run a multitude of tests
+        across different parts of the project. Moreover, there might not be any
+        test scripts provided to you that are sufficiently flexible to allow you
+        to run any individual tests or combinations of them efficiently.
+        
+        Well, despair no more, *nifty* was designed to address this problem. All
+        you have do is to specify all the tests in a ``.yaml`` config file in a
+        hierarchical structure that makes sense to you.
+        
+        Below is a hypothetical example:
+        
+        .. code:: yaml
+        
+            unittests:
+              backend:
+                - 'base/utils/tests/utils_test.test'
+                - 'components/models/tests/models_test.test'
+                - 'servlet/v1/handlers/tests/handlers_test.test'
+              logic:
+                - 'logic/core/encapsulation/tests/encapsulation_test.test'
+                - 'logic/core/request_delegation/tests/request_delegation.test'
+              frontend:
+                - 'www/servlet/tests/servlet_test.test'
+                - 'rendering/tests/rendering_test.test'
+                - 'js/tests/js_test.test'
+            integrations:
+              - 'v1/integrations/integration_test_1.test'
+              - 'v1/integrations/integration_test_2.test'
+              - 'v1/integrations/integration_test_3.test'
+        
+        Say you put this file under ``test_configs/project.yaml``, all you have
+        to do is to run this with *nifty*:
+        ``nifty test_configs/project.yaml -c testrunner -r '--verbose'``
+        
+        In a nutshell, you pass in the path of the config file, in this case
+        it's ``test_configs/project.yaml``, then followed by the command that's
+        used to run the tests, in this case it's a hypothetical command called
+        ``testrunner``, following right after either ``-c`` or ``--command``.
+        
+        Additionally, you can also specify extra arguments that get passed to
+        the command followed by either ``-r`` or ``--arguments`` (in this case
+        it's ``--verbose``).
+        
+        **Note**: for the current version, only the most bottom level items can
+        be arranged into lists. This is by design for the time being, and will
+        probably be changed later on for greater flexibility.
+        
+        Last, if you still feel lost, just do ``nifty --help``.
+        
+        Item Selection
+        --------------
+        
+        *Nifty* allows you to select one or more items simultaneously. For the
+        sample config file above, the following is shown:
+        
+        ::
+        
+            From config file: test_configs/project.yaml
+        
+             [1] unittests
+                [1] logic
+                  [1] logic/core/encapsulation/tests/encapsulation_test.test
+                  [2] logic/core/request_delegation/tests/request_delegation.test
+                [2] frontend
+                  [1] www/servlet/tests/servlet_test.test
+                  [2] rendering/tests/rendering_test.test
+                  [3] js/tests/js_test.test
+                [3] backend
+                  [1] base/utils/tests/utils_test.test
+                  [2] components/models/tests/models_test.test
+                  [3] servlet/v1/handlers/tests/handlers_test.test
+                [2] integrations
+                  [1] v1/integrations/integration_test_1.test
+                  [2] v1/integrations/integration_test_2.test
+                  [3] v1/integrations/integration_test_3.test
+        
+            Please enter: a) One or more paths (e.g. '1.2, 3.4.5') b) "all" c) "exit"
+            >>
+        
+        If you just want to select a single item, just enter an integer that's
+        labeled for the desired item, and the interactive prompt will step into
+        that item. For example, if you want to select all integration tests,
+        just enter ``2``, the result will look like this:
+        
+        ::
+        
+            From config file: test_configs/project.yaml
+        
+             [1] v1/integrations/integration_test_1.test
+             [2] v1/integrations/integration_test_2.test
+             [3] v1/integrations/integration_test_3.test
+        
+            Please enter: a) One or more paths (e.g. '1.2, 3.4.5') b) "all" c) "exit"
+            >>
+        
+        You can also select one or more items that may not be in the same
+        logical group, using dot-separated paths, with each path separated by a
+        comma. For example, if you want to select ``js/tests/js_test.test``,
+        ``base/utils/tests/utils_test.test`` and
+        ``v1/integrations/integration_test_1.test`` together, you can enter
+        ``1.2.3, 1.3.1, 2.1``.
+        
+        The result will look like this:
+        
+        ::
+        
+            Please enter: a) One or more paths (e.g. '1.2, 3.4.5') b) "all" c) "exit"
+            >> 1.2.3, 1.3.1, 2.1
+        
+        
+            Going to execute the following 3 item(s) with the command testrunner:
+        
+              [1] js/tests/js_test.test
+              [2] base/utils/tests/utils_test.test
+              [3] v1/integrations/integration_test_1.test
+        
+        Last, there are two more options that can be convenient from time to
+        time. ``-l`` or ``--list`` lists all the targets without running them
+        and ``-a`` or ``--all`` runs all targets.
+        
+        Latest version
+        --------------
+        
+        1.6.3
+        
+        License
+        -------
+        
+        DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE Version 2, December 2004
+        
+        Copyright (C) 2014 Yanzheng Li
+        
+        Everyone is permitted to copy and distribute verbatim or modified copies
+        of this license document, and changing it is allowed as long as the name
+        is changed.
+        
+        DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE TERMS AND CONDITIONS FOR
+        COPYING, DISTRIBUTION AND MODIFICATION
+        
+        0. You just DO WHAT THE FUCK YOU WANT TO.
+        
+        .. |Build Status| image:: https://travis-ci.org/yanzhengli/nifty.png?branch=dev
+           :target: https://travis-ci.org/yanzhengli/nifty
+        
+Platform: UNKNOWN
+Classifier: Programming Language :: Python
+Classifier: Operating System :: OS Independent
+Classifier: License :: Freely Distributable
+Classifier: Topic :: Software Development
+Classifier: Intended Audience :: Developers
+Classifier: Development Status :: 5 - Production/Stable
+Provides: nifty
