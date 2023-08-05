@@ -1,0 +1,97 @@
+friendly_brief parses brief titles from a CSV file and emits a new CSV file
+with some inferences about the brief. A brief title might look like this.
+
+    1.    Amicus Brief, BRIEF OF L. S. LEE, INC. AMICUS CURIAE ON BEHALF OF PETITIONER, December 6, 2000, 2000 U.S. S. Ct. Briefs LEXIS 836 
+
+For such a title, friendly_brief tries to guess the
+
+* Brief number
+* Amici curiae
+* Posture of the amici
+
+How to use
+--------------
+Install it from pip. ::
+
+    pip3 install friendly_brief
+
+And run it on a CSV file. The file must contain a column with all of the
+brief titles that you care about, and the titles must be in a column called
+"brief". The CSV file can have anything else you want in it too. ::
+
+    friendly-brief briefs.csv
+
+It can also receive a CSV file over STDIN. ::
+
+    cat briefs.csv | friendly-brief
+
+The resulting CSV file is written to stdout.
+
+How it works
+---------------
+Let's discuss how each of the inferences is made.
+
+Brief number
+~~~~~~~~~~~~~
+We take the first unbroken group of digits as the brief number.
+For example, the following brief title starts with a "1", then a "9",
+and then a ".".
+
+    19.    Brief, BRIEF AMICUS CURIAE OF SOCIAL SCIENCE AND COMPARATIVE LAW SCHOLARS IN SUPPORT OF NEITHER PARTY, June 1, 2001, 2001 U.S. S. Ct. Briefs LEXIS 718 
+
+We stop upon noticing the non-digit "." and use "19" as the brief number.
+
+Posture
+~~~~~~~~~~~~
+Posture is guessed based on the presence of certain phrases.
+There are five types of posture, and here are their corresponding phrases
+
+Posture 0
+    "Neither party"
+Posture 1
+    "Petitioner", "Appellant", and "Reversal"
+Posture 2
+    "Respondent", "Appellee", "Affirmance"
+Posture 3
+    "Plaintiff"
+Posture 4
+    "Defendant"
+
+The program looks for the presence of all of these phrases.
+If the result is unambiguous, the resulting spreadsheet contains
+the number corresponding to the posture.
+
+Ambiguity can occur if no posture phrases are present or if
+phrases corresponding to different postures are present.
+For example, I would consider a brief title containing both
+"plaintiff" and "defendant" to be ambiguous. In cases of
+ambiguouity, the posture cell is left blank.
+
+Amici
+~~~~~~~~~
+The messiest part of this whole process is the guessing of the amici.
+I don't even know what it's doing, but here are some of the concepts.
+
+Pretty early on, the date and everything after get removed. For example, this
+
+    4.    Amicus Brief, BRIEF OF SOCIAL AND ORGANIZATIONAL PSYCHOLOGISTS AS AMICI CURIAE SUPPORTING RESPONDENTS, August 13, 2012, 2012 U.S. S. Ct. Briefs LEXIS 3223  
+
+becomes this.
+
+    4.    Amicus Brief, BRIEF OF SOCIAL AND ORGANIZATIONAL PSYCHOLOGISTS AS AMICI CURIAE SUPPORTING RESPONDENTS
+
+The brief title is split into pieces at things like commas, semicolons
+and the word "and", so we wind up with something like this.
+
+* 4.    Amicus Brief
+* BRIEF OF SOCIAL AND ORGANIZATIONAL PSYCHOLOGISTS AS AMICI CURIAE SUPPORTING RESPONDENTS
+
+Things that don't look like the names of amici get removed. This includes
+words like "amici", "amicus", "supporting", "as", and "brief", and we wind
+up with the following amicus.
+
+    SOCIAL AND ORGANIZATIONAL PSYCHOLOGISTS
+
+Lots of weird things are done to deal with suffixes ("INC", "LLC", "JR"),
+non-serial commas ("first, second and third"), strange character encodings,
+misspellings, and other typos in the brief title.
