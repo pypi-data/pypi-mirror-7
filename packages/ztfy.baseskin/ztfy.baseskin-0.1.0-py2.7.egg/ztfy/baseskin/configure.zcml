@@ -1,0 +1,81 @@
+<configure
+	xmlns="http://namespaces.zope.org/zope"
+	xmlns:browser="http://namespaces.zope.org/browser"
+	xmlns:i18n="http://namespaces.zope.org/i18n"
+	i18n_domain="ztfy.baseskin">
+
+	<i18n:registerTranslations directory="locales" />
+
+	<include file="metas.zcml" />
+
+	<!-- Skinnables traversal -->
+	<subscriber handler=".skin.handleSkinTraversal" />
+
+	<!-- Sub-packages includes -->
+	<include package=".tal" />
+
+	<!-- Forms viewlets managers -->
+	<browser:viewletManager
+		name="form_prefix"
+		class=".viewlet.FormPrefixViewletManager"
+		permission="zope.View"
+		layer=".layer.IBaseSkinLayer" />
+
+	<browser:viewletManager
+		name="widgets_prefix"
+		class=".viewlet.WidgetsPrefixViewletManager"
+		permission="zope.View"
+		layer=".layer.IBaseSkinLayer" />
+
+	<browser:viewletManager
+		name="widgets_suffix"
+		class=".viewlet.WidgetsSuffixViewletManager"
+		permission="zope.View"
+		layer=".layer.IBaseSkinLayer" />
+
+	<browser:viewletManager
+		name="form_suffix"
+		class=".viewlet.FormSuffixViewletManager"
+		permission="zope.View"
+		layer=".layer.IBaseSkinLayer" />
+
+
+	<!-- Custom widgets -->
+	<adapter
+		factory=".widget.ResetFieldWidget" />
+
+	<adapter
+		factory=".widget.ResetButtonAction"
+		provides="z3c.form.interfaces.IButtonAction" />
+
+	<adapter
+		factory=".widget.CloseFieldWidget" />
+
+	<adapter
+		factory=".widget.CloseButtonAction"
+		provides="z3c.form.interfaces.IButtonAction" />
+
+
+	<!-- Text renderers views -->
+	<browser:view
+		name=""
+		for="zope.app.renderer.plaintext.IPlainTextSource"
+		class="zope.app.renderer.plaintext.PlainTextToHTMLRenderer"
+		layer=".layer.IBaseSkinLayer"
+		permission="zope.Public" />
+
+	<browser:view
+		name=""
+		for="zope.app.renderer.stx.IStructuredTextSource"
+		class="zope.app.renderer.stx.StructuredTextToHTMLRenderer"
+		layer=".layer.IBaseSkinLayer"
+		permission="zope.Public" />
+
+	<browser:view
+		name=""
+		for="zope.app.renderer.rest.IReStructuredTextSource"
+		class="zope.app.renderer.rest.ReStructuredTextToHTMLRenderer"
+		layer=".layer.IBaseSkinLayer"
+		permission="zope.Public" />
+
+</configure>
