@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html lang="de">
+<head>
+    <title>Slotty - Slotcar Racing Management</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="{{url_for('static', filename='css/bootstrap.min.css')}}" rel="stylesheet" media="screen">
+    <link href="{{url_for('static', filename='css/style.css')}}" rel="stylesheet" media="screen">
+    <script src="{{ url_for('static', filename='js/jquery-2.0.3.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap-3.0.3.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/socket.io-0.9.16.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.color-2.1.2.min.js')}}"></script>
+
+    <script type="text/javascript" charset="utf-8">
+        lap = function(data) {
+            console.log(data)
+            $("#driver_laptime_"+ data.id).html(data.time.toFixed(3) + ' s');
+            $("#driver_fastest_lap_"+ data.id).html(data.fastest.toFixed(3));
+            $("#driver_laps_"+ data.id).html(data.laps);
+        };
+        $(document).ready(function() {
+            var address = "/sensors";
+            console.log(address);
+	        var ws = io.connect(address);
+
+            ws.on('connect', function () {
+                console.log('Socket connected');
+            });
+            ws.on('disconnect', function (error) {
+                console.log('Socket disconnected ' + error);
+            });
+            ws.on('error', function (error) {
+                console.log('Socket Error ' + error);
+            });
+            ws.on('lap', function (data) {
+                console.log(data)
+                lap(data);
+            });
+        });
+    </script>
+</head>
+<body>
+    <!-- add some bootstrap or other fancy UI here -->
+    <div class="top-menu">
+            <div class="container">
+                <div class="row">
+                </div>
+            </div>
+        </div>
+        <div class="container raceresults">
+	    <div class="page-header">
+  	        <h1>Slotty <small>Slotcar RMS</small></h1>
+            </div>
+	    <table class="table table-responsive">
+                    <tr>
+		       <th>
+		          Driver
+		       </th>
+                       <th>
+                         Lap Time
+                       </th>
+                       <th>
+                          Rounds
+                       </th>
+                       <th>
+                          Fastest Lap
+                       </th>
+		   </tr>
+	    {% for controller in range(1,7) %}
+	    <tr id="row_{{i}}">
+                    <td>
+                       {{controller}}
+                    </td>
+                    <td class="lap-time" id="driver_laptime_{{controller}}">
+                        0.000 s
+                    </td>
+                    <td id="driver_laps_{{controller}}">
+                        0
+                    </td>
+                     <td class="lap-time" id="driver_fastest_lap_{{controller}}">
+                     0.0000s
+                    </td>
+                </tr>
+	   {% endfor %}
+	</table>
+        </div>
+</body>
+</html>
