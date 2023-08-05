@@ -1,0 +1,47 @@
+===============
+ctypes-bitfield
+===============
+
+ctypes-bitfield provides a mechanism for creating ctypes compatible
+implementations of registers made up of bitfields.  The base
+ctypes library already provides much of this functionality, but the
+ctypes-bitfield builder implementation wraps it up for simpler usage.
+
+Normally the underlying register type would be a fixed size integer, a 
+c_uint16 or c_uint64 or the like.  However, a somewhat strange example usage
+would look something like this::
+
+	>>> from bitfield import *
+	>>> IEEE754 = make_bf('IEEE754', [
+	...		('mantissa', c_uint, 23),
+	...		('exponent', c_uint, 8),
+	...		('sign', c_uint, 1)
+	... ], basetype=c_float, doc='Bitfields of an IEEE754 single precision float.')
+	>>> x = IEEE754()
+	>>> x.keys()
+	['mantissa', 'exponent', 'sign']
+	>>> x.base = 5.0
+	>>> list(x.items())	#doctest: +ELLIPSIS
+	[('mantissa', 2097152...), ('exponent', 129...), ('sign', 0...)]
+	>>> x.sign = 1
+	>>> x.base
+	-5.0
+	>>> x.exponent -= 2
+	>>> x.base
+	-1.25
+	>>> x.update(sign = 0, mantissa = 0)
+	>>> x.base
+	1.0
+	
+Bitfield objects are derived from ctypes.Union.  Because of this derivation,
+these classes can be stacked into ctypes.Structures, which means they can
+work directly on memory mapped data.  If the memory-mapped data is volatile, 
+such as hardware registers, then the fact that the update() method operates
+on the entire register in one write, rather than one write per field, may
+be of use.
+
+Works under Python 2.6+ and 3.0+
+
+:author: 	Rob Gaddi, Highland Technology, Inc.
+:date:	 	08-May-2014
+:version:	0.1
