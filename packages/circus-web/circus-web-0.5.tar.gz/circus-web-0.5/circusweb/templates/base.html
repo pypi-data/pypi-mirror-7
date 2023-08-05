@@ -1,0 +1,118 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="copyright" content="Copyright 2012, Circus Team" />
+    <meta name="description" content="Control panel for the Circus Process Watcher" />
+    <title>Circus Control Panel</title>
+
+    <link href="http://fonts.googleapis.com/css?family=Ubuntu" rel="stylesheet" type="text/css">
+    <link href="http://fonts.googleapis.com/css?family=Ubuntu+Mono:400,400italic" rel="stylesheet" type="text/css" />
+
+    <!--[if IE]>
+        <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link rel="stylesheet" href="${static_url('circus.css')}" type="text/css" />
+    <link rel="shortcut icon" href="${static_url('favicon.ico')}"/>
+    <link rel="shortcut icon" type="image/x-icon" href="${static_url('favicon.ico')}" />
+    <script type="text/javascript" src="${static_url('socket.io.js')}"></script>
+    <script type="text/javascript" src="${static_url('jquery.min.js')}"></script>
+
+    <script type="text/javascript" src="${static_url('rickshaw.min.js')}"></script>
+    <script type="text/javascript" src="${static_url('d3.v2.js')}"></script>
+    <script type="text/javascript" src="${static_url('circus.js')}"></script>
+</head>
+<body>
+    % if session.connected:
+    <div id="overlay" style="display:none;">
+        <div class="overlay">
+            <div class="dialog-header">
+                <h3>Add Watcher</h3>
+            </div>
+            <form action="#" method="POST">
+
+                <p>
+                    <label for="name">Name</label>
+                    <input type="text" name="name" required></input>
+                </p>
+                <p>
+                    <label for="cmd">Command</label>
+                    <input type="text" name="cmd" required></input>
+                </p>
+                <p>
+                    <label for="working_dir">Working directory</label>
+                    <input type="text" name="working_dir" required></input>
+                </p>
+                <p>
+                    <label for="numprocesses">Number of processes</label>
+                    <input type="text" name="numprocesses" required></input>
+                </p>
+                <p>
+                    <label for="shell">Run in Shell ?</label>
+                    <input type="checkbox" name="shell"></input>
+                </p>
+
+                <p>
+                    <input class="add_watcher_btn" type="submit"></input>
+                    <input class="add_watcher_btn" type="button" id="cancel_watcher_btn" value="Cancel"></input>
+                </p>
+                <p>
+                </p>
+
+            </form>
+        </div>
+    </div>
+    % endif
+    <header>
+        <a href="/"><img id="logo" src="${static_url('circus.png')}" border="0" /></a>
+        % if session.connected:
+            <a href="${reverse_url('disconnect')}" class="disconnect">Logout</a>
+        % endif
+    </header>
+    <section id="wrapper">
+        % if session.connected:
+            <aside>
+              <nav>
+                <ul>
+                  <li><a href="${reverse_url('index')}">Home</a></li>
+                  <li><a href="${reverse_url('all_sockets')}">All sockets</a></li>
+                </ul>
+			  </nav>
+			  <hr style="margin: 20px 0;"/>
+			  <a href="/disconnect/" class="add_endpoint">Add an endpoint</a>
+			  <form action="${reverse_url('connect')}" method="post" id="endpoints_list">
+				<ul>
+                  % for endpoint in endpoints_list:
+				  <li><label><input type="checkbox" name="endpoint_list" value="${endpoint}"
+% if endpoint in endpoints:
+checked="checked"
+% endif
+/> ${endpoint}</label></li>
+				  % endfor
+				</ul>
+			  </form>
+			  <script type="text/javascript">
+				$('#endpoints_list input').change(function() {
+                    this.form.submit();
+                });
+			  </script>
+            </aside>
+            <section id="content">
+        % else:
+            <section id="login">
+        % endif
+        % for message in messages:
+            <div class="note">
+                ${message}
+            </div>
+        %endfor
+        ${self.body()}
+        </section>
+    </section>
+
+    <footer>
+        &copy; Copyright 2012, The Mozilla Foundation - circushttpd v.${version}
+    </footer>
+
+    </body>
+</html>

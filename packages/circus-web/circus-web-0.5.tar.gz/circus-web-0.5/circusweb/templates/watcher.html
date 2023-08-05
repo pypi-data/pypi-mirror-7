@@ -1,0 +1,164 @@
+<%inherit file="base.html"/>
+
+% if controller:
+    <div class="title" style="background-color: #D6D6FF;">
+     <div class="watcher_name">${endpoint} Watcher <strong>${name}</strong>
+      <a style="display:inline-block;" class="${controller.get_status(name, endpoint)}"
+         title="${controller.get_status(name, endpoint)}" href="${reverse_url('switch_status', b64encode(endpoint), name)}?redirect=${reverse_url('watcher', b64encode(endpoint), name)}"></a></div>
+      <div class="watcher_description"><strong>${controller.get_option(name, 'numprocesses', endpoint)}</strong> <span>processes</span>
+     </div>
+    </div>
+
+    <div class="legend">
+        <div class="legend_cpu">
+            <span class="legend_indicator"></span>
+            <span class="">CPU</span>
+        </div>
+        <div class="legend_mem">
+            <span class="legend_indicator"></span>
+            <span class="">Memory</span>
+        </div>
+    </div>
+
+    <div class="box">
+    %for pid in pids:
+    <div class="process">
+        <div>
+            <span style="display: inline-block; float: left;" class="label">Process #${pid}</span><span id="${name}-${pid}-${b64encode(endpoints[endpoint])}_last_age" class="age-stat"></span>
+
+            <span style="display: inline-block; float: right;">
+                <a href="${reverse_url('kill_process', b64encode(endpoint), name, pid)}" title="Kill">
+                    <img src="${static_url('kill.png')}" border="0" alt="Kill" />
+                </a>
+            </span>
+        </div>
+
+        <div class="stat">
+             <div id="${name}-${pid}-${b64encode(endpoints[endpoint])}" class="graph"></div>
+             <div class="metrics cpu">
+                <span class="metric_label">CPU</span>
+                <span class="metric_value" id="${name}-${pid}-${b64encode(endpoints[endpoint])}_last_cpu">0.0 %</span>
+             </div>
+             <div class="metrics mem">
+                <span class="metric_label">Mem</span>
+                <span class="metric_value" id="${name}-${pid}-${b64encode(endpoints[endpoint])}_last_mem">0.0 %</span>
+             </div>
+        </div>
+    </div>
+    %endfor
+    %if not controller.get_option(name, 'singleton', endpoint):
+    <div class="process">
+        <div>
+            <span class="label">Add process</span>
+        </div>
+        <div class="stat">
+             <a class="add_process" title="Add process" href="${reverse_url('incr_proc', b64encode(endpoint), name)}?redirect=${reverse_url('watcher', b64encode(endpoint), name)}">+</a>
+        </div>
+    </div>
+    %endif
+
+    </div>
+
+    <div class="title">
+       <div class="watcher_name">Options</div>
+    </div>
+
+    <%
+       options = dict(controller.get_options(name, endpoint))
+     %>
+
+    <table class="options">
+        <tr>
+            <td>
+                Command to run.
+            </td>
+            <td class="value">
+                <span>${options['cmd']}</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Arguments passed to the command.
+            </td>
+            <td class="value">
+                <span>${options['args']}</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Environment passed to the command.
+            </td>
+            <td class="value">
+                <span>${options['env']}</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Do we run the command in the shell ?
+            </td>
+            <td class="value">
+                <span>${options['shell']}</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                uid (defaults to the one used for the circusd process)
+            </td>
+            <td class="value">
+                <span>${options['uid']}</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                gid (defaults to the one used for the circusd process)
+            </td>
+            <td class="value">
+                <span>${options['gid']}</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Working directory.
+            </td>
+            <td class="value">
+                <span>${options['working_dir']}</span>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+            Number of processes
+            </td>
+            <td class="value">
+                <a href="${reverse_url('incr_proc', b64encode(endpoint), name)}?redirect=${reverse_url('watcher', b64encode(endpoint), name)}"><span class="orangelabel">+</span></a>
+                <span class="num_process">${options['numprocesses']}</span>
+                <a href="${reverse_url('decr_proc', b64encode(endpoint), name)}?redirect=${reverse_url('watcher', b64encode(endpoint), name)}"><span class="orangelabel">-</span></a>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Maximum number of attempts to start a process.
+            </td>
+            <td class="value">
+                <span>${options['max_retry']}</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Warmup delay in seconds after a process is started.
+            </td>
+            <td class="value">
+                <span>${options['warmup_delay']}</span>
+            </td>
+        </tr>
+    </table>
+
+<script src="${static_url('socket.io.js')}"></script>
+<script type="text/javascript">
+    $(document).ready(function () {
+        var socket = io.connect('${SERVER}');
+        supervise(socket, [], [['${name}', ${dumps(b64encode(endpoints[endpoint]))}, ${dumps(b64encode(endpoint))}]], ${dumps([endpoint])}, ${dumps([endpoints[endpoint]])});
+    });
+</script>
+
+% endif

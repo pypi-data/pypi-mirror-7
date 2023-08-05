@@ -1,0 +1,53 @@
+<%inherit file="base.html"/>
+
+% for endpoint, endpoint_sockets in sockets.items():
+    <div class="title" style="background-color: #D6D6FF;">
+     <div class="watcher_name">${endpoint} sockets activity</div>
+    </div>
+
+    <div class="legend">
+        <div class="legend_reads">
+            <span class="legend_indicator"></span>
+            <span class="">Socket reads</span>
+        </div>
+    </div>
+
+    <div class="box">
+    %for socket in endpoint_sockets:
+    <div class="process">
+      <div>
+        %if 'host' in socket:
+            <span style="display: inline-block; float: left;"
+              class="label">${socket['host']}:${socket['port']} (fd: ${socket['fd']})</span>
+        %else:
+            <span style="display: inline-block; float: left;"
+              class="label">${socket['path']} (fd: ${socket['fd']})</span>
+
+        %endif
+        </div>
+
+        <div class="stat">
+            <div id="socket-stats-${socket['fd']}-${b64encode(controller.get_client(endpoint).stats_endpoint)}" class="graph"></div>
+            <div class="metrics">
+                <span class="metric_label">Reads</span>
+                <span class="metric_value" id="socket-stats-${socket['fd']}-${b64encode(controller.get_client(endpoint).stats_endpoint)}_last_reads">0.0</span>
+             </div>
+        </div>
+    </div>
+    %endfor
+    </div>
+% endfor
+
+<script src="${static_url('socket.io.js')}"></script>
+<script type="text/javascript">
+    $(document).ready(function () {
+        var socket = io.connect('${SERVER}');
+        var watchers = [];
+        var stats_endpoints = [];
+        % for endpoint in sockets.keys():
+            watchers.push(['sockets', ${dumps(b64encode(controller.get_client(endpoint).stats_endpoint))}, ${dumps(b64encode(endpoint))}]);
+            stats_endpoints.push(${dumps(controller.get_client(endpoint).stats_endpoint)});
+        % endfor
+        supervise(socket, [], watchers, ${dumps(sockets.keys())}, stats_endpoints);
+    });
+</script>
