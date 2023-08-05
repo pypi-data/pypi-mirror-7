@@ -1,0 +1,116 @@
+#!/bin/bash
+# Agalma - Tools for processing gene sequence data and automating workflows
+# Copyright (c) 2012-2014 Brown University. All rights reserved.
+# 
+# This file is part of Agalma.
+# 
+# Agalma is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# Agalma is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with Agalma.  If not, see <http://www.gnu.org/licenses/>.
+
+set -e
+
+usage() {
+	echo "
+usage: agalma COMMAND [ARGS]
+
+This is a wrapper script for the various components that come
+with agalma, a suite of tools for de novo assembly and annotation
+of transcriptomes from paired-end sequence data. The following
+commands are available:
+
+  help       Print this help message
+  version    Print the version
+  cite       Print information on citing agalma
+  testdata   Unzip 9MB of test data in the current directory
+  test       Unzip 9MB of test data and run a regression test for both the
+             transciptome and phylogeny pipelines in the current directory
+
+Utilities:
+  catalog       Manage the metadata associated with your sequence data
+  diagnostics   Query the global diagnostics database
+  matrix2genes  Extract genes from a supermatrix
+
+Reports:
+  report            Generate an HTML report for a single catalog ID
+  resources         Generate an HTML report showing resource usage across a run
+  tabular_report    Generate an HTML report comparing several catalog IDs
+  phylogeny_report  Generate a PDF figure showing reduction in genes
+
+Pipelines:
+  sanitize      Randomizes and filters raw paired-end Illumina data
+  insert_size   Estimates the insert size of paired-end Illumina data
+  remove_rrna   Removes ribosomal RNA from paired-end Illumina data
+  assemble      Sweeps over multiple assembly protocols
+  postassemble  Cleans and generates diagnostics for assemblies
+  load          Loads sequence data and annotations into the database
+  homologize    Clusters homologous sequences across datasets
+  orthologize   Clusters orthologous sequences across datasets
+  multalign     Multiple alignment of homologous clusters
+  multalignx    Multiple alignment (frame-aware) of homologous clusters
+  treeprune	Performs monophyly masking and paralogy pruning
+  supermatrix   Concatenate multiple alignments
+  genetree      Builds gene trees for aligned homologous clusters
+  speciestree   Builds species tree from a supermatrix
+  expression    Maps reads to an assembly and estimates expression levels
+
+Meta-pipelines:
+  preassemble    [sanitize, insert_size, remove_rrna]
+  transcriptome  [preassemble, assemble, postassemble]
+
+To print a help message for a specific command, use:
+  agalma COMMAND -h
+"
+	exit 0
+}
+
+if [ $# -lt 1 ]; then usage; fi
+
+command=$1
+prefix=$(python -c "import agalma; print agalma.__path__[0]")
+case $command in
+help|-h|--help)
+	usage
+	;;
+cite)
+	python -c "import agalma; print agalma.__cite__"
+	;;
+version)
+	python -c "import agalma; print agalma.__version__"
+	;;
+testdata)
+	cp -v $prefix/testdata/* .
+	;;
+test)
+	shift
+	agalma-test-transcriptome "$@"
+	agalma-test-phylogeny "$@"
+	agalma-test-expression "$@"
+	agalma-test-tutorial "$@"
+	echo "Test ran successfully."
+	;;
+catalog|diagnostics)
+	shift
+	"bl-$command" "$@"
+	;;
+matrix2genes|report|resources|tabular_report|phylogeny_report)
+	shift
+	"agalma-${command/_/-}" "$@"
+	;;
+assemble|expression|genetree|homologize|insert_size|load|multalign|multalignx|orthologize|postassemble|preassemble|remove_rrna|sanitize|speciestree|supermatrix|transcriptome|treeprune)
+	shift
+	python "$prefix/${command}.py" "$@"
+	;;
+*)
+	echo "agalma: unknown command or pipeline: $command"
+	exit 1
+esac

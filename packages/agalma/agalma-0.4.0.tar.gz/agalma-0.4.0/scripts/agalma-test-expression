@@ -1,0 +1,31 @@
+#!/bin/bash
+
+set -e
+
+TESTDATA=$(python -c "import agalma; print agalma.__path__[0]")/testdata
+LEVEL=${1-"1"}
+DIR=`mktemp -d $PWD/agalma-test-expression-XXX`
+
+echo "Created temp directory '$DIR'"
+cd $DIR
+
+if [ -n "$BIOLITE_RESOURCES" ]
+then
+	SAVE_BIOLITE_RESOURCES=",$BIOLITE_RESOURCES"
+fi
+export BIOLITE_RESOURCES="database=$DIR/biolite.sqlite,agalma_database=$DIR/agalma.sqlite,outdir=$DIR$SAVE_BIOLITE_RESOURCES"
+
+agalma catalog insert --id "SRX033366" --paths $TESTDATA/SRX033366.fq --species "Nanomia bijuga" --ncbi_id "168759" --library_id "SRR081276" --library_type "TRANSCRIPTOMIC" --sequencer "Illumina Genome Analyzer IIx" --seq_center "Dunnlab" --note "mRNA directly extracted from youngest gastrozooids from Nanomia bijuga specimen #1" --sample_prep "Illumina mRNA-seq sample kit (#RS-930-1001, Illumina Inc.)"
+agalma catalog insert --id "SRX036876" --paths $TESTDATA/SRX036876.fq --species "Nanomia bijuga" --ncbi_id "168759" --library_id "SRR089297" --library_type "TRANSCRIPTOMIC" --sequencer "Illumina Genome Analyzer IIx" --seq_center "Dunnlab" --note "mRNA directly extracted from youngest gastrozooids from Nanomia bijuga specimen #2" --sample_prep "Illumina mRNA-seq sample kit (#RS-930-1001, Illumina Inc.)"
+agalma catalog insert --id "Nanomia_bijuga" --paths $TESTDATA/Nanomia_bijuga.fa --species "Nanomia bijuga" --ncbi_id "168759" --itis_id "51389" --library_type "genome" --note "Assembly from previous Agalma run"
+
+cd $DIR
+
+agalma postassemble --id Nanomia_bijuga --external
+agalma load --id Nanomia_bijuga
+
+for ID in SRX033366 SRX036876
+do
+	agalma expression --id $ID Nanomia_bijuga
+done
+

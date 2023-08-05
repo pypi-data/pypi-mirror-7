@@ -1,0 +1,34 @@
+#!/bin/bash
+
+set -e
+
+TESTDATA=$(python -c "import agalma; print agalma.__path__[0]")/testdata
+LEVEL=${1-"1"}
+ID=SRX288285
+DIR=`mktemp -d $PWD/agalma-test-transcriptome-XXX`
+
+echo "Created temp directory '$DIR'"
+cd $DIR
+
+if [ -n "$BIOLITE_RESOURCES" ]
+then
+	SAVE_BIOLITE_RESOURCES=",$BIOLITE_RESOURCES"
+fi
+export BIOLITE_RESOURCES="database=$DIR/biolite.sqlite,agalma_database=$DIR/agalma.sqlite,outdir=$DIR$SAVE_BIOLITE_RESOURCES"
+
+agalma catalog insert --id "$ID" --paths $TESTDATA/${ID}_1.fq $TESTDATA/${ID}_2.fq --species "Agalma elegans" --ncbi_id "316166" --library_id "SRR871526" --library_type "TRANSCRIPTOMIC" --sequencer "Illumina HiSeq 2000" --seq_center "Dunnlab" --sample_prep "Trizol | Illumina TruSeq RNA Sample Prep Kit RNA Purification Beads ; 2 rounds | Illumina TruSeq RNA Sample Prep Kit"
+
+agalma transcriptome --id $ID --insert_nreads 5000
+
+if [ $LEVEL -gt 1 ]; then
+
+agalma preassemble --id $ID
+agalma assemble --id $ID --nreads 10000
+agalma postassemble --id $ID
+
+fi
+
+agalma report --id $ID --outdir report
+agalma resources --id $ID --outdir report
+agalma tabular_report --all --line --outdir tabular-report
+

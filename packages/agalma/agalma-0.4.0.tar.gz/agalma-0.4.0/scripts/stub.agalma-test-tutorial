@@ -1,0 +1,22 @@
+#!/bin/bash
+
+set -e
+
+LEVEL=${1-"1"}
+
+if [ $LEVEL -lt 3 ]; then
+	echo "$0: skipping"
+	exit 0
+fi
+
+DIR=`mktemp -d $PWD/agalma-test-tutorial-XXX`
+
+echo "Created temp directory '$DIR'"
+cd $DIR
+
+if [ -n "$BIOLITE_RESOURCES" ]
+then
+	SAVE_BIOLITE_RESOURCES=",$BIOLITE_RESOURCES"
+fi
+export BIOLITE_RESOURCES="database=$DIR/biolite.sqlite,agalma_database=$DIR/agalma.sqlite,outdir=$DIR$SAVE_BIOLITE_RESOURCES"
+
