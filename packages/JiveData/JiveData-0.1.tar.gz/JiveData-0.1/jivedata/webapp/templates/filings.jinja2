@@ -1,0 +1,83 @@
+{% extends 'base.jinja2' %}
+{% set active_page = "filings" %}
+
+{% block titletag -%}
+  {%- if 'ticker' in session and session['ticker'] != {} -%}
+  {{ session['ticker']['name'] }} SEC Filings
+  {%- else -%}
+  SEC Filings
+  {%- endif -%}
+{%- endblock %}
+
+{% block canonical -%}
+  {% if 'ticker' in session and session['ticker'] != {} -%}
+  <link rel="canonical" href="https://www.jivedata.com/filings/{{ session['ticker']['cik'] }}/">
+  {% endif %}
+{%- endblock %}
+
+ 
+{% block jquery %}
+<script src="{{ url_for('static', filename='base/ticker.js') }}" type="text/javascript"></script>
+<script src="{{ url_for('static', filename='filings.js') }}" type="text/javascript"></script>
+{% endblock %}
+
+{% block css %}
+<style>
+td > a > i.fa{ padding-right:15px;}
+@media(max-width:480px){ 
+  #datagrid{zoom:.80;}
+  td > i.fa{ padding-bottom:10px; padding-top:10px; }
+}
+</style> 						
+{% endblock %}
+
+{% block additionalTicker %}
+</div>
+	<div class="row-fluid">
+	  <div class="span2" style="margin-top: 4px;"><label class="checkbox">
+       <input id="watchlist_view" type="checkbox" {% if session['watchlist_view'] == 'true' %} checked="checked" {% endif %}>Watchlist View</label>
+    </div>
+    <div id="insider_span" class="span2" style="margin-top:4px;{% if session.forms and session.forms != '0' %}display:none;{% endif %}"><label class="checkbox">
+       <input id="include_insiders" type="checkbox" {% if session['insiders'] == 'true' %} checked="checked" {% endif %}>Include Insider Filings</label>
+    </div>
+    <div class="span3">
+    
+    <select id="forms_selector" style="width:240px;">
+			<option value="0" {% if session.forms == '0' %} selected="selected" {% endif %}>All Forms</option>
+			<option value="1" {% if session.forms == '1' %} selected="selected" {% endif %}>Press Releases (8Ks)</option>
+			<option value="2" {% if session.forms == '2' %} selected="selected" {% endif %}>10-K</option>
+ 		  <option value="3" {% if session.forms == '3' %} selected="selected" {% endif %}>10-Q</option>
+ 		  <option value="4" {% if session.forms == '4' %} selected="selected" {% endif %}>Activists/Large Holder (13D/13G)</option>
+			<option value="5" {% if session.forms == '5' %} selected="selected" {% endif %}>Institutional (13F)</option>
+			<option value="6" {% if session.forms == '6' %} selected="selected" {% endif %}>Proxies</option>
+			<option value="7" {% if session.forms == '7' %} selected="selected" {% endif %}>IPO Prospectus</option>
+			<option value="8" {% if session.forms == '8' %} selected="selected" {% endif %}>20-F/6-K</option>
+		</select>
+	</div>
+</div>
+{% endblock %}
+ 
+ {% block content %}
+ {% if results == [] %}
+ <h4>No Results</h4>
+ {% else %}
+ <table id="datagrid" class="table table-hover">
+   <thead>
+    <tr>
+      <th>Company</th>
+      <th>Form</th>
+      <th>Date Filed (EST)</th>
+      <th>Links</th>
+    </tr>
+  </thead>
+  <tbody>
+  {{ html }}
+  {% if pagination['next']  ==  None  %}
+  <tr style="height:50px;border-bottom:0px;"><td colspan="4" style="text-align:center">No More Records</td></tr>
+  {% endif %}
+  </tbody>
+	</table>
+{% endif %}
+<div id="current" style="display:none;">{{ pagination['current'] }}</div>
+<div id="next" style="display:none;">{{ pagination['next'] }}</div>
+{% endblock %}

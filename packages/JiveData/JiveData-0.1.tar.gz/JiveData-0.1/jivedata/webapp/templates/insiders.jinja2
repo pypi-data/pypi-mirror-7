@@ -1,0 +1,73 @@
+{% extends "base.jinja2" %}
+{% set active_page = "ins" %}
+
+{% block titletag -%}
+  {%- if 'ticker' in session and session['ticker'] != {} -%}
+  {{ session['ticker']['name'] }} Insider Filings
+  {%- else -%}
+  Insider Filings
+  {%- endif -%}
+{%- endblock %}
+
+{% block canonical -%}
+  {% if 'ticker' in session and session['ticker'] != {} -%}
+  <link rel="canonical" href="https://www.jivedata.com/insiders/{{ session['ticker']['cik'] }}/">
+  {% endif %}
+{%- endblock %}
+
+{% block css %}
+	<style>
+	td > a > i.fa{ padding-right:15px; }
+	
+	@media(max-width:479px){ 
+  	#datagrid{zoom:.80;}
+  	td > a > i.fa{ padding-bottom:10px;padding-top:10px; }
+  }
+	</style>
+{% endblock %}
+
+{% block jquery %}
+	<script src="{{ url_for('static', filename='base/ticker.js') }}" type="text/javascript"></script>
+	<script src="{{ url_for('static', filename='insiders.js') }}" type="text/javascript"></script>
+{% endblock %}
+
+{% block additionalTicker %}
+  </div>
+	<div class="row-fluid">  
+	  <div class="span2" style="margin-top: 4px;"><label class="checkbox">
+			<input id="watchlist_view" type="checkbox" {% if session['watchlist_view'] == 'true' %} checked="checked" {% endif %}>Watchlist View</label>
+		</div>
+		<div class="span3" style="margin-top:4px;"><label class="checkbox">
+		  <input id="planned" type="checkbox" {% if 'planned' not in session or session['planned']=='true' %}checked="checked"{% endif %}>Include 10b5-1 Transactions</label>
+		</div>
+		<div class="span3" style="margin-top:4px;"><label class="checkbox">
+		  <input id="open_market" type="checkbox" checked="checked" disabled="disabled">Only Open Market Transactions</label>
+		</div>
+	</div>
+{% endblock %}
+
+{% block content %}
+<div id="span_me">
+	<table id="datagrid" class="table table-hover"> 
+	  <thead>
+	   <tr>
+	     <th>{% if session['ticker'] == {} -%}Company & Insider</small>{% else %}Insider{%- endif %}</th>
+	   	 <th>Summary</th>
+	   	 <th>Links</th>
+	   </tr>
+	  </thead>
+	  <tbody>
+ 	  {{ html | safe }}
+ 	  {% if pagination['next']  ==  None  %}
+    <tr style="height:50px;border-bottom:0px;"><td colspan="3" style="text-align:center">No More Records</td></tr>
+    {% endif %}
+		</tbody>
+	</table>
+</div>
+
+<div id="current" style="display:none;">{{ pagination['current'] }}</div>
+<div id="next" style="display:none;">{{ pagination['next'] }}</div>
+{% endblock %}
+
+
+

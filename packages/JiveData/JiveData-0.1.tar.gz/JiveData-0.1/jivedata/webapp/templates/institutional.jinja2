@@ -1,0 +1,77 @@
+{% extends 'base.jinja2' %}
+{% set active_page = 'institutional' %}
+
+{% block titletag -%}
+  {%- if 'fund' in session and session['fund'] != '' -%}
+  {{ session['fund']['name'] }} Holdings
+  {%- else -%}
+  13F Filings
+  {%- endif -%}
+{%- endblock %}
+
+{% block css %}
+<style>
+@media (max-width: 480px){ #datagrid{zoom:.80;} #datagrid_detail{zoom:.85;}}
+</style> 						
+{% endblock %}
+
+{% block jquery %}
+<script src="{{ url_for('static', filename='institutional.js') }}" type="text/javascript"></script>
+{% endblock %}
+
+{% block ticker %}
+    <input id="fund" name="funds" spellcheck="false" type="text" class="input-large" style="margin-bottom:4px;" value="{% if 'fund' in session and session['fund'] != '' %}{{ session['fund']['name'] }}{% endif %}">
+	  {% if 'user_oauth_token' in session and 'access_token' in session['user_oauth_token'] %}
+	  <button id="institution_add" class="btn btn-mini"
+		   {% if 'fund' not in session or session['fund'] == '' %}disabled
+	     {% elif session['fund'] and session['fund']['cik'] in session['funds_ciks'] %}disabled
+	     {% endif %} 
+	  type="button" style="margin-left:10px; margin-right:10px; margin-bottom:4px;">Add to My Funds</button>
+		{% endif %}
+	<a id="clear_all" style="margin-bottom:4px;cursor:pointer;">Clear</a>
+	{% if 'fund' not in session or session['fund'] == ''  %}
+	<div class="row-fluid">  
+		<div class="span2" style="margin-top: 4px;"><label class="checkbox">
+	       	<input id="my_funds_view" type="checkbox" {% if session['my_funds_view'] == 'true' %} checked="checked" {% endif %}>My Funds</label>
+	    </div>
+	</div>
+	{% endif %}
+{% endblock %}
+{% block additionalTicker %}{% endblock %}
+
+{% block content %}
+<div id="span_me">
+	{% if not detail %}
+	  {% if results == [] %}
+	  <h4>No Results</h4>
+	  {% else %}
+	  <table id="datagrid" class="table table-hover"> 
+	    <thead>
+	      <tr>
+	        <th style="text-align:left;">Filer</th>
+	        {%- if session['my_funds_view'] == 'true' -%}
+	        <th>Latest Reporting Period</th>
+	        {%- else -%}
+	        <th>Reporting Period</th>
+	        {%- endif -%}
+	        <th>Date Filed</th>
+	        <th></th>
+	      </tr>
+	    </thead>
+	    <tbody>
+	    {{ html | safe }}
+	    {% if pagination['next']  ==  None  %}
+		  <tr style="height:50px;border-bottom:0px;"><td colspan="4" style="text-align:center">No More Records</td></tr>
+		  {% endif %}
+	    </tbody>
+	  </table>
+	  <div id="current" style="display:none;">{{ pagination['current'] }}</div>
+    <div id="next" style="display:none;">{{ pagination['next'] }}</div>
+	 {% endif %}
+	 {% else %}
+	    {{ html | safe }}
+	{% endif %}
+
+</div>
+
+{% endblock %}

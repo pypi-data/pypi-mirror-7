@@ -1,0 +1,59 @@
+{% set navigation_bar = [
+ 	('/financials/', 'financials', 'Financials'),
+	('/filings/', 'filings', 'Filings'),
+	('/insiders/', 'ins', 'Insider Filings'),
+	('/13F/', 'institutional', '13F Filings'),
+	('/econ/', 'econ', 'Econ'),
+] -%}
+
+{% set additional_links = [] %}
+
+{% if config['additional_links'] %}
+  {% set additional_links = config['additional_links'] -%}
+{% endif %}
+
+{% set active_page = active_page|default('') -%}
+<div class="navbar navbar-inverse navbar-fixed-top">
+  <div class="navbar-inner">
+    <div class="container-fluid">
+      <div class="btn btn-inverse btn-navbar" data-toggle="collapse" data-target="#collapsable">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </div>
+      {% if config['logo'] %}
+			<a class="brand {% if active_page==''%}active{% endif %}" style="font-family:'Philosopher',serif;font-size:26px;" href="/">{{ config['logo'] }}</a>
+      {% endif %}
+      <div id="collapsable" class="nav-collapse collapse">
+        <ul class="nav">
+        {% for href, id, caption in navigation_bar -%}
+ 					<li{% if id == active_page %} class="active"{% endif %}><a href="{{ href|e }}">{{ caption|e }}</a></li>
+				{%- endfor %}
+			  {% for href, id, caption in additional_links -%}
+			  <li><a href="{{ href|e }}" style="color:#5586e0;opacity:.9;">{{ caption|e }}</a></li>
+			  {% endfor %}
+        </ul>
+        <ul class="nav pull-right" style="margin-right:100px;">
+          {% if 'user_oauth_token' in session and 'access_token' in session['user_oauth_token'] %}
+          <li class="nav-header hidden-desktop">Settings</li>
+      		<li class="hidden-desktop"><a href="/me/">Me</a></li>
+     		  <li class="hidden-desktop"><a href="/logout/">Logout</a></li>
+      		<li class="dropdown visible-desktop">
+             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Settings<b class="caret"></b></a>
+             <ul class="dropdown-menu">
+               <li><a href="/me/">Me</a></li>
+               <li><a href="/logout/">Logout</a></li>
+             </ul>
+           </li>
+       		{% else %}
+       		<li>
+       			<a href="/login">Login/Register</a>
+       		</li>
+      		{%- endif %}
+    	</ul>
+      </div><!--/.nav-collapse -->
+    </div>
+  </div>
+</div>
+
+

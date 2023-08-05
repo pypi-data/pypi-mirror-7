@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>{% block titletag %}Jive Data{% endblock %}</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/fav.ico') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <meta charset="UTF-8"/>
+    <meta name="google" value="notranslate" />
+    <meta http-equiv="Content-Language" content="en"/>
+    {% block canonical %}{% endblock %}
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" />
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/2.3.2/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='base/main.css') }}"/>
+    {% block css %}{% endblock %}
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/profile_logo_white.png') }}">
+ 	  <link rel="apple-touch-icon" sizes="76x76" href="{{ url_for('static', filename='images/touch-icon-ipad.png') }}">
+		<link rel="apple-touch-icon" sizes="120x120" href="{{ url_for('static', filename='images/touch-icon-iphone-retina.png') }}">
+		<link rel="apple-touch-icon" sizes="152x152" href="{{ url_for('static', filename='images/touch-icon-ipad-retina.png') }}">
+		<link rel="apple-touch-startup-image" href="{{ url_for('static', filename='images/startup.png') }}">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+   
+    <script type="text/javascript">
+      (function(document,navigator,standalone){ // prevent links on iPhone from opening in Safari...see https://gist.github.com/irae/1042167
+         if ((standalone in navigator) && navigator[standalone]){
+            var curnode, location=document.location, stop=/^(a|html)$/i;
+            document.addEventListener('click',function(e){
+               curnode=e.target;
+               while (!(stop).test(curnode.nodeName)){
+                 curnode=curnode.parentNode;
+               }
+               if('href' in curnode && (curnode.href.indexOf('http') || ~curnode.href.indexOf(location.host))){
+                 e.preventDefault();
+                 location.href = curnode.href;
+               }
+            },false);
+         }
+       })(document,window.navigator,'standalone');
+    </script>
+  </head>
+	<body>
+	
+	{% if config['show_github'] == True %}
+	<a class="visible-desktop" href="https://github.com/jivedata/jivedata" target="_blank"><img style="position:absolute;top:0;right:0;border:0;z-index:10000;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png" alt="Fork me on GitHub"></a>
+	{% endif %}
+	
+	{% set active_page = active_page|default('') -%}
+	{% include "nav.jinja2" %}
+	
+	{% if config['test_data'] == True %}
+	<div class="alert alert-dismissable">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    You are using test data.
+  </div>
+	{% endif %}
+	
+	{% if request.path != '/' %}
+		{% if 'user_oauth_token' not in session or 'access_token' not in session['user_oauth_token'] %}
+		   <div class="alert alert-danger alert-dismissable">
+	        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+	        We have given you the default watchlist & funds list. Please login to create and save tickers & funds.
+	      </div>
+		{% endif %}
+  {% endif %}
+		
+	{% with messages = get_flashed_messages(with_categories=true) %}
+	  {% if messages %}
+	    {% for category, message in messages %}
+	      <div class="alert alert-{{category}} alert-dismissable">
+				  <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+				  {{ message }}
+				</div>
+	    {% endfor %}
+	  {% endif %}
+	{% endwith %}
+	
+	
+	<div id="main-container" class="container-fluid">
+	  {% if 'mobile_adsense' in config and request.path != '/' %}
+	  <div class="row-fluid visible-phone">
+	    <div class="span12">
+	    {{ config['mobile_adsense'] }}
+	    </div>
+	  </div>
+	  {% endif %}
+	
+	
+	 <div id="options_row" class="well well-small" style="display:none;background-color:#fff">
+		{% block ticker %}
+		<div class='row-fluid'>
+ 			<input id="tickers" name="tickers" spellcheck="false" type="text" class="input-large" style="margin-bottom:4px;"
+ 					value="{% if 'ticker' in session and session['ticker'] != {} -%}
+ 					       {% if session['ticker']['ticker'] != None and session['ticker']['ticker'] != '' -%}
+ 					         {{ session['ticker']['ticker'] }}: {% endif %}{{ session['ticker']['name'] }}
+ 					       {%- endif %}">
+ 			{% if 'user_oauth_token' in session and 'access_token' in session['user_oauth_token'] %}
+ 			<button id="wl_add" class="btn btn-mini"
+					{% if 'ticker' not in session or session['ticker'] == {} %}disabled
+					{% elif session['ticker'] and session['ticker']['cik'] in session['watchlist_ciks'] %}disabled
+					{% endif %}	
+					type="button" style="margin-left:5px;margin-bottom:4px;">Add to WatchList</button>
+			{% endif %}
+ 			<a id="clear_all" style="margin-bottom:4px;margin-left:5px;cursor:pointer;">Clear</a>
+		{% endblock %} 
+		{% block additionalTicker %}</div>{% endblock %}
+   </div> 
+
+   <div class="row-fluid">
+     <div class="{% if 'adsense' in config and request.path != '/' %}span10{% else %}span12{% endif %}">
+     {% block content %}{% endblock %}
+     </div>
+     {%- if 'adsense' in config and request.path != '/' -%}
+     <div class="span2 hidden-phone" style="margin-top:20px;">
+     {{ config['adsense'] }}
+     </div>
+     {%- endif -%}
+   </div>
+		
+	</div>
+	
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js" type="text/javascript"></script>
+	<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.1/jquery-ui.min.js"></script>
+	<script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>
+	<script src="{{ url_for('static', filename='base/main.js') }}" type="text/javascript"></script>
+	{% block jquery %}{% endblock %}
+	
+  {% if 'analytics_code' in config -%}
+	<script>
+      {{ config['analytics_code'] }}
+  </script>
+  {%- endif %}
+	
+  </body>
+</html>
