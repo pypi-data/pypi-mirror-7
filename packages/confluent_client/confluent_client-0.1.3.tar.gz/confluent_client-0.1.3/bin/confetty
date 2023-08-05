@@ -1,0 +1,562 @@
+#!/usr/bin/env python
+# vim: tabstop=4 shiftwidth=4 softtabstop=4
+
+# Copyright 2014 IBM Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+# ultimately, this should provide an interactive cli for navigating confluent
+# tree and doing console with a socket.  <ESC>]0;<string><BELL> can be used to
+# present info such as whether it is in a console or other mode and, if in
+# console, how many other connections are live and looking
+# this means 'wcons' simply needs to make a terminal run and we'll take care of
+# the title while providing more info
+# this also means the socket interface needs to have ways to convey more
+# interesting pieces of data (like concurrent connection count)
+# socket will probably switch to a TLV scheme:
+# 32 bit TL, 8 bits of type code and 24 bit size
+# type codes:
+# 0: string data
+# 1: json data
+# 24 bit size allows the peer to avoid having to do any particular parsing to
+# understand message boundaries (which is a significant burden on the xCAT
+# protocol)
+
+# When in a console client mode, will recognize two escape sequences by
+# default:
+# Ctrl-E, c, ?: mimic conserver behavior
+# ctrl-]: go to interactive prompt (telnet escape, but not telnet prompt)
+# esc-( would interfere with normal esc use too much
+# ~ I will not use for now...
+
+import fcntl
+import getpass
+import optparse
+import os
+import readline
+import select
+import shlex
+import sys
+import termios
+import tty
+
+exitcode = 0
+consoleonly = False
+consolename = ""
+target = "/"
+path = os.path.dirname(os.path.realpath(__file__))
+path = os.path.realpath(os.path.join(path, '..'))
+sys.path.append(path)
+
+import confluent.tlvdata as tlvdata
+import confluent.client as client
+
+conserversequence = '\x05c'  # ctrl-e, c
+
+oldtcattr = termios.tcgetattr(sys.stdin.fileno())
+netserver = None
+
+
+def updatestatus(stateinfo):
+    status = consolename
+    info = []
+    if ('connectstate' in stateinfo and
+            stateinfo['connectstate'] != 'connected'):
+        info.append(stateinfo['connectstate'])
+    if 'error' in stateinfo:
+        info.append(stateinfo['error'])
+    if 'clientcount' in stateinfo and stateinfo['clientcount'] != 1:
+        info.append('clients: %d' % stateinfo['clientcount'])
+    if info:
+        status += ' [' + ','.join(info) + ']'
+    sys.stdout.write('\x1b]0;console: %s\x07' % status)
+    sys.stdout.flush()
+
+
+def recurse_format(datum, levels=0):
+    ret = ''
+    import json
+    return json.dumps(datum, indent=1)
+    if isinstance(datum, dict):
+        for key in datum.iterkeys():
+            if datum[key] is None:
+                continue
+            ret += key + ':'
+            if type(datum[key]) in (str, unicode):
+                ret += datum[key] + '\n'
+            else:
+                ret += recurse_format(datum[key], levels + 1)
+    elif isinstance(datum, list):
+        if type(datum[0]) in (str, unicode):
+            ret += '[' + ",".join(datum) + ']\n'
+        else:
+            ret += '['
+            elems = []
+            for elem in datum:
+                elems.append('{' + recurse_format(elem, levels + 1) + '}')
+            ret += ','.join(elems)
+            ret += ('  ' * levels) + ']\n'
+    return ret
+
+
+def prompt():
+    sys.stdout.write('\x1b]0;confetty: %s\x07' % target)
+    try:
+        return raw_input(target + ' -> ')
+    except KeyboardInterrupt:
+        print ""
+        return ""
+    except EOFError:  # ctrl-d
+        print("exit")
+        return "exit"
+#    sys.stdout.write(target + ' -> ')
+#    sys.stdout.flush()
+#    username = raw_input("Name: ")
+
+valid_commands = [
+    'start',
+    'cd',
+    'show',
+    'set',
+    'unset',
+    'create',
+    'remove',
+    'rm',
+    'delete',
+]
+
+candidates = None
+session = None
+
+
+def completer(text, state):
+    try:
+        return rcompleter(text, state)
+    except:
+        import traceback
+        traceback.print_exc()
+
+
+def rcompleter(text, state):
+    global candidates
+    global valid_commands
+    cline = readline.get_line_buffer()
+    if len(text):
+        cline = cline[:-len(text)]
+    args = shlex.split(cline, posix=True)
+    currpos = len(args)
+    if currpos and cline[-1] == ' ':
+        lastarg = ''
+        currpos += 1
+    elif currpos:
+        lastarg = args[-1]
+    else:
+        lastarg = ''
+    if currpos <= 1:
+        foundcount = 0
+        for cmd in valid_commands:
+            if cmd.startswith(text):
+                if foundcount == state:
+                    return cmd
+                else:
+                    foundcount += 1
+        candidates = None
+        return None
+    cmd = args[0]
+    if candidates is None:
+        candidates = []
+        targpath = fullpath_target(lastarg)
+        for res in session.read(targpath):
+            if 'item' in res:  # a link relation
+                if type(res['item']) == dict:
+                    candidates.append(res['item']["href"])
+                else:
+                    for item in res['item']:
+                        candidates.append(item["href"])
+    foundcount = 0
+    for elem in candidates:
+        if cmd == 'cd' and elem[-1] != '/':
+            continue
+        if elem.startswith(text):
+            if foundcount == state:
+                return elem
+            else:
+                foundcount += 1
+    candidates = None
+    return None
+
+
+def parse_command(command):
+    args = shlex.split(command, posix=True)
+    return args
+
+
+currchildren = None
+
+
+def print_result(res):
+    if 'errorcode' in res:
+        return
+    for key in res.iterkeys():
+        notes = []
+        if res[key] is None:
+            attrstr = '%s=""' % key
+        elif type(res[key]) == list:
+            attrstr = '%s=%s' % (key, recurse_format(res[key]))
+        elif 'value' in res[key] and res[key]['value'] is not None:
+            attrstr = '%s="%s"' % (key, res[key]['value'])
+        elif 'value' in res[key] and res[key]['value'] is None:
+            attrstr = '%s=""' % key
+        else:
+            if 'isset' in res[key] and res[key]['isset']:
+                attrstr = '%s="********"' % key
+            else:
+                attrstr = '%s=""' % key
+        if res[key] is not None and 'inheritedfrom' in res[key]:
+            notes.append(
+                'Inherited from %s' % res[key]['inheritedfrom'])
+        if res[key] is not None and 'expression' in res[key]:
+            notes.append(
+                ('Derived from expression "%s"' %
+                 res[key]['expression']))
+        if notes:
+            notestr = '(' + ', '.join(notes) + ')'
+            output = '{0:<40} {1:>39}'.format(attrstr, notestr)
+        else:
+            output = attrstr
+        print(output)
+
+
+def do_command(command, server):
+    global exitcode
+    global target
+    global currconsole
+    global currchildren
+    exitcode = 0
+    argv = parse_command(command)
+    if len(argv) == 0:
+        return
+    argv[0] = argv[0].lower()
+    if argv[0] == 'exit':
+        sys.exit(0)
+    elif argv[0] == 'cd':
+        otarget = target
+        if len(argv) > 1:
+            target = fullpath_target(argv[1], forcepath=True)
+        else:  # cd by itself, go 'home'
+            target = '/'
+        for res in session.read(target, server):
+            if 'errorcode' in res:
+                exitcode = res['errorcode']
+            if 'error' in res:
+                sys.stderr.write(target + ': ' + res['error'] + '\n')
+                target = otarget
+    elif argv[0] in ('cat', 'show', 'ls', 'dir'):
+        if len(argv) > 1:
+            targpath = fullpath_target(argv[1])
+        else:
+            targpath = target
+        for res in session.read(targpath):
+            if 'item' in res:  # a link relation
+                if type(res['item']) == dict:
+                    print res['item']["href"]
+                else:
+                    for item in res['item']:
+                        print item["href"]
+            else:  # generic attributes to list
+                if 'error' in res:
+                    sys.stderr.write(res['error'] + '\n')
+                if 'errorcode' in res:
+                    exitcode = res['errorcode']
+                    continue
+                print_result(res)
+    elif argv[0] == 'start':
+        targpath = fullpath_target(argv[1])
+        nodename = targpath.split('/')[-3]
+        currconsole = targpath
+        tlvdata.send(
+            session.connection, {'operation': 'start', 'path': targpath})
+        status = tlvdata.recv(session.connection)
+        if 'error' in status:
+            if 'errorcode' in status:
+                exitcode = status['errorcode']
+            sys.stderr.write('Error: ' + status['error'] + '\n')
+            return
+        print '[console session started]'
+        startconsole(nodename)
+        return
+    elif argv[0] == 'set':
+        setvalues(argv[1:])
+    elif argv[0] == 'create':
+        createresource(argv[1:])
+    elif argv[0] in ('rm', 'delete', 'remove'):
+        delresource(argv[1])
+    elif argv[0] in ('unset', 'clear'):
+        clearvalues(argv[1], argv[2:])
+    else:
+        sys.stderr.write("%s: command not found...\n" % argv[0])
+
+
+def createresource(args):
+    resname = args[0]
+    attribs = args[1:]
+    keydata = parameterize_attribs(attribs)
+    if keydata is None:
+        return
+    targpath = fullpath_target(resname)
+    collection, _, resname = targpath.rpartition('/')
+    keydata['name'] = resname
+    makecall(session.create, (collection, keydata))
+
+
+def makecall(callout, args):
+    global exitcode
+    for response in callout(*args):
+        if 'error' in response:
+            if 'errorcode' in response:
+                exitcode = response['errorcode']
+            sys.stderr.write('Error: ' + response['error'] + '\n')
+
+
+def clearvalues(resource, attribs):
+    global exitcode
+    targpath = fullpath_target(resource)
+    keydata = {}
+    for attrib in attribs:
+        keydata[attrib] = None
+    for res in session.update(targpath, keydata):
+        if 'error' in res:
+            if 'errorcode' in res:
+                exitcode = res['errorcode']
+            sys.stderr.write('Error: ' + res['error'] + '\n')
+
+
+def delresource(resname):
+    resname = fullpath_target(resname)
+    makecall(session.delete, (resname,))
+
+
+def setvalues(attribs):
+    global exitcode
+    if '=' in attribs[0]:  # going straight to attribute
+        resource = attribs[0][:attribs[0].index("=")]
+        if '/' in resource:
+            lastslash = resource.rindex('/')
+            attribs[0] = attribs[0][lastslash + 1:]
+    else:  # an actual resource
+        resource = attribs[0]
+        attribs = attribs[1:]
+    keydata = parameterize_attribs(attribs)
+    if not keydata:
+        return
+    targpath = fullpath_target(resource)
+    for res in session.update(targpath, keydata):
+        if 'error' in res:
+            if 'errorcode' in res:
+                exitcode = res['errorcode']
+            sys.stderr.write('Error: ' + res['error'] + '\n')
+        print_result(res)
+
+
+def parameterize_attribs(attribs):
+    keydata = {}
+    for attrib in attribs:
+        if '=' not in attrib:
+            sys.stderr.write("Invalid syntax %s\n" % attrib)
+            return None
+        key = attrib[:attrib.index("=")]
+        value = attrib[attrib.index("=") + 1:]
+        if key == 'groups':
+            value = value.split(',')
+        keydata[key] = value
+    return keydata
+
+
+def fullpath_target(currpath, forcepath=False):
+    global target
+    if currpath == '':
+        return target
+    pathcomponents = currpath.split("/")
+    if pathcomponents[-1] == "":  # preserve path
+        forcepath = True
+    if pathcomponents[0] == "":  # absolute path
+        ntarget = currpath
+    else:
+        targparts = target.split("/")[:-1]
+        for component in pathcomponents:
+            if component in ('.', ''):  # ignore these
+                continue
+            elif component == '..':
+                if len(targparts) > 0:
+                    del targparts[-1]
+            else:
+                targparts.append(component)
+        if forcepath and (len(targparts) == 0 or targparts[-1] != ""):
+            targparts.append('')
+        ntarget = '/'.join(targparts)
+    if forcepath and (len(ntarget) == 0 or ntarget[-1] != '/'):
+        ntarget += '/'
+    return ntarget
+
+
+def startconsole(nodename):
+    global inconsole
+    global consolename
+    consolename = nodename
+    tty.setraw(sys.stdin.fileno())
+    currfl = fcntl.fcntl(sys.stdin.fileno(), fcntl.F_GETFL)
+    fcntl.fcntl(sys.stdin.fileno(), fcntl.F_SETFL, currfl | os.O_NONBLOCK)
+    inconsole = True
+
+
+def quitconfetty(code=0, fullexit=False):
+    global inconsole
+    global currconsole
+    currfl = fcntl.fcntl(sys.stdin.fileno(), fcntl.F_GETFL)
+    fcntl.fcntl(sys.stdin.fileno(), fcntl.F_SETFL, currfl ^ os.O_NONBLOCK)
+    termios.tcsetattr(sys.stdin.fileno(), termios.TCSANOW, oldtcattr)
+    if fullexit:
+        sys.exit(code)
+    else:
+        tlvdata.send(session.connection, {'operation': 'stop',
+                                          'path': currconsole})
+        inconsole = False
+
+
+def conserver_command(filehandle, command):
+    # x - conserver has that as 'show baud', I am inclined to replace that with
+    #     'request exclusive'
+    # b - conserver has that as 'broadcast message', I'm tempted to use that
+    #     for break
+    # r - replay
+    # p - replay (this is the one I've always used)
+    # f - force attach read/write
+    # a - attach read/write
+    # s - spy mode
+    # l[n] - send a particular break, tempted to do l0 for compatibility
+    # o - reopen tty, this should mean reconnect console
+    # d - down a console... never used this...
+    # L - toggle logging
+    # w - who is on console
+    while not command:
+        ready, _, _ = select.select((filehandle,), (), (), 1)
+        if ready:
+            command += filehandle.read()
+    if command[0] == '.':
+        print("disconnect]\r")
+        quitconfetty(fullexit=consoleonly)
+    if command[0] == 'b':
+        tlvdata.send(session.connection, {'operation': 'break',
+                                          'path': currconsole})
+        print("break sent]\r")
+    elif command[0] == '?':
+        print("help]\r")
+        print(".    disconnect\r")
+        print("b    break\r")
+        print("<cr> abort command\r")
+    elif command[0] == '\x0d':
+        print("ignored]\r")
+    else:  # not a command at all..
+        print("unknown -- use '?']\r")
+
+
+def check_escape_seq(currinput, filehandle):
+    while conserversequence.startswith(currinput):
+        if currinput.startswith(conserversequence):  # We have full sequence
+            sys.stdout.write("[")
+            sys.stdout.flush()
+            return conserver_command(
+                filehandle, currinput[len(conserversequence):])
+        ready, _, _ = select.select((filehandle,), (), (), 3)
+        if not ready:  # 3 seconds of no typing
+            break
+        currinput += filehandle.read()
+    return currinput
+
+
+parser = optparse.OptionParser()
+parser.add_option("-s", "--server", dest="netserver",
+                  help="Confluent instance to connect to",
+                  metavar="SERVER:PORT")
+opts, shellargs = parser.parse_args()
+if opts.netserver:  # going over a TLS network
+    session = client.Command(opts.netserver)
+elif 'CONFLUENT_HOST' in os.environ:
+    session = client.Command(os.environ['CONFLUENT_HOST'])
+else:  # unix domain
+    session = client.Command()
+
+#Next stop, reading and writing from whichever of stdin and server goes first.
+#see pyghmi code for solconnect.py
+if not session.authenticated and 'CONFLUENT_USER' in os.environ:
+    username = os.environ['CONFLUENT_USER']
+    passphrase = os.environ['CONFLUENT_PASSPHRASE']
+    session.authenticate(username, passphrase)
+while not session.authenticated:
+    username = raw_input("Name: ")
+    readline.clear_history()
+    passphrase = getpass.getpass("Passphrase: ")
+    session.authenticate(username, passphrase)
+# clear on start can help with readable of TUI, but it
+# can be annoying, so for now don't do it.
+# sys.stdout.write('\x1b[H\x1b[J')
+# sys.stdout.flush()
+
+readline.parse_and_bind("tab: complete")
+readline.parse_and_bind("set bell-style none")
+readline.set_completer(completer)
+doexit = False
+inconsole = False
+pendingcommand = ""
+if len(shellargs) == 1 and ' ' not in shellargs[0]:  # straight to node console
+    consoleonly = True
+    do_command("start /nodes/%s/console/session" % shellargs[0], netserver)
+elif shellargs:
+    command = " ".join(shellargs)
+    do_command(command, netserver)
+    quitconfetty(fullexit=True)
+while not doexit:
+    if inconsole:
+        rdylist, _, _ = select.select(
+            (sys.stdin, session.connection), (), (), 60)
+        for fh in rdylist:
+            if fh == session.connection:
+                # this only should get called in the
+                # case of a console session
+                # each command should slurp up all relevant
+                # recv potential
+                #fh.read()
+                try:
+                    data = tlvdata.recv(fh)
+                except Exception:
+                    data = None
+                if type(data) == dict:
+                    updatestatus(data)
+                    continue
+                if data is not None:
+                    sys.stdout.write(data)
+                    sys.stdout.flush()
+                else:
+                    doexit = True
+                    sys.stdout.write("\r\n[remote disconnected]\r\n")
+                    break
+            else:
+                myinput = fh.read()
+                myinput = check_escape_seq(myinput, fh)
+                if myinput:
+                    tlvdata.send(session.connection, myinput)
+    else:
+        currcommand = prompt()
+        do_command(currcommand, netserver)
+quitconfetty(fullexit=True)
