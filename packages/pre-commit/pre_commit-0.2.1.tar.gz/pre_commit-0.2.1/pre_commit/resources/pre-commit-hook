@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# This is a randomish md5 to identify this script
+# 4d9958c90bc262f47553e2c073f14cfe
+
+pushd `dirname $0` > /dev/null
+HERE=`pwd`
+popd > /dev/null
+
+retv=0
+
+which pre-commit >& /dev/null
+WHICH_RETV=$?
+python -c 'import pre_commit.main' >& /dev/null
+PYTHON_RETV=$?
+
+if [ $WHICH_RETV -ne 0 ] && [ $PYTHON_RETV -ne 0 ]; then
+    echo '`pre-commit` not found.  Did you forget to activate your virtualenv?'
+    exit 1
+fi
+
+
+# Run the legacy pre-commit if it exists
+if [ -x "$HERE"/pre-commit.legacy ]; then
+    "$HERE"/pre-commit.legacy
+    if [ $? -ne 0 ]; then
+        retv=1
+    fi
+fi
+
+
+# Run pre-commit
+if [ $WHICH_RETV -eq 0 ]; then
+    pre-commit
+    PRE_COMMIT_RETV=$?
+else
+    python -m pre_commit.main
+    PRE_COMMIT_RETV=$?
+fi
+
+if [ $PRE_COMMIT_RETV -ne 0 ]; then
+    retv=1
+fi
+
+exit $retv
