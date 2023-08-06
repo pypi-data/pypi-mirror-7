@@ -1,0 +1,445 @@
+'\" t
+.\"     Title: juicer
+.\"    Author: :doctype:manpage
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 03/20/2014
+.\"    Manual: Pulp repos and release carts
+.\"    Source: Juicer 0.7.1
+.\"  Language: English
+.\"
+.TH "JUICER" "1" "03/20/2014" "Juicer 0\&.7\&.1" "Pulp repos and release carts"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+juicer \- create and push release carts, upload items to pulp
+.SH "SYNOPSIS"
+.sp
+juicer [\-vvv] [\-V] command subcommand [PARAMETERS \&...] [OPTIONS \&...]
+.SH "DESCRIPTION"
+.sp
+A release cart is a description of what RPMs you want to push into a specific repository\&. A single cart can specify multiple repos and associated items\&. Release cart descriptions are saved so you can easily "promote" a cart to another environment\&.
+.sp
+RPMs (\fIitems\fR) need not be stored on your local machine\&. Juicer can handle remote resources as well\&. Anywhere an option argument is described as \fIitem\fR you can give the path to a local directory, or rpm, as well as an RPM available over HTTP\&. HTTP directory indexes work as well; the page is parsed and links to rpm files are added to your cart\&.
+.SH "COMMON OPTIONS"
+.PP
+\fB\-v\fR, \fB\-\-verbose\fR
+.RS 4
+Increase the verbosity (up to 3x)\&. In usage specify
+\fI\-v\fR
+before
+\fICOMMAND\fR\&.
+.RE
+.PP
+\fB\-V\fR, \fB\-\-version\fR
+.RS 4
+Print the version that you\(cqre using of juicer\&.
+.RE
+.PP
+\fB\-\-in\fR \fIenv\fR \&...
+.RS 4
+In
+\fBjuicer\fR(1) many subcommands allow you to limit their scope to a specific environment\&. Use
+\fB\-\-in\fR
+to specify which environment(s) to perform the
+\fISUBCOMMAND\fR
+in\&. Commands which support this will show
+\fB[\-\-in]\fR
+in their usage line\&.
+.RE
+.SH "CART CREATE"
+.sp
+usage: juicer cart create \fICARTNAME\fR [\-f \fImanifest\fR] [\-r \fIREPONAME\fR \fIitems\fR \&... [ \-r \fIREPONAME\fR \fIitems\fR ]]
+.sp
+Create a cart with the items specified\&.
+.PP
+\fBCARTNAME\fR
+.RS 4
+The name of the new release cart\&.
+.RE
+.PP
+\fB\-f\fR \fImanifest\fR
+.RS 4
+Create a cart from a manifest file\&. A manifest file is written in the following format:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+name: version\-release
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.PP
+\fB\-r\fR \fIREPONAME\fR
+.RS 4
+Name of the reopsitory to install
+\fIITEMS\fR
+into\&. The
+\fI\-r\fR
+option may be given multiple times\&.
+.RE
+.PP
+\fBITEM\fR \&...
+.RS 4
+Items to add to the cart in repository
+\fIREPONAME\fR\&.
+.RE
+.SH "CART DELETE"
+.sp
+usage: juicer cart delete \fICARTNAME\fR
+.sp
+Deletes a release cart from your local system and on the cart server\&.
+.PP
+\fBCARTNAME\fR
+.RS 4
+The name of the release cart to delete\&.
+.RE
+.SH "RPM DELETE"
+.sp
+usage: juicer rpm delete \-r \fIREPO\-NAME\fR \fIITEM\fR \fIITEM\fR \&... [\-\-in]
+.sp
+Delete rpms in a repository\&.
+.PP
+\fBREPO\-NAME\fR
+.RS 4
+The name of the repo rpms live in\&.
+.RE
+.PP
+\fBITEM\fR
+.RS 4
+Filename of rpm to delete\&.
+.RE
+.SH "HELLO"
+.sp
+usage: juicer hello [\-\-in]
+.sp
+Test connection settings in \fB~/\&.config/juicer/config\fR
+.SH "CART MERGE"
+.sp
+usage: juicer cart merge \fICART1\fR [\&...] \fICARTN\fR \-\-name \fINEWCARTNAME\fR
+.sp
+Merges the contents of N carts into \fINEWCARTNAME\fR\&. Defaults to updating \fICART1\fR\&.
+.PP
+\fBCART#\fR
+.RS 4
+Names of N carts to merge\&.
+.RE
+.PP
+\fB\-\-name\fR \fINEWCARTNAME\fR
+.RS 4
+(Optional) Name of resultant cart, defaults to first cart specified\&.
+.RE
+.SH "CART PULL"
+.sp
+usage: juicer cart pull \fICARTNAME\fR
+.sp
+Pulls a description of a cart from the pulp server and saves it on your local machine in \fB~/\&.config/juicer/carts/\fR\&.
+.PP
+\fBCARTNAME\fR
+.RS 4
+The name of the cart to pull\&.
+.RE
+.SH "CART PUSH"
+.sp
+usage: juicer cart push \fICARTNAME\fR [\-\-in]
+.sp
+Pushes/Updates a cart on the pulp server\&.
+.PP
+\fBCARTNAME\fR
+.RS 4
+The name of the cart to push\&.
+.RE
+.SH "REPO PUBLISH"
+.sp
+usage: juicer repo publish \fIREPO\fR [\-\-in]
+.sp
+Publishes a repository, regenerating it\(cqs metadata\&.
+.PP
+\fBREPO\fR
+.RS 4
+The name of the repo to publish\&.
+.RE
+.SH "CART PROMOTE"
+.sp
+usage: juicer cart promote \fICARTNAME\fR
+.sp
+Promote a release cart to the next release environment in its directed graph\&.
+.PP
+\fBCARTNAME\fR
+.RS 4
+The release cart to promote\&.
+.RE
+.SH "CART UPDATE"
+.sp
+usage: juicer cart update \fICARTNAME\fR [\-f \fIMANIFEST\fR] [\-r \fIREPONAME\fR \fIITEMS\fR \&... [ \-r \fIREPONAME\fR \fIitems\fR ]]
+.sp
+Update the specified cart with the items specified\&.
+.sp
+Updating a cart will add an item to the cart if it wasn\(cqt originally present or overwrite an item if it already was\&.
+.PP
+\fBCARTNAME\fR
+.RS 4
+The name of the new release cart\&.
+.RE
+.PP
+\fB\-f\fR \fIMANIFEST\fR
+.RS 4
+Update a cart with a manifest file\&. A manifest file is written in the following format:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+name: version\-release
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.PP
+\fB\-r\fR \fIREPONAME\fR
+.RS 4
+Name of the reopsitory to install
+\fIITEMS\fR
+into\&. The
+\fI\-r\fR
+option may be given multiple times\&.
+.RE
+.PP
+\fBITEMS\fR \&...
+.RS 4
+Items to add to the cart in repository
+\fIREPONAME\fR\&.
+.RE
+.SH "RPM SEARCH"
+.sp
+usage: juicer rpm search \fIITEM\fR [\-r \fIREPO\fR \&...] [\-c] [\-\-in]
+.sp
+Search for an RPM (\fIitem\fR) in pulp\&.
+.PP
+\fBITEM\fR
+.RS 4
+Name of the RPM to search for\&.
+.RE
+.PP
+\fB\-r\fR \fIREPO\fR \&...
+.RS 4
+The repo(s) to limit search scope to\&.
+.RE
+.PP
+\fB\-c\fR
+.RS 4
+Search for the package in carts as well\&.
+.RE
+.SH "CART SHOW"
+.sp
+usage: juicer cart show \fICARTNAME\fR
+.sp
+Print the contents of a cart\&.
+.PP
+\fBCARTNAME\fR
+.RS 4
+The name of the release cart to show\&.
+.RE
+.SH "CART LIST"
+.sp
+usage: juicer cart list [\fICART_GLOB\fR [ \fICART_GLOB\fR \&...]]
+.sp
+List all carts\&. Optionally provide one or more \fICART_GLOB\fR to only list carts whose names match the given pattern\&. Pattern matching uses standard \fBfnmatch\fR rules\&.
+.PP
+\fBCART_GLOB\fR
+.RS 4
+The pattern to match\&. Default:
+\fB*\fR
+.RE
+.SH "RPM UPLOAD"
+.sp
+usage: juicer rpm upload \-r \fIREPO\fR \fIITEM\fR \&... [\-\-in]
+.sp
+Upload multiple RPMs or files (\fIITEM\fR) to \fIREPO\fR\&.
+.PP
+\fB\-r\fR \fIREPO\fR \&...
+.RS 4
+The repo that
+\fIITEM\fR
+will be uploaded to\&. The
+\fI\-r\fR
+option may be given multiple times\&.
+.RE
+.PP
+\fBITEM\fR \&...
+.RS 4
+Name of the RPM(s) or file(s) to upload\&.
+.RE
+.SH "EXAMPLES"
+.sp
+\fIitems\fR given may be any number and combination of the following input resource types:
+.PP
+\fBlocal\fR
+.RS 4
+\&./directory/of/items | \&./path/to/item\&.rpm | /path/to/item*
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+The items given are directly uploaded to the pulp server\&.
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+Here is an example of how you would specify a directory of \fBlocal\fR RPMs and a direct path:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ juicer rpm upload \-r javastuff \e
+    ~/my\-java\-app/rpmbuild/noarch/ \e
+    ~/misc\-java\-rpms/megafrobber\-0\&.8\&.0\&.noarch\&.rpm
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fBremote\fR
+.RS 4
+http[s]://rpms/directory/ | http[s]://website/some\-thing\&.rpm
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+URL to an HTTP directory index or an RPM\&. RPM paths are parsed
+from the index and then added to your cart\&. All remote items are
+synced when you upload or push\&.
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+Here is an example of how you would specify a directory of \fBremote\fR RPMs and a specific remote RPM:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ juicer rpm upload \-r javastuff \e
+    http://jenkins\&.foo/job/results/ \e
+    http://foo\&.bar/rpms/megafrobber\-0\&.8\&.0\&.noarch\&.rpm
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+\fBcreate and show a cart\fR:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ juicer cart create juicer\-0\&.1\&.7 \e
+    \-r juicer \e
+    http://kojipkgs\&.fedoraproject\&.org/\&.\&.\&.\&./juicer\-0\&.1\&.7\-1\&.fc17\&.noarch\&.rpm \e
+    \-r juicer\-deps \e
+    \&./rpm\-build/noarch/juicer\-misc\-0\&.1\&.7\-1\&.fc17\&.noarch\&.rpm
+Creating cart \*(Aqjuicer\-0\&.1\&.7\*(Aq\&.
+Saved cart \*(Aqjuicer\-0\&.1\&.7\*(Aq\&.
+JUICER
+\-\-\-\-\-\-
+http://kojipkgs\&.fedoraproject\&.org/\&.\&.\&.\&./juicer\-0\&.1\&.7\-1\&.fc17\&.noarch\&.rpm
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+JUICER\-DEPS
+\-\-\-\-\-\-\-\-\-\-\-
+\&./rpm\-build/noarch/juicer\-misc\-0\&.1\&.7\-1\&.fc17\&.noarch\&.rpm
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The cart description is saved into \fB~/\&.config/juicer/carts/\fR as \fBjuicer\-0\&.1\&.7\&.json\fR\&. We could show it again simply:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ juicer cart show juicer\-0\&.1\&.7
+JUICER
+\-\-\-\-\-\-
+http://kojipkgs\&.fedoraproject\&.org/\&.\&.\&.\&./juicer\-0\&.1\&.7\-1\&.fc17\&.noarch\&.rpm
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+JUICER\-DEPS
+\-\-\-\-\-\-\-\-\-\-\-
+\&./rpm\-build/noarch/juicer\-misc\-0\&.1\&.7\-1\&.fc17\&.noarch\&.rpm
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Remote items will be synced automatically when we push this cart to the repositories\&. Items synced are saved into \fB~/\&.config/juicer/carts/\fR\fICART\-NAME\fR\fB\-remotes/\fR\&.
+.sp
+Similarly, when using the \fBupload\fR command, remotes are also synced\&.
+.SH "FILES"
+.sp
+\fB~/\&.config/juicer/config\fR \(em Juicer configuration file
+.sp
+\fB~/\&.config/juicer/carts/\fR \(em Cart storage location
+.SH "AUTHOR"
+.sp
+Juicer was written by GCA\-PC, Red Hat, Inc\&.\&.
+.sp
+This man page was written by Tim Bielawa <tbielawa@redhat\&.com>\&.
+.SH "COPYRIGHT"
+.sp
+Copyright \(co 2012\-2014, Red Hat, Inc\&.\&.
+.sp
+Juicer is released under the terms of the GPLv3+ License\&.
+.SH "SEE ALSO"
+.sp
+\fBjuicer\-admin\fR(1), \fBjuicer\&.conf\fR(5), \fBfnmatch\fR(3)
+.sp
+\fBThe Juicer Homepage\fR \(em https://github\&.com/juicer/juicer/
+.SH "AUTHOR"
+.PP
+\fB:doctype:manpage\fR
+.RS 4
+Author.
+.RE

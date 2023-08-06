@@ -1,0 +1,587 @@
+'\" t
+.\"     Title: juicer-admin
+.\"    Author: :doctype:manpage
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 03/20/2014
+.\"    Manual: Pulp repos and release carts
+.\"    Source: Juicer 0.7.1
+.\"  Language: English
+.\"
+.TH "JUICER\-ADMIN" "1" "03/20/2014" "Juicer 0\&.7\&.1" "Pulp repos and release carts"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+juicer-admin \- manage pulp repositories, users, and roles\&.
+.SH "SYNOPSIS"
+.sp
+juicer\-admin [\-vvv] [\-V] command subcommand [PARAMETERS \&...] [OPTIONS \&...] [\-\-in env \&...]
+.SH "DESCRIPTION"
+.sp
+Manage pulp repositories, users, and roles\&.
+.SH "COMMON OPTIONS"
+.PP
+\fB\-v\fR, \fB\-\-verbose\fR
+.RS 4
+Increase the verbosity (up to 3x)\&. In usage specify
+\fI\-v\fR
+before
+\fICOMMAND\fR\&.
+.RE
+.PP
+\fB\-V\fR, \fB\-\-version\fR
+.RS 4
+Print the version that you\(cqre using of juicer\-admin\&.
+.RE
+.PP
+\fB\-\-in\fR \fIenv\fR \&...
+.RS 4
+Specify which environment(s) to perform the
+\fISUBCOMMAND\fR
+in\&. In
+\fBjuicer\-admin\fR(1) usage, all
+\fISUBCOMMAND\fRs accept this option when given after
+\fISUBCOMMAND\fR\&.
+.RE
+.SH "REPO SUBCOMMANDS"
+.sp
+This section describes all of the \fIREPO\fR subcommands\&.
+.SH "REPO CREATE"
+.sp
+usage: juicer\-admin repo create \fIREPONAME\fR [\-\-feed \fIFEED\fR] [\-\-checksum\-type \fITYPE\fR]
+.PP
+\fBREPONAME\fR
+.RS 4
+The name of the repository to be created\&. Only alphanumeric, \&., \-, and _ allowed\&. As a regular expression:
+\fB([a\-zA\-Z0\-9\-_\&.]+)\fR
+.RE
+.PP
+\fB\-\-feed=\fR\fIFEED\fR
+.RS 4
+Optional\&. A feed url from which to synchronize yum repository packages\&.
+.RE
+.PP
+\fB\-\-checksum\-type=\fR\fICHECKSUM_TYPE\fR
+.RS 4
+Optional\&. The checksum type to use when generating meta\-data\&. Defaults to
+\fBsha256\fR, also valid is
+\fBsha\fR\&.
+.RE
+.SH "REPO IMPORT"
+.sp
+usage: juicer\-admin repo import \fIREPO_DEF\fR [\-\-noop]
+.sp
+Create repositories matching the definitions in the repo def file\&. Repositories which already exist will be updated if necessary\&.
+.sp
+\fBNote\fR this command can take a \fIlong\fR time to complete\&.
+.PP
+\fBREPO_DEF\fR
+.RS 4
+Repository definition file in JSON format\&. See
+\fIREPO DEF FORMAT\fR
+(below) for a quick review of the syntax\&. See the docs online or in /usr/share/doc/juicer*/repo_syntax\&.md for a detailed description\&.
+.RE
+.PP
+\fB\-\-noop\fR, \fB\-\-dry\-run\fR, \fB\-n\fR
+.RS 4
+Don\(cqt create the repos, just show what would have happened\&.
+.RE
+.sp
+\fBNote:\fR This command does not respect \fB\-\-in\fR
+.SH "REPO EXPORT"
+.sp
+usage: juicer\-admin repo export [\-\-out \fIOUT\fR] [\-\-pretty]
+.sp
+This dumps a standard juicer format repository definition for all of you repos\&. Note that this may take a long time to finish\&. However, the runtime decreases linearly in relation to the number of CPUs available\&.
+.PP
+\fB\-o\fR \fIOUT\fR,\fB\-\-out=\fR\fIOUT\fR
+.RS 4
+Write the output to
+\fIOUT\fR\&. Use a single hypen,
+\fB\-\fR, for
+\fBstdout\fR\&. Default is repodefs\-\fIdatestamp\fR\&.json\&. The
+\fIdatestamp\fR
+is in ISO8601 format: YYYY\-MM\-DDTHH:MM:SS[\&.mmmmmm][+HH:MM]\&.
+.RE
+.PP
+\fB\-p\fR,\fB\-\-pretty\fR
+.RS 4
+Pretty\-print the export\&.
+.RE
+.sp
+\fBNote:\fR Unlike the \fBIMPORT\fR command, this command \fBdoes\fR respect \fB\-\-in\fR
+.SH "REPO DELETE"
+.sp
+usage: juicer\-admin repo delete \fIREPONAME\fR
+.sp
+Delete a pulp repository\&. The repository will be deleted in \fBall environments\fR if you do not specify \fB\-\-in\fR\&.
+.PP
+\fBREPONAME\fR
+.RS 4
+Name of repository which will be deleted
+.RE
+.SH "REPO LIST"
+.sp
+usage: juicer\-admin repo list [\-\-json]
+.sp
+List all of the repos in any or all environments\&.
+.PP
+\fB\-\-json\fR
+.RS 4
+Optional\&. Return the data in JSON format\&.
+.RE
+.SH "REPO SHOW"
+.sp
+usage: juicer\-admin repo show \fIREPONAME\fR [\&...] [\-\-json]
+.sp
+Show basic statistics in table format about one or more repos in pulp\&.
+.PP
+\fBREPONAME\fR
+.RS 4
+Name of the repository to show\&. Separate multiple
+\fIREPONAME\fR
+parameters with spaces\&.
+.RE
+.PP
+\fB\-\-json\fR
+.RS 4
+Optional\&. Return the data in JSON format\&.
+.RE
+.sp
+Examples:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+juicer\-admin repo show demo\-repo
+.RE
+.TS
+allbox tab(:);
+ltB ltB ltB ltB ltB ltB.
+T{
+Name
+T}:T{
+Environment
+T}:T{
+RPM count
+T}:T{
+SRPM count
+T}:T{
+Checksum Type
+T}:T{
+Feed
+T}
+.T&
+lt lt lt lt lt lt.
+T{
+.sp
+demo\-repo
+T}:T{
+.sp
+QA
+T}:T{
+.sp
+1337
+T}:T{
+.sp
+0
+T}:T{
+.sp
+sha256
+T}:T{
+.sp
+None
+T}
+.TE
+.sp 1
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Show a few repos, in json format, only in dev and stage
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+juicer\-admin repo show repo01 repo02 repo04 \-\-in dev stage \-\-json
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "REPO SYNC"
+.sp
+usage: juicer\-admin repo sync \fINAME\fR
+.sp
+Syncs content into repository \fINAME\fR from a feed source\&. This call always executes asynchronously\&. The feed source is defined at repository creation time\&.
+.PP
+\fBNAME\fR
+.RS 4
+Name of repository to sync
+.RE
+.SH "USER SUBCOMMANDS"
+.sp
+This section describes all of the \fIUSER\fR subcommands\&.
+.SH "USER CREATE"
+.sp
+usage: juicer\-admin user create \fILOGIN\fR \-\-name \fIFULLNAME\fR \-\-password \fIPASSWORD\fR
+.sp
+Create a user in the pulp system\&.
+.PP
+\fBLOGIN\fR
+.RS 4
+Login or username
+.RE
+.PP
+\fB\-\-name=\fR\fIFULLNAME\fR
+.RS 4
+User\(cqs full name
+.RE
+.PP
+\fB\-\-password=\fR\fIPASSWORD\fR
+.RS 4
+Plain text password\&. Will prompt if no arg specified
+.RE
+.SH "USER DELETE"
+.sp
+usage: juicer\-admin user delete \fILOGIN\fR
+.sp
+Delete the \fILOGIN\fR account\&. The account will be deleted in \fBall environments\fR if you do not specify \fB\-\-in\fR\&.
+.PP
+\fBLOGIN\fR
+.RS 4
+The login or username of user which will be deleted
+.RE
+.SH "USER LIST"
+.sp
+usage: juicer\-admin user list
+.sp
+Print out the users in each environment, as well as their associated roles\&.
+.SH "USER SHOW"
+.sp
+usage: juicer\-admin user show \fILOGIN\fR
+.sp
+Print the \fBLogin\fR, \fBName\fR, and \fBRole\fR of \fILOGIN\fR in each environment\&.
+.PP
+\fBLOGIN\fR
+.RS 4
+The login for the user to show
+.RE
+.SH "USER UPDATE"
+.sp
+usage: juicer\-admin user update \fILOGIN\fR { [\-\-name \fIFULLNAME\fR] | [\-\-password \fIPASSWORD\fR] }
+.sp
+Update the \fIFULLNAME\fR and/or \fIPASSWORD\fR for the \fILOGIN\fR account\&. One of \fB\-\-name\fR or \fB\-\-password\fR is required\&. Providing both is not necessary, but valid\&.
+.PP
+\fBLOGIN\fR
+.RS 4
+Login or username of user which will be updated
+.RE
+.PP
+\fB\-\-name=\fR\fIFULLNAME\fR
+.RS 4
+Updated full name
+.RE
+.PP
+\fB\-\-password=\fR\fIPASSWORD\fR
+.RS 4
+Updated plain text password\&. Will prompt if no arg specified
+.RE
+.SH "ROLE SUBCOMMANDS"
+.sp
+This section describes all of the \fIROLE\fR subcommands\&.
+.SH "ROLE LIST"
+.sp
+usage: juicer\-admin role list
+.sp
+For each environment, print summary information on each defined role\&. This information includes:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBName\fR
+of the role
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBDescription\fR
+of the role
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBID\fR
+of the role
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBUsers\fR
+assigned the role
+.RE
+.sp
+See the Pulp User documentation (\fBSEE ALSO\fR) for more information on the specifics of role management\&.
+.SH "ROLE ADD"
+.sp
+usage: juicer\-admin role add \-\-role \fIROLE\fR \-\-login \fILOGIN\fR
+.sp
+Add the specified \fIROLE\fR to the \fILOGIN\fR account in the specified environments\&.
+.PP
+\fB\-\-role=\fR\fIROLE\fR
+.RS 4
+The role which will be assigned to login or username
+.RE
+.PP
+\fB\-\-login=\fR\fILOGIN\fR
+.RS 4
+Login or username of user which will be added to role
+.RE
+.sp
+See the Pulp User documentation (\fBSEE ALSO\fR) for more information on the specifics of role management\&.
+.SH "REPO DEF FORMAT"
+.sp
+\fBMandatory keys\fR:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+name (string)
+.RE
+.sp
+\fBOptional Keys\fR:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+feed (string)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+checksum_type (string, one of:
+\fBsha\fR,
+\fBsha256\fR)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+env (list of environment name strings)
+.RE
+.sp
+\fBExample:\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[
+    {"name": "repo01", "env": ["prod"]},
+    {"name": "repo02"},
+    {
+        "name": "fedora_mirror",
+        "feed": "http://download\&.fedoraproject\&.org/pub/fedora/linux/releases/20/Everything/x86_64/os/",
+        "checksum_type": "sha",
+        "env": ["dev", "prod"]
+    }
+]
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+\fBProtips\fR
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Don\(cqt end lists or hashes with trailing commas
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Remember to close all of your braces and brackets: Each
+\fB[\fR
+has a matching
+\fB]\fR, each
+\fB{\fR
+has a matching
+\fB}\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Use a javascript mode in your editor if it doesn\(cqt have a native json mode
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Setting
+\fBenv\fR
+to an empty list (\fB[]\fR) will
+\fInot\fR
+delete the repo from any environment
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Use a linting service if you\(cqre stuck, for example:
+\fBhttp://jsonlint\&.com/\fR
+.RE
+.SH "FILES"
+.sp
+\fB~/\&.config/juicer/config\fR \(em Juicer configuration file
+.sp
+\fB~/\&.config/juicer/carts/\fR \(em Cart storage location
+.SH "EXIT CODES"
+.sp
+Generally speaking, \fBjuicer\-admin\fR will return \fB0\fR on success, and non\-zero on failure\&. There is one exception, however: \fBrepo import \-\-noop\fR
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+If no create/updates would have been made, this command returns
+\fB0\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+If create/updates would have been made, then the exit code is the number of create/updates that would have happened\&.
+.RE
+.SH "AUTHOR"
+.sp
+Juicer was written by GCA\-PC, Red Hat, Inc\&.\&.
+.sp
+This man page was written by Tim Bielawa <tbielawa@redhat\&.com> and Andrew Butcher <abutcher@redhat\&.com>\&.
+.SH "COPYRIGHT"
+.sp
+Copyright \(co 2012\-2014, Red Hat, Inc\&.\&.
+.sp
+Juicer is released under the terms of the GPLv3+ License\&.
+.SH "SEE ALSO"
+.sp
+\fBjuicer\fR(1), \fBjuicer\&.conf\fR(5)
+.sp
+\fBPulp User Documentation\fR \(em http://www\&.pulpproject\&.org/docs/
+.sp
+\fBDetailed Repo Def Description\fR \(em https://github\&.com/juicer/juicer/blob/master/docs/markdown/repo_syntax\&.md
+.sp
+\fBThe Juicer Homepage\fR \(em https://github\&.com/juicer/juicer/
+.SH "AUTHOR"
+.PP
+\fB:doctype:manpage\fR
+.RS 4
+Author.
+.RE

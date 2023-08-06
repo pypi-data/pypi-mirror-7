@@ -1,0 +1,281 @@
+'\" t
+.\"     Title: juicer.conf
+.\"    Author: :doctype:manpage
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 03/20/2014
+.\"    Manual: Pulp repos and release carts
+.\"    Source: Juicer 0.7.1
+.\"  Language: English
+.\"
+.TH "JUICER\&.CONF" "5" "03/20/2014" "Juicer 0\&.7\&.1" "Pulp repos and release carts"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+juicer.conf \- juicer configuration file
+.SH "SYNOPSIS"
+.sp
+juicer configuration file
+.SH "DESCRIPTION"
+.sp
+Sections and variables to use in your juicer configuration file\&. This file is broken into two or more parts\&. The first is \fBDEFAULT\fR and the rest are named after your environments, e\&.g\&., \fBqa\fR, \fBstage\fR, or \fBprod\fR\&.
+.sp
+Assuming you have a \fBdevel\fR and \fBprod\fR environment, you might have a configuration file that looks like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# ~/\&.config/juicer/config \- In this example config file we maintain two
+# environments: devel and prod\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[DEFAULT]
+username: tux
+password: 5w33tP@ssw04d
+base_url: https://pulp\&.devel\&.int\&.tux\&.org/pulp/api
+# \*(Aqdevel\*(Aq is the base environment\&. This means juicer will default
+# to using \*(Aqdevel\*(Aq when commands are not specified with an
+# explicit environment(s)\&.
+start_in: devel
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# If an environment requires signatures, specify an
+# rpm_sign_plugin\&. Here we\*(Aqve included MySweetPlugin, which will
+# serve to sign RPMs for us\&. See juicer\&.common\&.RpmSignPlugin\&.
+rpm_sign_plugin: juicer\&.plugins\&.MySweetPlugin
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# Carts are stored in a mongodb instance somewhere, this is the
+#  hostname of our mongodb server\&.
+cart_host: mongodb01\&.util\&.tux\&.org
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[devel]
+# Most of our configuration for this environment lives in the
+# DEFAULT section already, but we do need to tell Juicer where
+# this environment promotes to next\&.
+promotes_to: prod
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[prod]
+# username already defined in DEFAULT\&.
+password: 5w33t_AdM!n_P@ssw04d
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# Note that this is a different pulp server, so we must specify
+# the base_url once again\&.
+base_url: https://pulp\&.prod\&.int\&.tux\&.org/pulp/api
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# We specify that the production environment requires packages to
+# be signed\&.
+requires_signature: true
+.fi
+.if n \{\
+.RE
+.\}
+.SH "ATTRIBUTES"
+.PP
+\fBusername\fR
+.RS 4
+The user name to use when connecting to a pulp server\&.
+.sp
+\fBAllowed in\fR:
+\fBDEFAULT\fR, and any environment definition
+.sp
+\fBRequired in\fR: Each environment definition if not defined in
+\fBDEFAULT\fR
+.RE
+.PP
+\fBpassword\fR
+.RS 4
+The password to use when connecting to a pulp server\&.
+.sp
+\fBAllowed in\fR:
+\fBDEFAULT\fR, and any environment definition
+.sp
+\fBRequired in\fR: Each environment definition if not defined in
+\fBDEFAULT\fR
+.RE
+.PP
+\fBbase_url\fR
+.RS 4
+The url to the API for a pulp server\&. You
+\fBmust\fR
+provide the full path to the pulp api after the hostname\&. This is usually
+\fI/pulp/api\fR\&.
+.sp
+\fBAllowed in\fR:
+\fBDEFAULT\fR, and any environment definition
+.sp
+\fBRequired in\fR: Each environment definition if not defined in
+\fBDEFAULT\fR
+.RE
+.PP
+\fBstart_in\fR
+.RS 4
+This is the default destination for all operations when not explicitly specified\&.
+.sp
+\fBAllowed in\fR:
+\fBDEFAULT\fR
+.sp
+\fBRequired in\fR:
+\fBDEFAULT\fR
+.sp
+\fBValues\fR: Must be a single valid environment name
+.RE
+.PP
+\fBpromotes_to\fR
+.RS 4
+This attribute specifies what environment packages flow into next\&. For example, packages in a
+\fBdevel\fR
+environment normally promote to a
+\fBstage\fR
+or
+\fBprod\fR
+environment next\&.
+.sp
+\fBAllowed in\fR: Any environment definition
+.sp
+\fBRequired in\fR: This attribute is optional
+.sp
+\fBValues\fR: Must be a single valid environment name
+.RE
+.PP
+\fBrequires_signature\fR
+.RS 4
+This attribute indicates that a given environment requires that items are signed before they can be published to it\&.
+.sp
+\fBAllowed in\fR:
+\fBDEFAULT\fR, and any environment definition
+.sp
+\fBRequired in\fR: This attribute is optional
+.sp
+\fBValues\fR:
+\fItrue\fR
+or
+\fIfalse\fR
+.RE
+.PP
+\fBrpm_sign_plugin\fR
+.RS 4
+This attribute indicates which RpmSignPlugin to use for RPM signing\&. RpmSignPlugins should subclass and implement the
+\fIjuicer\&.common\&.RpmSignPlugin\fR
+class\&. This plugin will be called whenever RPMs are being uploaded to an environment that
+\fBrequires_signature\fR\&.
+.sp
+\fBAllowed in\fR:
+\fBDEFAULT\fR
+.sp
+\fBRequired in\fR: This attribute is optional
+.sp
+\fBValues\fR: Must be a single python module, e\&.g\&.,
+\fIjuicer\&.plugins\&.MySweetPlugin\fR
+.RE
+.PP
+\fBcart_host\fR
+.RS 4
+This attribute defines the name of the mongodb host where carts are stored\&. The credentials used to authenticate must be the same as the
+\fBusername\fR
+and
+\fBpassword\fR
+attributes in the
+\fBDEFAULT\fR
+section\&.
+.sp
+\fBAllowed in\fR:
+\fBDEFAULT\fR
+.sp
+\fBRequired in\fR:
+\fBDEFAULT\fR
+.sp
+\fBValues\fR: Must be a valid hostname
+.RE
+.SH "FILES"
+.sp
+\fB~/\&.config/juicer/config\fR \(em Personal Juicer configuration file
+.SH "AUTHOR"
+.sp
+Juicer was written by GCA\-PC, Red Hat, Inc\&.\&. This man page was written by Tim Bielawa <tbielawa@redhat\&.com>\&.
+.SH "COPYRIGHT"
+.sp
+Copyright \(co 2012\-2014, Red Hat, Inc\&.\&.
+.sp
+Juicer is released under the terms of the GPLv3+ License\&.
+.SH "SEE ALSO"
+.sp
+\fBjuicer\fR(1), \fBjuicer\-admin\fR(1)
+.sp
+\fBThe Juicer Homepage\fR \(em https://github\&.com/juicer/juicer/
+.SH "AUTHOR"
+.PP
+\fB:doctype:manpage\fR
+.RS 4
+Author.
+.RE

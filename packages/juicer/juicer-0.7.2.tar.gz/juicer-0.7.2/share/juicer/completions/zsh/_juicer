@@ -1,0 +1,95 @@
+#compdef juicer
+
+_carts()
+{
+    for cart in `find ~/.config/juicer/carts -maxdepth 1 -type f | grep -v "upload-cart" | awk -F/ '{print $NF}' | sed "s/.json//"`; do
+	_wanted 'cart' expl 'cart' compadd $cart
+    done
+}
+
+
+_juicer_commands()
+{
+    local -a juicer_commands
+    juicer_commands=(
+	'create:Create a cart with the items specified'
+#	'edit:Interactively edit a release cart'
+	'show:Print the contents of a cart'
+#	'update:Update a release crate'
+#	'create-like:Create a new cart like an old one'
+	'push:Pushes/updates a cart on the pulp server'
+#	'cart-search:Search for a cart in pulp'
+	'rpm-search:Search for an RPM in pulp'
+	'upload:Update an item to pulp server'
+	'hello:Test your connection to the pulp server'
+    )
+
+    _describe -t command 'subcommand' juicer_commands
+}
+
+_juicer_create()
+{
+    _arguments \
+	"1:Cart Name: " \
+	"*-r:Repo:" \
+	"*:Item:_files -f '*.rpm'"
+}
+
+_juicer_edit()
+# Only show files in ~/.config/juicer/carts as suggestions. By using -g
+# (glob) we limit completions to files that match the glob
+# "*.json". Finally, the "(:r)" part of the glob instructs zsh to omit
+# the '.json' part of each match from the final result. E.g.,
+# "change123.json" is shown in the completion list as "change123".
+{
+    _arguments \
+	:cart:_carts
+}
+
+_juicer_show()
+{
+    #_files -W ~/.config/juicer/carts -g "*.json(:r)"
+    _arguments \
+	:cart:_carts
+}
+
+_juicer_update()
+{
+
+}
+
+_juicer_create-like()
+{
+    _arguments \
+	:cart:_carts
+}
+
+_juicer_push()
+{
+    _arguments \
+	:cart:_carts
+}
+
+_juicer_upload()
+{
+
+}
+
+
+_juicer()
+{
+  if (( CURRENT > 2 )) ; then
+    local cmd=${words[2]}
+    curcontext="${curcontext%:*:*}:juicer-$cmd"
+    (( CURRENT-- ))
+    shift words
+    _call_function ret _juicer_$cmd
+    return ret
+  else
+    _juicer_commands
+  fi
+}
+
+# Do it?
+_juicer "$@"
+

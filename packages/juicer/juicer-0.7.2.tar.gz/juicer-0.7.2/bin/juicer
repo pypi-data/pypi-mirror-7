@@ -1,0 +1,46 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Juicer - Administer Pulp and Release Carts
+# Copyright © 2012, Red Hat, Inc.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+import juicer.juicer
+import juicer.juicer.Parser
+import juicer.utils.Log
+from juicer.common.Errors import JuicerError
+import os
+
+def main():
+    parser = juicer.juicer.Parser.Parser()
+    args = parser.parser.parse_args()
+    juicer.utils.Log.LOG_LEVEL_CURRENT = args.v
+    juicer.utils.Log.log_debug(args)
+    args.j(args)
+
+if __name__ == '__main__':
+    try:
+        if os.getenv('JPROFILE', None):
+            import cProfile
+            import juicer.utils
+            profile_log = os.getenv('JPROFILELOG', '/tmp/juicer-call-stats')
+            juicer.utils.print_stderr("[PROFILING ENABLED] Log will be written to %s\n" % profile_log)
+            cProfile.run('main()', profile_log)
+        else:
+            main()
+    except JuicerError, e:
+        print "Juicer error happened:"
+        print e
+    except KeyboardInterrupt:
+        print "User killed via ^C"
