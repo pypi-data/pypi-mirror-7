@@ -1,0 +1,77 @@
+===========
+pysprites
+===========
+
+Sometimes, designer will give you a visual production, and that you need to 
+crop the little sprites off from the files, merge them into a png files, and
+write a css files for such sprites. 
+
+This tools make everything in onkey.
+
+Install
+-------
+
+::
+
+    $ pip install pysprites
+    
+
+Example
+-------
+
+::
+
+    $ pysprites -i page1.psd -m icon- -b -r -c page1.css -o page1.png
+
+
+This command will import layers whose name starts with ``icon-``,  from ``page1.psd``, reposition them, 
+output the css for each sprite to ``page1.css``, and output the merged png to ``page1.png``
+
+Command line
+------------
+
+::
+
+    $ pysprites [args...]
+    
+    -i a.psd b.psd ... : import psd layer from psd files (need psd_tools)
+    -a x.png y.png ... : add png files
+    -m filter  : only handle layer or image name startswith filter
+    -p padding : add padding for each sprite
+    -r         : reposition sprites
+    -cp string : use string as css class prefix
+    -b         : gen sprite width and height for css
+    -c out.css : output css to file
+    -o out.png : output merged png to file
+
+Framework
+---------
+
+Actually, everything is in a single file : ``pysprites/sprites.py``. 
+
+In a task, everything present as a "General Sprite Process Group" (gsp), it is struct is as follow::
+
+    gsp :: (width, height, img, padding, prefix, args)
+    img :: list of [[name, [width, height],[left, top], PIL_object]
+    
+And the gsp go though handlers, a handler reposition the img, and a handler save it to png, and so on.
+
+Reposition Algorithm
+--------------------
+
+1. Select two most height sprites and the final image height.
+2. Find a lowest gap.
+3. Select a longest sprite that can be insert to left, and insert it.
+4. If cannot insert it, fill the gap and goto step2.
+5. Repeat untail every sprite has been inserted.
+
+Using a EdgeLines struct to maintain the lowest gap, and the ``gsp_reposition`` function implements
+this algorithm. See the code in ``pysprites/sprites.py``
+
+Contribute
+-----------
+
+I think this tools is good enough for me. However, Welcome for new handlers, for example,
+import the layer from a GIMP ``xcf`` file, or new reposition algorithm, or any participation !
+
+Enjoy it!
