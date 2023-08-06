@@ -1,0 +1,62 @@
+#!/usr/bin/env python
+import logging
+import os
+import sys
+
+from watermarks.bin import (
+    handle_version, handle_help, get_log_level, add_basic_args, add_common_args,
+    WMParser,
+)
+from watermarks.core import setup_logger
+from watermarks.core.loader import Loader
+
+
+logger = logging.getLogger()
+
+
+def run():
+    handle_version()
+    parser = setup_basic_parser()
+    handle_help(parser)
+    args = parser.parse_known_args()[0]
+    setup_logger(get_log_level(args))
+    logger.debug('basic reader args: %s', args)
+    r = Loader('readers')
+    try:
+        r.load_methods(args.methods)
+        update_parser(parser)
+        for module in r.modules:
+            module.update_parser(parser)
+        if args.help:
+            parser.print_help()
+            exit(0)
+        args = parser.parse_args()
+        setattr(args, 'is_in_chain', len(r.modules) > 1)
+        logger.debug('all args: %s', args)
+        r.run(args)
+        return 0
+    except ImportError:
+        logger.critical('Cannot find method(s) "%s". Please make sure you '
+                        'spelled it correctly and check your PYTHONPATH.',
+                        args.methods)
+        return 1
+
+
+def setup_basic_parser():
+    description = 'Utility for reading watermarks from images.'
+    parser = WMParser(description=description, add_help=False)
+    parser.add_argument(
+        'methods', metavar='METHOD',
+        help='Watermark method to be applied. You can specify more methods '
+             'separated with comma. Supported built-in methods are: lsb'
+    )
+    add_basic_args(parser)
+    return parser
+
+
+def update_parser(parser):
+    add_common_args(parser)
+
+
+if __name__ == '__main__':
+    exit(run())
