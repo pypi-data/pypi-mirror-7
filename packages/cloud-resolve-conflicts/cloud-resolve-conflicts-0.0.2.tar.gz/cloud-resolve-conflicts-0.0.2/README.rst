@@ -1,0 +1,46 @@
+ownCloud and Seafile conflict files resolver
+============================================
+
+ownCloud often generates bunch of conflict files. Seafile is far better, but it happens. Some of conflict files are completely senseless (they are equivalent to non conflict files laying beside them), some of them really differs from their neighborhoods. The aim of this script is to resolve conflict files of both types. 
+
+Installation
+------------
+
+Dependencies
+~~~~~~~~~~~~
+
+`python3.3` or newer.
+
+Python 3.3 specific libraries: `pathlib flufl.enum`.
+
+Additional
+""""""""""
+
+Python libraries: `send2trash` (for deleting files to trash).
+
+`kdiff3` (for file comparison).
+
+
+Usage
+-----
+
+Simple execution:
+
+.. code:: bash
+
+   cloud-resolve-conflicts ~/ownCloud
+
+This executes backup of all conflict files into `~/ownCloud/conflict_files_backup.tar`, removes all senseless conflict files (permanently) and asks your decision for real conflict files (it shows `kdiff3` window with files opened side by side).
+
+For more options (such as disabling backups, deleting files to trash, using different compare program, etc.) use:
+
+.. code:: bash
+
+   cloud-resolve-conflicts --help
+
+Warranty
+--------
+
+I wrote this script for myself and used it successfully. I hope this program will work for you too. I wrote some tests to be sure that it will do things correctly. But as always:
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
