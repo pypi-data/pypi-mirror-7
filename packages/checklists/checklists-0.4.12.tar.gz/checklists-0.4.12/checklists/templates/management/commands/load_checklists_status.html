@@ -1,0 +1,54 @@
+Load checklists command
+Date: {% now "d-m-Y" %}
+Time: {% now "H:i" %}
+
++---------------------+
+  Checklists filtered
++---------------------+
+{% if filtered %}
+The following checklists were not loaded because they matched an entry in the
+filter table:
+{% if debug %}{% for path, checklist, match in filtered %}
+{{ checklist.date }} {% if checklist.protocol.time %}{{ checklist.protocol.time }}{% else %}--:--{% endif %} {{ checklist.location.name }}
+    Matching Filter: {{ match.0 }}
+    Matching Value: "{{ match.1 }}"{% endfor %}
+{% else %}{% for path, checklist, match in filtered %}
+{{ checklist.date }} {% if checklist.protocol.time %}{{ checklist.protocol.time }}{% else %}--:--{% endif %} {{ checklist.location.name }}{% endfor %}
+{% endif %}
+{% else %}No checklists were filtered.
+{% endif %}
++-------------------+
+  Checklists added
++-------------------+
+{% if added %}
+The following checklists were successfully loaded into the checklists table:
+{% for path, checklist, messages in added %}
+{{ checklist.date }} {% if checklist.method.time %}{{ checklist.method.time }}{% else %}--:--{% endif %} {{ checklist.location.name }}
+    {% for message in messages %}{{ message }}
+    {% endfor %}{% endfor %}
+{% else %}
+No new checklists.
+{% endif %}
++---------------------+
+  Checklists updated
++---------------------+
+{% if updated %}
+The following checklists were successfully updated:
+{% for path, checklist, messages in updated %}
+{{ checklist.date }} {% if checklist.method.time %}{{ checklist.method.time }}{% else %}--:--{% endif %} {{ checklist.location.name }}
+    {% for message in messages %}{{ message }}
+    {% endfor %}{% endfor %}
+{% else %}
+There were no updates to existing checklists.
+{% endif %}
++--------+
+  Errors
++--------+
+{% if errors %}
+An error occurred while loading the following checklist files:
+{% for path, error in errors %}
+File: {{ path }}
+{{ error }}{% endfor %}
+{% else %}
+No errors occurred.
+{% endif %}
