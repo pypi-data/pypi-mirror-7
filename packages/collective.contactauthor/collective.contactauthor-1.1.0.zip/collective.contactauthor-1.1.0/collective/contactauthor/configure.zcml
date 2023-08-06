@@ -1,0 +1,45 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:five="http://namespaces.zope.org/five"
+    xmlns:i18n="http://namespaces.zope.org/i18n"
+    xmlns:cmf="http://namespaces.zope.org/cmf"
+    xmlns:genericsetup="http://namespaces.zope.org/genericsetup"
+    i18n_domain="collective.contactauthor">
+
+  <five:registerPackage package="." />
+  <i18n:registerTranslations directory="locales" />
+  <cmf:registerDirectory name="contact_author"/>
+
+  <include package="collective.recaptcha" />
+  <include package="plone.app.registry" />
+  
+  <permission
+      id="collective.contactauthor.ManageContactAuthorSettings"
+      title="collective.contactauthor: Manage author contact settings"
+      />
+  
+  <include package=".browser" />
+  
+  <genericsetup:registerProfile
+      name="default"
+      title="collective.contactauthor"
+      directory="profiles/default"
+      description="Anonymous users can send message to authors with captcha protection"
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      />
+  <genericsetup:registerProfile
+      name="uninstall"
+      title="collective.contactauthor: uninstall"
+      directory="profiles/uninstall"
+      description="Remove collective.contactauthor"
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      />
+
+  <include file="upgrades.zcml" />
+
+  <utility
+     name="collective.contactauthor.vocabulary.securityLevels"
+     component=".vocabularies.securityLevelVocabularyFactory"
+     />
+
+</configure>
