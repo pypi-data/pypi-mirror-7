@@ -1,0 +1,97 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:metal="http://xml.zope.org/namespaces/metal"
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+      lang="en"
+      metal:use-macro="context/main_template/macros/master"
+      i18n:domain="zopyx.existdb">
+<body>
+
+<metal:main fill-slot="content-core">
+  <metal:content-core define-macro="content-core">
+
+      <div tal:content="context/Title">Title inserted here</div>
+
+      <div class="actions">
+          <ul>
+              <li>
+                  <a href="connector-zip-import" i18n:translate="">ZIP import</a>
+              </li>
+              <li>
+                  <a href="connector-zip-export" i18n:translate="">ZIP export</a>
+              </li>
+              <li>
+                  <a href="connector-reindex" i18n:translate="">Reindex</a>
+              </li>
+              <li>
+                  <a href="connector-log" i18n:translate="">Log</a>
+              </li>
+          </ul>
+      </div>
+
+      <h2 tal:condition="options/files">Files</h2>
+      <table class="listing" tal:condition="options/files">
+          <thead>
+              <tr>
+                  <th i18n:translate="">Filename</th>
+                  <th i18n:translate="">Last modified</th>
+                  <th i18n:translate="">Size</th>
+                  <th i18n:translate="">Action</th>
+              </tr>
+          </thead>
+          <tbody>
+              <tr tal:repeat="item options/files">
+                  <td>
+                      <a tal:attributes="href python: u'view/{}/{}'.format(options['subpath'], item[0])" tal:content="python: item[0]" />
+                  </td>
+                  <td>
+                      <span tal:replace="python: view.datetime2DateTime(item[1]['modified_time'])" />
+                  </td>
+                  <td>
+                      <span tal:replace="python: view.human_readable_filesize(item[1]['size'])" />
+                  </td>
+                  <td>
+                      <a tal:condition="python: view.is_ace_editable(item[0])" 
+                         tal:attributes="href python: u'view-editor/{}/{}'.format(options['subpath'], item[0])"
+                         i18n:attributes="title"
+                         title="Edit"
+                          >
+                          <img src="++resource++zopyx.existdb/images/edit.png" />
+                      </a>
+                  </td>
+              </tr>
+          </tbody>
+      </table>
+
+      <h2 tal:condition="options/dirs">Directories</h2>
+      <table class="listing" tal:condition="options/dirs">
+          <thead>
+              <tr>
+                  <th i18n:translate="">Directory</th>
+                  <th i18n:translate="">Last modified</th>
+              </tr>
+          </thead>
+          <tbody>
+              <tr>
+                  <td>
+                      <a tal:attributes="href python: u'view/{}'.format('/'.join(view.subpath[:-1]))">..</a>
+                  </td>
+                  <td />
+              </tr>
+              <tr tal:repeat="item options/dirs">
+                  <td>
+                      <a tal:attributes="href python: u'view/{}/{}'.format(options['subpath'], item[0])" tal:content="python: item[0]" />
+                  </td>
+                  <td>
+                      <span tal:replace="python: view.datetime2DateTime(item[1]['modified_time'])" />
+                  </td>
+              </tr>
+          </tbody>
+      </table>
+
+  </metal:content-core>
+</metal:main>
+
+</body>
+</html>
+
