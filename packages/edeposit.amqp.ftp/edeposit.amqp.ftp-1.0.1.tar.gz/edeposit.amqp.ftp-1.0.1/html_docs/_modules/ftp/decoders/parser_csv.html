@@ -1,0 +1,190 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ftp.decoders.parser_csv &mdash; edeposit.amqp.ftp 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="edeposit.amqp.ftp 1.0.1 documentation" href="../../../index.html" />
+    <link rel="up" title="ftp.decoders" href="../decoders.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">edeposit.amqp.ftp 1.0.1 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../ftp.html" >ftp</a> &raquo;</li>
+          <li><a href="../decoders.html" accesskey="U">ftp.decoders</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for ftp.decoders.parser_csv</h1><div class="highlight"><pre>
+<span class="c">#! /usr/bin/env python</span>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="c">#</span>
+<span class="c"># Interpreter version: python 2.7</span>
+<span class="c">#</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This submodule is used to parse metadata from CSV_ (``.csv``) files.</span>
+
+<span class="sd">.. _CSV: https://en.wikipedia.org/wiki/Comma-separated_values</span>
+
+<span class="sd">Example of the valid data::</span>
+
+<span class="sd">    ISBN knihy;978-80-87270-99-8</span>
+<span class="sd">    Vazba knihy;brož.</span>
+<span class="sd">    Nazev knihy;whatever.csv</span>
+<span class="sd">    Misto vydani;Praha</span>
+<span class="sd">    Nakladatel;Garda</span>
+<span class="sd">    Datum vydani;IX.12</span>
+<span class="sd">    Poradi vydani;1</span>
+<span class="sd">    Zpracovatel zaznamu;Franta Putsalek</span>
+
+<span class="sd">See :doc:`/workflow/required` for list of required fields.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c">#= Imports ====================================================================</span>
+<span class="kn">import</span> <span class="nn">csv</span>
+
+<span class="kn">import</span> <span class="nn">validator</span>
+<span class="kn">from</span> <span class="nn">meta_exceptions</span> <span class="kn">import</span> <span class="n">MetaParsingException</span>
+
+
+<span class="c">#= Functions &amp; objects ========================================================</span>
+<span class="k">def</span> <span class="nf">_remove_quotes</span><span class="p">(</span><span class="n">word</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Remove quotes from `word` if the word starts and ands with quotes (&quot; or &#39;).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">word</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">word</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">word</span>
+
+    <span class="k">if</span> <span class="n">word</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">word</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="n">word</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&quot;&#39;&quot;</span><span class="p">,</span> <span class="s">&#39;&quot;&#39;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">word</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">word</span>
+
+
+<div class="viewcode-block" id="decode"><a class="viewcode-back" href="../../../api/ftp.decoders.parser_csv.html#ftp.decoders.parser_csv.decode">[docs]</a><span class="k">def</span> <span class="nf">decode</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handles decoding of the CSV `data`.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        data (str): Data which will be decoded.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: Dictionary with decoded data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># try to guess dialect of the csv file</span>
+    <span class="n">dialect</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">dialect</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">Sniffer</span><span class="p">()</span><span class="o">.</span><span class="n">sniff</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="c"># parse data with csv parser</span>
+    <span class="n">handler</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>  <span class="c"># used later</span>
+        <span class="n">handler</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">dialect</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">MetaParsingException</span><span class="p">(</span><span class="s">&quot;Can&#39;t parse your CSV data: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+
+    <span class="c"># make sure, that data are meaningful</span>
+    <span class="n">decoded</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">cnt</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">handler</span><span class="p">):</span>
+        <span class="n">usable_data</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span> <span class="n">line</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">usable_data</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">usable_data</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">MetaParsingException</span><span class="p">(</span>
+                <span class="s">&quot;Bad number of elements - line </span><span class="si">%d</span><span class="s">:</span><span class="se">\n\t</span><span class="si">%s</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">cnt</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">cnt</span><span class="p">])</span>
+            <span class="p">)</span>
+
+        <span class="c"># remove trailing spaces, decode to utf-8</span>
+        <span class="n">usable_data</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&quot;utf-8&quot;</span><span class="p">),</span> <span class="n">usable_data</span><span class="p">)</span>
+
+        <span class="c"># remove quotes if the csv.Sniffer failed to decode right `dialect`</span>
+        <span class="n">usable_data</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">_remove_quotes</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">usable_data</span><span class="p">)</span>
+
+        <span class="n">decoded</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">usable_data</span><span class="p">)</span>
+
+    <span class="c"># apply another checks to data</span>
+    <span class="n">decoded</span> <span class="o">=</span> <span class="n">validator</span><span class="o">.</span><span class="n">check_structure</span><span class="p">(</span><span class="n">decoded</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">decoded</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">edeposit.amqp.ftp 1.0.1 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../ftp.html" >ftp</a> &raquo;</li>
+          <li><a href="../decoders.html" >ftp.decoders</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014 E-deposit team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

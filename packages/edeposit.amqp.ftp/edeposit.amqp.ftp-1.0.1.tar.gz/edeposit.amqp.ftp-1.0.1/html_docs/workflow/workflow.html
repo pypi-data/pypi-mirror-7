@@ -1,0 +1,215 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>User work-flow &mdash; edeposit.amqp.ftp 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="edeposit.amqp.ftp 1.0.1 documentation" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">edeposit.amqp.ftp 1.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="user-work-flow">
+<h1>User work-flow<a class="headerlink" href="#user-work-flow" title="Permalink to this headline">¶</a></h1>
+<p>This documentation so covers topics of installation and detailed description of
+the provided API.</p>
+<p>There is also still one topic, that needs some coverage - how the Edeposit user
+can use this module.</p>
+<div class="section" id="why">
+<h2>Why<a class="headerlink" href="#why" title="Permalink to this headline">¶</a></h2>
+<p>First of all - you may ask &#8220;why should I use the FTP interface to upload files
+to the Edeposit project?&#8221;</p>
+<p>Answer is simple: it can save you a lot of work. Data uploaded over FTP are
+automatically paired with metadata, you can use batch uploads and there is only
+few steps compared with process in web interface.</p>
+<p>You can make the whole process automatic and forget about it, if you want.</p>
+</div>
+</div>
+<div class="section" id="usage">
+<h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="step-1-configuration">
+<h2>Step 1: Configuration<a class="headerlink" href="#step-1-configuration" title="Permalink to this headline">¶</a></h2>
+<p>Before you can use this module, you need to allow FTP access and set password
+for your FTP account in Edeposit site.</p>
+</div>
+<div class="section" id="step-2-ftp-connection">
+<h2>Step 2: FTP connection<a class="headerlink" href="#step-2-ftp-connection" title="Permalink to this headline">¶</a></h2>
+<p>After you set all necessary details in <cite>Step 1</cite>, you can try to connect to the
+FTP server.</p>
+<p>Recommended FTP client is <a class="reference external" href="https://filezilla-project.org/">FileZilla</a>, but you can use whatever FTP client you
+have.</p>
+<a class="reference internal image-reference" href="../_images/filezilla.png"><img alt="../_images/filezilla.png" src="../_images/filezilla.png" style="width: 400px;" /></a>
+<p>Following pictures and animation uses the <tt class="docutils literal"><span class="pre">caja</span></tt> FTP client from
+<a class="reference external" href="http://www.linuxmint.com/">Linux Mint</a>. You can use Explorer from Windows in
+similar way by typing <tt class="docutils literal"><span class="pre">ftp://user&#64;address</span></tt> to navigation bar.</p>
+<a class="reference internal image-reference" href="../_images/explorer.png"><img alt="../_images/explorer.png" src="../_images/explorer.png" style="width: 400px;" /></a>
+<p>When you connect to your account, you will probably notice that there is already
+one file - usually named as <tt class="docutils literal"><span class="pre">delete_me_to_import_files.txt</span></tt>. When you
+delete this file, nothing happens, except that the file is there again.</p>
+<a class="reference internal image-reference" href="../_images/lock.gif"><img alt="../_images/lock.gif" src="../_images/lock.gif" style="width: 400px;" /></a>
+<p>It all right, don&#8217;t worry about it now, it will be explained later.</p>
+</div>
+<div class="section" id="step-3-pairing-the-data">
+<h2>Step 3: Pairing the data<a class="headerlink" href="#step-3-pairing-the-data" title="Permalink to this headline">¶</a></h2>
+<p>This module allows you to pair the <cite>ebook</cite> files with <cite>metadata</cite>. It can
+automatically recognize this pairs and put them together at Edeposit site.</p>
+<p><cite>Pair</cite> always consist from <cite>metadata</cite> and <cite>ebook</cite> file. It can be created in
+three different ways:</p>
+<ul class="simple">
+<li>Put together exactly two files in one directory, which contains nothing else.
+Name of the files is not important.</li>
+<li>Upload two files with same name into same directory. Files differ only in
+suffix (for example <tt class="docutils literal"><span class="pre">babicka.json</span></tt> and <tt class="docutils literal"><span class="pre">babicka.pdf</span></tt>). There can be
+multiple samenamed pairs in one directory.</li>
+<li>Create two files named as <cite>ISBN</cite> of the book they are describing. No matter
+where the files will be in directory structure, they will be paired. For
+example <tt class="docutils literal"><span class="pre">/metadata/80-86056-31-7.json</span></tt> and
+<tt class="docutils literal"><span class="pre">/ebooky/80-86056-31-7.pdf</span></tt></li>
+</ul>
+<p>All methods of pairing can be disabled in your user account.</p>
+</div>
+<div class="section" id="step-4-triggering-the-import">
+<h2>Step 4: Triggering the import<a class="headerlink" href="#step-4-triggering-the-import" title="Permalink to this headline">¶</a></h2>
+<p>As you probably guessed, the import is triggered by deleting automatically
+created <cite>lock</cite> file <tt class="docutils literal"><span class="pre">delete_me_to_import_files.txt</span></tt>.</p>
+<p>Reason for this is that FTP uploads are not atomic. Client can close connection,
+open another and continue in file upload and it is still perfectly valid
+upload of the file. There is no good way how to recognize that file was fully
+uploaded, unless the user will tell us.</p>
+<a class="reference internal image-reference" href="../_images/import.gif"><img alt="../_images/import.gif" src="../_images/import.gif" style="width: 400px;" /></a>
+</div>
+<div class="section" id="import-and-error-log">
+<h2>Import and error log<a class="headerlink" href="#import-and-error-log" title="Permalink to this headline">¶</a></h2>
+<p>As you can see at example animation, when I&#8217;ve uploaded the files and triggered
+import, not only the <cite>lock</cite> file was created, but also the file named
+<tt class="docutils literal"><span class="pre">import.log.txt</span></tt>.</p>
+<p>This is important part of the communication API for automation of the upload,
+because you get overall information at first line (<tt class="docutils literal"><span class="pre">Status:</span> <span class="pre">Ok/Error</span></tt>)
+and details of processing each file in lines under the <cite>status</cite>.</p>
+<p>In case of bad metadata files, error log is created and bad files are left where
+they were found:</p>
+<a class="reference internal image-reference" href="../_images/error.gif"><img alt="../_images/error.gif" src="../_images/error.gif" style="width: 400px;" /></a>
+<p>You can change some of the behavior in settings.</p>
+</div>
+<div class="section" id="metadata-details">
+<h2>Metadata details<a class="headerlink" href="#metadata-details" title="Permalink to this headline">¶</a></h2>
+<p>Every data file (ebook) should have metadata. It is not required, but it can
+save you a lot of work later in web interface.</p>
+<p>So far, the program has support for four formats of metadata:</p>
+<ul class="simple">
+<li><a class="reference internal" href="../api/ftp.decoders.parser_json.html"><em>JSON</em></a></li>
+<li><a class="reference internal" href="../api/ftp.decoders.parser_csv.html"><em>CSV</em></a></li>
+<li><a class="reference internal" href="../api/ftp.decoders.parser_xml.html"><em>XML</em></a></li>
+<li><a class="reference internal" href="../api/ftp.decoders.parser_yaml.html"><em>YAML</em></a></li>
+</ul>
+<p>Metadata are recognized by their suffix - <tt class="docutils literal"><span class="pre">.json</span></tt> for JSON files, <tt class="docutils literal"><span class="pre">.csv</span></tt> for
+CSV, <tt class="docutils literal"><span class="pre">.xml</span></tt> for XML and <tt class="docutils literal"><span class="pre">.yaml</span></tt> for YAML files.</p>
+<p>Warning: <strong>All metadata files should be encoded in UTF-8 encoding!</strong></p>
+<p>Every metadata file has to contain few required fields and may contain also few
+optional. Description and list of the fields can be found here:</p>
+<ul class="simple">
+<li><a class="reference internal" href="required.html"><em>Required fields</em></a></li>
+</ul>
+<p>In case that metadata file has bad structure, encoding or permissions, error
+log is created and files are skipped.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">User work-flow</a><ul>
+<li><a class="reference internal" href="#why">Why</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#usage">Usage</a><ul>
+<li><a class="reference internal" href="#step-1-configuration">Step 1: Configuration</a></li>
+<li><a class="reference internal" href="#step-2-ftp-connection">Step 2: FTP connection</a></li>
+<li><a class="reference internal" href="#step-3-pairing-the-data">Step 3: Pairing the data</a></li>
+<li><a class="reference internal" href="#step-4-triggering-the-import">Step 4: Triggering the import</a></li>
+<li><a class="reference internal" href="#import-and-error-log">Import and error log</a></li>
+<li><a class="reference internal" href="#metadata-details">Metadata details</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/workflow/workflow.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">edeposit.amqp.ftp 1.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014 E-deposit team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

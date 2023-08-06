@@ -1,0 +1,610 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ftp.request_parser &mdash; edeposit.amqp.ftp 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="edeposit.amqp.ftp 1.0.1 documentation" href="../../index.html" />
+    <link rel="up" title="ftp" href="../ftp.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">edeposit.amqp.ftp 1.0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../ftp.html" accesskey="U">ftp</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for ftp.request_parser</h1><div class="highlight"><pre>
+<span class="c">#! /usr/bin/env python</span>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="c">#</span>
+<span class="c"># Interpreter version: python 2.7</span>
+<span class="c">#</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This submodule provides ability to process and parse import requests.</span>
+
+<span class="sd">Most important function in this matter is the :func:`process_import_request`,</span>
+<span class="sd">which is called from from :func:`ftp.monitor.process_log`. When it is called,</span>
+<span class="sd">it scans the user&#39;s home directory, detects new files, pairs them together into</span>
+<span class="sd">proper objects (see :mod:`ftp.structures`, speficifally :class:`.MetadataFile`,</span>
+<span class="sd">:class:`.EbookFile` and :class:`.DataPair`).</span>
+
+<span class="sd">API</span>
+<span class="sd">---</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c"># Imports =====================================================================</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">namedtuple</span>
+
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">aleph</span> <span class="kn">import</span> <span class="n">isbn</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">edeposit.amqp.aleph</span> <span class="kn">import</span> <span class="n">isbn</span>
+
+
+<span class="kn">import</span> <span class="nn">decoders</span>
+<span class="kn">import</span> <span class="nn">passwd_reader</span>
+<span class="kn">import</span> <span class="nn">settings</span>
+<span class="kn">from</span> <span class="nn">settings</span> <span class="kn">import</span> <span class="n">conf_merger</span>
+<span class="kn">from</span> <span class="nn">structures</span> <span class="kn">import</span> <span class="n">ImportRequest</span><span class="p">,</span> <span class="n">MetadataFile</span><span class="p">,</span> <span class="n">EbookFile</span><span class="p">,</span> <span class="n">DataPair</span>
+<span class="kn">from</span> <span class="nn">api</span> <span class="kn">import</span> <span class="n">create_lock_file</span><span class="p">,</span> <span class="n">recursive_chmod</span>
+
+
+<span class="c"># Variables ===================================================================</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="bp">None</span>
+
+
+<span class="c"># Functions &amp; objects =========================================================</span>
+<span class="k">def</span> <span class="nf">_filter_files</span><span class="p">(</span><span class="n">paths</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Filter files from the list of `paths`. Directories, symlinks and other crap</span>
+<span class="sd">    (named pipes and so on) are ignored.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        paths (list): List of string paths.</span>
+
+<span class="sd">    Return (list): Paths, which points to files.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">filter</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">path</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">path</span><span class="p">),</span>
+        <span class="n">paths</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_just_name</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return: (str) `name` for given `fn`.</span>
+
+<span class="sd">    Name is taken from the filename and it is just the name of the file,</span>
+<span class="sd">    without suffix and path.</span>
+
+<span class="sd">    For example - name of ``/home/bystrousak/config.json`` is just ``config``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>  <span class="c"># get filename</span>
+    <span class="k">return</span> <span class="n">fn</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s">&quot;.&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c"># get name without suffix</span>
+
+
+<span class="k">def</span> <span class="nf">_same_named</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">fn_list</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Args:</span>
+<span class="sd">        fn (str): Matching filename.</span>
+<span class="sd">        fn_list (list): List of filenames.</span>
+
+<span class="sd">    Return: (list of tuples) filenames from `fn_list`, which has same *name* as</span>
+<span class="sd">    `fn` and their indexes in tuple (i, fn).</span>
+
+<span class="sd">    Name is taken from the filename and it is just the name of the file,</span>
+<span class="sd">    without suffix and path.</span>
+
+<span class="sd">    For example - name of ``/home/bystrousak/config.json`` is just ``config``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fn</span> <span class="o">=</span> <span class="n">_just_name</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">filter</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span> <span class="n">fn</span> <span class="o">==</span> <span class="n">_just_name</span><span class="p">(</span><span class="n">filename</span><span class="p">),</span>
+        <span class="nb">enumerate</span><span class="p">(</span><span class="n">fn_list</span><span class="p">)</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_is_meta</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return ``True``, if the `fn` argument looks (has right suffix) like it can</span>
+<span class="sd">    be meta.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s">&quot;.&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">fn</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">return</span> <span class="n">fn</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s">&quot;.&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">decoders</span><span class="o">.</span><span class="n">SUPPORTED_FILES</span>
+
+
+<span class="k">def</span> <span class="nf">_remove_files</span><span class="p">(</span><span class="n">files</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Remove all given files.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        files (list): List of filenames, which will be removed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Request for file removal (_remove_files()).&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Removing &#39;</span><span class="si">%s</span><span class="s">&#39;.&quot;</span> <span class="o">%</span> <span class="n">fn</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_safe_read_meta_file</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">error_protocol</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Try to read MetadataFile. If the exception is raised, log the errors to</span>
+<span class="sd">    the `error_protocol` and return None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">MetadataFile</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">error_protocol</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="s">&quot;Can&#39;t read MetadataFile &#39;</span><span class="si">%s</span><span class="s">&#39;:</span><span class="se">\n\t</span><span class="si">%s</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_process_pair</span><span class="p">(</span><span class="n">first_fn</span><span class="p">,</span> <span class="n">second_fn</span><span class="p">,</span> <span class="n">error_protocol</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Look at given filenames, decide which is what and try to pair them.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ebook</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">metadata</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">if</span> <span class="n">_is_meta</span><span class="p">(</span><span class="n">first_fn</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">_is_meta</span><span class="p">(</span><span class="n">second_fn</span><span class="p">):</span>    <span class="c"># 1st meta, 2nd data</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s">&quot;Parsed: &#39;</span><span class="si">%s</span><span class="s">&#39; as meta, &#39;</span><span class="si">%s</span><span class="s">&#39; as data.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">first_fn</span><span class="p">,</span> <span class="n">second_fn</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">metadata</span><span class="p">,</span> <span class="n">ebook</span> <span class="o">=</span> <span class="n">first_fn</span><span class="p">,</span> <span class="n">second_fn</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">_is_meta</span><span class="p">(</span><span class="n">first_fn</span><span class="p">)</span> <span class="ow">and</span> <span class="n">_is_meta</span><span class="p">(</span><span class="n">second_fn</span><span class="p">):</span>  <span class="c"># 1st data, 2nd meta</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s">&quot;Parsed: &#39;</span><span class="si">%s</span><span class="s">&#39; as meta, &#39;</span><span class="si">%s</span><span class="s">&#39; as data.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">second_fn</span><span class="p">,</span> <span class="n">first_fn</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">metadata</span><span class="p">,</span> <span class="n">ebook</span> <span class="o">=</span> <span class="n">second_fn</span><span class="p">,</span> <span class="n">first_fn</span>
+    <span class="k">elif</span> <span class="n">_is_meta</span><span class="p">(</span><span class="n">first_fn</span><span class="p">)</span> <span class="ow">and</span> <span class="n">_is_meta</span><span class="p">(</span><span class="n">second_fn</span><span class="p">):</span>      <span class="c"># both metadata</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s">&quot;Parsed: both &#39;</span><span class="si">%s</span><span class="s">&#39; and &#39;</span><span class="si">%s</span><span class="s">&#39; as meta.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">first_fn</span><span class="p">,</span> <span class="n">second_fn</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">_safe_read_meta_file</span><span class="p">(</span><span class="n">first_fn</span><span class="p">,</span> <span class="n">error_protocol</span><span class="p">),</span>
+            <span class="n">_safe_read_meta_file</span><span class="p">(</span><span class="n">second_fn</span><span class="p">,</span> <span class="n">error_protocol</span><span class="p">)</span>
+        <span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>                                                 <span class="c"># both data</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s">&quot;Parsed: both &#39;</span><span class="si">%s</span><span class="s">&#39; and &#39;</span><span class="si">%s</span><span class="s">&#39; as data.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">first_fn</span><span class="p">,</span> <span class="n">second_fn</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">EbookFile</span><span class="p">(</span><span class="n">first_fn</span><span class="p">),</span>
+            <span class="n">EbookFile</span><span class="p">(</span><span class="n">second_fn</span><span class="p">)</span>
+        <span class="p">]</span>
+
+    <span class="c"># process pairs, which were created in first two branches of the if</span>
+    <span class="c"># statement above</span>
+    <span class="n">pair</span> <span class="o">=</span> <span class="n">DataPair</span><span class="p">(</span>
+        <span class="n">metadata_file</span><span class="o">=</span><span class="n">_safe_read_meta_file</span><span class="p">(</span><span class="n">metadata</span><span class="p">,</span> <span class="n">error_protocol</span><span class="p">),</span>
+        <span class="n">ebook_file</span><span class="o">=</span><span class="n">EbookFile</span><span class="p">(</span><span class="n">ebook</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">pair</span><span class="o">.</span><span class="n">metadata_file</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s">&quot;Can&#39;t parse MetadataFile &#39;</span><span class="si">%s</span><span class="s">&#39;. Continuing with data file &#39;</span><span class="si">%s</span><span class="s">&#39;.&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="n">metadata</span><span class="p">,</span> <span class="n">ebook</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">pair</span><span class="o">.</span><span class="n">ebook_file</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="p">[</span><span class="n">pair</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">_process_directory</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">user_conf</span><span class="p">,</span> <span class="n">error_protocol</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Look at items in given directory, try to match them for same names and pair</span>
+<span class="sd">    them.</span>
+
+<span class="sd">    If the items can&#39;t be paired, add their representation.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        All successfully processed files are removed.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list: of items. Example: [MetadataFile, DataPair, DataPair, EbookFile]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">banned</span> <span class="o">=</span> <span class="p">[</span><span class="n">settings</span><span class="o">.</span><span class="n">USER_IMPORT_LOG</span><span class="p">,</span> <span class="n">settings</span><span class="o">.</span><span class="n">USER_ERROR_LOG</span><span class="p">]</span>
+    <span class="n">files</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="ow">in</span> <span class="n">banned</span><span class="p">,</span> <span class="n">files</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">conf_merger</span><span class="p">(</span><span class="n">user_conf</span><span class="p">,</span> <span class="s">&quot;SAME_DIR_PAIRING&quot;</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;There are only two files.&quot;</span><span class="p">)</span>
+
+        <span class="n">items</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_process_pair</span><span class="p">(</span><span class="n">files</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">files</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">error_protocol</span><span class="p">))</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">while</span> <span class="n">files</span><span class="p">:</span>
+        <span class="n">same_names</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">files</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Processing &#39;</span><span class="si">%s</span><span class="s">&#39;.&quot;</span> <span class="o">%</span> <span class="n">fn</span><span class="p">)</span>
+
+        <span class="c"># get files with same names (ignore paths and suffixes)</span>
+        <span class="k">if</span> <span class="n">conf_merger</span><span class="p">(</span><span class="n">user_conf</span><span class="p">,</span> <span class="s">&quot;SAME_NAME_DIR_PAIRING&quot;</span><span class="p">):</span>
+            <span class="n">same_names</span> <span class="o">=</span> <span class="n">_same_named</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">files</span><span class="p">)</span>  <span class="c"># returns (index, name)</span>
+            <span class="n">indexes</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">fn</span><span class="p">):</span> <span class="n">i</span><span class="p">,</span> <span class="n">same_names</span><span class="p">)</span>  <span class="c"># get indexes</span>
+            <span class="n">same_names</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">fn</span><span class="p">):</span> <span class="n">fn</span><span class="p">,</span> <span class="n">same_names</span><span class="p">)</span>  <span class="c"># get names</span>
+
+            <span class="c"># remove `same_names` from `files` (they are processed in this</span>
+            <span class="c"># pass)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">indexes</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+                <span class="k">del</span> <span class="n">files</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+        <span class="c"># has exactly one file pair</span>
+        <span class="n">SDP</span> <span class="o">=</span> <span class="n">conf_merger</span><span class="p">(</span><span class="n">user_conf</span><span class="p">,</span> <span class="s">&quot;SAME_NAME_DIR_PAIRING&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">same_names</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">SDP</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s">&quot;&#39;</span><span class="si">%s</span><span class="s">&#39; can be probably paired with &#39;</span><span class="si">%s</span><span class="s">&#39;.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">same_names</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="p">)</span>
+            <span class="n">items</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_process_pair</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">same_names</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">error_protocol</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">same_names</span><span class="p">:</span>  <span class="c"># there is no similar files</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;&#39;</span><span class="si">%s</span><span class="s">&#39; can&#39;t be paired. Adding standalone file.&quot;</span> <span class="o">%</span> <span class="n">fn</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">_is_meta</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+                <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_safe_read_meta_file</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">error_protocol</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">EbookFile</span><span class="p">(</span><span class="n">fn</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c"># error - there is too many similar files</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s">&quot;Too many files with same name: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">same_names</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">error_protocol</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="s">&quot;Too many files with same name:&quot;</span> <span class="o">+</span>
+                <span class="s">&quot;</span><span class="se">\n\t</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">same_names</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n\n</span><span class="s">---</span><span class="se">\n</span><span class="s">&quot;</span>
+            <span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span> <span class="n">items</span><span class="p">)</span>  <span class="c"># remove None items (errors during read)</span>
+
+
+<span class="k">def</span> <span class="nf">_index</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Array search function.</span>
+
+<span class="sd">    Written, because ``.index()`` method for array doesn&#39;t have `key` parameter</span>
+<span class="sd">    and raises `ValueError`, if the item is not found.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        array (list): List of items, which will be searched.</span>
+<span class="sd">        item (whatever): Item, which will be matched to elements in `array`.</span>
+<span class="sd">        key (function, default None): Function, which will be used for lookup</span>
+<span class="sd">                                      into each element in `array`.</span>
+
+<span class="sd">    Return:</span>
+<span class="sd">        Index of `item` in `array`, if the `item` is in `array`, else `-1`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">el</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">array</span><span class="p">):</span>
+        <span class="n">resolved_el</span> <span class="o">=</span> <span class="n">key</span><span class="p">(</span><span class="n">el</span><span class="p">)</span> <span class="k">if</span> <span class="n">key</span> <span class="k">else</span> <span class="n">el</span>
+
+        <span class="k">if</span> <span class="n">resolved_el</span> <span class="o">==</span> <span class="n">item</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">i</span>
+
+    <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+
+
+<span class="k">def</span> <span class="nf">_isbn_pairing</span><span class="p">(</span><span class="n">items</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Pair `items` with same ISBN into `DataPair` objects.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        items (list): list of items, which will be searched.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list: list with paired items. Paired items are removed, `DataPair` is \</span>
+<span class="sd">              added instead.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">NameWrapper</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s">&quot;NameWrapper&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s">&quot;name&quot;</span><span class="p">,</span> <span class="s">&quot;obj&quot;</span><span class="p">])</span>
+    <span class="n">metas</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">NameWrapper</span><span class="p">(</span><span class="n">_just_name</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">filename</span><span class="p">),</span> <span class="n">x</span><span class="p">),</span>
+        <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">MetadataFile</span><span class="p">),</span> <span class="n">items</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">ebooks</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">NameWrapper</span><span class="p">(</span><span class="n">_just_name</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">filename</span><span class="p">),</span> <span class="n">x</span><span class="p">),</span>
+        <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">EbookFile</span><span class="p">),</span> <span class="n">items</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="c"># simple pairing mechanism, which shouldn&#39;t be O^2 complex, but something</span>
+    <span class="c"># slightly better</span>
+    <span class="n">metas</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">metas</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">ebooks</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">ebooks</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">metas</span><span class="p">:</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="n">metas</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">isbn</span><span class="o">.</span><span class="n">is_valid_isbn</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">name</span><span class="p">):</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ebooks</span><span class="p">:</span>
+            <span class="k">break</span>
+
+        <span class="n">ebook_index</span> <span class="o">=</span> <span class="n">_index</span><span class="p">(</span><span class="n">ebooks</span><span class="p">,</span> <span class="n">meta</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ebook_index</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s">&quot;Pairing &#39;</span><span class="si">%s</span><span class="s">&#39; and &#39;</span><span class="si">%s</span><span class="s">&#39;.&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="n">meta</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span>
+                    <span class="n">ebooks</span><span class="p">[</span><span class="n">ebook_index</span><span class="p">]</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">filename</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">DataPair</span><span class="p">(</span>
+                    <span class="n">metadata_file</span><span class="o">=</span><span class="n">meta</span><span class="o">.</span><span class="n">obj</span><span class="p">,</span>
+                    <span class="n">ebook_file</span><span class="o">=</span><span class="n">ebooks</span><span class="p">[</span><span class="n">ebook_index</span><span class="p">]</span><span class="o">.</span><span class="n">obj</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">items</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">obj</span><span class="p">)</span>
+            <span class="n">items</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">ebooks</span><span class="p">[</span><span class="n">ebook_index</span><span class="p">]</span><span class="o">.</span><span class="n">obj</span><span class="p">)</span>
+            <span class="n">ebooks</span> <span class="o">=</span> <span class="n">ebooks</span><span class="p">[</span><span class="n">ebook_index</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
+
+    <span class="k">return</span> <span class="n">items</span>
+
+
+<span class="k">def</span> <span class="nf">_create_import_log</span><span class="p">(</span><span class="n">items</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Used to create log with successfully imported data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">log</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">MetadataFile</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="s">&quot;Metadata file &#39;</span><span class="si">%s</span><span class="s">&#39; successfully imported.&quot;</span> <span class="o">%</span> <span class="n">item</span><span class="o">.</span><span class="n">filename</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">EbookFile</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="s">&quot;Ebook file &#39;</span><span class="si">%s</span><span class="s">&#39; successfully imported.&quot;</span> <span class="o">%</span> <span class="n">item</span><span class="o">.</span><span class="n">filename</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">DataPair</span><span class="p">):</span>
+            <span class="n">meta</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">metadata_file</span><span class="o">.</span><span class="n">filename</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">ebook_file</span><span class="o">.</span><span class="n">filename</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span>
+                <span class="s">&quot;Metadata and data files paired to epub. import request:&quot;</span><span class="p">,</span>
+                <span class="s">&quot;</span><span class="se">\t</span><span class="s">Metadata file &#39;</span><span class="si">%s</span><span class="s">&#39; successfully imported.&quot;</span> <span class="o">%</span> <span class="n">meta</span><span class="p">,</span>
+                <span class="s">&quot;</span><span class="se">\t</span><span class="s">Ebook file &#39;</span><span class="si">%s</span><span class="s">&#39; successfully imported.&quot;</span> <span class="o">%</span> <span class="n">data</span>
+            <span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">log</span>
+
+
+<span class="k">def</span> <span class="nf">_process_items</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">user_conf</span><span class="p">,</span> <span class="n">error_protocol</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse metadata. Remove processed and sucessfully parsed items.</span>
+
+<span class="sd">    Returns sucessfully processed items.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">process_meta</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">error_protocol</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">item</span><span class="o">.</span><span class="n">_parse</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">error_protocol</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="s">&quot;Can&#39;t parse </span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">_get_filenames</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">DataPair</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">item</span><span class="o">.</span><span class="n">ebook_file</span>
+
+    <span class="c"># process all items and put them to output queue</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">EbookFile</span><span class="p">):</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">process_meta</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">error_protocol</span><span class="p">))</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>  <span class="c"># remove None items (process_meta() fails)</span>
+
+    <span class="c"># remove processed files</span>
+    <span class="n">fn_pool</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">soon_removed</span> <span class="o">=</span> <span class="n">out</span> <span class="k">if</span> <span class="n">conf_merger</span><span class="p">(</span><span class="n">user_conf</span><span class="p">,</span> <span class="s">&quot;LEAVE_BAD_FILES&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="n">items</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">soon_removed</span><span class="p">:</span>
+        <span class="n">fn_pool</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">_get_filenames</span><span class="p">())</span>
+
+    <span class="n">_remove_files</span><span class="p">(</span><span class="n">fn_pool</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">out</span>
+
+
+<div class="viewcode-block" id="process_import_request"><a class="viewcode-back" href="../../api/ftp.request_parser.html#ftp.request_parser.process_import_request">[docs]</a><span class="k">def</span> <span class="nf">process_import_request</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">logger_handler</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    React to import request. Look into user&#39;s directory and react to files</span>
+<span class="sd">    user uploaded there.</span>
+
+<span class="sd">    Behavior of this function can be set by setting variables in</span>
+<span class="sd">    :mod:`ftp.settings`.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        username (str): Name of the user who triggered the import request.</span>
+<span class="sd">        path (str): Path to the file, which triggered import request.</span>
+<span class="sd">        timestamp (float): Timestamp of the event.</span>
+<span class="sd">        logger_handler (object): Python logger. See :py:mod:`logging` for</span>
+<span class="sd">                                 details.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ::class:`.ImportRequest`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">error_protocol</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c"># import logger into local namespace</span>
+    <span class="k">global</span> <span class="n">logger</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logger_handler</span>
+
+    <span class="c"># read user configuration</span>
+    <span class="n">user_conf</span> <span class="o">=</span> <span class="n">passwd_reader</span><span class="o">.</span><span class="n">read_user_config</span><span class="p">(</span><span class="n">username</span><span class="p">)</span>
+
+    <span class="c"># lock directory to prevent user to write during processing of the batch</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Locking user´s directory.&quot;</span><span class="p">)</span>
+    <span class="n">recursive_chmod</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="mo">0555</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c"># pick up pairs in directories</span>
+        <span class="k">for</span> <span class="n">root</span><span class="p">,</span> <span class="n">dirs</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">dn</span> <span class="ow">in</span> <span class="n">dirs</span> <span class="o">+</span> <span class="p">[</span><span class="n">path</span><span class="p">]:</span>
+                <span class="n">dn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">dn</span><span class="p">)</span>
+                <span class="n">dir_list</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">fn</span><span class="p">:</span> <span class="n">dn</span> <span class="o">+</span> <span class="s">&quot;/&quot;</span> <span class="o">+</span> <span class="n">fn</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">dn</span><span class="p">))</span>
+                <span class="n">files</span> <span class="o">=</span> <span class="n">_filter_files</span><span class="p">(</span><span class="n">dir_list</span><span class="p">)</span>
+
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Processing directory &#39;</span><span class="si">%s</span><span class="s">&#39;.&quot;</span> <span class="o">%</span> <span class="n">dn</span><span class="p">)</span>
+
+                <span class="n">items</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                    <span class="n">_process_directory</span><span class="p">(</span>
+                        <span class="n">files</span><span class="p">,</span>
+                        <span class="n">user_conf</span><span class="p">,</span>
+                        <span class="n">error_protocol</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">conf_merger</span><span class="p">(</span><span class="n">user_conf</span><span class="p">,</span> <span class="s">&quot;ISBN_PAIRING&quot;</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;ISBN_PAIRING is ON.&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Pairing user&#39;s files by ISBN filename.&quot;</span><span class="p">)</span>
+            <span class="n">items</span> <span class="o">=</span> <span class="n">_isbn_pairing</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+
+        <span class="c"># parse metadata and remove files from disk</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="n">_process_items</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">user_conf</span><span class="p">,</span> <span class="n">error_protocol</span><span class="p">)</span>
+
+        <span class="c"># unlink blank directories left by processing files</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Removing blank directories.&quot;</span><span class="p">)</span>
+        <span class="n">all_dirs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">root</span><span class="p">,</span> <span class="n">dirs</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="n">all_dirs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="n">dirs</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">dn</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">all_dirs</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+            <span class="n">content</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">dn</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">content</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Removing blank directory &#39;</span><span class="si">%s</span><span class="s">&#39;.&quot;</span> <span class="o">%</span> <span class="n">dn</span><span class="p">)</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">dn</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Leaving non-blank directory: &#39;</span><span class="si">%s</span><span class="s">&#39;&quot;</span> <span class="o">%</span> <span class="n">dn</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Content:</span><span class="se">\n\t</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="s">&quot;</span><span class="se">\n\t</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">content</span><span class="p">))</span>
+
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="c"># unlock directory</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Unlocking user´s directory.&quot;</span><span class="p">)</span>
+        <span class="n">recursive_chmod</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="mo">0775</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Creating lock file &#39;</span><span class="si">%s</span><span class="s">&#39;.&quot;</span> <span class="o">%</span> <span class="n">settings</span><span class="o">.</span><span class="n">LOCK_FILENAME</span><span class="p">)</span>
+        <span class="n">create_lock_file</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s">&quot;/&quot;</span> <span class="o">+</span> <span class="n">settings</span><span class="o">.</span><span class="n">LOCK_FILENAME</span><span class="p">)</span>
+
+        <span class="c"># process errors if found</span>
+        <span class="k">if</span> <span class="n">error_protocol</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s">&quot;Found </span><span class="si">%d</span><span class="s"> error(s).&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">error_protocol</span><span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="n">err_path</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s">&quot;/&quot;</span> <span class="o">+</span> <span class="n">settings</span><span class="o">.</span><span class="n">USER_ERROR_LOG</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">err_path</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+                <span class="n">fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">error_protocol</span><span class="p">))</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;Error protocol saved to &#39;</span><span class="si">%s</span><span class="s">&#39;.&quot;</span> <span class="o">%</span> <span class="n">err_path</span><span class="p">)</span>
+
+        <span class="c"># process import log</span>
+        <span class="n">import_log</span> <span class="o">=</span> <span class="n">_create_import_log</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">import_log</span> <span class="ow">and</span> <span class="n">conf_merger</span><span class="p">(</span><span class="n">user_conf</span><span class="p">,</span> <span class="s">&quot;CREATE_IMPORT_LOG&quot;</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;CREATE_IMPORT_LOG is on.&quot;</span><span class="p">)</span>
+
+            <span class="n">imp_path</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s">&quot;/&quot;</span> <span class="o">+</span> <span class="n">settings</span><span class="o">.</span><span class="n">USER_IMPORT_LOG</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">imp_path</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">error_protocol</span><span class="p">:</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;Status: Error</span><span class="se">\n\n</span><span class="s">&quot;</span><span class="p">)</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;Error: Import only partially successful.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                        <span class="s">&quot;See &#39;</span><span class="si">%s</span><span class="s">&#39; for details.</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">settings</span><span class="o">.</span><span class="n">USER_ERROR_LOG</span>
+                    <span class="p">)</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">--- Errors ---</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">error_protocol</span><span class="p">))</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n\n</span><span class="s">--- Successfully imported files ---</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;Status: Ok</span><span class="se">\n\n</span><span class="s">&quot;</span><span class="p">)</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;--- Sucess ---</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">import_log</span><span class="p">))</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Created import protocol &#39;</span><span class="si">%s</span><span class="s">&#39;.&quot;</span> <span class="o">%</span> <span class="n">imp_path</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ImportRequest</span><span class="p">(</span>
+        <span class="n">username</span><span class="o">=</span><span class="n">username</span><span class="p">,</span>
+        <span class="n">requests</span><span class="o">=</span><span class="n">items</span><span class="p">,</span>
+        <span class="n">import_log</span><span class="o">=</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">import_log</span><span class="p">),</span>
+        <span class="n">error_log</span><span class="o">=</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">error_protocol</span><span class="p">)</span>
+    <span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">edeposit.amqp.ftp 1.0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../ftp.html" >ftp</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014 E-deposit team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

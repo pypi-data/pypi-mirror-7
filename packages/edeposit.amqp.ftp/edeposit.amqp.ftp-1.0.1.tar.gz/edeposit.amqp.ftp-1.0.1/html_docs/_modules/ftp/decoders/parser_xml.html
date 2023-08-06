@@ -1,0 +1,183 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ftp.decoders.parser_xml &mdash; edeposit.amqp.ftp 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="edeposit.amqp.ftp 1.0.1 documentation" href="../../../index.html" />
+    <link rel="up" title="ftp.decoders" href="../decoders.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">edeposit.amqp.ftp 1.0.1 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../ftp.html" >ftp</a> &raquo;</li>
+          <li><a href="../decoders.html" accesskey="U">ftp.decoders</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for ftp.decoders.parser_xml</h1><div class="highlight"><pre>
+<span class="c">#! /usr/bin/env python</span>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="c">#</span>
+<span class="c"># Interpreter version: python 2.7</span>
+<span class="c">#</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This submodule is used to parse metadata from XML_ (``.xml``) files.</span>
+
+<span class="sd">.. _XML: https://en.wikipedia.org/wiki/XML</span>
+
+<span class="sd">Format schema::</span>
+
+<span class="sd">    &lt;root&gt;</span>
+<span class="sd">        &lt;item key=&quot;key&quot;&gt;value&lt;/item&gt;</span>
+<span class="sd">    &lt;/root&gt;</span>
+
+
+<span class="sd">Example of valid data::</span>
+
+<span class="sd">    &lt;root&gt;</span>
+<span class="sd">        &lt;item key=&quot;ISBN knihy&quot;&gt;80-86056-31-7&lt;/item&gt;</span>
+<span class="sd">        &lt;item key=&quot;Vazba knihy&quot;&gt;brož.&lt;/item&gt;</span>
+<span class="sd">        &lt;item key=&quot;Nazev knihy&quot;&gt;standalone2.xml&lt;/item&gt;</span>
+<span class="sd">        &lt;item key=&quot;Misto vydani&quot;&gt;Praha&lt;/item&gt;</span>
+<span class="sd">        &lt;item key=&quot;Nakladatel&quot;&gt;Garda&lt;/item&gt;</span>
+<span class="sd">        &lt;item key=&quot;Datum vydani&quot;&gt;09/2012&lt;/item&gt;</span>
+<span class="sd">        &lt;item key=&quot;Poradi vydani&quot;&gt;1&lt;/item&gt;</span>
+<span class="sd">        &lt;item key=&quot;Zpracovatel zaznamu&quot;&gt;Franta Putsalek&lt;/item&gt;</span>
+<span class="sd">    &lt;/root&gt;</span>
+
+<span class="sd">See :doc:`/workflow/required` for list of required fields.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c">#= Imports ====================================================================</span>
+<span class="kn">import</span> <span class="nn">dhtmlparser</span>
+
+<span class="kn">import</span> <span class="nn">validator</span>
+<span class="kn">from</span> <span class="nn">meta_exceptions</span> <span class="kn">import</span> <span class="n">MetaParsingException</span>
+
+
+<span class="c">#= Functions &amp; objects ========================================================</span>
+<div class="viewcode-block" id="decode"><a class="viewcode-back" href="../../../api/ftp.decoders.parser_xml.html#ftp.decoders.parser_xml.decode">[docs]</a><span class="k">def</span> <span class="nf">decode</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handles decoding of the XML `data`.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        data (str): Data which will be decoded.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: Dictionary with decoded data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dom</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">dom</span> <span class="o">=</span> <span class="n">dhtmlparser</span><span class="o">.</span><span class="n">parseString</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">MetaParsingException</span><span class="p">(</span><span class="s">&quot;Can&#39;t parse your XML data: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+
+    <span class="n">root</span> <span class="o">=</span> <span class="n">dom</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;root&quot;</span><span class="p">)</span>
+
+    <span class="c"># check whether there is &lt;root&gt;s</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">root</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">MetaParsingException</span><span class="p">(</span><span class="s">&quot;All elements have to be inside &lt;root&gt;.&quot;</span><span class="p">)</span>
+
+    <span class="c"># and make sure, that there is not too many &lt;root&gt;s</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">root</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">MetaParsingException</span><span class="p">(</span><span class="s">&quot;Too many &lt;root&gt; elements in your XML!&quot;</span><span class="p">)</span>
+
+    <span class="n">items</span> <span class="o">=</span> <span class="n">root</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;item&quot;</span><span class="p">)</span>
+
+    <span class="c"># check for items</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">items</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">MetaParsingException</span><span class="p">(</span><span class="s">&quot;There are no &lt;items&gt; in your XML &lt;root&gt;!&quot;</span><span class="p">)</span>
+
+    <span class="n">decoded</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s">&quot;key&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">params</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">MetaParsingException</span><span class="p">(</span>
+                <span class="s">&quot;There is no &#39;key&#39; parameter in </span><span class="si">%s</span><span class="s">.&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="n">decoded</span><span class="o">.</span><span class="n">append</span><span class="p">([</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s">&quot;key&quot;</span><span class="p">],</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">getContent</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="p">])</span>
+
+    <span class="n">decoded</span> <span class="o">=</span> <span class="n">validator</span><span class="o">.</span><span class="n">check_structure</span><span class="p">(</span><span class="n">decoded</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">decoded</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">edeposit.amqp.ftp 1.0.1 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../ftp.html" >ftp</a> &raquo;</li>
+          <li><a href="../decoders.html" >ftp.decoders</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014 E-deposit team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

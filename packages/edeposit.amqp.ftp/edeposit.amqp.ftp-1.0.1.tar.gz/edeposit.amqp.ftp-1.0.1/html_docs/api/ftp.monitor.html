@@ -1,0 +1,183 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Monitor script &mdash; edeposit.amqp.ftp 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="edeposit.amqp.ftp 1.0.1 documentation" href="../index.html" />
+    <link rel="next" title="__init__.py" href="ftp.html" />
+    <link rel="prev" title="Initializer script" href="../initializer.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="ftp.html" title="__init__.py"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../initializer.html" title="Initializer script"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">edeposit.amqp.ftp 1.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-ftp.monitor">
+<span id="monitor-script"></span><h1>Monitor script<a class="headerlink" href="#module-ftp.monitor" title="Permalink to this headline">¶</a></h1>
+<p>This script is used to monitor ProFTPD log and to react at certain events
+(deletion of the <a class="reference internal" href="ftp.settings.html#ftp.settings.LOCK_FILENAME" title="ftp.settings.LOCK_FILENAME"><tt class="xref py py-attr docutils literal"><span class="pre">ftp.settings.LOCK_FILENAME</span></tt></a>).</p>
+<p>It is also used at API level in <tt class="xref py py-mod docutils literal"><span class="pre">edeposit.amqp</span></tt> (see <a class="reference internal" href="#ftp.monitor.process_log" title="ftp.monitor.process_log"><tt class="xref py py-func docutils literal"><span class="pre">process_log()</span></tt></a>
+and <tt class="xref py py-mod docutils literal"><span class="pre">ftp_managerd</span></tt>).</p>
+<p>Details of parsing are handled by <a class="reference internal" href="ftp.request_parser.html#module-ftp.request_parser" title="ftp.request_parser"><tt class="xref py py-mod docutils literal"><span class="pre">request_parser</span></tt></a>.</p>
+<dl class="function">
+<dt id="ftp.monitor._read_stdin">
+<tt class="descclassname">ftp.monitor.</tt><tt class="descname">_read_stdin</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/ftp/monitor.html#_read_stdin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftp.monitor._read_stdin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generator for reading from standard input in nonblocking mode.</p>
+<p>Other ways of reading from <tt class="docutils literal"><span class="pre">stdin</span></tt> in python waits, until the buffer is
+big enough, or until EOF character is sent.</p>
+<p>This functions yields immediately after each line.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ftp.monitor._parse_line">
+<tt class="descclassname">ftp.monitor.</tt><tt class="descname">_parse_line</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="../_modules/ftp/monitor.html#_parse_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftp.monitor._parse_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert one line from the extended log to dict.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>line</strong> (<em>str</em>) &#8211;
+Line which will be converted.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><em>dict</em> &#8211;
+dict with <tt class="docutils literal"><span class="pre">timestamp</span></tt>, <tt class="docutils literal"><span class="pre">command</span></tt>, <tt class="docutils literal"><span class="pre">username</span></tt> and <tt class="docutils literal"><span class="pre">path</span></tt>               keys.</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Typical line looks like this:</p>
+<div class="highlight-python"><div class="highlight"><pre>/home/ftp/xex/asd bsd.dat, xex, STOR, 1398351777
+</pre></div>
+</div>
+<p class="last">Filename may contain <tt class="docutils literal"><span class="pre">,</span></tt> character, so I am <tt class="docutils literal"><span class="pre">rsplitting</span></tt> the line
+from the end to the beginning.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="ftp.monitor.process_log">
+<tt class="descclassname">ftp.monitor.</tt><tt class="descname">process_log</tt><big>(</big><em>file_iterator</em><big>)</big><a class="reference internal" href="../_modules/ftp/monitor.html#process_log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftp.monitor.process_log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process the extended ProFTPD log.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>file_iterator</strong> (<em>file</em>) &#8211;
+any file-like iterator for reading the log or
+stdin (see <a class="reference internal" href="#ftp.monitor._read_stdin" title="ftp.monitor._read_stdin"><tt class="xref py py-func docutils literal"><span class="pre">_read_stdin()</span></tt></a>).</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Yields:</th><td class="field-body"><em>ImportRequest</em> &#8211;
+with each import.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="ftp.monitor.main">
+<tt class="descclassname">ftp.monitor.</tt><tt class="descname">main</tt><big>(</big><em>filename</em><big>)</big><a class="reference internal" href="../_modules/ftp/monitor.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftp.monitor.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open <cite>filename</cite> and start processing it line by line. If <cite>filename</cite> is
+none, process lines from <cite>stdin</cite>.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../initializer.html"
+                        title="previous chapter">Initializer script</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="ftp.html"
+                        title="next chapter">__init__.py</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/api/ftp.monitor.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="ftp.html" title="__init__.py"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../initializer.html" title="Initializer script"
+             >previous</a> |</li>
+        <li><a href="../index.html">edeposit.amqp.ftp 1.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014 E-deposit team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

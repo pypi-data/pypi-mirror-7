@@ -1,0 +1,605 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>edeposit_proftpd_init &mdash; edeposit.amqp.ftp 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="edeposit.amqp.ftp 1.0.1 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">edeposit.amqp.ftp 1.0.1 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for edeposit_proftpd_init</h1><div class="highlight"><pre>
+<span class="c">#! /usr/bin/env python</span>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="c">#</span>
+<span class="c"># Interpreter version: python 2.7</span>
+<span class="c">#</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This script is used to initialize ProFTPD and set configuration required by</span>
+<span class="sd">edeposit.amqp.ftp module.</span>
+
+<span class="sd">It changes/creates ProFTPD configuration file, password file and extened log</span>
+<span class="sd">file. Also user directory is created and correct permissions is set.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c"># Imports ====================================================================</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+
+<span class="c"># if the module wasn&#39;t yet installed at this system</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">edeposit.amqp.ftp</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s">&#39;../src/edeposit/amqp&#39;</span><span class="p">))</span>
+    <span class="kn">import</span> <span class="nn">ftp</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="s">&quot;edeposit.amqp.ftp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ftp</span>
+
+<span class="kn">from</span> <span class="nn">edeposit.amqp.ftp.api</span> <span class="kn">import</span> <span class="n">reload_configuration</span><span class="p">,</span> <span class="n">require_root</span>
+<span class="kn">from</span> <span class="nn">edeposit.amqp.ftp.passwd_reader</span> <span class="kn">import</span> <span class="n">get_ftp_uid</span>
+<span class="kn">from</span> <span class="nn">edeposit.amqp.ftp.settings</span> <span class="kn">import</span> <span class="n">CONF_PATH</span><span class="p">,</span> <span class="n">CONF_FILE</span><span class="p">,</span> <span class="n">DATA_PATH</span>
+<span class="kn">from</span> <span class="nn">edeposit.amqp.ftp.settings</span> <span class="kn">import</span> <span class="n">LOGIN_FILE</span><span class="p">,</span> <span class="n">LOG_FILE</span><span class="p">,</span> <span class="n">MODULES_FILE</span>
+
+
+<span class="c"># Variables ==================================================================</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">()</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+
+
+<span class="n">DEFAULT_PROFTPD_CONF</span> <span class="o">=</span> <span class="s">r&quot;&quot;&quot;</span>
+<span class="s">#</span>
+<span class="s"># /etc/proftpd/proftpd.conf -- This is a basic ProFTPD configuration file.</span>
+<span class="s"># To really apply changes, reload proftpd after modifications, if</span>
+<span class="s"># it runs in daemon mode. It is not required in inetd/xinetd mode.</span>
+<span class="s">#</span>
+
+<span class="s"># Includes DSO modules</span>
+<span class="s">Include /etc/proftpd/modules.conf</span>
+
+<span class="s"># Set off to disable IPv6 support which is annoying on IPv4 only boxes.</span>
+<span class="s">UseIPv6             on</span>
+<span class="s"># If set on you can experience a longer connection delay in many cases.</span>
+<span class="s">IdentLookups            off</span>
+
+<span class="s">ServerName          &quot;Debian&quot;</span>
+<span class="s">ServerType          standalone</span>
+<span class="s">DeferWelcome            off</span>
+
+<span class="s">MultilineRFC2228        on</span>
+<span class="s">DefaultServer           on</span>
+<span class="s">ShowSymlinks            on</span>
+
+<span class="s">TimeoutNoTransfer       600</span>
+<span class="s">TimeoutStalled          600</span>
+<span class="s">TimeoutIdle             1200</span>
+
+<span class="s">DisplayLogin            welcome.msg</span>
+<span class="s">DisplayChdir            .message true</span>
+<span class="s">ListOptions             &quot;-l&quot;</span>
+
+<span class="s">DenyFilter              \*.*/</span>
+
+<span class="s"># Use this to jail all users in their homes</span>
+<span class="s">DefaultRoot ~</span>
+
+<span class="s"># Users require a valid shell listed in /etc/shells to login.</span>
+<span class="s"># Use this directive to release that constrain.</span>
+<span class="s">RequireValidShell off</span>
+
+<span class="s"># Port 21 is the standard FTP port.</span>
+<span class="s">Port                21</span>
+
+<span class="s"># In some cases you have to specify passive ports range to by-pass</span>
+<span class="s"># firewall limitations. Ephemeral ports can be used for that, but</span>
+<span class="s"># feel free to use a more narrow range.</span>
+<span class="s"># PassivePorts                  49152 65534</span>
+
+<span class="s"># If your host was NATted, this option is useful in order to</span>
+<span class="s"># allow passive tranfers to work. You have to use your public</span>
+<span class="s"># address and opening the passive ports used on your firewall as well.</span>
+<span class="s"># MasqueradeAddress     1.2.3.4</span>
+
+<span class="s"># This is useful for masquerading address with dynamic IPs:</span>
+<span class="s"># refresh any configured MasqueradeAddress directives every 8 hours</span>
+<span class="s">&lt;IfModule mod_dynmasq.c&gt;</span>
+<span class="s"># DynMasqRefresh 28800</span>
+<span class="s">&lt;/IfModule&gt;</span>
+
+<span class="s"># To prevent DoS attacks, set the maximum number of child processes</span>
+<span class="s"># to 30.  If you need to allow more than 30 concurrent connections</span>
+<span class="s"># at once, simply increase this value.  Note that this ONLY works</span>
+<span class="s"># in standalone mode, in inetd mode you should use an inetd server</span>
+<span class="s"># that allows you to limit maximum number of processes per service</span>
+<span class="s"># (such as xinetd)</span>
+<span class="s">MaxInstances            30</span>
+
+<span class="s"># Set the user and group that the server normally runs at.</span>
+<span class="s">User                proftpd</span>
+<span class="s">Group               nogroup</span>
+
+<span class="s"># Umask 022 is a good standard umask to prevent new files and dirs</span>
+<span class="s"># (second parm) from being group and world writable.</span>
+<span class="s">Umask               022  022</span>
+<span class="s"># Normally, we want files to be overwriteable.</span>
+<span class="s">AllowOverwrite          on</span>
+
+<span class="s"># Uncomment this if you are using NIS or LDAP via NSS to retrieve passwords:</span>
+<span class="s"># PersistentPasswd      off</span>
+
+<span class="s"># This is required to use both PAM-based authentication and local passwords</span>
+<span class="s"># AuthOrder         mod_auth_pam.c* mod_auth_unix.c</span>
+
+<span class="s"># Be warned: use of this directive impacts CPU average load!</span>
+<span class="s"># Uncomment this if you like to see progress and transfer rate with ftpwho</span>
+<span class="s"># in downloads. That is not needed for uploads rates.</span>
+<span class="s">#</span>
+<span class="s"># UseSendFile           off</span>
+
+<span class="s">TransferLog /var/log/proftpd/xferlog</span>
+<span class="s">SystemLog   /var/log/proftpd/proftpd.log</span>
+
+<span class="s"># Logging onto /var/log/lastlog is enabled but set to off by default</span>
+<span class="s">#UseLastlog on</span>
+
+<span class="s"># In order to keep log file dates consistent after chroot, use timezone info</span>
+<span class="s"># from /etc/localtime.  If this is not set, and proftpd is configured to</span>
+<span class="s"># chroot (e.g. DefaultRoot or &lt;Anonymous&gt;), it will use the non-daylight</span>
+<span class="s"># savings timezone regardless of whether DST is in effect.</span>
+<span class="s">#SetEnv TZ :/etc/localtime</span>
+
+<span class="s">&lt;IfModule mod_quotatab.c&gt;</span>
+<span class="s">QuotaEngine off</span>
+<span class="s">&lt;/IfModule&gt;</span>
+
+<span class="s">&lt;IfModule mod_ratio.c&gt;</span>
+<span class="s">Ratios off</span>
+<span class="s">&lt;/IfModule&gt;</span>
+
+
+<span class="s"># Delay engine reduces impact of the so-called Timing Attack described in</span>
+<span class="s"># http://www.securityfocus.com/bid/11430/discuss</span>
+<span class="s"># It is on by default.</span>
+<span class="s">&lt;IfModule mod_delay.c&gt;</span>
+<span class="s">DelayEngine on</span>
+<span class="s">&lt;/IfModule&gt;</span>
+
+<span class="s">&lt;IfModule mod_ctrls.c&gt;</span>
+<span class="s">ControlsEngine        off</span>
+<span class="s">ControlsMaxClients    2</span>
+<span class="s">ControlsLog           /var/log/proftpd/controls.log</span>
+<span class="s">ControlsInterval      5</span>
+<span class="s">ControlsSocket        /var/run/proftpd/proftpd.sock</span>
+<span class="s">&lt;/IfModule&gt;</span>
+
+<span class="s">&lt;IfModule mod_ctrls_admin.c&gt;</span>
+<span class="s">AdminControlsEngine off</span>
+<span class="s">&lt;/IfModule&gt;</span>
+
+<span class="s"># Alternative authentication frameworks</span>
+<span class="s">#</span>
+<span class="s">#Include /etc/proftpd/ldap.conf</span>
+<span class="s">#Include /etc/proftpd/sql.conf</span>
+
+<span class="s"># This is used for FTPS connections</span>
+<span class="s">#</span>
+<span class="s">#Include /etc/proftpd/tls.conf</span>
+
+<span class="s"># Useful to keep VirtualHost/VirtualRoot directives separated</span>
+<span class="s">#</span>
+<span class="s">Include /etc/proftpd/virtuals.conf</span>
+
+<span class="s"># Include other custom configuration files</span>
+<span class="s">Include /etc/proftpd/conf.d/</span>
+
+<span class="s">AuthUserFile /etc/proftpd/ftpd.passwd</span>
+<span class="s">&quot;&quot;&quot;</span>
+
+<span class="n">DEFAULT_MODULES_CONF</span> <span class="o">=</span> <span class="s">r&quot;&quot;&quot;</span>
+<span class="s"># This file is used to manage DSO modules and features.</span>
+<span class="s">#</span>
+
+<span class="s"># This is the directory where DSO modules reside</span>
+
+<span class="s">ModulePath /usr/lib/proftpd</span>
+
+<span class="s"># Allow only user root to load and unload modules, but allow everyone</span>
+<span class="s"># to see which modules have been loaded</span>
+
+<span class="s">ModuleControlsACLs insmod,rmmod allow user root</span>
+<span class="s">ModuleControlsACLs lsmod allow user *</span>
+
+<span class="s">LoadModule mod_ctrls_admin.c</span>
+<span class="s">LoadModule mod_tls.c</span>
+
+<span class="s"># Install one of proftpd-mod-mysql, proftpd-mod-pgsql or any other</span>
+<span class="s"># SQL backend engine to use this module and the required backend.</span>
+<span class="s"># This module must be mandatory loaded before anyone of</span>
+<span class="s"># the existent SQL backeds.</span>
+<span class="s">#LoadModule mod_sql.c</span>
+
+<span class="s"># Install proftpd-mod-ldap to use this</span>
+<span class="s">#LoadModule mod_ldap.c</span>
+
+<span class="s">#</span>
+<span class="s"># &#39;SQLBackend mysql&#39; or &#39;SQLBackend postgres&#39; (or any other valid backend)</span>
+<span class="s"># directives are required to have SQL authorization working. You can also</span>
+<span class="s"># comment out the unused module here, in alternative.</span>
+<span class="s">#</span>
+
+<span class="s"># Install proftpd-mod-mysql and decomment the previous</span>
+<span class="s"># mod_sql.c module to use this.</span>
+<span class="s">#LoadModule mod_sql_mysql.c</span>
+
+<span class="s"># Install proftpd-mod-pgsql and decomment the previous</span>
+<span class="s"># mod_sql.c module to use this.</span>
+<span class="s">#LoadModule mod_sql_postgres.c</span>
+
+<span class="s"># Install proftpd-mod-sqlite and decomment the previous</span>
+<span class="s"># mod_sql.c module to use this</span>
+<span class="s">#LoadModule mod_sql_sqlite.c</span>
+
+<span class="s"># Install proftpd-mod-odbc and decomment the previous</span>
+<span class="s"># mod_sql.c module to use this</span>
+<span class="s">#LoadModule mod_sql_odbc.c</span>
+
+<span class="s"># Install one of the previous SQL backends and decomment</span>
+<span class="s"># the previous mod_sql.c module to use this</span>
+<span class="s">#LoadModule mod_sql_passwd.c</span>
+
+<span class="s">LoadModule mod_radius.c</span>
+<span class="s">LoadModule mod_quotatab.c</span>
+<span class="s">LoadModule mod_quotatab_file.c</span>
+
+<span class="s"># Install proftpd-mod-ldap to use this</span>
+<span class="s">#LoadModule mod_quotatab_ldap.c</span>
+
+<span class="s"># Install one of the previous SQL backends and decomment</span>
+<span class="s"># the previous mod_sql.c module to use this</span>
+<span class="s">#LoadModule mod_quotatab_sql.c</span>
+<span class="s">LoadModule mod_quotatab_radius.c</span>
+<span class="s">LoadModule mod_wrap.c</span>
+<span class="s">LoadModule mod_rewrite.c</span>
+<span class="s">#LoadModule mod_sql_odbcad.c</span>
+<span class="s">LoadModule mod_ban.c</span>
+<span class="s">LoadModule mod_wrap2.c</span>
+<span class="s">LoadModule mod_wrap2_file.c</span>
+<span class="s"># Install one of the previous SQL backends and decomment</span>
+<span class="s"># the previous mod_sql.c module to use this</span>
+<span class="s">#LoadModule mod_wrap2_sql.c</span>
+<span class="s">LoadModule mod_dynmasq.c</span>
+<span class="s">LoadModule mod_exec.c</span>
+<span class="s">LoadModule mod_shaper.c</span>
+<span class="s">LoadModule mod_ratio.c</span>
+<span class="s">LoadModule mod_site_misc.c</span>
+
+<span class="s">LoadModule mod_sftp.c</span>
+<span class="s">LoadModule mod_sftp_pam.c</span>
+<span class="s"># Install one of the previous SQL backends and decomment</span>
+<span class="s"># the previous mod_sql.c module to use this</span>
+<span class="s">#LoadModule mod_sftp_sql.c</span>
+
+<span class="s">LoadModule mod_facl.c</span>
+<span class="s">LoadModule mod_unique_id.c</span>
+<span class="s">LoadModule mod_copy.c</span>
+<span class="s">LoadModule mod_deflate.c</span>
+<span class="s">LoadModule mod_ifversion.c</span>
+<span class="s">LoadModule mod_tls_memcache.c</span>
+
+<span class="s"># Install proftpd-mod-geoip to use the GeoIP feature</span>
+<span class="s">#LoadModule mod_geoip.c</span>
+
+<span class="s">#LoadModule mod_log.c</span>
+
+<span class="s"># keep this module the last one</span>
+<span class="s">LoadModule mod_ifsession.c</span>
+<span class="s">&quot;&quot;&quot;</span>
+
+
+<span class="c"># Functions &amp; objects ========================================================,</span>
+<div class="viewcode-block" id="add_or_update"><a class="viewcode-back" href="../initializer.html#edeposit_proftpd_init.add_or_update">[docs]</a><span class="k">def</span> <span class="nf">add_or_update</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Add or update value in configuration file format used by proftpd.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        data (str): Configuration file as string.</span>
+<span class="sd">        item (str): What option will be added/updated.</span>
+<span class="sd">        value (str): Value of option.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: updated configuration</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+
+    <span class="c"># to list of bytearrays (this is useful, because their reference passed to</span>
+    <span class="c"># other functions can be changed, and it will change objects in arrays</span>
+    <span class="c"># unlike strings)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">data</span><span class="p">)</span>
+
+    <span class="c"># search for the item in raw (ucommented) values</span>
+    <span class="n">conf</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">and</span> <span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">item</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">conf</span><span class="p">:</span>
+        <span class="n">conf</span><span class="p">[</span><span class="mi">0</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">conf</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s">&quot; &quot;</span> <span class="o">+</span> <span class="n">value</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c"># search for the item in commented values, if found, uncomment it</span>
+        <span class="n">comments</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&quot;#&quot;</span><span class="p">)</span>
+                      <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;#&quot;</span><span class="p">))</span> <span class="o">&gt;=</span> <span class="mi">2</span>
+                      <span class="ow">and</span> <span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;#&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                      <span class="ow">and</span> <span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;#&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">item</span><span class="p">,</span>
+            <span class="n">data</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">comments</span><span class="p">:</span>
+            <span class="n">comments</span><span class="p">[</span><span class="mi">0</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">comments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;#&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s">&quot; &quot;</span> <span class="o">+</span> <span class="n">value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># add item, if not found in raw/commented values</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span> <span class="o">+</span> <span class="s">&quot; &quot;</span> <span class="o">+</span> <span class="n">value</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">data</span><span class="p">))</span>  <span class="c"># convert back to string</span>
+
+</div>
+<span class="k">def</span> <span class="nf">comment</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">what</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Comments line containing `what` in string `data`.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        data (str): Configuration file in string.</span>
+<span class="sd">        what (str): Line which will be commented out.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: Configuration file with commented `what`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="s">&quot;#&quot;</span> <span class="o">+</span> <span class="n">x</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="o">==</span> <span class="n">what</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="k">else</span> <span class="n">x</span><span class="p">,</span>
+        <span class="n">data</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_is_deb_system</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Badly written test whether the system is deb/apt based or not.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s">&quot;/etc/apt&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_write_conf_file</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Write configuration file as it is defined in settings.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">CONF_FILE</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">DEFAULT_PROFTPD_CONF</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;&#39;</span><span class="si">%s</span><span class="s">&#39; created.&quot;</span><span class="p">,</span> <span class="n">CONF_FILE</span><span class="p">)</span>
+
+
+<span class="nd">@require_root</span>
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../initializer.html#edeposit_proftpd_init.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">overwrite</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Used to create configuration files, set permissions and so on.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Checking existence of &#39;</span><span class="si">%s</span><span class="s">&#39;.&quot;</span><span class="p">,</span> <span class="n">CONF_PATH</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">CONF_PATH</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Directory </span><span class="si">%s</span><span class="s"> not found! Panicking..&quot;</span><span class="p">,</span> <span class="n">CONF_PATH</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">UserWarning</span><span class="p">(</span>
+            <span class="s">&quot;Can&#39;t find &#39;</span><span class="si">%s</span><span class="s">&#39; - it looks like ProFTPD is not installed!&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="n">CONF_PATH</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="c"># check existence of proftpd.conf</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Checking existence of configuration file &#39;</span><span class="si">%s</span><span class="s">&#39;.&quot;</span><span class="p">,</span> <span class="n">CONF_FILE</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">CONF_FILE</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Configuration file not found, creating..&quot;</span><span class="p">)</span>
+        <span class="n">_write_conf_file</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Found.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">CONF_FILE</span> <span class="o">+</span> <span class="s">&quot;_&quot;</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s">&quot;Backing up the configuration file &#39;</span><span class="si">%s</span><span class="s">&#39; -&gt; &#39;</span><span class="si">%s</span><span class="s">&#39;.&quot;</span><span class="p">,</span>
+                <span class="n">CONF_FILE</span><span class="p">,</span>
+                <span class="n">CONF_FILE</span> <span class="o">+</span> <span class="s">&quot;_&quot;</span>
+            <span class="p">)</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copyfile</span><span class="p">(</span><span class="n">CONF_FILE</span><span class="p">,</span> <span class="n">CONF_FILE</span> <span class="o">+</span> <span class="s">&quot;_&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s">&quot;Backup already exists. &#39;</span><span class="si">%s</span><span class="s">&#39; will be overwritten.&quot;</span><span class="p">,</span>
+                <span class="n">CONF_FILE</span>
+            <span class="p">)</span>
+    <span class="k">if</span> <span class="n">overwrite</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;--update switch not found, overwriting conf file&quot;</span><span class="p">)</span>
+        <span class="n">_write_conf_file</span><span class="p">()</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Checking existence of the &#39;</span><span class="si">%s</span><span class="s">&#39; file.&quot;</span><span class="p">,</span> <span class="n">MODULES_FILE</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">MODULES_FILE</span><span class="p">)</span> <span class="ow">and</span> <span class="n">_is_deb_system</span><span class="p">():</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">MODULES_FILE</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">DEFAULT_MODULES_CONF</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Modules file not found. Created &#39;</span><span class="si">%s</span><span class="s">&#39;.&quot;</span><span class="p">,</span> <span class="n">MODULES_FILE</span><span class="p">)</span>
+
+    <span class="c"># create data directory, where the user informations will be stored</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Checking existence of user&#39;s directory &#39;</span><span class="si">%s</span><span class="s">&#39;.&quot;</span><span class="p">,</span> <span class="n">DATA_PATH</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">DATA_PATH</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Directory &#39;</span><span class="si">%s</span><span class="s">&#39; not found, creating..&quot;</span><span class="p">,</span> <span class="n">DATA_PATH</span><span class="p">)</span>
+
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">DATA_PATH</span><span class="p">,</span> <span class="mo">0777</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Done. &#39;</span><span class="si">%s</span><span class="s">&#39; created.&quot;</span><span class="p">,</span> <span class="n">DATA_PATH</span><span class="p">)</span>
+
+    <span class="c"># create user files if they doesn&#39;t exists</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Checking existence of passwd file &#39;</span><span class="si">%s</span><span class="s">&#39;.&quot;</span><span class="p">,</span> <span class="n">LOGIN_FILE</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">LOGIN_FILE</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;passwd file not found, creating..&quot;</span><span class="p">)</span>
+
+        <span class="nb">open</span><span class="p">(</span><span class="n">LOGIN_FILE</span><span class="p">,</span> <span class="s">&quot;a&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Done. &#39;</span><span class="si">%s</span><span class="s">&#39; created.&quot;</span><span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Setting permissions..&quot;</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chown</span><span class="p">(</span><span class="n">LOGIN_FILE</span><span class="p">,</span> <span class="n">get_ftp_uid</span><span class="p">(),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="n">LOGIN_FILE</span><span class="p">,</span> <span class="mo">0400</span><span class="p">)</span>
+
+    <span class="c"># load values from protpd conf file</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Switching and adding options..&quot;</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">CONF_FILE</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+    <span class="c"># set path to passwd file</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">AuthUserFile&quot;</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">add_or_update</span><span class="p">(</span>
+        <span class="n">data</span><span class="p">,</span>
+        <span class="s">&quot;AuthUserFile&quot;</span><span class="p">,</span>
+        <span class="n">LOGIN_FILE</span>
+    <span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">RequireValidShell&quot;</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">add_or_update</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s">&quot;RequireValidShell&quot;</span><span class="p">,</span> <span class="s">&quot;off&quot;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">DefaultRoot&quot;</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">add_or_update</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s">&quot;DefaultRoot&quot;</span><span class="p">,</span> <span class="s">&quot;~&quot;</span><span class="p">)</span>
+
+    <span class="c"># http://www.proftpd.org/docs/modules/mod_log.html</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">LogFormat&quot;</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">add_or_update</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s">&quot;LogFormat&quot;</span><span class="p">,</span> <span class="s">&#39;paths &quot;</span><span class="si">%f</span><span class="s">, </span><span class="si">%u</span><span class="s">, %m, %{</span><span class="si">%s</span><span class="s">}t&quot;&#39;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">ExtendedLog&quot;</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">add_or_update</span><span class="p">(</span>
+        <span class="n">data</span><span class="p">,</span>
+        <span class="s">&quot;ExtendedLog&quot;</span><span class="p">,</span>
+        <span class="n">LOG_FILE</span> <span class="o">+</span> <span class="s">&quot; WRITE paths&quot;</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_deb_system</span><span class="p">():</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Detected non debian based linux. Aplying SUSE changes.&quot;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">comment</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s">&quot;IdentLookups off&quot;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">comment</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s">&quot;Include /etc/proftpd/modules.conf&quot;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">add_or_update</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s">&quot;User&quot;</span><span class="p">,</span> <span class="s">&quot;ftp&quot;</span><span class="p">)</span>
+
+    <span class="c"># save changed file</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Saving into config file..&quot;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">CONF_FILE</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Done.&quot;</span><span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Sending proftpd signal to reload configuration..&quot;</span><span class="p">)</span>
+    <span class="n">reload_configuration</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Done.&quot;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;All set.&quot;</span><span class="p">)</span>
+
+
+<span class="c"># Main program ===============================================================</span></div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="s">&quot;&quot;&quot;This script will modify your ProFTPD installation for</span>
+<span class="s">                       use with edeposit.amqp.ftp package.&quot;&quot;&quot;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s">&quot;-o&quot;</span><span class="p">,</span>
+        <span class="s">&#39;--overwrite&#39;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&quot;&quot;&quot;Overwrite ProFTPD configuration file with edeposit.amqp.ftp</span>
+<span class="s">                default configuration.&quot;&quot;&quot;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s">&quot;-v&quot;</span><span class="p">,</span>
+        <span class="s">&#39;--verbose&#39;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&quot;Print debug output.&quot;</span>
+    <span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Logger set to debug level.&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">main</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">overwrite</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">AssertionError</span><span class="p">,</span> <span class="ne">UserWarning</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">message</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">edeposit.amqp.ftp 1.0.1 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014 E-deposit team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

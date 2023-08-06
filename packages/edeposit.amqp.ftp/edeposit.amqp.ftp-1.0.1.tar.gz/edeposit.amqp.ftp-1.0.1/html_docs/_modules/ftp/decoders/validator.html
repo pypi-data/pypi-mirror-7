@@ -1,0 +1,408 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ftp.decoders.validator &mdash; edeposit.amqp.ftp 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="edeposit.amqp.ftp 1.0.1 documentation" href="../../../index.html" />
+    <link rel="up" title="ftp.decoders" href="../decoders.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">edeposit.amqp.ftp 1.0.1 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../ftp.html" >ftp</a> &raquo;</li>
+          <li><a href="../decoders.html" accesskey="U">ftp.decoders</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for ftp.decoders.validator</h1><div class="highlight"><pre>
+<span class="c">#! /usr/bin/env python</span>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="c">#</span>
+<span class="c"># Interpreter version: python 2.7</span>
+<span class="c">#</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module provides highlevel checking of parsed data for lowlevel decoders.</span>
+
+<span class="sd">It handles the unicode in keys, builds dicts from flat arrays and so on.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c"># Imports =====================================================================</span>
+<span class="kn">import</span> <span class="nn">unicodedata</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">aleph.isbn</span> <span class="kn">import</span> <span class="n">is_valid_isbn</span>
+    <span class="kn">from</span> <span class="nn">aleph.datastructures.epublication</span> <span class="kn">import</span> <span class="n">EPublication</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">edeposit.amqp.aleph.isbn</span> <span class="kn">import</span> <span class="n">is_valid_isbn</span>
+    <span class="kn">from</span> <span class="nn">edeposit.amqp.aleph.datastructures.epublication</span> <span class="kn">import</span> <span class="n">EPublication</span>
+
+<span class="kn">from</span> <span class="nn">meta_exceptions</span> <span class="kn">import</span> <span class="n">MetaParsingException</span>
+
+
+<span class="c"># Variables ===================================================================</span>
+<span class="n">_ALLOWED_TYPES</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="nb">str</span><span class="p">,</span>
+    <span class="nb">unicode</span><span class="p">,</span>
+    <span class="nb">int</span><span class="p">,</span>
+    <span class="nb">float</span><span class="p">,</span>
+    <span class="nb">long</span>
+<span class="p">]</span>
+
+<span class="n">_ITERABLE_TYPES</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="nb">list</span><span class="p">,</span>
+    <span class="nb">tuple</span>
+<span class="p">]</span>
+
+
+<span class="c"># Functions &amp; objects =========================================================</span>
+<div class="viewcode-block" id="Field"><a class="viewcode-back" href="../../../api/ftp.decoders.validator.html#ftp.decoders.validator.Field">[docs]</a><span class="k">class</span> <span class="nc">Field</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class is used to represent and parse specific &quot;key: val&quot; pair.</span>
+
+<span class="sd">    When you create the object, `keyword` and `descr` is specified. Optionally</span>
+<span class="sd">    also `epub` parameter, which is corresponding key in :class:`EPublication</span>
+<span class="sd">    &lt;edeposit.amqp.aleph.datastructures.epublication.EPublication&gt;` structure.</span>
+
+<span class="sd">    Assingning value to the class is done by calling :meth:`check`, which</span>
+<span class="sd">    sets the :attr:`value`, if the `key` parameter matches :attr:`keyword`.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        keyword (str): Key for the data pair.</span>
+<span class="sd">        descr (str): Description of the data pair. Used in exceptions.</span>
+<span class="sd">        epub (str, default None): Corresponding keyword in EPublication</span>
+<span class="sd">                                  structure.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keyword</span><span class="p">,</span> <span class="n">descr</span><span class="p">,</span> <span class="n">epub</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="c">#: Keyword agains :meth:`check` will try to match.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keyword</span> <span class="o">=</span> <span class="n">keyword</span>
+
+        <span class="c">#: Description of the data pair.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">descr</span> <span class="o">=</span> <span class="n">descr</span>
+
+        <span class="c">#: Internal value. Set when :meth:`check` successfully matched the</span>
+        <span class="c">#: keyword.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="c">#: Corresponding key in :class:`EPublication</span>
+        <span class="c">#: &lt;edeposit.amqp.aleph.datastructures.epublication.EPublication&gt;`</span>
+        <span class="c">#: structure.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epub</span> <span class="o">=</span> <span class="n">epub</span> <span class="k">if</span> <span class="n">epub</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">keyword</span>
+
+<div class="viewcode-block" id="Field.check"><a class="viewcode-back" href="../../../api/ftp.decoders.validator.html#ftp.decoders.validator.Field.check">[docs]</a>    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check whether `key` matchs the :attr:`keyword`. If so, set the</span>
+<span class="sd">        :attr:`value` to `value`.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            key (str): Key which will be matched with :attr:`keyword`.</span>
+<span class="sd">            value (str): Value which will be assigned to :attr:`value` if keys</span>
+<span class="sd">                         matches.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            True/False: Whether the key matched :attr:`keyword`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+        <span class="c"># try unicode conversion</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&quot;utf-8&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">UnicodeEncodeError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_remove_accents</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">keyword</span> <span class="ow">in</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="k">return</span> <span class="bp">True</span>
+
+        <span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="Field.is_valid"><a class="viewcode-back" href="../../../api/ftp.decoders.validator.html#ftp.decoders.validator.Field.is_valid">[docs]</a>    <span class="k">def</span> <span class="nf">is_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return ``True`` if :attr:`value` is set.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            :attr:`value` is set by calling :meth:`check` with proper `key`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span>
+</div>
+    <span class="k">def</span> <span class="nf">_remove_accents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert unicode string to ASCII.</span>
+
+<span class="sd">        Credit: http://stackoverflow.com/a/517974</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">nkfd_form</span> <span class="o">=</span> <span class="n">unicodedata</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="s">&#39;NFKD&#39;</span><span class="p">,</span> <span class="n">input_str</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">u&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">nkfd_form</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">unicodedata</span><span class="o">.</span><span class="n">combining</span><span class="p">(</span><span class="n">c</span><span class="p">)])</span>
+
+</div>
+<div class="viewcode-block" id="FieldParser"><a class="viewcode-back" href="../../../api/ftp.decoders.validator.html#ftp.decoders.validator.FieldParser">[docs]</a><span class="k">class</span> <span class="nc">FieldParser</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class used to make sure, that all fields in metadata are present.</span>
+
+<span class="sd">    See :doc:`/api/required` for list of required fields.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fields</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">Field</span><span class="p">(</span><span class="n">keyword</span><span class="o">=</span><span class="s">&quot;isbn&quot;</span><span class="p">,</span> <span class="n">descr</span><span class="o">=</span><span class="s">&quot;ISBN&quot;</span><span class="p">,</span> <span class="n">epub</span><span class="o">=</span><span class="s">&quot;ISBN&quot;</span><span class="p">),</span>
+            <span class="n">Field</span><span class="p">(</span><span class="n">keyword</span><span class="o">=</span><span class="s">&quot;vazba&quot;</span><span class="p">,</span> <span class="n">descr</span><span class="o">=</span><span class="s">&quot;Vazba/forma&quot;</span><span class="p">),</span>
+            <span class="n">Field</span><span class="p">(</span><span class="n">keyword</span><span class="o">=</span><span class="s">&quot;nazev&quot;</span><span class="p">,</span> <span class="n">descr</span><span class="o">=</span><span class="s">&quot;Název&quot;</span><span class="p">),</span>
+            <span class="n">Field</span><span class="p">(</span><span class="n">keyword</span><span class="o">=</span><span class="s">&quot;misto&quot;</span><span class="p">,</span> <span class="n">descr</span><span class="o">=</span><span class="s">&quot;Místo vydání&quot;</span><span class="p">,</span> <span class="n">epub</span><span class="o">=</span><span class="s">&quot;mistoVydani&quot;</span><span class="p">),</span>
+            <span class="n">Field</span><span class="p">(</span>
+                <span class="n">keyword</span><span class="o">=</span><span class="s">&quot;nakladatel&quot;</span><span class="p">,</span>
+                <span class="n">descr</span><span class="o">=</span><span class="s">&quot;Nakladatel&quot;</span><span class="p">,</span>
+                <span class="n">epub</span><span class="o">=</span><span class="s">&quot;nakladatelVydavatel&quot;</span>
+            <span class="p">),</span>
+            <span class="n">Field</span><span class="p">(</span>
+                <span class="n">keyword</span><span class="o">=</span><span class="s">&quot;datum&quot;</span><span class="p">,</span>
+                <span class="n">descr</span><span class="o">=</span><span class="s">&quot;Měsíc a rok vydání&quot;</span><span class="p">,</span>
+                <span class="n">epub</span><span class="o">=</span><span class="s">&quot;datumVydani&quot;</span>
+            <span class="p">),</span>
+            <span class="n">Field</span><span class="p">(</span><span class="n">keyword</span><span class="o">=</span><span class="s">&quot;poradi&quot;</span><span class="p">,</span> <span class="n">descr</span><span class="o">=</span><span class="s">&quot;Pořadí vydání&quot;</span><span class="p">,</span> <span class="n">epub</span><span class="o">=</span><span class="s">&quot;poradiVydani&quot;</span><span class="p">),</span>
+            <span class="n">Field</span><span class="p">(</span>
+                <span class="n">keyword</span><span class="o">=</span><span class="s">&quot;zpracovatel&quot;</span><span class="p">,</span>
+                <span class="n">descr</span><span class="o">=</span><span class="s">&quot;Zpracovatel záznamu&quot;</span><span class="p">,</span>
+                <span class="n">epub</span><span class="o">=</span><span class="s">&quot;zpracovatelZaznamu&quot;</span>
+            <span class="p">)</span>
+        <span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">optional</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">Field</span><span class="p">(</span><span class="n">keyword</span><span class="o">=</span><span class="s">&quot;url&quot;</span><span class="p">,</span> <span class="n">descr</span><span class="o">=</span><span class="s">&quot;Url&quot;</span><span class="p">),</span>
+            <span class="n">Field</span><span class="p">(</span><span class="n">keyword</span><span class="o">=</span><span class="s">&quot;format&quot;</span><span class="p">,</span> <span class="n">descr</span><span class="o">=</span><span class="s">&quot;Formát&quot;</span><span class="p">),</span>
+            <span class="n">Field</span><span class="p">(</span><span class="n">keyword</span><span class="o">=</span><span class="s">&quot;podnazev&quot;</span><span class="p">,</span> <span class="n">descr</span><span class="o">=</span><span class="s">&quot;Podnázev&quot;</span><span class="p">),</span>
+            <span class="n">Field</span><span class="p">(</span><span class="n">keyword</span><span class="o">=</span><span class="s">&quot;cena&quot;</span><span class="p">,</span> <span class="n">descr</span><span class="o">=</span><span class="s">&quot;Cena&quot;</span><span class="p">),</span>
+        <span class="p">]</span>
+
+<div class="viewcode-block" id="FieldParser.process"><a class="viewcode-back" href="../../../api/ftp.decoders.validator.html#ftp.decoders.validator.FieldParser.process">[docs]</a>    <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Try to look for `key` in all required and optional fields. If found,</span>
+<span class="sd">        set the `val`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">field</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+                <span class="k">return</span>
+
+        <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">optional</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">field</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+                <span class="k">return</span>
+</div>
+<div class="viewcode-block" id="FieldParser.is_valid"><a class="viewcode-back" href="../../../api/ftp.decoders.validator.html#ftp.decoders.validator.FieldParser.is_valid">[docs]</a>    <span class="k">def</span> <span class="nf">is_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            True/False whether ALL required fields are set.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">field</span><span class="o">.</span><span class="n">is_valid</span><span class="p">():</span>
+                <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">return</span> <span class="bp">True</span>
+</div>
+<div class="viewcode-block" id="FieldParser.get_epublication"><a class="viewcode-back" href="../../../api/ftp.decoders.validator.html#ftp.decoders.validator.FieldParser.get_epublication">[docs]</a>    <span class="k">def</span> <span class="nf">get_epublication</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            EPublication: Structure when the object :meth:`is_valid`.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            MetaParsingException: When the object is not valid.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_valid</span><span class="p">():</span>
+            <span class="n">bad_fields</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="ow">not</span> <span class="n">x</span><span class="o">.</span><span class="n">is_valid</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">)</span>
+            <span class="n">bad_fields</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="s">&quot;Keyword &#39;</span><span class="si">%s</span><span class="s">&#39; (</span><span class="si">%s</span><span class="s">) not found.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">keyword</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">descr</span><span class="p">),</span>
+                <span class="n">bad_fields</span>
+            <span class="p">)</span>
+
+            <span class="k">raise</span> <span class="n">MetaParsingException</span><span class="p">(</span>
+                <span class="s">&quot;Missing field(s):</span><span class="se">\n\t</span><span class="s">&quot;</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n\t</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bad_fields</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="n">relevant_fields</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span>
+        <span class="n">relevant_fields</span> <span class="o">+=</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">is_valid</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">optional</span><span class="p">)</span>
+
+        <span class="n">epub_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">epub</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">value</span><span class="p">),</span> <span class="n">relevant_fields</span><span class="p">))</span>
+
+        <span class="c"># make sure, that all fields present in EPublication has values also</span>
+        <span class="c"># in epub_dict</span>
+        <span class="k">for</span> <span class="n">epublication_part</span> <span class="ow">in</span> <span class="n">EPublication</span><span class="o">.</span><span class="n">_fields</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">epublication_part</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">epub_dict</span><span class="p">:</span>
+                <span class="n">epub_dict</span><span class="p">[</span><span class="n">epublication_part</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_valid_isbn</span><span class="p">(</span><span class="n">epub_dict</span><span class="p">[</span><span class="s">&quot;ISBN&quot;</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="n">MetaParsingException</span><span class="p">(</span>
+                <span class="s">&quot;ISBN &#39;</span><span class="si">%s</span><span class="s">&#39; is not valid!&quot;</span> <span class="o">%</span> <span class="n">epub_dict</span><span class="p">[</span><span class="s">&quot;ISBN&quot;</span><span class="p">]</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">EPublication</span><span class="p">(</span><span class="o">**</span><span class="n">epub_dict</span><span class="p">)</span>
+
+</div></div>
+<span class="k">def</span> <span class="nf">_all_correct_list</span><span class="p">(</span><span class="n">array</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Make sure, that all items in `array` has good type and size.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        array (list): Array of python types.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        True/False</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">array</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_ITERABLE_TYPES</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">array</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="ow">in</span> <span class="n">_ITERABLE_TYPES</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">return</span> <span class="bp">True</span>
+
+
+<span class="k">def</span> <span class="nf">_convert_to_dict</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert `data` to dictionary.</span>
+
+<span class="sd">    Tries to get sense in multidimensional arrays.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        data: List/dict/tuple of variable dimension.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: If the data can be converted to dictionary.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        MetaParsingException: When the data are unconvertible to dict.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">_all_correct_list</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">data</span><span class="p">[::</span><span class="mi">2</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">])</span>
+            <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">MetaParsingException</span><span class="p">(</span>
+            <span class="s">&quot;Can&#39;t decode provided metadata - unknown structure.&quot;</span>
+        <span class="p">)</span>
+
+
+<div class="viewcode-block" id="check_structure"><a class="viewcode-back" href="../../../api/ftp.decoders.validator.html#ftp.decoders.validator.check_structure">[docs]</a><span class="k">def</span> <span class="nf">check_structure</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check whether the structure is flat dictionary. If not, try to convert it</span>
+<span class="sd">    to dictionary.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        data: Whatever data you have (dict/tuple/list).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: When the conversion was successful or `data` was already `good`.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        MetaParsingException: When the data couldn&#39;t be converted or had `bad`</span>
+<span class="sd">                              structure.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">_convert_to_dict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">MetaParsingException</span><span class="p">:</span>
+            <span class="k">raise</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">MetaParsingException</span><span class="p">(</span>
+                <span class="s">&quot;Metadata format has invalid strucure (dict is expected).&quot;</span>
+            <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_ALLOWED_TYPES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">MetaParsingException</span><span class="p">(</span>
+                <span class="s">&quot;Can&#39;t decode the meta file - invalid type of keyword &#39;&quot;</span> <span class="o">+</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">+</span>
+                <span class="s">&quot;&#39;!&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_ALLOWED_TYPES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">MetaParsingException</span><span class="p">(</span>
+                <span class="s">&quot;Can&#39;t decode the meta file - invalid type of keyword &#39;&quot;</span> <span class="o">+</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">+</span>
+                <span class="s">&quot;&#39;!&quot;</span>
+            <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">data</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">edeposit.amqp.ftp 1.0.1 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../ftp.html" >ftp</a> &raquo;</li>
+          <li><a href="../decoders.html" >ftp.decoders</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014 E-deposit team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

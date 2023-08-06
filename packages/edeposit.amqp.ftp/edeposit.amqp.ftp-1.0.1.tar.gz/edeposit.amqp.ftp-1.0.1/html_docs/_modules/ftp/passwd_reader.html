@@ -1,0 +1,281 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ftp.passwd_reader &mdash; edeposit.amqp.ftp 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="edeposit.amqp.ftp 1.0.1 documentation" href="../../index.html" />
+    <link rel="up" title="ftp" href="../ftp.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">edeposit.amqp.ftp 1.0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../ftp.html" accesskey="U">ftp</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for ftp.passwd_reader</h1><div class="highlight"><pre>
+<span class="c">#! /usr/bin/env python</span>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="c">#</span>
+<span class="c"># Interpreter version: python 2.7</span>
+<span class="c">#</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">API for reading/writing of the passwd file used by ProFTPD (and also unix).</span>
+
+<span class="sd">API</span>
+<span class="sd">---</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c"># Imports =====================================================================</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">from</span> <span class="nn">pwd</span> <span class="kn">import</span> <span class="n">getpwnam</span>
+
+<span class="kn">import</span> <span class="nn">settings</span>
+
+
+<span class="c"># Functions &amp; objects =========================================================</span>
+<div class="viewcode-block" id="load_users"><a class="viewcode-back" href="../../api/ftp.passwd_reader.html#ftp.passwd_reader.load_users">[docs]</a><span class="k">def</span> <span class="nf">load_users</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">LOGIN_FILE</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read passwd file and return dict with users and all their settings.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        path (str, default settings.LOGIN_FILE): path of the file,</span>
+<span class="sd">            which will be loaded (default :attr:`ftp.settings.LOGIN_FILE`).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (dict): username: {pass_hash, uid, gid, full_name, home, shell}</span>
+
+<span class="sd">    Example of returned data::</span>
+
+<span class="sd">        {</span>
+<span class="sd">            &quot;xex&quot;: {</span>
+<span class="sd">                &quot;pass_hash&quot;: &quot;$asd$aiosjdaiosjdásghwasdjo&quot;,</span>
+<span class="sd">                &quot;uid&quot;: &quot;2000&quot;,</span>
+<span class="sd">                &quot;gid&quot;: &quot;2000&quot;,</span>
+<span class="sd">                &quot;full_name&quot;: &quot;ftftf&quot;,</span>
+<span class="sd">                &quot;home&quot;: &quot;/home/ftp/xex&quot;,</span>
+<span class="sd">                &quot;shell&quot;: &quot;/bin/false&quot;</span>
+<span class="sd">            }</span>
+<span class="sd">        }</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{}</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+
+    <span class="n">users</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">cnt</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;:&quot;</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="o">==</span> <span class="mi">7</span><span class="p">,</span> <span class="s">&quot;Bad number of fields in &#39;</span><span class="si">%s</span><span class="s">&#39;, at line </span><span class="si">%d</span><span class="s">!&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="n">path</span><span class="p">,</span>
+            <span class="n">cnt</span>
+        <span class="p">)</span>
+
+        <span class="n">users</span><span class="p">[</span><span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s">&quot;pass_hash&quot;</span><span class="p">:</span> <span class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="s">&quot;uid&quot;</span><span class="p">:</span> <span class="n">line</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+            <span class="s">&quot;gid&quot;</span><span class="p">:</span> <span class="n">line</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+            <span class="s">&quot;full_name&quot;</span><span class="p">:</span> <span class="n">line</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span>
+            <span class="s">&quot;home&quot;</span><span class="p">:</span> <span class="n">line</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span>
+            <span class="s">&quot;shell&quot;</span><span class="p">:</span> <span class="n">line</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>
+        <span class="p">}</span>
+
+        <span class="n">cnt</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">users</span>
+
+</div>
+<div class="viewcode-block" id="save_users"><a class="viewcode-back" href="../../api/ftp.passwd_reader.html#ftp.passwd_reader.save_users">[docs]</a><span class="k">def</span> <span class="nf">save_users</span><span class="p">(</span><span class="n">users</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">LOGIN_FILE</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Save dictionary with user data to passwd file (default</span>
+<span class="sd">    :attr:`ftp.settings.LOGIN_FILE`).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        users (dict): dictionary with user data. For details look at dict</span>
+<span class="sd">                      returned from :func:`load_users`.</span>
+<span class="sd">        path (str, default settings.LOGIN_FILE): path of the file, where the</span>
+<span class="sd">             data will be stored (default :attr:`ftp.settings.LOGIN_FILE`).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">username</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">users</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">pass_line</span> <span class="o">=</span> <span class="n">username</span> <span class="o">+</span> <span class="s">&quot;:&quot;</span> <span class="o">+</span> <span class="s">&quot;:&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
+                <span class="n">data</span><span class="p">[</span><span class="s">&quot;pass_hash&quot;</span><span class="p">],</span>
+                <span class="n">data</span><span class="p">[</span><span class="s">&quot;uid&quot;</span><span class="p">],</span>
+                <span class="n">data</span><span class="p">[</span><span class="s">&quot;gid&quot;</span><span class="p">],</span>
+                <span class="n">data</span><span class="p">[</span><span class="s">&quot;full_name&quot;</span><span class="p">],</span>
+                <span class="n">data</span><span class="p">[</span><span class="s">&quot;home&quot;</span><span class="p">],</span>
+                <span class="n">data</span><span class="p">[</span><span class="s">&quot;shell&quot;</span><span class="p">]</span>
+            <span class="p">])</span>
+
+            <span class="n">fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">pass_line</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="get_ftp_uid"><a class="viewcode-back" href="../../api/ftp.passwd_reader.html#ftp.passwd_reader.get_ftp_uid">[docs]</a><span class="k">def</span> <span class="nf">get_ftp_uid</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        int: UID of the proftpd/ftp user.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        KeyError: When ``proftpd`` and ``ftp`` user is not found.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">getpwnam</span><span class="p">(</span><span class="s">&#39;proftpd&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">pw_uid</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">getpwnam</span><span class="p">(</span><span class="s">&#39;ftp&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">pw_uid</span>
+
+</div>
+<div class="viewcode-block" id="set_permissions"><a class="viewcode-back" href="../../api/ftp.passwd_reader.html#ftp.passwd_reader.set_permissions">[docs]</a><span class="k">def</span> <span class="nf">set_permissions</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">uid</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">gid</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="mo">0775</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Set pemissions for given `filename`.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        filename (str): name of the file/directory</span>
+<span class="sd">        uid (int, default proftpd): user ID - if not set, user ID of `proftpd`</span>
+<span class="sd">                                    is used</span>
+<span class="sd">        gid (int): group ID, if not set, it is not changed</span>
+<span class="sd">        mode (int, default 0775): unix access mode</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">uid</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">uid</span> <span class="o">=</span> <span class="n">get_ftp_uid</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">gid</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">gid</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="n">os</span><span class="o">.</span><span class="n">chown</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="n">gid</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_decode_config</span><span class="p">(</span><span class="n">conf_str</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Decode string to configuration dict.</span>
+
+<span class="sd">    Only values defined in settings._ALLOWED_MERGES can be redefined.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">conf_str</span> <span class="o">=</span> <span class="n">conf_str</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="c"># convert &quot;tttff&quot; -&gt; [True, True, True, False, False]</span>
+    <span class="n">conf</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">True</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s">&quot;T&quot;</span> <span class="k">else</span> <span class="bp">False</span><span class="p">,</span>
+        <span class="nb">list</span><span class="p">(</span><span class="n">conf_str</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">_ALLOWED_MERGES</span><span class="p">,</span> <span class="n">conf</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">_encode_config</span><span class="p">(</span><span class="n">conf_dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Encode `conf_dict` to string.&quot;&quot;&quot;</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c"># get variables in order defined in settings._ALLOWED_MERGES</span>
+    <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">settings</span><span class="o">.</span><span class="n">_ALLOWED_MERGES</span><span class="p">:</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">conf_dict</span><span class="p">[</span><span class="n">var</span><span class="p">])</span>
+
+    <span class="c"># convert bools to chars</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="s">&quot;t&quot;</span> <span class="k">if</span> <span class="n">x</span> <span class="k">else</span> <span class="s">&quot;f&quot;</span><span class="p">,</span>
+        <span class="n">out</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="s">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="read_user_config"><a class="viewcode-back" href="../../api/ftp.passwd_reader.html#ftp.passwd_reader.read_user_config">[docs]</a><span class="k">def</span> <span class="nf">read_user_config</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">LOGIN_FILE</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read user&#39;s configuration from otherwise unused field ``full_name`` in</span>
+<span class="sd">    passwd file.</span>
+
+<span class="sd">    Configuration is stored in string as list of t/f characters.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_decode_config</span><span class="p">(</span><span class="n">load_users</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">)[</span><span class="n">username</span><span class="p">][</span><span class="s">&quot;full_name&quot;</span><span class="p">])</span>
+
+</div>
+<div class="viewcode-block" id="save_user_config"><a class="viewcode-back" href="../../api/ftp.passwd_reader.html#ftp.passwd_reader.save_user_config">[docs]</a><span class="k">def</span> <span class="nf">save_user_config</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">conf_dict</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">LOGIN_FILE</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Save user&#39;s configuration to otherwise unused field ``full_name`` in passwd</span>
+<span class="sd">    file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">users</span> <span class="o">=</span> <span class="n">load_users</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">users</span><span class="p">[</span><span class="n">username</span><span class="p">][</span><span class="s">&quot;full_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_encode_config</span><span class="p">(</span><span class="n">conf_dict</span><span class="p">)</span>
+    <span class="n">save_users</span><span class="p">(</span><span class="n">users</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">edeposit.amqp.ftp 1.0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../ftp.html" >ftp</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014 E-deposit team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

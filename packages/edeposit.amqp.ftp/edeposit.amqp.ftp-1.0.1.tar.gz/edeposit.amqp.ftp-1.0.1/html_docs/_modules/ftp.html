@@ -1,0 +1,210 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ftp &mdash; edeposit.amqp.ftp 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="edeposit.amqp.ftp 1.0.1 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">edeposit.amqp.ftp 1.0.1 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for ftp</h1><div class="highlight"><pre>
+<span class="c">#! /usr/bin/env python</span>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="c">#</span>
+<span class="c"># Interpreter version: python 2.7</span>
+<span class="c">#</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">edeposit.amqp.ftp</span>
+<span class="sd">-----------------</span>
+<span class="sd">In this module, :func:`.reactToAMQPMessage` is used only for **receiving**</span>
+<span class="sd">commands from the other side. Events caused by FTP users are handled by</span>
+<span class="sd">:mod:`monitor.py &lt;.monitor&gt;`.</span>
+
+<span class="sd">Commands can create/change/remove users and so on. This is done by sending one</span>
+<span class="sd">of the following structures defined in :mod:`structures.py &lt;.structures&gt;`:</span>
+
+
+<span class="sd">- :class:`.AddUser`</span>
+<span class="sd">- :class:`.RemoveUser`</span>
+<span class="sd">- :class:`.ChangePassword`</span>
+
+<span class="sd">- :class:`.ListRegisteredUsers`</span>
+
+<span class="sd">- :class:`.SetUserSettings`</span>
+<span class="sd">- :class:`.GetUserSettings`</span>
+
+<span class="sd">Responses</span>
+<span class="sd">+++++++++</span>
+<span class="sd">:class:`.AddUser`, :class:`.RemoveUser` and :class:`.ChangePassword` requests</span>
+<span class="sd">at this moment returns just simple ``True``. This may be changed later.</span>
+
+<span class="sd">.. image:: /_static/user_management.png</span>
+
+<span class="sd">:class:`.ListRegisteredUsers` returns :class:`.Userlist` class.</span>
+
+<span class="sd">.. image:: /_static/list_registered_users.png</span>
+
+<span class="sd">:class:`.SetUserSettings` and :class:`.GetUserSettings` both returns</span>
+<span class="sd">:class:`.UserSettings` structure.</span>
+
+<span class="sd">.. image:: /_static/set_get_settings.png</span>
+
+<span class="sd">API</span>
+<span class="sd">---</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c"># Imports =====================================================================</span>
+<span class="c"># from settings import *</span>
+<span class="kn">import</span> <span class="nn">api</span>
+<span class="kn">import</span> <span class="nn">structures</span>
+<span class="kn">import</span> <span class="nn">passwd_reader</span>
+
+
+<span class="c"># Variables ===================================================================</span>
+<span class="c"># Functions &amp; objects =========================================================</span>
+<span class="k">def</span> <span class="nf">_instanceof</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="n">cls</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check type of `instance` by matching ``.__name__`` with `cls.__name__`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">instance</span><span class="p">)</span><span class="o">.</span><span class="n">__name__</span> <span class="o">==</span> <span class="n">cls</span><span class="o">.</span><span class="n">__name__</span>
+
+
+<span class="c"># Main function ===============================================================</span>
+<div class="viewcode-block" id="reactToAMQPMessage"><a class="viewcode-back" href="../api/ftp.html#ftp.reactToAMQPMessage">[docs]</a><span class="k">def</span> <span class="nf">reactToAMQPMessage</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">UUID</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    React to given (AMQP) message. `message` is expected to be</span>
+<span class="sd">    :py:func:`collections.namedtuple` structure from :mod:`.structures` filled</span>
+<span class="sd">    with all necessary data.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        message (object): One of the request objects defined in</span>
+<span class="sd">                          :mod:`.structures`.</span>
+<span class="sd">        UUID (str): Unique ID of received message.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        object: Response class from :mod:`structures`.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: if bad type of `message` structure is given.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">_instanceof</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">structures</span><span class="o">.</span><span class="n">AddUser</span><span class="p">):</span>
+        <span class="n">api</span><span class="o">.</span><span class="n">add_user</span><span class="p">(</span>
+            <span class="n">username</span><span class="o">=</span><span class="n">message</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+            <span class="n">password</span><span class="o">=</span><span class="n">message</span><span class="o">.</span><span class="n">password</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">elif</span> <span class="n">_instanceof</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">structures</span><span class="o">.</span><span class="n">RemoveUser</span><span class="p">):</span>
+        <span class="n">api</span><span class="o">.</span><span class="n">remove_user</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">username</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">elif</span> <span class="n">_instanceof</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">structures</span><span class="o">.</span><span class="n">ChangePassword</span><span class="p">):</span>
+        <span class="n">api</span><span class="o">.</span><span class="n">change_password</span><span class="p">(</span>
+            <span class="n">username</span><span class="o">=</span><span class="n">message</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+            <span class="n">new_password</span><span class="o">=</span><span class="n">message</span><span class="o">.</span><span class="n">new_password</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">elif</span> <span class="n">_instanceof</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">structures</span><span class="o">.</span><span class="n">ListRegisteredUsers</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">structures</span><span class="o">.</span><span class="n">Userlist</span><span class="p">(</span><span class="n">api</span><span class="o">.</span><span class="n">list_users</span><span class="p">())</span>
+    <span class="k">elif</span> <span class="n">_instanceof</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">structures</span><span class="o">.</span><span class="n">SetUserSettings</span><span class="p">):</span>
+        <span class="n">username</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">username</span>
+
+        <span class="c"># convert namedtuple to dict (python rocks)</span>
+        <span class="n">conf_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">_asdict</span><span class="p">())</span>
+        <span class="k">del</span> <span class="n">conf_dict</span><span class="p">[</span><span class="s">&quot;username&quot;</span><span class="p">]</span>
+
+        <span class="n">passwd_reader</span><span class="o">.</span><span class="n">save_user_config</span><span class="p">(</span>
+            <span class="n">username</span><span class="p">,</span>
+            <span class="n">conf_dict</span>
+        <span class="p">)</span>
+
+        <span class="n">conf_dict</span> <span class="o">=</span> <span class="n">passwd_reader</span><span class="o">.</span><span class="n">read_user_config</span><span class="p">(</span><span class="n">username</span><span class="p">)</span>
+        <span class="n">conf_dict</span><span class="p">[</span><span class="s">&quot;username&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">username</span>
+        <span class="k">return</span> <span class="n">structures</span><span class="o">.</span><span class="n">UserSettings</span><span class="p">(</span><span class="o">**</span><span class="n">conf_dict</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">_instanceof</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">structures</span><span class="o">.</span><span class="n">GetUserSettings</span><span class="p">):</span>
+        <span class="n">conf_dict</span> <span class="o">=</span> <span class="n">passwd_reader</span><span class="o">.</span><span class="n">read_user_config</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">username</span><span class="p">)</span>
+        <span class="n">conf_dict</span><span class="p">[</span><span class="s">&quot;username&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">username</span>
+        <span class="k">return</span> <span class="n">structures</span><span class="o">.</span><span class="n">UserSettings</span><span class="p">(</span><span class="o">**</span><span class="n">conf_dict</span><span class="p">)</span>
+
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+        <span class="s">&quot;Unknown type of request: &#39;&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">message</span><span class="p">))</span> <span class="o">+</span> <span class="s">&quot;&#39;!&quot;</span>
+    <span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">edeposit.amqp.ftp 1.0.1 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014 E-deposit team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

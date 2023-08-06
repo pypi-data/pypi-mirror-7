@@ -1,0 +1,254 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ProFTPD API &mdash; edeposit.amqp.ftp 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="edeposit.amqp.ftp 1.0.1 documentation" href="../index.html" />
+    <link rel="next" title="Passwd reader" href="ftp.passwd_reader.html" />
+    <link rel="prev" title="Request parser" href="ftp.request_parser.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="ftp.passwd_reader.html" title="Passwd reader"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="ftp.request_parser.html" title="Request parser"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">edeposit.amqp.ftp 1.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-ftp.api">
+<span id="proftpd-api"></span><h1>ProFTPD API<a class="headerlink" href="#module-ftp.api" title="Permalink to this headline">¶</a></h1>
+<p><a class="reference external" href="http://www.proftpd.org">ProFTPD</a> wrapped used to manage users of the FTP server.</p>
+<p>This module controls the <tt class="docutils literal"><span class="pre">ftpd.passwd</span></tt> (<a class="reference internal" href="ftp.settings.html#ftp.settings.LOGIN_FILE" title="ftp.settings.LOGIN_FILE"><tt class="xref py py-attr docutils literal"><span class="pre">LOGIN_FILE</span></tt></a>), creates/removes users directory and so on.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This API supposes, that it has permissions to read/write to <cite>ProFTPD</cite>
+configuration directory and to <cite>root</cite> directory for users.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You don&#8217;t have to set the permissions and everything manually, there is
+script called <tt class="xref py py-mod docutils literal"><span class="pre">initializer</span></tt>, which can do it for you automatically.</p>
+</div>
+<dl class="function">
+<dt id="ftp.api.require_root">
+<tt class="descclassname">ftp.api.</tt><tt class="descname">require_root</tt><big>(</big><em>fn</em><big>)</big><a class="reference internal" href="../_modules/ftp/api.html#require_root"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftp.api.require_root" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator to make sure, that user is root.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ftp.api.reload_configuration">
+<tt class="descclassname">ftp.api.</tt><tt class="descname">reload_configuration</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/ftp/api.html#reload_configuration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftp.api.reload_configuration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send signal to the proftpd daemon to reload configuration.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ftp.api.recursive_chmod">
+<tt class="descclassname">ftp.api.</tt><tt class="descname">recursive_chmod</tt><big>(</big><em>path</em>, <em>mode=493</em><big>)</big><a class="reference internal" href="../_modules/ftp/api.html#recursive_chmod"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftp.api.recursive_chmod" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recursively change <tt class="docutils literal"><span class="pre">mode</span></tt> for given <tt class="docutils literal"><span class="pre">path</span></tt>. Same as <tt class="docutils literal"><span class="pre">chmod</span> <span class="pre">-R</span> <span class="pre">mode</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>path</strong> (<em>str</em>) &#8211;
+Path of the directory/file.</li>
+<li><strong>mode</strong> (<em>octal int, default 0755</em>) &#8211;
+New mode of the file.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Don&#8217;t forget to add <tt class="docutils literal"><span class="pre">0</span></tt> at the beginning of the numbers of <cite>mode</cite>, or
+<cite>Unspeakable hOrRoRs</cite> will be awaken from their unholy sleep outside of
+the reality and they WILL eat your soul (and your files).</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="ftp.api.create_lock_file">
+<tt class="descclassname">ftp.api.</tt><tt class="descname">create_lock_file</tt><big>(</big><em>path</em><big>)</big><a class="reference internal" href="../_modules/ftp/api.html#create_lock_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftp.api.create_lock_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create lock file filled with <a class="reference internal" href="ftp.settings.html#ftp.settings.LOCK_FILE_CONTENT" title="ftp.settings.LOCK_FILE_CONTENT"><tt class="xref py py-attr docutils literal"><span class="pre">LOCK_FILE_CONTENT</span></tt></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>path</strong> (<em>str</em>) &#8211;
+Path to the lock file. Made from users home directory and
+<a class="reference internal" href="ftp.settings.html#ftp.settings.LOCK_FILENAME" title="ftp.settings.LOCK_FILENAME"><tt class="xref py py-attr docutils literal"><span class="pre">LOCK_FILENAME</span></tt></a>.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="ftp.api.add_user">
+<tt class="descclassname">ftp.api.</tt><tt class="descname">add_user</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/ftp/api.html#add_user"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftp.api.add_user" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds record to passwd-like file for ProFTPD, creates home directory and
+sets permissions for important files.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>username</strong> (<em>str</em>) &#8211;
+User&#8217;s name.</li>
+<li><strong>password</strong> (<em>str</em>) &#8211;
+User&#8217;s password.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="ftp.api.remove_user">
+<tt class="descclassname">ftp.api.</tt><tt class="descname">remove_user</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/ftp/api.html#remove_user"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftp.api.remove_user" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove user, his home directory and so on..</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>username</strong> (<em>str</em>) &#8211;
+User&#8217;s name.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="ftp.api.change_password">
+<tt class="descclassname">ftp.api.</tt><tt class="descname">change_password</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/ftp/api.html#change_password"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftp.api.change_password" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change password for given <cite>username</cite>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>username</strong> (<em>str</em>) &#8211;
+User&#8217;s name.</li>
+<li><strong>new_password</strong> (<em>str</em>) &#8211;
+User&#8217;s new password.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="ftp.api.list_users">
+<tt class="descclassname">ftp.api.</tt><tt class="descname">list_users</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/ftp/api.html#list_users"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftp.api.list_users" title="Permalink to this definition">¶</a></dt>
+<dd><p>List all registered users, which are stored in
+<a class="reference internal" href="ftp.settings.html#ftp.settings.LOGIN_FILE" title="ftp.settings.LOGIN_FILE"><tt class="xref py py-attr docutils literal"><span class="pre">LOGIN_FILE</span></tt></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><em>list</em> &#8211;
+of str usernames.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="ftp.request_parser.html"
+                        title="previous chapter">Request parser</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="ftp.passwd_reader.html"
+                        title="next chapter">Passwd reader</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/api/ftp.api.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="ftp.passwd_reader.html" title="Passwd reader"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="ftp.request_parser.html" title="Request parser"
+             >previous</a> |</li>
+        <li><a href="../index.html">edeposit.amqp.ftp 1.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014 E-deposit team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,284 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ftp.monitor &mdash; edeposit.amqp.ftp 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="edeposit.amqp.ftp 1.0.1 documentation" href="../../index.html" />
+    <link rel="up" title="ftp" href="../ftp.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">edeposit.amqp.ftp 1.0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../ftp.html" accesskey="U">ftp</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for ftp.monitor</h1><div class="highlight"><pre>
+<span class="c">#! /usr/bin/env python</span>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="c">#</span>
+<span class="c"># Interpreter version: python 2.7</span>
+<span class="c">#</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This script is used to monitor ProFTPD log and to react at certain events</span>
+<span class="sd">(deletion of the :attr:`ftp.settings.LOCK_FILENAME`).</span>
+
+<span class="sd">It is also used at API level in :mod:`edeposit.amqp` (see :func:`process_log`</span>
+<span class="sd">and :mod:`.ftp_managerd`).</span>
+
+<span class="sd">Details of parsing are handled by :mod:`.request_parser`.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c"># Imports =====================================================================</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+
+<span class="kn">import</span> <span class="nn">sh</span>
+
+<span class="kn">import</span> <span class="nn">settings</span>
+<span class="kn">from</span> <span class="nn">request_parser</span> <span class="kn">import</span> <span class="n">process_import_request</span>
+
+
+<span class="c"># Variables ===================================================================</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">()</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Started&quot;</span><span class="p">)</span>
+
+
+<span class="c"># Functions &amp; objects =========================================================</span>
+<div class="viewcode-block" id="_read_stdin"><a class="viewcode-back" href="../../api/ftp.monitor.html#ftp.monitor._read_stdin">[docs]</a><span class="k">def</span> <span class="nf">_read_stdin</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generator for reading from standard input in nonblocking mode.</span>
+
+<span class="sd">    Other ways of reading from ``stdin`` in python waits, until the buffer is</span>
+<span class="sd">    big enough, or until EOF character is sent.</span>
+
+<span class="sd">    This functions yields immediately after each line.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">line</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+    <span class="k">while</span> <span class="n">line</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">line</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="_parse_line"><a class="viewcode-back" href="../../api/ftp.monitor.html#ftp.monitor._parse_line">[docs]</a><span class="k">def</span> <span class="nf">_parse_line</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert one line from the extended log to dict.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        line (str): Line which will be converted.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: dict with ``timestamp``, ``command``, ``username`` and ``path`` \</span>
+<span class="sd">              keys.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        Typical line looks like this::</span>
+
+<span class="sd">            /home/ftp/xex/asd bsd.dat, xex, STOR, 1398351777</span>
+
+<span class="sd">        Filename may contain ``,`` character, so I am ``rsplitting`` the line</span>
+<span class="sd">        from the end to the beginning.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">line</span><span class="p">,</span> <span class="n">timestamp</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s">&quot;,&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">line</span><span class="p">,</span> <span class="n">command</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s">&quot;,&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">path</span><span class="p">,</span> <span class="n">username</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s">&quot;,&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s">&quot;timestamp&quot;</span><span class="p">:</span> <span class="n">timestamp</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span>
+        <span class="s">&quot;command&quot;</span><span class="p">:</span> <span class="n">command</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span>
+        <span class="s">&quot;username&quot;</span><span class="p">:</span> <span class="n">username</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span>
+        <span class="s">&quot;path&quot;</span><span class="p">:</span> <span class="n">path</span><span class="p">,</span>
+    <span class="p">}</span>
+
+</div>
+<div class="viewcode-block" id="process_log"><a class="viewcode-back" href="../../api/ftp.monitor.html#ftp.monitor.process_log">[docs]</a><span class="k">def</span> <span class="nf">process_log</span><span class="p">(</span><span class="n">file_iterator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Process the extended ProFTPD log.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        file_iterator (file): any file-like iterator for reading the log or</span>
+<span class="sd">                              stdin (see :func:`_read_stdin`).</span>
+
+<span class="sd">    Yields:</span>
+<span class="sd">        ImportRequest: with each import.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file_iterator</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s">&quot;,&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">parsed</span> <span class="o">=</span> <span class="n">_parse_line</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">parsed</span><span class="p">[</span><span class="s">&quot;command&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&quot;DELE&quot;</span><span class="p">,</span> <span class="s">&quot;DEL&quot;</span><span class="p">]:</span>
+            <span class="k">continue</span>
+
+        <span class="c"># don&#39;t react to anything else, than trigger in form of deleted</span>
+        <span class="c"># &quot;lock&quot; file</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">parsed</span><span class="p">[</span><span class="s">&quot;path&quot;</span><span class="p">])</span> <span class="o">!=</span> <span class="n">settings</span><span class="o">.</span><span class="n">LOCK_FILENAME</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="c"># react only to lock file in in home directory</span>
+        <span class="n">dir_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">parsed</span><span class="p">[</span><span class="s">&quot;path&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">LOCK_ONLY_IN_HOME</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">dir_name</span> <span class="o">!=</span> <span class="n">settings</span><span class="o">.</span><span class="n">DATA_PATH</span> <span class="o">+</span> <span class="n">parsed</span><span class="p">[</span><span class="s">&quot;username&quot;</span><span class="p">]:</span>
+                <span class="k">continue</span>
+
+        <span class="c"># deleted user</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">parsed</span><span class="p">[</span><span class="s">&quot;path&quot;</span><span class="p">])):</span>
+            <span class="k">continue</span>
+
+        <span class="c"># old record, which doesn&#39;t need to be parsed again</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">parsed</span><span class="p">[</span><span class="s">&quot;path&quot;</span><span class="p">]):</span>
+            <span class="k">continue</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s">&quot;Request for processing from user &#39;</span><span class="si">%s</span><span class="s">&#39;.&quot;</span> <span class="o">%</span> <span class="n">parsed</span><span class="p">[</span><span class="s">&quot;username&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="k">yield</span> <span class="n">process_import_request</span><span class="p">(</span>
+            <span class="n">username</span><span class="o">=</span><span class="n">parsed</span><span class="p">[</span><span class="s">&quot;username&quot;</span><span class="p">],</span>
+            <span class="n">path</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">parsed</span><span class="p">[</span><span class="s">&quot;path&quot;</span><span class="p">]),</span>
+            <span class="n">timestamp</span><span class="o">=</span><span class="n">parsed</span><span class="p">[</span><span class="s">&quot;timestamp&quot;</span><span class="p">],</span>
+            <span class="n">logger_handler</span><span class="o">=</span><span class="n">logger</span>
+        <span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../api/ftp.monitor.html#ftp.monitor.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Open `filename` and start processing it line by line. If `filename` is</span>
+<span class="sd">    none, process lines from `stdin`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">filename</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;&#39;</span><span class="si">%s</span><span class="s">&#39; doesn&#39;t exists!&quot;</span> <span class="o">%</span> <span class="n">filename</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;&#39;</span><span class="si">%s</span><span class="s">&#39; doesn&#39;t exists!</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">filename</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Processing &#39;</span><span class="si">%s</span><span class="s">&#39;&quot;</span> <span class="o">%</span> <span class="n">filename</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">ir</span> <span class="ow">in</span> <span class="n">process_log</span><span class="p">(</span><span class="n">sh</span><span class="o">.</span><span class="n">tail</span><span class="p">(</span><span class="s">&quot;-f&quot;</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">_iter</span><span class="o">=</span><span class="bp">True</span><span class="p">)):</span>
+            <span class="k">print</span> <span class="n">ir</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Processing stdin.&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">ir</span> <span class="ow">in</span> <span class="n">process_log</span><span class="p">(</span><span class="n">_read_stdin</span><span class="p">()):</span>
+            <span class="k">print</span> <span class="n">ir</span>
+
+
+<span class="c"># Main program ================================================================</span></div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="s">&quot;&quot;&quot;ProFTPD log monitor. This script reacts to preprogrammed</span>
+<span class="s">                       events.&quot;&quot;&quot;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s">&quot;FN&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&quot;&quot;&quot;Path to the log file. Usually &#39;</span><span class="si">%s</span><span class="s">&#39;. If not set, stdin is used to</span>
+<span class="s">                read the log file.&quot;&quot;&quot;</span> <span class="o">%</span> <span class="n">settings</span><span class="o">.</span><span class="n">LOG_FILE</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s">&quot;-v&quot;</span><span class="p">,</span>
+        <span class="s">&#39;--verbose&#39;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&quot;Be verbose.&quot;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s">&quot;-vv&quot;</span><span class="p">,</span>
+        <span class="s">&#39;--very-verbose&#39;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&quot;Be very verbose (include debug messages).&quot;</span>
+    <span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">very_verbose</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Logger set to debug level.&quot;</span><span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Running as standalone program.&quot;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">main</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">FN</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">edeposit.amqp.ftp 1.0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../ftp.html" >ftp</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014 E-deposit team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

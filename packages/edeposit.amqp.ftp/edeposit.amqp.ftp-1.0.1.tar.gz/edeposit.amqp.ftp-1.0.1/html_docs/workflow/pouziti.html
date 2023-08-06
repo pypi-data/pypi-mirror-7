@@ -1,0 +1,226 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Použití modulu &mdash; edeposit.amqp.ftp 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="edeposit.amqp.ftp 1.0.1 documentation" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">edeposit.amqp.ftp 1.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="pouziti-modulu">
+<h1>Použití modulu<a class="headerlink" href="#pouziti-modulu" title="Permalink to this headline">¶</a></h1>
+<p>V dokumentaci zatím bylo uvedeno jak modul nainstalovat a jak použít jednotlivé
+vrstvy API, které poskytuje.</p>
+<p>Nyní se zaměřím na poslední část, kterou je nutné popsat - jakým způsobem
+vlastně uživatel Edepositu může tento modul využívat.</p>
+<div class="section" id="motivace">
+<h2>Motivace<a class="headerlink" href="#motivace" title="Permalink to this headline">¶</a></h2>
+<p>Mnoho uživatelů bude pravděpodobně řešit jako první otázku motivace: „Proč bych
+vlastně měl modul používat?“</p>
+<p>Odpověď je jednoduchá - protože může ušetřit spoustu času a práce. Data nahraná
+přes FTP jsou automaticky párována s metadaty, můžete používat dávkové nahrávání
+a celé to vyžaduje jen pár kroků, na rozdíl od webového rozhraní.</p>
+<p>Pokud chcete, celý proces se dá zautomatizovat, takže se dá s trochou nadsázky
+říct, že na něj můžete zapomenout.</p>
+</div>
+</div>
+<div class="section" id="pouziti">
+<h1>Použití<a class="headerlink" href="#pouziti" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="krok-1-konfigurace">
+<h2>Krok 1: Konfigurace<a class="headerlink" href="#krok-1-konfigurace" title="Permalink to this headline">¶</a></h2>
+<p>Předtím než můžete FTP rozhraní začít používat je zapotřebí povolit přístup a
+nastavit heslo. To můžete provést na webových stránkách Edepositu.</p>
+</div>
+<div class="section" id="krok-2-pripojeni-na-ftp">
+<h2>Krok 2: Připojení na FTP<a class="headerlink" href="#krok-2-pripojeni-na-ftp" title="Permalink to this headline">¶</a></h2>
+<p>Poté co nastavíte nezbytné údaje z <cite>Kroku 1</cite> se můžete zkusit připojit k FTP
+serveru.</p>
+<p>Doporučený FTP klient pro připojení je <a class="reference external" href="https://filezilla-project.org/">FileZilla</a>, ale nic vám nebrání použít
+jakéhokoliv klienta, kterého máte k dispozici.</p>
+<a class="reference internal image-reference" href="../_images/filezilla.png"><img alt="../_images/filezilla.png" src="../_images/filezilla.png" style="width: 400px;" /></a>
+<p>Následující ukázky využívají pro připojení FTP klient <cite>caja</cite>, který je k
+dispozici v distribuci <a class="reference external" href="http://www.linuxmint.com/">Linux Mint</a>. Podobným
+způsobem je možné použít i Explorer z Windows, který Vám umožní připojit se na
+server napsáním adresy ve tvaru <tt class="docutils literal"><span class="pre">ftp://uzivatel&#64;adresa</span></tt> do adresního řádku.</p>
+<a class="reference internal image-reference" href="../_images/explorer.png"><img alt="../_images/explorer.png" src="../_images/explorer.png" style="width: 400px;" /></a>
+<p>Poté co se připojíte na server si pravděpodobně všimnete, že je zde již přítomen
+jeden soubor, pojmenovaný <tt class="docutils literal"><span class="pre">delete_me_to_import_files.txt</span></tt>. Pokud tento soubor
+smažete, nic se nestane a soubor se na serveru opět objeví.</p>
+<a class="reference internal image-reference" href="../_images/lock.gif"><img alt="../_images/lock.gif" src="../_images/lock.gif" style="width: 400px;" /></a>
+<p>Smysl tohoto souboru je vysvětlen dále v textu, prozatím ho můžete ignorovat.</p>
+</div>
+<div class="section" id="krok-3-parovani-dat">
+<h2>Krok 3: Párování dat<a class="headerlink" href="#krok-3-parovani-dat" title="Permalink to this headline">¶</a></h2>
+<p>Tento modul Vám umožňuje automaticky párovat soubory <cite>ebooků</cite> s <cite>metadaty</cite>. Tyto
+<cite>páry</cite> jsou rozpoznány a brány jako jeden celek ve webovém rozhraní Edepositu,
+takže později již nemusíte ručně vyplňovat povinné informace.</p>
+<p><cite>Pár</cite> je vždy složen z dvojice <cite>metadatového</cite> souboru a souboru <cite>eknihy</cite>. <cite>Pár</cite>
+je možné vytvořit třemi různými způsoby:</p>
+<ul class="simple">
+<li>Dva libovolně pojmenované soubory ve složce, která obsahuje jen tyto dva
+soubory a nic jiného.</li>
+<li>Dva stejně pojmenované soubory v jedné složce. Jméno může souborů být
+libovolné, důležité je aby bylo až na příponu souborů stejné (například
+<tt class="docutils literal"><span class="pre">babicka.json</span></tt> a <tt class="docutils literal"><span class="pre">babicka.pdf</span></tt>). Složka může obsahovat libovolný počet
+dalších, odlišně pojmenovaných souborů, či <cite>párů</cite>.</li>
+<li>Dva soubory pojmenované jako jedno validní ISBN, ať již jsou v adresářové
+struktuře  umístěny kdekoliv. Například <tt class="docutils literal"><span class="pre">/metadata/80-86056-31-7.json</span></tt> a
+<tt class="docutils literal"><span class="pre">/ebooky/80-86056-31-7.pdf</span></tt>.</li>
+</ul>
+<p>Všechny tři metody automatického párování metadat mohou být vypnuty v nastavení
+FTP serveru ve Vašem účtu.</p>
+</div>
+<div class="section" id="krok-4-spusteni-importu">
+<h2>Krok 4: Spuštění importu<a class="headerlink" href="#krok-4-spusteni-importu" title="Permalink to this headline">¶</a></h2>
+<p>Import je spuštěn smazáním již zmíněného <cite>zamykacího</cite> souboru
+<tt class="docutils literal"><span class="pre">delete_me_to_import_files.txt</span></tt>.</p>
+<p>Spouštění importu mazáním <cite>zámkového</cite> souboru bylo zvoleno, protože neexistuje
+žádný spolehlivý a obecně použitelný způsob, jak poznat, že již byl soubor
+skutečně celý přenesen a zda došlo k nahrání všech zamýšlených souborů.
+Někteří FTP klienti totiž otevírají a zavírají vícero spojení a běžně se
+vyskytují situace, kdy přenos souboru je náhle přerušen a pokračování probíhá o
+několik vteřin či minut později v jiném spojení.</p>
+<a class="reference internal image-reference" href="../_images/import.gif"><img alt="../_images/import.gif" src="../_images/import.gif" style="width: 400px;" /></a>
+</div>
+<div class="section" id="protokol-importu-a-chyb">
+<h2>Protokol importu a chyb<a class="headerlink" href="#protokol-importu-a-chyb" title="Permalink to this headline">¶</a></h2>
+<p>Jak je možné vidět na předešlé animaci, poté co byly nahrány soubory a spuštěn
+import došlo na serveru k opětovnému vytvoření <cite>zámkového</cite> souboru. Navíc se
+zde také objevil soubor <tt class="docutils literal"><span class="pre">import.log.txt</span></tt>.</p>
+<p>Tento soubor obsahuje podrobné informace o právě proběhlém importu souborů.
+Na první řádce se nachází hlášení <tt class="docutils literal"><span class="pre">Status:</span> <span class="pre">Ok</span></tt>, či <tt class="docutils literal"><span class="pre">Status:</span> <span class="pre">Error</span></tt>, v
+závislosti na úspěchu procesu importu. Dále pak následují podrobná hlášení
+o zpracování jednotlivých souborů.</p>
+<p>Díky tomu je možné jednoduše implementovat scripty, které budou automaticky
+nahrávat Vámi zvolená data na server.</p>
+<p>Pokud není možné přečíst či zpracovat soubory metadat, je vytvořen navíc také
+soubor <tt class="docutils literal"><span class="pre">error.log.txt</span></tt>, který obsahuje seznam chyb a chybné soubory jsou
+ponechány na serveru, aby je bylo možné opravit.</p>
+<a class="reference internal image-reference" href="../_images/error.gif"><img alt="../_images/error.gif" src="../_images/error.gif" style="width: 400px;" /></a>
+<p>Toto chování je možné částečně změnit v nastavení.</p>
+</div>
+<div class="section" id="metadata">
+<h2>Metadata<a class="headerlink" href="#metadata" title="Permalink to this headline">¶</a></h2>
+<p>Každý datový soubor e-knih by měl mít k sobě přiložen i soubor metadat. Nejedná
+se o povinnost, pouze o snahu ušetřit námahu s pozdějším ručním přidáváním dat
+ve webovém rozhraní.</p>
+<p>Momentálně existuje podpora pro čtyři typy <cite>metadatových</cite> souborů:</p>
+<ul class="simple">
+<li><a class="reference internal" href="../api/ftp.decoders.parser_json.html"><em>JSON</em></a></li>
+<li><a class="reference internal" href="../api/ftp.decoders.parser_csv.html"><em>CSV</em></a></li>
+<li><a class="reference internal" href="../api/ftp.decoders.parser_xml.html"><em>XML</em></a></li>
+<li><a class="reference internal" href="../api/ftp.decoders.parser_yaml.html"><em>YAML</em></a></li>
+</ul>
+<p>Soubory metadat jsou rozeznávány podle jejich přípony - <tt class="docutils literal"><span class="pre">.json</span></tt> pro JSON
+soubory, <tt class="docutils literal"><span class="pre">.csv</span></tt> pro CSV, <tt class="docutils literal"><span class="pre">.xml</span></tt> pro XML a <tt class="docutils literal"><span class="pre">.yaml</span></tt> pro YAML soubory.</p>
+<p>Varování: <strong>Všechny metadatové soubory jsou očekávány v kódování UTF-8!</strong></p>
+<p>Každý soubor metadat by měl obsahovat několik povinných a několik volitelných
+polí. Popis a seznam všech polí je možné najít zde:</p>
+<ul class="simple">
+<li><a class="reference internal" href="pozadovane.html"><em>Požadovaná pole</em></a></li>
+</ul>
+<p>Pokud mají soubory špatnou strukturu, kódování či oprávnění pro přístup, tak
+dochází k vytvoření souboru chybového protokolu a metadata jsou přeskočeny.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Použití modulu</a><ul>
+<li><a class="reference internal" href="#motivace">Motivace</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pouziti">Použití</a><ul>
+<li><a class="reference internal" href="#krok-1-konfigurace">Krok 1: Konfigurace</a></li>
+<li><a class="reference internal" href="#krok-2-pripojeni-na-ftp">Krok 2: Připojení na FTP</a></li>
+<li><a class="reference internal" href="#krok-3-parovani-dat">Krok 3: Párování dat</a></li>
+<li><a class="reference internal" href="#krok-4-spusteni-importu">Krok 4: Spuštění importu</a></li>
+<li><a class="reference internal" href="#protokol-importu-a-chyb">Protokol importu a chyb</a></li>
+<li><a class="reference internal" href="#metadata">Metadata</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/workflow/pouziti.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">edeposit.amqp.ftp 1.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014 E-deposit team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
