@@ -1,0 +1,23 @@
+============================
+geoffrey-todo
+============================
+
+.. image:: https://badge.fury.io/py/geoffrey-todo.png
+    :target: http://badge.fury.io/py/geoffrey-todo
+    
+.. image:: https://travis-ci.org/nilp0inter/geoffrey-todo.png?branch=master
+        :target: https://travis-ci.org/nilp0inter/geoffrey-todo
+
+.. image:: https://pypip.in/d/geoffrey-todo/badge.png
+        :target: https://pypi.python.org/pypi/geoffrey-todo
+
+
+Collects all TODO notes in source files.
+
+* Free software: GPLv3
+* Documentation: http://geoffrey-todo.readthedocs.org.
+
+Features
+--------
+
+* TODO
