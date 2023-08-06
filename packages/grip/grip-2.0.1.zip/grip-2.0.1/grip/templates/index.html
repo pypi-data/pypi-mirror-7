@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}{% if filename %}{{ filename }} - {% endif %}Grip{% endblock %}
+
+{%- block styles -%}
+  {%- for style_url in style_urls -%}
+  <link rel="stylesheet" href="{{ style_url }}" />
+  {% endfor -%}
+  {%- if styles %}
+  <style>
+    {% for style in styles -%}
+    {{ style }}
+    {% endfor -%}
+  </style>
+  {% endif -%}
+  <style>
+    .previewPage {
+      margin: 64px auto;
+      width: 920px;
+    }
+  </style>
+{%- endblock -%}
+
+{%- block scripts -%}
+  <script>
+    function scrollToHash() {
+      if (location.hash && !document.querySelector(":target")) {
+        var elements = document.getElementsByName('user-content-' + location.hash.slice(1));
+        if (elements.length > 0) {
+          elements[elements.length - 1].scrollIntoView();
+        }
+      }
+    }
+    window.onhashchange = function() {
+      scrollToHash();
+    }
+    window.onload = function() {
+      scrollToHash();
+    }
+  </script>
+{%- endblock -%}
+
+{%- block page -%}
+  <div class="previewPage">
+    <div id="readme" class="announce md">
+      <article class="markdown-body entry-content">
+        {{ content|safe }}
+      </article>
+    </div>
+  </div>
+
+  <div>&nbsp;</div>
+{%- endblock -%}
