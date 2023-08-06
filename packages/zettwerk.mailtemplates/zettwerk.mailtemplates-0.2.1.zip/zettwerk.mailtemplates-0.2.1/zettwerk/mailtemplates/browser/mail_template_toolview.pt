@@ -1,0 +1,95 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"
+      lang="en"
+      metal:use-macro="here/main_template/macros/master"
+      i18n:domain="zettwerk.mailtemplates">
+  <body>
+    <div metal:fill-slot="main">
+      <tal:main-macro metal:define-macro="main">
+
+	<h1 class="documentFirstHeading" i18n:translate="">Choose recipients by user or group</h1>
+	<p class="description" i18n:translate="">Recipients can be choosen by username or groupname. If a username is given, the group filter is ignored. If whether username nor groupname is given, <strong>all existing members</strong> are taken.
+	</p>
+
+	<form action="."
+	      class="enableFormTabbing"
+	      tal:attributes="action string:${here/absolute_url}/."
+	      method="post">
+
+	  <fieldset id="fieldset-user">
+	    <legend id="fieldsetlegend-user" i18n:translate="">User</legend>
+	    <div class="field">
+	      <label for="user_id" i18n:translate="">User</label><br />
+	      <div class="formHelp" i18n:translate="">Enter a user id. If this field is given, the group filters are ignored.</div>
+	      <input type="text" name="user_id" />
+	    </div>
+	  </fieldset>
+
+	  <fieldset id="fieldset-group">
+	    <legend id="fieldsetlegend-group" i18n:translate="">Group</legend>
+	    <div class="field">
+	      <label for="group_id" i18n:translate="">Group</label><br />
+	      <div class="formHelp" i18n:translate="">Leave empty to choose all portal users.</div>
+	      <select name="group_id">
+		<option value="" i18n:translate=""></option>
+		<tal:block tal:repeat="item view/getGroups">
+		  <option tal:attributes="value python:item[0];
+					  selected python:['', 'selected'][request.get('group_id', '') == item[0]]"
+			  tal:content="python:item[1]" />
+		</tal:block>
+	      </select>
+	    </div>
+
+	  <tal:block tal:define="extraFilters view/getExtraFilters">
+	    <div class="field" tal:condition="extraFilters">
+	      <label for="extra_filter" i18n:translate="">Extra filters</label><br />
+	      <select name="extra_filter">
+		<tal:block tal:repeat="item extraFilters">
+		  <option tal:attributes="value item/name"
+			  tal:content="item/title" />
+		</tal:block>
+	      </select>
+	    </div>
+	  </tal:block>
+
+	  <tal:block tal:define="extraObjectFilters view/getExtraObjectFilters">
+	    <div class="field" tal:condition="extraObjectFilters">
+	      <label i18n:translate="">Object filters</label><br />
+	      <div tal:repeat="item extraObjectFilters">
+		<label tal:content="item/title" />
+		<select tal:attributes="name string:extra_object_filters.${item/name}:record">
+		  <option value=""></option>
+		  <tal:block tal:repeat="obj item/objects">
+		    <option tal:attributes="value python:'/'.join(obj.getPhysicalPath())"
+			    tal:content="obj/Title" />
+		  </tal:block>
+		</select>
+	      </div>
+	    </div>
+	  </tal:block>
+	  </fieldset>
+
+	  <div class="field">
+	    <label for="template" i18n:translate="">Template</label><br />
+	    <select name="template">
+              <tal:block tal:repeat="item view/templates">
+		<option tal:attributes="value item/getTemplateId;
+					selected python:['', 'selected'][request.get('template', '') == item['getId']]"
+			tal:content="python:'%s: %s' % (item.getTemplateId(), item.Title())" />
+              </tal:block>
+	    </select>
+	  </div>
+
+	  <input type="submit" value="Send Emails"
+		 name="send_email_view:method"
+		 i18n:attributes="value" />
+
+	  <input type="submit" value="Simulate and view receivers"
+		 name="simulate_view:method"
+		 i18n:attributes="value" />
+
+	</form>
+
+      </tal:main-macro>
+    </div>
+  </body>
+</html>
