@@ -1,0 +1,71 @@
+#!/usr/bin/env python
+
+"""
+Usage:
+    gen_pseudo_utp [options] [--cutoff=<cutoff>] repulsive <a> <E> 
+    gen_pseudo_utp [options] attractive <a> <E> <cutoff>
+
+Arguments:
+    a    Scattering length.
+    E    Fermi energy.
+
+Options:
+    -c <cutoff>, --cutoff=<cutoff>  pseudopotential cutoff (only optional
+                                    for the repulsive branch).
+    -q, --quiet                     Do not print convergence information.
+"""
+
+from docopt import docopt
+
+from contactpp import make_utp_potential
+from contactpp.outputs import print_utp_for_casino
+
+def validate_args_repulsive(**argv):
+    a = float(argv["<a>"])
+    Ef = float(argv["<E>"])
+    cutoff = argv["--cutoff"]
+    if a <= 0.:
+        raise ValueError("Scattering length <a> should be > 0.")
+    if Ef <= 0.:
+        raise ValueError("Ef should be > 0.")
+    if cutoff is not None:
+        cutoff = float(cutoff)
+        if cutoff <= 0.:
+            raise ValueError("Cutoff should be >= 0.")
+    return a, Ef, cutoff, argv
+
+def validate_args_attractive(**argv):
+    a = float(argv["<a>"])
+    Ef = float(argv["<E>"])
+    cutoff = float(argv["<cutoff>"])
+    if a >= 0.:
+        raise ValueError("Scattering length <a> should be < 0.")
+    if Ef <= 0.:
+        raise ValueError("Ef should be > 0.")
+    if cutoff <= 0.:
+        raise ValueError("Cutoff must be > 0.")
+    return a, Ef, cutoff, argv
+
+
+def gen_pseudo_repulsive(**argv):
+    a, Ef, cutoff,argv = validate_args_repulsive(**argv)
+    ppot = make_utp_potential(a,Ef,cutoff=cutoff,
+            verbose=(not argv["--quiet"]))
+    print_utp_for_casino(ppot)
+
+def gen_pseudo_attractive(**argv):
+    a, Ef, cutoff, argv = validate_args_attractive(**argv)
+    ppot = make_utp_potential(a,Ef,cutoff=cutoff,
+            verbose=(not argv["--quiet"]))
+    print_utp_for_casino(ppot)
+
+
+if __name__ == "__main__":
+
+    args = docopt(__doc__,options_first=True)
+
+    if args["repulsive"]:
+        gen_pseudo_repulsive(**args)
+    if args["attractive"]: 
+        gen_pseudo_attractive(**args)
+

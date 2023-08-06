@@ -1,0 +1,49 @@
+#!/usr/bin/env python
+
+"""
+Usage:
+    gen_pseudo <type> [<args> ...]
+
+The allowed values of <type> are:
+    troullier    Generate a Troullier-Martins type pseudopotential.
+    utp          Generate an 'ultratransferable' pseudopotential.
+    swell        Generate a square well/top hat pseudopotential.
+
+See 'gen_pseudo help <type>' for more information on a specific type.
+
+This script produces output suitable for inclusion in a CASINO input
+file.
+"""
+
+from docopt import docopt
+from subprocess import call
+import sys
+
+if __name__ == '__main__':
+    arg_dict = docopt(__doc__,options_first=True)
+
+    typ = arg_dict["<type>"]
+    args = arg_dict["<args>"]
+
+    if typ == "help":
+        if "troullier" in args:
+            exit(call(["gen_pseudo_troullier","--help"]))
+        elif "utp" in args:
+            exit(call(["gen_pseudo_utp","--help"]))
+        elif "swell" in args:
+            exit(call(["gen_pseudo_swell","--help"]))
+        else:
+            exit(call(["gen_pseudo","--help"]))
+        
+    elif typ == "troullier":
+        exit(call(["gen_pseudo_troullier"] + args))
+    elif typ == "utp":
+        exit(call(["gen_pseudo_utp"] + args))
+    elif typ == "swell":
+        exit(call(["gen_pseudo_swell"] + args))
+    
+    else:
+        print >> sys.stderr, \
+                "{} is not a valid type. See 'gen_pseudo help'.".format(typ)
+        exit()
+

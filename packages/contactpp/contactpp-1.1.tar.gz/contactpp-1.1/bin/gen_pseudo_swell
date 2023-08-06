@@ -1,0 +1,63 @@
+#!/usr/bin/env python
+
+"""
+Usage:
+    gen_pseudo_swell [--radius=<radius>] [--] <a>
+
+Arguments:
+    a     Scattering length (must be positive).
+
+Options:
+    --radius=<radius>   Radius of top hat. If not specified, a radius
+                        is chosen to give zero effective range.
+
+Use the [--] double dash to separate options from the scattering length when 
+it is negative (otherwise it's interpreted as a command line argument and the
+parser gets confused).
+
+Example:
+
+    $ gen_pseudo_swell 0.5 # a = 0.5
+
+    %block manual_interaction
+    square_well
+    width : 0.7753283824
+    height : 12.9960193961
+    %endblock manual_interaction
+
+    $ gen_pseudo_swell --radius=0.3 -- -0.5 # a = -0.5
+
+    %block manual_interaction
+    square_well
+    width : 0.3
+    height : -18.413886902
+    %endblock manual_interaction
+"""
+
+from docopt import docopt
+
+from contactpp import make_square_well_potential
+from contactpp.outputs import print_swell_for_casino
+
+def validate_args(**argv):
+    a = float(argv["<a>"])
+    radius = argv["--radius"]
+    if radius is not None:
+        radius = float(radius)
+        if radius <= a:
+            raise ValueError("Radius must be larger than scattering length.")
+    if radius is None and a < 0.:
+        raise ValueError("Must specify radius for attractive potentials.")
+    return a, radius
+
+def gen_pseudo(**argv):
+    a, radius = validate_args(**argv)
+    ppot = make_square_well_potential(a,radius)
+    print_swell_for_casino(ppot)
+
+
+if __name__ == "__main__":
+
+    args = docopt(__doc__,options_first=True)
+    gen_pseudo(**args)
+

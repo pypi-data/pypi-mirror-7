@@ -1,0 +1,87 @@
+#!/usr/bin/env python
+
+"""
+Usage:
+    gen_pseudo_troullier [--cutoff=<cutoff>] repulsive <a> <E> 
+    gen_pseudo_troullier attractive <a> <E> <cutoff>
+    gen_pseudo_troullier bound <a> <cutoff>
+
+Arguments:
+    a    Scattering length.
+    E    Calibration energy (repulsive/attractive branch only). 
+         We suggest using E = 3/5 Ef, where Ef is the Fermi energy.
+
+Options:
+    -c <cutoff>, --cutoff=<cutoff>  pseudopotential cutoff (only optional
+                                    for the repulsive branch).
+"""
+
+from docopt import docopt
+
+from contactpp import make_troullier_potential
+from contactpp.outputs import print_troullier_for_casino
+
+def validate_args_repulsive(**argv):
+    a = float(argv["<a>"])
+    Ef = float(argv["<E>"])
+    cutoff = argv["--cutoff"]
+    if a <= 0.:
+        raise ValueError("Scattering length <a> should be > 0.")
+    if Ef <= 0.:
+        raise ValueError("Ef should be > 0.")
+    if cutoff is not None:
+        cutoff = float(cutoff)
+        if cutoff <= 0.:
+            raise ValueError("Cutoff should be >= 0.")
+    return a, Ef, cutoff
+
+def validate_args_attractive(**argv):
+    a = float(argv["<a>"])
+    Ef = float(argv["<E>"])
+    cutoff = float(argv["<cutoff>"])
+    if a >= 0.:
+        raise ValueError("Scattering length <a> should be < 0.")
+    if Ef <= 0.:
+        raise ValueError("Ef should be > 0.")
+    if cutoff <= 0.:
+        raise ValueError("Cutoff must be > 0.")
+    return a, Ef, cutoff
+
+def validate_args_bound(**argv):
+    a = float(argv["<a>"])
+    cutoff = float(argv["<cutoff>"])
+    if a <= 0.:
+        raise ValueError("Scattering length <a> should be > 0.")
+    if cutoff <= 0.:
+        raise ValueError("Cutoff should be > 0.")
+    return a, cutoff
+
+
+def gen_pseudo_repulsive(**argv):
+    a, Ef, cutoff = validate_args_repulsive(**argv)
+    ppot = make_troullier_potential("repulsive",a,Ef,cutoff)
+    print_troullier_for_casino(ppot)
+
+def gen_pseudo_attractive(**argv):
+    a, Ef, cutoff = validate_args_attractive(**argv)
+    ppot = make_troullier_potential("attractive",a,Ef,cutoff)
+    print_troullier_for_casino(ppot)
+
+def gen_pseudo_bound(**argv):
+    a, cutoff = validate_args_bound(**argv)
+    ppot = make_troullier_potential("bound", a, cutoff=cutoff)
+    print_troullier_for_casino(ppot)
+
+
+if __name__ == "__main__":
+
+    args = docopt(__doc__,options_first=True)
+
+    if args["repulsive"]:
+        gen_pseudo_repulsive(**args)
+    if args["attractive"]: 
+        gen_pseudo_attractive(**args)
+    if args["bound"]:
+        gen_pseudo_bound(**args)
+
+
