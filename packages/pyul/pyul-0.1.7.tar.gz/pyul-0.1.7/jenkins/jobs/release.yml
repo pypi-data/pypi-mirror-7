@@ -1,0 +1,38 @@
+name: pyul-release
+description: | 
+  This job will release pyul by:
+  * creating a new tag for the given COMMIT_ID with the next release number for the given RELEASE_TYPE
+  * create and set the 'origin/release' branch to this commit id
+  * creating and upload an sdist and bdist_wheel for pypi
+assigned_node: python
+
+properties:
+- type: github-project
+  repo_url: https://github.com/rocktavious/pyul
+  
+parameters:
+- type: string
+  label: COMMIT_ID
+- type: choice
+  label: RELEASE_TYPE
+  value:
+  - patch
+  - minor
+  - major
+  
+scms:
+- type: git
+  repo_url: https://jenkins-mmf:efibCek9@github.com/rocktavious/pyul.git
+  branches:
+  - '${COMMIT_ID}'
+
+builders:
+- type: shell
+  command: |
+    . ./jenkins/configure.sh
+    . ./jenkins/virtualenv.sh
+    . ./jenkins/release.sh
+
+buildWrappers:
+- type: namesetter
+  name_format: '#${BUILD_NUMBER}-${ENV,var="RELEASE_TYPE"}'
