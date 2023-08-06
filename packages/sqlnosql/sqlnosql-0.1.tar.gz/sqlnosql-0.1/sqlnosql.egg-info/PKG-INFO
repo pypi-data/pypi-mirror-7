@@ -1,0 +1,66 @@
+Metadata-Version: 1.1
+Name: sqlnosql
+Version: 0.1
+Summary: Push semi-structured data (e.g. JSON documents) into a database with a minimum of fuss. Includes validation and schema migration.
+Home-page: UNKNOWN
+Author: Stijn Debrouwere
+Author-email: stijn@stdout.be
+License: MIT
+Download-URL: http://www.github.com/newslynx/nosqlsql/tarball/master
+Description: `sqlnosql` gets you from nosql to, well... sql. It takes a [JSON schema](http://json-schema.org/) and it turns it into any of: 
+        
+        * a SQL schema
+        * a sqlalchemy Table object
+        * migration files for Alembic/SQLAlchemy
+        
+        It can also take JSON data and insert it into your database -- either from the commandline or from Python.
+        
+        Type in `sqlnosql --help` on the command line for more information.
+        
+        `sqlnosql` will translate JSON types into SQL types and it will flatten down nested data structures so that e.g. `{"supplies": {"medical": "string"}}` becomes a `supplies_medical` column with type TEXT.
+        
+        `sqlnosql` is useful in ETL processes where you might have a bunch of data in flat files or a nosql database that you want to get into a proper SQL database for analysis purposes.
+        
+        If your database supports it, sqlnosql will keep arrays intact. In particular, Postgres has an ARRAY type. However, keep in mind that native arrays can only contain a single, simple type, like strings or numbers. Complex types will automatically be reduced to simple types by sqlnosql. By default it does this by simply serializing them to JSON.
+        
+        Similarly, if your JSON schema specifies objects that don't have any specifically defined properties, these too will be serialized into strings.
+        
+        Keep in mind that your JSON schema must be exhaustive. Fields not in your schema will not become columns and will be ignored.
+        
+        Because you probably ain't gonna need it, there's no support for data normalization, that is, no support for splitting out your data into separate tables that are connected through foreign keys.
+        
+        ## Migrations with Alembic
+        
+        Alembic might seem overwhelming at first, especially for those who are not from a Python background but would simply like to use the migration feature of `sqlnosql`. Don't worry, it's really rather easy to get started.
+        
+        Figure out where you'd like to keep your migration code, probably a subdirectory of your general code repo, and do `alembic init <revisions_dir>`. Now open `alembic.ini` and look for `sqlalchemy.url` -- that's where you should enter the authentication for and location to your database.
+        
+        (Alternatively, it is also possible to keep this information in environment variables, which we will explain later.)
+        
+        Now open `<revisions_dir>/env.py`, look for the line that says `target_metadata = None` and change it to something like
+        
+        ```python
+        import json
+        import sqlnosql
+        from sqlalchemy import MetaData
+        
+        schema = json.load(open('path/to/schema.json'))
+        target_metadata = MetaData()
+        table = sqlnosql.schema.create_table(schema, target_metadata, pk='my_primary_key_column')
+        ```
+        
+        And that's all there is to it in terms of setup.
+        
+        Now, to create a new revision (a.k.a. migration), run `alembic revision --autogenerate`. Alembic will generate a Python file containing `upgrade` and `download` functions. It will tell you the path to this file, and before applying the migration you will want to check that file to make sure the database operations it suggests are correct, and if not, make the necessary adjustments.
+        
+        Finally, to run the migration, do `alembic upgrade head`.
+        
+        For more details on Alembic, take a look at [the Alembic tutorial](http://alembic.readthedocs.org/en/latest/tutorial.html).
+Keywords: etl sql nosql postgres migrations transform load extract
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Topic :: Utilities
