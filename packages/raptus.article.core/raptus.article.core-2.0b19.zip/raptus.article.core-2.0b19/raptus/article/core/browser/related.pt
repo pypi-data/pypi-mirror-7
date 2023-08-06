@@ -1,0 +1,52 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xml:lang="en"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:metal="http://xml.zope.org/namespaces/metal"
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+      lang="en"
+      tal:omit-tag="">
+
+  <div class="related icons-on"
+       tal:define="related view/related_items;
+                   ploneview nocall:context/@@plone;
+                   normalizeString nocall:ploneview/normalizeString;
+                   site_properties context/portal_properties/site_properties;
+                   use_view_action site_properties/typesUseViewActionInListings|python:();"
+       tal:condition="related"
+       i18n:domain="raptus.article">
+    <h2 i18n:translate="">
+      Related content
+    </h2>
+    <ul class="visualNoMarker">
+      <li tal:repeat="item related">
+        <tal:define define="description item/Description;
+                            item_icon python:ploneview.getIcon(item);
+                            item_type item/portal_type;
+                            item_type_class python:'contenttype-' + normalizeString(item_type);
+                            item_wf_state item/review_state|python: getInfoFor(item, 'review_state', '');
+                            item_wf_state_class python: 'state-' + normalizeString(item_wf_state);
+                            item_url item/getURL|item/absolute_url;
+                            item_url python:(item_type in use_view_action) and item_url+'/view' or item_url
+                            ">
+          <span tal:attributes="class item_type_class">
+            <a href=""
+               tal:attributes="href item_url;
+                               title description;
+                               class string:$item_wf_state_class;">
+              <img tal:replace="structure item_icon/html_tag" /> 
+              <span tal:content="item/pretty_title_or_id">
+                Title
+              </span>
+            </a>
+            <span class="discreet"
+                  tal:condition="description"
+                  tal:content="description">
+              Description
+            </span>
+          </span>
+        </tal:define>
+      </li>
+    </ul>
+  </div>
+
+</html>
