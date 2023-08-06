@@ -1,0 +1,54 @@
+<html xmlns='http://www.w3.org/1999/xhtml'
+    xml:lang='en'
+    lang='en'
+    xmlns:tal='http://xml.zope.org/namespaces/tal'
+    xmlns:metal='http://xml.zope.org/namespaces/metal'
+    xmlns:i18n='http://xml.zope.org/namespaces/i18n'
+    metal:use-macro='context/main_template/macros/master'
+    i18n:domain='eke.publications'>
+    <head>
+        <title>Publication</title>
+    </head>
+    <body>
+        <metal:main fill-slot='content-core'>
+            <tal:main-macro metal:define-macro='content-core'>
+                <p i18n:translate='biobliographicCitation' class='bibliographicCitation'>
+                    <span tal:condition='context/authors|nothing'>
+                        <span i18n:name='authors' tal:replace='python:", ".join(context.authors)'>Kelly S, Heather, K</span>.
+                    </span>
+                    <span tal:replace='structure context/title' i18n:name='title'>
+                        Use of titles as brief naming descriptors of various published works: a retrospective
+                    </span>.
+                    <cite tal:condition='context/journal' i18n:name='journal' tal:content='structure context/journal'>
+                        Professionals Monthly Review of False Articles
+                    </cite>
+                    <span tal:condition='context/year|nothing'>
+                        <span tal:replace='context/year' i18n:name='year'>1964</span>;
+                    </span>
+                    <span tal:condition='context/volume' i18n:name='volume' tal:replace='context/volume'>
+                        9
+                    </span>.
+                </p>
+                <div tal:condition='python:context.pubMedID or context.pubURL'>
+                    <span tal:condition='context/pubMedID' style="padding-left:0px;">
+                        <a href='#' i18n:translate='pub_viewPubMedRecord' tal:attributes='href view/pubMedURL'>
+                            Click to view PubMed record
+                        </a>
+                        &#x2014;
+                    </span>
+                    <span tal:condition='context/pubURL' style="padding-left:0px;">
+                        <a href='#' i18n:translate='pub_viewPub' tal:attributes='href context/pubURL'>
+                            Click to view publication
+                        </a>
+                    </span>
+                </div>
+                <tal:block condition='context/abstract|nothing'>
+                    <h2 i18n:translate='pub_abstractHeading'>Abstract</h2>
+                    <p tal:content='structure context/abstract'>
+                        Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt.
+                    </p>
+                </tal:block>
+            </tal:main-macro>
+        </metal:main>
+    </body>
+</html>
