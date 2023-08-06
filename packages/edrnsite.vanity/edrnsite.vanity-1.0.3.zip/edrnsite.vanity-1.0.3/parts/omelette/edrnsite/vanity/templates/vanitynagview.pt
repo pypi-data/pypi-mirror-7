@@ -1,0 +1,42 @@
+<html
+    xmlns='http://www.w3.org/1999/xhtml'
+    xmlns:metal='http://xml.zope.org/namespaces/metal'
+    xmlns:tal='http://xml.zope.org/namespaces/tal'
+    xmlns:i18n='http://xml.zope.org/namespaces/i18n'
+    metal:use-macro='context/main_template/macros/master'
+    i18n:domain='edrnsite.vanity'>
+    <head>
+        <title>Vanity Nag View</title>
+        <metal:block fill-slot='base'>
+            <base target='_parent'/>
+        </metal:block>
+        <metal:block fill-slot='top_slot' tal:define='
+            dummy_disable_border python:request.set("disable_border", 1);
+            dummy_disable_left   python:request.set("disable_plone.leftcolumn", 1);
+            dummy_disable_right  python:request.set("disable_plone.rightcolumn", 1);
+        '/>
+        <metal:block fill-slot='style_slot'>
+            <link rel='stylesheet' type='text/css' tal:define='navroot context/@@plone_portal_state/navigation_root_url'
+                tal:attributes='href string:${navroot}/++resource++edrnsite.vanity/overlays.css'
+            />
+        </metal:block>
+    </head>
+    <body>
+        <metal:block fill-slot='body'>
+            <tal:block condition='view/haveUser'>
+                <h1 i18n:translate='edrnsiteVanityByTheWay'>
+                    By the way, <span i18n:name='personName' tal:replace='view/userName'>Jason Robards</span>&#x2026;
+                </h1>
+                <p i18n:translate='edrnsiteVanityBeenAWhile'>
+                    It might be time to take a <em>fresh look</em> at
+                    <a href='#' tal:attributes='href view/vanityPageURL' i18n:name='yourPage'>your very own page</a>
+                    here on the EDRN Public Portal.
+                </p>
+                <p i18n:translate='edrnsiteVanityTakaAnotherLook'>
+                    If you'd like to fix anything, <a href='#' i18n:name='edrnsiteVanityVisitItNow'
+                        tal:attributes='href view/vanityPageURL'>why not visit it now</a>?
+                </p>
+            </tal:block>
+        </metal:block>
+    </body>
+</html>

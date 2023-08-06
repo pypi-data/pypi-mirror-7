@@ -1,0 +1,40 @@
+<html
+    xmlns='http://www.w3.org/1999/xhtml'
+    xmlns:metal='http://xml.zope.org/namespaces/metal'
+    xmlns:tal='http://xml.zope.org/namespaces/tal'
+    xmlns:i18n='http://xml.zope.org/namespaces/i18n'
+    metal:use-macro='context/main_template/macros/master'
+    i18n:domain='edrnsite.vanity'>
+    <head>
+        <title>Vanity Welcome View</title>
+        <metal:block fill-slot='base'>
+            <base target='_parent'/>
+        </metal:block>
+        <metal:block fill-slot='top_slot' tal:define='
+            dummy_disable_border python:request.set("disable_border", 1);
+            dummy_disable_left   python:request.set("disable_plone.leftcolumn", 1);
+            dummy_disable_right  python:request.set("disable_plone.rightcolumn", 1);
+        '/>
+        <metal:block fill-slot='style_slot'>
+            <link rel='stylesheet' type='text/css' tal:define='navroot context/@@plone_portal_state/navigation_root_url'
+                tal:attributes='href string:${navroot}/++resource++edrnsite.vanity/overlays.css'
+            />
+        </metal:block>
+    </head>
+    <body>
+        <metal:block fill-slot='body'>
+            <div id='content' condition='view/haveUser'>
+                <h1 class='vanityNagHeading' i18n:translate='edrnsiteVanityHeyYou'>
+                    Hey, <span i18n:name='personName' tal:replace='view/userName'>Meg Tilley</span>!
+                </h1>
+                <p class='vanityNagMessage' i18n:translate='edrnsiteVanityDidjaKnow'>
+                    Did you know you've got your <em>own</em> page right here on the EDRN Public Portal?
+                </p>
+                <p class='vanityNagMessage' i18n:translate='edrnsiteVanityTakeALook'>
+                    You sure do. <a href='#' i18n:name='edrnsiteVanityHref'
+                        tal:attributes='href view/vanityPageURL'>Take a look at it</a>.
+                </p>
+            </div>
+        </metal:block>
+    </body>
+</html>
