@@ -1,0 +1,128 @@
+{% extends "_base.html" %}
+{% block title %}{{ cohort.name }}{% endblock %}
+{% block styles %}
+<style>
+    #banner {
+        background: url('{{ page.banner }}');
+        background-size: 100%;
+        background-repeat: no-repeat;
+    }
+</style>
+{% endblock %}
+{% block body %}
+<div class="container">
+
+{% if page.languages|length > 1 %}
+    <div class="row select-language">
+        <div class="col-md-12">
+            <ul>
+            {% for language in page.languages|reverse %}
+                <li>
+                {% if language == page.language %}
+                    <li class="selected">{{ get_language_name(language) }}</li>
+                {% else %}
+                    {% if language == page.default_language %}
+                        <li><a href="../{{ page.id }}.html">{{ get_language_name(language) }}</a></li>
+                    {% else %}
+                        <li><a href="{{ language }}/{{ page.id }}.html">{{ get_language_name(language) }}</a></li>
+                    {% endif %}
+                {% endif %}
+                </li>
+            {% endfor %}
+            </ul>
+        </div>
+    </div>
+{% endif %}
+
+    <div class="page-header" id="header-row">
+        <div class="row" id="banner">
+            <div class="col-md-4">
+                <div class="logo-box">
+                    <h1>{{ cohort.name }}</h1>
+                    <span>{{ cohort.places }}</span>
+                </div>
+            </div>
+            <div class="col-md-4"></div>
+            <div class="col-md-4">
+            {% if cohort.statistics %}
+                <div class="logo-box">
+                    <table>
+                        {% for statistic in cohort.statistics %}
+                        <tr>
+                            <td>{{ statistic.name }}</td>
+                            <td class="number">{{ statistic.value }}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <ol class="breadcrumb">
+    {% for crumb in page.breadcrumbs %}
+        {% if not loop.last %}
+            <li><a href="{{ crumb[0] }}.html">{{ crumb[1] }}</a></li>
+        {% else %}
+            <li class="active">{{ crumb[1] }}</li>
+        {% endif %}
+    {% endfor %}
+    </ol>
+
+    <div class="row">
+        <div class="col-md-8 page-content">
+            {{ page.content }}
+        </div>
+        <div class="col-md-4">
+            <div id="contact">
+                <h4>{{ cohort.contact_label }}</h4>
+                <ul class="vcard">
+                {% for line in cohort.contact %}
+                    {% if line.is_phone %}
+                    <li class="phone"><i class="fa fa-phone"></i> {{ line.text }}</li>
+                    {% elif line.is_mail %}
+                    <li class="email"><i class="fa fa-envelope-o"></i> <a href="mailto:{{ line.text }}">{{ line.text }}</a></li>
+                    {% else %}
+                    <li>{{ line.text }}</li>
+                    {% endif %}
+                {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="row sections">
+    {% for page in pages[1:] %}
+        <div class="col-md-3">
+            <img class="img-responsive" src="{{ page.banner }}" />
+            <h3>{{ page.title }}</h1>
+            <p>{{ page.description }}</p>
+            <div class="more"><a href="{{ page.id }}.html"><i class="fa fa-chevron-right"></i> {{ gettext('more') }}</a></div>
+        </div>
+    {% endfor %}
+    </div>
+
+    <hr />
+
+{% for column in cohort.contributors|batch(6, '&nbsp;') %}
+    <div class="row">
+        {% for contributor in column %}
+        <div class="col-md-2">
+            {% if contributor != '&nbsp;' %}
+                <a href="{{ contributor.url }}">
+                    <img class="img-responsive" src="{{ contributor.image }}" title="{{ contributor.name }}" />
+                </a>
+            {% else %}
+                &nbsp;
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+{% endfor %}
+    <hr />
+
+</div> <!-- /container -->
+{% endblock %}
