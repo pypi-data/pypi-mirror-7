@@ -1,0 +1,256 @@
+<div 
+    xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:py="http://genshi.edgewall.org/"
+    xmlns:xi="http://www.w3.org/2001/XInclude"
+    py:strip="" >
+
+  <xi:include href="widget_macros.html" />
+
+  <py:def function="create_jqlayout(layoutname, itemlist)">
+    <script type="text/javascript">
+    $(document).ready(function () {
+        $("#tabs_div").tabs();
+
+        var${layoutname}  = $('#${layoutname}').layout({
+		defaults: {
+			paneClass:				"ui-layout-pane" 		// default = 'ui-layout-pane'
+		,	resizerClass:			"ui-layout-resizer"	// default = 'ui-layout-resizer'
+		,	togglerClass:			"ui-layout-toggler"	// default = 'ui-layout-toggler'
+		,	buttonClass:			"ui-layout-button"	// default = 'ui-layout-button'
+		,	contentSelector:		".content"	// inner div to auto-size so only it scrolls, not the entire pane!
+		,	contentIgnoreSelector:	"span"		// 'paneSelector' for content to 'ignore' when measuring room for content
+		,	hideTogglerOnSlide:		true		// hide the toggler when pane is 'slid open'
+		,	togglerTip_open:		"Close This Pane"
+		,	togglerTip_closed:		"Open This Pane"
+		,	resizerTip:				"Resize This Pane"
+		//	effect defaults - overridden on some panes
+		,	fxName:					"slide"		// none, slide, drop, scale
+		,	fxSpeed_open:			750
+		,	fxSpeed_close:			1500
+		,	fxSettings_open:		{ easing: "easeInQuint" }
+		,	fxSettings_close:		{ easing: "easeOutQuint" }
+	}
+	,	west: {
+            spacing_closed:			21			// wider space when closed
+		,	togglerLength_closed:	21			// make toggler 'square' - 21x21
+		,	togglerAlign_closed:	"top"		// align to top of resizer
+		,	togglerLength_open:		0			// NONE - using custom togglers INSIDE west-pane
+		,	togglerTip_open:		"Close West Pane"
+		,	togglerTip_closed:		"Open West Pane"
+		,	resizerTip_open:		"Resize West Pane"
+		,	slideTrigger_open:		"click" 	// default
+        ,	initClosed:				true
+		//	add 'bounce' option to default 'slide' effect
+		,	fxSettings_open:		{ easing: "easeOutBounce" }
+		}
+	,	east: {
+            spacing_closed:			21			// wider space when closed
+		,	togglerLength_closed:	21			// make toggler 'square' - 21x21
+		,	togglerAlign_closed:	"top"		// align to top of resizer
+		,	togglerLength_open:		0 			// NONE - using custom togglers INSIDE east-pane
+		,   togglerTip_open:		"Close East Pane"
+		,	togglerTip_closed:		"Open East Pane"
+		,	resizerTip_open:		"Resize East Pane"
+		,	slideTrigger_open:		"mouseover"
+        ,	initClosed:				true
+		//	override default effect, speed, and settings
+		,	fxName:					"drop"
+		,	fxSpeed:				"normal"
+		,	fxSettings:				{ easing: "" } // nullify default easing
+		}
+	});
+
+    <py:def function="update_params(item, location)">
+        <py:choose test="item.open">
+            <py:when test="True">
+                var${layoutname}.open("${location}");
+            </py:when>
+            <py:otherwise>
+                var${layoutname}.close("${location}");
+            </py:otherwise>
+        </py:choose>
+        <py:if test="item.width != None">
+            var${layoutname}.sizePane("${location}", ${item.width});
+        </py:if>
+         <py:if test="item.pinbtn == True">
+            // save selector strings to vars so we don't have to repeat it
+            // must prefix paneClass with "body > " to target ONLY the outerLayout panes
+            var ${location}${layoutname}Selector = "#${layoutname} .ui-layout-${location}";
+
+             // CREATE SPANs for pin-buttons - using a generic class as identifiers
+            $("<span></span>").addClass("pin-button").prependTo( ${location}${layoutname}Selector );
+            // BIND events to pin-buttons to make them functional
+            var${layoutname}.addPinBtn( ${location}${layoutname}Selector +" .pin-button", "${location}" );
+
+             // CREATE SPANs for close-buttons - using unique IDs as identifiers
+            $("<span></span>").attr("id", "${location}-closer").prependTo( ${location}${layoutname}Selector );
+            // BIND layout events to close-buttons to make them functional
+            var${layoutname}.addCloseBtn("#${location}-closer", "${location}");
+        </py:if>
+    </py:def>
+
+    <py:for each="item in itemlist">
+        <py:choose test="">
+            <py:when test="item=='center'">
+                /*Center no tiene open, close, ni width*/
+            </py:when>
+            <py:when test="item=='east'">
+                ${update_params(itemlist['east'], "east")}
+            </py:when>
+            <py:when test="item=='west'">
+                ${update_params(itemlist['west'], "west")}
+            </py:when>
+            <py:when test="item=='north'">
+                ${update_params(itemlist['north'], "north")}
+            </py:when>
+            <py:when test="item=='south'">
+                ${update_params(itemlist['south'], "south")}
+            </py:when>
+        </py:choose>
+    </py:for>
+
+    });
+    </script>
+  </py:def>
+
+  <py:def function="create_tabs(tabid)">
+    <script type="text/javascript">
+    $(document).ready(function () {
+        $("#${tabid}").tabs();
+    });
+    </script>
+  </py:def>
+
+  <?python
+      from uuid import uuid4
+      def get_random_id():
+          return str(uuid4()).replace('-', '_')
+  ?>
+
+  <div py:def="put_pane(location, locationpane, layoutinside)" py:with="divname='div_'+ get_random_id()"
+    id="${divname}" class="ui-layout-${location} ${locationpane._class}" style="padding-left: 10px;">
+
+     <py:if test="locationpane.title">
+        <h3>Area Title: ${locationpane.title}</h3>
+     </py:if>
+
+     <!-- RENDER widgets list -->
+     <py:if test="layoutinside == 'false'">
+         <!-- IF WIDGETS ARE INSIDE TABS -->
+         <py:if test="locationpane.widget_on_tab == True">
+             <!-- JS TO CREATE TABS -->
+             ${create_tabs(divname)}
+             <!-- CREATE the LI for tabs title -->
+             <UL style="-moz-border-radius-bottomleft: 0; -moz-border-radius-bottomright: 0;">
+                <py:for each="widget_name in locationpane.widget">
+                    <LI><A href="#tab_widget_${widget_name.replace(' ', '_')}"><SPAN>${widget_name}</SPAN></A></LI>
+                </py:for>
+             </UL>
+         </py:if>
+         <!-- RENDER EACH WIDGET -->
+         <py:for each="widget_name in locationpane.widget">
+            <py:choose test="">
+                <!-- RENDER EACH WIDGET BUT INSIDE DIV FOR TAB-->
+                <py:when test="locationpane.widget_on_tab == True">
+                    <div id="tab_widget_${widget_name.replace(' ', '_')}" class="ui-layout-content ui-widget-content ui-corner-bottom"
+                         style="border-top: 0; padding-bottom: 1em;">
+                        ${widget_container(widgets[widget_name])}
+                    </div>
+                </py:when>
+                <!-- RENDER EACH WIDGET WITHOUT TAB-->
+                <py:otherwise>
+                    ${widget_container(widgets[widget_name])}
+                </py:otherwise>
+            </py:choose>
+         </py:for>
+     </py:if>
+
+     <!-- RENDER LAYOUTS -->
+     <py:if test="layoutinside == 'true'">
+         <!--${repr(locationpane.panes)}-->
+       ${put_layout(locationpane.panes, locationpane.height, "layout" + get_random_id())}
+     </py:if>
+  </div>
+
+  <div py:def="put_layout(itemlist, lheight, idlayout)" id="${idlayout}" style="height:${lheight};">
+   <py:for each="item in itemlist">
+        <py:choose test="">
+            <py:when test="item=='center'">
+                <py:choose test="">
+                    <!-- ${repr(itemlist['center'])} - ${repr(layout['panes'])} -->
+                    <py:when test="itemlist['center'].panes">
+                        ${put_pane("center", itemlist['center'], "true")}
+                    </py:when>
+                    <py:otherwise>
+                        <py:choose test="">
+                            <py:when test="itemlist['center'].widget">
+                                ${put_pane("center", itemlist['center'], "false")}
+                            </py:when>
+                        </py:choose>
+                    </py:otherwise>
+                </py:choose>
+            </py:when>
+            <py:when test="item=='east'">
+                 <py:choose test="">
+                    <py:when test="itemlist['east'].panes">
+                        ${put_pane("east", itemlist['east'], "true")}
+                    </py:when>
+                    <py:otherwise>
+                        <py:choose test="">
+                            <py:when test="itemlist['east'].widget">
+                                ${put_pane("east", itemlist['east'], "false")}
+                            </py:when>
+                        </py:choose>
+                    </py:otherwise>
+                </py:choose>
+            </py:when>
+            <py:when test="item=='west'">
+                <py:choose test="">
+                    <py:when test="itemlist['west'].panes">
+                        ${put_pane("west", itemlist['west'], "true")}
+                    </py:when>
+                    <py:otherwise>
+                        <py:choose test="">
+                            <py:when test="itemlist['west'].widget">
+                                ${put_pane("west", itemlist['west'], "false")}
+                            </py:when>
+                        </py:choose>
+                    </py:otherwise>
+                </py:choose>
+            </py:when>
+            <py:when test="item=='north'">
+                <py:choose test="">
+                    <py:when test="itemlist['north'].panes">
+                        ${put_pane("north", itemlist['north'], "true")}
+                    </py:when>
+                    <py:otherwise>
+                        <py:choose test="">
+                            <py:when test="itemlist['north'].widget">
+                                ${put_pane("north", itemlist['north'], "false")}
+                            </py:when>
+                        </py:choose>
+                    </py:otherwise>
+                </py:choose>
+            </py:when>
+            <py:when test="item=='south'">
+                <py:choose test="">
+                    <py:when test="itemlist['south'].panes">
+                        ${put_pane("south", itemlist['south'], "true")}
+                    </py:when>
+                    <py:otherwise>
+                        <py:choose test="">
+                            <py:when test="itemlist['south'].widget">
+                               ${put_pane("south", itemlist['south'], "false")}
+                            </py:when>
+                        </py:choose>
+                    </py:otherwise>
+                </py:choose>
+            </py:when>
+        </py:choose>
+   </py:for>
+      ${create_jqlayout(idlayout, itemlist)}
+  </div>
+
+  ${put_layout(layout.panes, layout.height, "layout"+ get_random_id())}
+
+</div>

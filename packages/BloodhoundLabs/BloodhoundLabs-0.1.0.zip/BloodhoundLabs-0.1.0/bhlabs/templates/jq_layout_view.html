@@ -1,0 +1,146 @@
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:i18n="http://genshi.edgewall.org/i18n"
+      i18n:domain="bhdashboard"
+      xmlns:bh="http://issues.apache.org/bloodhound/wiki/Ui/Dashboard"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+
+  <xi:include href="layout.html" />
+  <xi:include href="widget_macros.html" />
+
+  <head>
+    <title>Jquery UI layouts Demo</title>
+  </head>
+
+  <body>
+    <bh:layout urn="jquerylayout">
+      <bh:schema>
+        {
+         "height": "1000px",
+         "panes" : {"center": {"title" : "Main Center",
+                               "_class" : "span5",
+                               "width": "300",
+                               "open": true,
+                               "widget_on_tab": true,
+                               "widget" : ["milestones", "versions"]
+                               },
+                    "east" :  {"title" : "Right Area",
+                               "width": "300",
+                               "open": true,
+                               "_class" : "",
+                               "pinbtn": true,
+                               "widget" : ["activity"]
+                               },
+                    "west" :  {"title" : "Left Area",
+                               "width": "350",
+                               "open": true,
+                               "_class" : "",
+                               "height": "600px",
+                               "panes" : {"center" : {"title" : "Nested Center Area",
+                                                      "width": "300",
+                                                      "open": true,
+                                                      "_class" : "span12",
+                                                      "widget_on_tab": true,
+                                                      "widget" : ["milestones 1", "versions 1"]
+                                                     },
+                                          "north"  : {"title" : "Nested North Area",
+                                                      "width": "300",
+                                                      "open": true,
+                                                      "_class" : "span11",
+                                                      "widget" : ["components 1","active tickets 1"]
+                                                     }
+                                          }
+                               },
+                    "south" : {"title" : "South Area",
+                               "width": "300",
+                               "open": false,
+                               "_class" : "span12",
+                               "widget" : ["products"]
+                               },
+                    "north" : {"title" : "North Area",
+                               "width": "300",
+                               "open": true,
+                               "_class" : "span11",
+                               "widget" : ["components","active tickets"]
+                               }
+               }
+         }
+      </bh:schema>
+      <bh:widgets>
+        {"milestones" : {"args" : ["TicketFieldValues", null,
+                           {"args" : {"field": "milestone",
+                                      "title": "Milestones",
+                                      "verbose": true
+                                      }}
+                           ]},
+         "milestones 1" : {"args" : ["TicketFieldValues", null,
+                           {"args" : {"field": "milestone",
+                                      "title": "Milestones",
+                                      "verbose": true
+                                      }}
+                           ]},
+         "activity" : {"args" : ["Timeline", null,
+                           {"args" : {"realm" : "ticket",
+                                      "id" : "${ticket_id}"
+                                      }}
+                           ]},
+         "products" : {"args" : ["Product", null,
+                           {"args" : {"max": 3,
+                                      "cols": 5
+                                      }}
+                           ]},
+         "products 1" : {"args" : ["Product", null,
+                           {"args" : {"max": 3,
+                                      "cols": 5
+                                      }}
+                           ]},
+         "versions" : {"args" : ["TicketFieldValues", null,
+                           {"args" : {"field" : "version",
+                                      "title" : "Versions",
+                                      "verbose" : true
+                                      }}
+                           ]},
+         "versions 1" : {"args" : ["TicketFieldValues", null,
+                           {"args" : {"field" : "version",
+                                      "title" : "Versions",
+                                      "verbose" : true
+                                      }}
+                           ]},
+         "components" : {"args" : ["TicketFieldValues", null,
+                           {"args" : {"field" : "component",
+                                      "title" : "Components",
+                                      "verbose" : true
+                                      }}
+                           ]},
+         "components 1" : {"args" : ["TicketFieldValues", null,
+                           {"args" : {"field" : "component",
+                                      "title" : "Components",
+                                      "verbose" : true
+                                      }}
+                           ]},
+         "my tickets" : {"args" : ["TicketQuery", null,
+                                {"args" : {"max" : 10,
+                                           "query": "status=!closed&amp;group=milestone&amp;col=id&amp;col=summary&amp;col=owner&amp;col=status&amp;col=priority&amp;order=priority",
+                                           "title": "My Tickets"
+                                      }}
+                           ]},
+         "active tickets" : {"args" : ["TicketQuery", null,
+                                {"args" : {"max" : 10,
+                                           "query": "status=!closed&amp;group=milestone&amp;col=id&amp;col=summary&amp;col=owner&amp;col=status&amp;col=priority&amp;order=priority&amp;owner=$USER",
+                                           "title": "Active Tickets"
+                                      }}
+                           ]},
+          "active tickets 1" : {"args" : ["TicketQuery", null,
+                                {"args" : {"max" : 10,
+                                           "query": "status=!closed&amp;group=milestone&amp;col=id&amp;col=summary&amp;col=owner&amp;col=status&amp;col=priority&amp;order=priority&amp;owner=$USER",
+                                           "title": "Active Tickets"
+                                      }}
+                           ]}
+         }
+      </bh:widgets>
+    </bh:layout>
+  </body>
+</html>
