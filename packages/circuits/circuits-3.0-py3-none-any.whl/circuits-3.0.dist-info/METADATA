@@ -1,0 +1,348 @@
+Metadata-Version: 2.0
+Name: circuits
+Version: 3.0
+Summary: Asynchronous Component based Event Application Framework
+Home-page: http://circuitsframework.com/
+Author: James Mills
+Author-email: prologic@shortcircuit.net.au
+License: MIT
+Download-URL: http://bitbucket.org/circuits/circuits/downloads/
+Keywords: event framework distributed concurrent component asynchronous
+Platform: POSIX
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Environment :: Console
+Classifier: Environment :: No Input/Output (Daemon)
+Classifier: Environment :: Other Environment
+Classifier: Environment :: Plugins
+Classifier: Environment :: Web Environment
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Information Technology
+Classifier: Intended Audience :: Science/Research
+Classifier: Intended Audience :: System Administrators
+Classifier: Intended Audience :: Telecommunications Industry
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Natural Language :: English
+Classifier: Operating System :: POSIX :: BSD
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Programming Language :: Python :: 2.6
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3.1
+Classifier: Programming Language :: Python :: 3.2
+Classifier: Programming Language :: Python :: 3.3
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Programming Language :: Python :: Implementation :: PyPy
+Classifier: Topic :: Adaptive Technologies
+Classifier: Topic :: Communications :: Chat :: Internet Relay Chat
+Classifier: Topic :: Communications :: Email :: Mail Transport Agents
+Classifier: Topic :: Database
+Classifier: Topic :: Internet :: WWW/HTTP :: HTTP Servers
+Classifier: Topic :: Internet :: WWW/HTTP :: WSGI :: Application
+Classifier: Topic :: Internet :: WWW/HTTP :: WSGI :: Middleware
+Classifier: Topic :: Internet :: WWW/HTTP :: WSGI :: Server
+Classifier: Topic :: Software Development :: Libraries :: Application Frameworks
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: System :: Clustering
+Classifier: Topic :: System :: Distributed Computing
+
+.. _Python Programming Language: http://www.python.org/
+.. _#circuits IRC Channel: http://webchat.freenode.net/?randomnick=1&channels=circuits&uio=d4
+.. _FreeNode IRC Network: http://freenode.net
+.. _Python Standard Library: http://docs.python.org/library/
+.. _MIT License: http://www.opensource.org/licenses/mit-license.php
+.. _Create an Issue: https://bitbucket.org/circuits/circuits/issue/new
+.. _Mailing List: http://groups.google.com/group/circuits-users
+.. _Project Website: http://circuitsframework.com/
+.. _PyPi Page: http://pypi.python.org/pypi/circuits
+.. _Read the Docs: http://circuits.readthedocs.org/en/latest/
+.. _Downloads Page: https://bitbucket.org/circuits/circuits/downloads
+
+
+circuits is a **Lightweight** **Event** driven and **Asynchronous**
+**Application Framework** for the `Python Programming Language`_
+with a strong **Component** Architecture.
+
+circuits also includes a lightweight, high performance and scalable
+HTTP/WSGI compliant web server as well as various I/O and Networking
+components.
+
+- Visit the `Project Website`_
+- `Read the Docs`_
+- Download it from the `Downloads Page`_
+
+.. image:: https://pypip.in/v/circuits/badge.png
+   :target: https://crate.io/packages/circuits/
+   :alt: Latest PyPI version
+
+.. image:: https://pypip.in/d/circuits/badge.png
+   :target: https://crate.io/packages/circuits/
+   :alt: Number of PyPI downloads
+
+.. image:: https://requires.io/bitbucket/circuits/circuits/requirements.png?branch=default
+   :target: https://requires.io/bitbucket/circuits/circuits/requirements/?branch=default
+   :alt: Requirements Status
+
+
+Examples
+--------
+
+
+Hello
+.....
+
+
+.. code:: python
+
+    #!/usr/bin/env python
+
+    """circuits Hello World"""
+
+    from circuits import Component, Event
+
+
+    class hello(Event):
+        """hello Event"""
+
+
+    class App(Component):
+
+        def hello(self):
+            """Hello Event Handler"""
+
+            print("Hello World!")
+
+        def started(self, component):
+            """Started Event Handler
+
+            This is fired internally when your application starts up and can be used to
+            trigger events that only occur once during startup.
+            """
+
+            self.fire(hello())  # Fire hello Event
+
+            raise SystemExit(0)  # Terminate the Application
+
+    App().run()
+
+
+Echo Server
+...........
+
+
+.. code:: python
+
+    #!/usr/bin/env python
+
+    """Simple TCP Echo Server
+
+    This example shows how you can create a simple TCP Server (an Echo Service)
+    utilizing the builtin Socket Components that the circuits library ships with.
+    """
+
+    from circuits import handler, Debugger
+    from circuits.net.sockets import TCPServer
+
+
+    class EchoServer(TCPServer):
+
+        @handler("read")
+        def on_read(self, sock, data):
+            """Read Event Handler
+
+            This is fired by the underlying Socket Component when there has been
+            new data read from the connected client.
+
+            ..note :: By simply returning, client/server socket components listen
+                      to ValueChagned events (feedback) to determine if a handler
+                      returned some data and fires a subsequent Write event with
+                      the value returned.
+            """
+
+            return data
+
+    # Start and "run" the system.
+    # Bind to port 0.0.0.0:9000
+    app = EchoServer(9000)
+    Debugger().register(app)
+    app.run()
+
+
+Hello Web
+.........
+
+
+.. code:: python
+
+    #!/usr/bin/env python
+
+    from circuits.web import Server, Controller
+
+
+    class Root(Controller):
+
+        def index(self):
+            """Index Request Handler
+
+            Controller(s) expose implicitly methods as request handlers.
+            Request Handlers can still be customized by using the ``@expose``
+            decorator. For example exposing as a different path.
+            """
+
+            return "Hello World!"
+
+    app = Server(("0.0.0.0", 9000))
+    Root().register(app)
+    app.run()
+
+
+More `examples <https://bitbucket.org/circuits/circuits/src/tip/examples/>`_...
+
+
+
+Features
+--------
+
+- event driven
+- concurrency support
+- component architecture
+- asynchronous I/O components
+- no required external dependencies
+- full featured web framework (circuits.web)
+- coroutine based synchronization primitives
+
+
+Requirements
+------------
+
+- circuits has no dependencies beyond the `Python Standard Library`_.
+
+
+Supported Platforms
+-------------------
+
+- Linux, FreeBSD, Mac OS X, Windows
+- Python 2.6, 2.7, 3.2, 3.3, 3.4
+- pypy 2.0, 2.1, 2.2
+
+
+Installation
+------------
+
+The simplest and recommended way to install circuits is with pip.
+You may install the latest stable release from PyPI with pip::
+
+    > pip install circuits
+
+If you do not have pip, you may use easy_install::
+
+    > easy_install circuits
+
+Alternatively, you may download the source package from the
+`PyPi Page`_ or the `Downloads Page`_ extract it and install using::
+
+    > python setup.py install
+
+
+.. note::
+    You can install the `development version
+    <https://bitbucket.org/circuits/circuits/get/tip.tar.gz#egg=circuits>`_
+    via ``pip install circuits==dev``.
+
+
+License
+-------
+
+circuits is licensed under the `MIT License`_.
+
+
+Feedback
+--------
+
+We welcome any questions or feedback about bugs and suggestions on how to
+improve circuits. Let us know what you think about circuits. `@pythoncircuits <http://twitter.com/pythoncircuits>`_.
+
+Do you have suggestions for improvement? Then please `Create an Issue`_
+with details of what you would like to see. I'll take a look at it and
+work with you to either incorporate the idea or find a better solution.
+
+
+Community
+---------
+
+There is also a small community of circuits enthusiasts that you may
+find on the `#circuits IRC Channel`_ on the `FreeNode IRC Network`_
+and the `Mailing List`_.
+
+
+:orphan:
+
+
+==========
+Change Log
+==========
+
+
+- :release:`3.0 <2014-08-31>`
+- :bug:`111 major` Fixed broken Digest Auth Test for circuits.web
+- :feature:`112` Improved Signal Handling
+- :bug:`109 major` Fixed ``Event.create()`` factory and metaclass.
+- :feature:`108` Improved server support for the IRC Protocol.
+- :bug:`107 major` Added ``__le__`` and ``__ge__`` methods to ``circuits.web.wrappers.HTTPStatus``
+- :bug:`106 major` Added ``__format__`` method to circuits.web.wrappers.HTTPStatus.
+- :bug:`104 major` Prevent other websockets sessions from closing.
+- :feature:`103` Added the firing of a ``disconnect`` event for the WebSocketsDispatcher.
+- :bug:`102 major` Fixed minor bug with WebSocketsDispatcher causing superflusous ``connect()`` events from being fired.
+- :bug:`100 major` Fixed returned Content-Type in JSON-RPC Dispatcher.
+- :feature:`99` Added Digest Auth support to the ``circuits.web`` CLI Tool
+- :feature:`98` Dockerized circuits. See: https://docker.io/
+- :bug:`97 major` Fixed ``tests.net.test_tcp.test_lookup_failure`` test for Windows
+- :support:`95` Updated Developer Documentation with corrections and a new workflow.
+- :feature:`94` Modified the :class:`circuits.web.Logger` to use the ``response_success`` event.
+- :support:`86` Telnet Tutorial
+- :bug:`47 major` Dispatcher does not fully respect optional arguments. web
+- :support:`61` circuits.web documentation enhancements docs
+- :support:`85` Migrate away from ShiningPanda
+- :support:`87` A rendered example of ``circuits.tools.graph()``. docs
+- :support:`88` Document the implicit registration of components attached as class attributes docs
+- :bug:`89 major` Class attribtues that reference methods cause duplicate event handlers core
+- :support:`92` Update circuitsframework.com content docs
+- :support:`71` Document the value_changed event docs
+- :support:`78` Migrate Change Log maintenance and build to Releases
+- :bug:`91 major` Call/Wait and specific instances of events
+- :bug:`59 major` circuits.web DoS in serve_file (remote denial of service) web
+- :bug:`66 major` web examples jsonserializer broken web
+- :support:`73` Fix duplication in auto generated API Docs. docs
+- :support:`72` Update Event Filtering section of Users Manual docs
+- :bug:`76 major` Missing unit test for DNS lookup failures net
+- :support:`70` Convention around method names of event handlers
+- :support:`75` Document and show examples of using circuits.tools docs
+- :bug:`81 major` "index" method not serving / web
+- :bug:`77 major` Uncaught exceptions Event collides with sockets and others core
+- :support:`69` Merge #circuits-dev FreeNode Channel into #circuits
+- :support:`65` Update tutorial to match circuits 3.0 API(s) and Semantics docs
+- :support:`60` meantion @handler decorator in tutorial docs
+- :bug:`67 major` web example jsontool is broken on python3 web
+- :support:`63` typos in documentation docs
+- :bug:`53 major` WebSocketClient treating WebSocket data in same TCP segment as HTTP response as part the HTTP response. web
+- :bug:`62 major` Fix packaging and bump circuits 1.5.1 for @dsuch (*Dariusz Suchojad*) for `Zato <https://zato.io/>`_
+- :bug:`56 major` circuits.web HEAD request send response body web
+- :bug:`45 major` Fixed use of ``cmp()`` and ``__cmp__()`` for Python 3 compatibility.
+- :bug:`48 major` Allow ``event`` to be passed to the decorated function (*the request handler*) for circuits.web
+- :bug:`46 major` Set ``Content-Type`` header on response for errors. (circuits.web)
+- :bug:`38 major` Guard against invalid headers. (circuits.web)
+- :bug:`37 major` Fixed a typo in :class:`~circuits.io.file.File`
+
+
+Older Change Logs
+=================
+
+For older Change Logs of previous versions of circuits please see the respective `PyPi <http://pypi.python.org/pypi>`_ page(s):
+
+- `circuits-2.1.0 <http://pypi.python.org/pypi/circuits/2.1.0>`_
+- `circuits-2.0.1 <http://pypi.python.org/pypi/circuits/2.0.1>`_
+- `circuits-2.0.0 <http://pypi.python.org/pypi/circuits/2.0.0>`_
+- `circuits-1.6 <http://pypi.python.org/pypi/circuits/1.6>`_
+- `circuits-1.5 <http://pypi.python.org/pypi/circuits/1.5>`_
+
+
