@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% import "macros.html" as macros %}
+
+{% macro request_header(attr, title, class=None) -%}
+<th id="col-{{ attr }}"{{ (' class="' ~ class ~ '"')|safe if class }}><a href="#" class="heading">{{ title }} <i></i></a></th>
+{%- endmacro %}
+
+{% macro request_cell(attr, content) -%}
+<td class="col-{{ attr }}">{{ content }}</td>
+{%- endmacro %}
+
+{% block content %}
+<div class="row">
+  <div id="request-list" class="col-md-10 col-md-offset-1">
+    <div class="input-group form-group">
+      <span class="input-group-addon">Filters</span>
+      <input type="text" class="form-control filter-tokenfield">
+    </div>
+    <table class="table table-condensed" id="requests">
+      <tr>
+        {% block table_headers %}
+        {{ request_header("id", "Request ID") }}
+        {{ request_header("pilot", "Pilot") }}
+        {{ request_header("ship", "Ship") }}
+        {{ request_header("system", "System") }}
+        {{ request_header("status", "Status") }}
+        {{ request_header("payout", "Payout") }}
+        {{ request_header("submit_timestamp", "Submit Time") }}
+        {{ request_header("division", "Division") }}
+        {% endblock table_headers %}
+      </tr>
+      {% for request in pager.items %}
+      <tr class="{{ macros.status_color(request.status) }}">
+        {% block table_row scoped %}
+        <td class="col-id"><a href="{{ url_for('requests.get_request_details', request_id=request.id) }}">{{ request.id }}</a></td>
+        {{ request_cell('pilot', request.pilot.name) }}
+        {{ request_cell('ship', request.ship_type) }}
+        {{ request_cell('system', request.system) }}
+        {{ request_cell('status', request.status) }}
+        {{ request_cell('payout', request.payout.currency()) }}
+        {{ request_cell('submit_timestamp', request.timestamp.strftime('%d %b %Y @ %H:%M')) }}
+        {{ request_cell('division', request.division.name) }}
+        {% endblock table_row %}
+      </tr>
+      {% endfor %}
+    </table>
+    {% if pager.pages > 1 %}
+    <div class="text-center">
+      <ul class="pagination">
+        {% if pager.has_prev %}
+        <li><a id="prev_page" href="{{ url_for(request.endpoint, page=pager.prev_num) }}">&laquo;</a></li>
+        {% else %}
+        <li class="disabled"><span>&laquo;</span></li>
+        {% endif %}
+        {% for page in pager.iter_pages() %}
+          {% if page %}
+            {% if page != pager.page %}
+        <li><a href="{{ url_for(request.endpoint, page=page) }}">{{ page }}</a></li>
+            {% else %}
+        <li class="active"><a href="{{ url_for(request.endpoint, page=page) }}">{{ page }}<span class="sr-only"> (current)</span></a></li>
+            {% endif %}
+          {% else %}
+        <li class="disabled"><span>&hellip;</span></li>
+          {% endif %}
+        {% endfor %}
+        {% if pager.has_next %}
+        <li><a id="next_page" href="{{ url_for(request.endpoint, page=pager.next_num) }}">&raquo;</a></li>
+        {% else %}
+        <li class="disabled"><span>&raquo;</span></li>
+        {% endif %}
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock content %}
