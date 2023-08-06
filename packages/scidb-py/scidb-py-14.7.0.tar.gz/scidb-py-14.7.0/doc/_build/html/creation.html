@@ -1,0 +1,361 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Creating arrays &mdash; SciDB-Py 14.7.0 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="SciDB-Py 14.7.0 documentation" href="index.html"/>
+        <link rel="up" title="Basic Use" href="tutorial.html"/>
+        <link rel="next" title="Accessing array data" href="access.html"/>
+        <link rel="prev" title="Introduction to SciDB arrays" href="connection.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="index.html" class="fa fa-home"> SciDB-Py</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installing SciDB-Py</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="install.html#software-prerequisites">Software prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#python-prerequisites">Python Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#scidb-py-package-installation">SciDB-Py Package Installation</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="tutorial.html">Basic Use</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="connection.html">Introduction to SciDB arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="connection.html#loading-the-scidbpy-package-and-connecting-to-scidb">Loading the scidbpy package and connecting to SciDB</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Creating arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="access.html">Accessing array data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="operations.html">Operations on SciDB array objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="comparison_and_filtering.html">Comparing and Filtering Arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="query.html">The SciDB Query Interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="conversion.html">Downloading SciDBArrays</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="demos.html">Demos and Other Topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="classes.html">Class Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="afl.html">AFL Operator Reference</a></li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">SciDB-Py</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="tutorial.html">Basic Use</a> &raquo;</li>
+      
+    <li>Creating arrays</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="_sources/creation.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            
+  <div class="section" id="creating-arrays">
+<span id="creation"></span><h1>Creating arrays<a class="headerlink" href="#creating-arrays" title="Permalink to this headline">¶</a></h1>
+<p>The following sections illustrate a number of ways to create <a class="reference internal" href="classes.html#scidbpy.SciDBArray" title="scidbpy.SciDBArray"><tt class="xref py py-class docutils literal"><span class="pre">SciDBArray</span></tt></a>
+objects. The examples assume that an <tt class="docutils literal"><span class="pre">sdb</span></tt> interface object has already
+been set up.</p>
+<div class="section" id="from-a-numpy-array">
+<h2>From a numpy array<a class="headerlink" href="#from-a-numpy-array" title="Permalink to this headline">¶</a></h2>
+<p>Perhaps the simplest approach to creating an arbitrary <a class="reference internal" href="classes.html#scidbpy.SciDBArray" title="scidbpy.SciDBArray"><tt class="xref py py-class docutils literal"><span class="pre">SciDBArray</span></tt></a>
+object is to upload a numpy array into SciDB with the
+<tt class="xref py py-meth docutils literal"><span class="pre">from_array()</span></tt>
+function. Although this approach is very convenient, it is not really suitable
+for very big arrays (which might exceed memory availability in a single
+computer, for example). In such cases, consider other options described below.</p>
+<p>The following example creates a <a class="reference internal" href="classes.html#scidbpy.SciDBArray" title="scidbpy.SciDBArray"><tt class="xref py py-class docutils literal"><span class="pre">SciDBArray</span></tt></a> object named <tt class="docutils literal"><span class="pre">Xsdb</span></tt>
+from a small 5x4 numpy array named <tt class="docutils literal"><span class="pre">X</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">scidbpy</span> <span class="kn">import</span> <span class="n">connect</span>
+<span class="n">sdb</span> <span class="o">=</span> <span class="n">connect</span><span class="p">()</span>
+
+<span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arndom</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<span class="n">Xsdb</span> <span class="o">=</span> <span class="n">sdb</span><span class="o">.</span><span class="n">from_array</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The package takes care of naming the SciDB array in this example (use
+<tt class="docutils literal"><span class="pre">Xsdb.name</span></tt> to see the SciDB array name).</p>
+</div>
+<div class="section" id="from-a-scipy-sparse-matrix">
+<h2>From a scipy sparse matrix<a class="headerlink" href="#from-a-scipy-sparse-matrix" title="Permalink to this headline">¶</a></h2>
+<p>In a similar way, a <a class="reference internal" href="classes.html#scidbpy.SciDBArray" title="scidbpy.SciDBArray"><tt class="xref py py-class docutils literal"><span class="pre">SciDBArray</span></tt></a> can be created from a scipy sparse
+matrix.  For example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">coo_matrix</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="n">X</span><span class="p">[</span><span class="n">X</span> <span class="o">&lt;</span> <span class="mf">0.9</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c"># make array sparse</span>
+<span class="n">Xcoo</span> <span class="o">=</span> <span class="n">coo_matrix</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<span class="n">Xsdb</span> <span class="o">=</span> <span class="n">sdb</span><span class="o">.</span><span class="n">from_sparse</span><span class="p">(</span><span class="n">Xcoo</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This operation is most efficient for matrices stored in coordinate form
+(<tt class="docutils literal"><span class="pre">coo_matrix</span></tt>).  Other sparse formats will be internally converted to
+COO form in the process of transferring the data.</p>
+</div>
+<div class="section" id="convenience-array-creation-functions">
+<h2>Convenience array creation functions<a class="headerlink" href="#convenience-array-creation-functions" title="Permalink to this headline">¶</a></h2>
+<p>Many standard numpy functions for creating special arrays are supported.  These
+include:</p>
+<dl class="docutils">
+<dt><tt class="xref py py-meth docutils literal"><span class="pre">zeros()</span></tt></dt>
+<dd>to create an array full of zeros:</dd>
+</dl>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Create a 10x10 array of double-precision zeros:</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">sdb</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt><tt class="xref py py-meth docutils literal"><span class="pre">ones()</span></tt></dt>
+<dd>to create an array full of ones:</dd>
+</dl>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Create a 10x10 array of 64-bit signed integer ones:</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">sdb</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s">&#39;int64&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt><tt class="xref py py-meth docutils literal"><span class="pre">random()</span></tt></dt>
+<dd>to create an array of uniformly distributed random floating-point values:</dd>
+</dl>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Create a 10x10 array of numbers between -1 and 2 (inclusive)</span>
+<span class="c">#    sampled from a uniform random distribution.</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">sdb</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">lower</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">upper</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt><tt class="xref py py-meth docutils literal"><span class="pre">randint()</span></tt></dt>
+<dd>to create an array of uniformly distributed random integers:</dd>
+</dl>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Create a 10x10 array of uniform random integers between 0 and 10</span>
+<span class="c">#  (inclusive of 0, non-inclusive of 10)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">sdb</span><span class="o">.</span><span class="n">randint</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">lower</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">upper</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt><tt class="xref py py-meth docutils literal"><span class="pre">arange()</span></tt></dt>
+<dd>to create and array with evenly-spaced values given a step size:</dd>
+</dl>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Create a vector of ten integers, counting up from zero</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">sdb</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt><tt class="xref py py-meth docutils literal"><span class="pre">linspace()</span></tt></dt>
+<dd>to create an array with evenly spaced values between supplied bounds:</dd>
+</dl>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Create a vector of 5 equally spaced numbers between 1 and 10,</span>
+<span class="c"># including the endpoints:</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">sdb</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt><tt class="xref py py-meth docutils literal"><span class="pre">identity()</span></tt></dt>
+<dd>to create a sparse or dense identity matrix:</dd>
+</dl>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Create a 10x10 sparse, double-precision-valued identity matrix:</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">sdb</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s">&#39;double&#39;</span><span class="p">,</span> <span class="n">sparse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>These functions should be familiar to anyone who has used NumPy, and the
+syntax of each function closely follows its NumPy counterpart.  In each case,
+the array is defined and created directly in the SciDB server, and the
+resulting Python object is simply a wrapper of the native SciDB array.
+Because of this, the functions outlined here and in the following sections
+can be more efficient ways to generate large SciDB arrays than copying data
+from a numpy array.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">SciDB does not yet have a way to set a random seed, prohibiting
+reproducible results involving the random number generator.</p>
+</div>
+</div>
+<div class="section" id="from-an-existing-scidb-array">
+<h2>From an existing SciDB array<a class="headerlink" href="#from-an-existing-scidb-array" title="Permalink to this headline">¶</a></h2>
+<p>Finally, <a class="reference internal" href="classes.html#scidbpy.SciDBArray" title="scidbpy.SciDBArray"><tt class="xref py py-class docutils literal"><span class="pre">SciDBArray</span></tt></a> objects may be created from existing SciDB arrays, so
+long as the data type restrictions outlined above are met. (It usually makes
+sense to load large data sets into SciDB externally from the Python package,
+using the SciDB parallel bulk loader or similar facility.)</p>
+<p>The following example uses the <tt class="xref py py-meth docutils literal"><span class="pre">query()</span></tt> function to build
+and store a small 10x5 SciDB array named &#8220;A&#8221; independently of Python.
+We then create a <a class="reference internal" href="classes.html#scidbpy.SciDBArray" title="scidbpy.SciDBArray"><tt class="xref py py-class docutils literal"><span class="pre">SciDBArray</span></tt></a>
+object from the SciDB array with the <tt class="xref py py-meth docutils literal"><span class="pre">wrap_array()</span></tt> function, passing
+the name of the array identifier on the SciDB server:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># remove A if it already exists</span>
+<span class="k">if</span> <span class="s">&quot;A&quot;</span> <span class="ow">in</span> <span class="n">sdb</span><span class="o">.</span><span class="n">list_arrays</span><span class="p">():</span>
+    <span class="n">sdb</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s">&quot;remove(A)&quot;</span><span class="p">)</span>
+
+<span class="c"># create an array named &#39;A&#39; on the server</span>
+<span class="n">sdb</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s">&quot;store(build(&lt;v:double&gt;[i=1:10,10,0,j=1:5,5,0],i+j),A)&quot;</span><span class="p">)</span>
+
+<span class="c"># create a Python object pointing to this array</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">sdb</span><span class="o">.</span><span class="n">wrap_array</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that there are some restrictions on the types of arrays which can be
+wrapped by <tt class="docutils literal"><span class="pre">SciDB-Py</span></tt>.  The array data must be of a compatible type, and
+have integer indices.  Also, arrays with indices that don&#8217;t start at zero
+may not behave as expected for item access and slicing, discussed below.</p>
+<p>Note also that many functions in the SciDB-Py package work on single-attribute
+arrays. When a <a class="reference internal" href="classes.html#scidbpy.SciDBArray" title="scidbpy.SciDBArray"><tt class="xref py py-class docutils literal"><span class="pre">SciDBArray</span></tt></a> object refers to a SciDB array with more
+than one attribute, only the first listed attribute is used.</p>
+</div>
+<div class="section" id="persistence-of-scidb-py-arrays">
+<h2>Persistence of SciDB-Py arrays<a class="headerlink" href="#persistence-of-scidb-py-arrays" title="Permalink to this headline">¶</a></h2>
+<p>Each array has a <a class="reference internal" href="classes.html#scidbpy.SciDBArray.persistent" title="scidbpy.SciDBArray.persistent"><tt class="xref py py-attr docutils literal"><span class="pre">persistent</span></tt></a> attribute.
+When <tt class="docutils literal"><span class="pre">persistent</span></tt> is set to <tt class="docutils literal"><span class="pre">True</span></tt>, arrays remain in SciDB
+until explicitly removed by a <tt class="docutils literal"><span class="pre">remove</span></tt> query.
+If <tt class="docutils literal"><span class="pre">persistent</span></tt> is set to False, the arrays are removed when the
+<tt class="xref py py-meth docutils literal"><span class="pre">SciDBInterface.reap()</span></tt> or <a class="reference internal" href="classes.html#scidbpy.SciDBArray.reap" title="scidbpy.SciDBArray.reap"><tt class="xref py py-meth docutils literal"><span class="pre">SciDBArray.reap()</span></tt></a> methods are invoked.
+(Note that <a class="reference internal" href="classes.html#scidbpy.interface.SciDBInterface.reap" title="scidbpy.interface.SciDBInterface.reap"><tt class="xref py py-meth docutils literal"><span class="pre">interface.SciDBInterface.reap()</span></tt></a> is automatically invoked when
+Python exits).</p>
+<p>Arrays defined from an existing SciDB array using the
+<a class="reference internal" href="classes.html#scidbpy.interface.SciDBInterface.wrap_array" title="scidbpy.interface.SciDBInterface.wrap_array"><tt class="xref py py-meth docutils literal"><span class="pre">wrap_array()</span></tt></a> argument are always persistent, while
+all other array creation routines set <tt class="docutils literal"><span class="pre">persistent=False</span></tt> by default:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">X</span> <span class="o">=</span> <span class="n">sdb</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">persistent</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>  <span class="c"># default</span>
+<span class="k">print</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">sdb</span><span class="o">.</span><span class="n">list_arrays</span><span class="p">())</span>  <span class="c"># True</span>
+<span class="n">X</span><span class="o">.</span><span class="n">reap</span><span class="p">()</span>
+<span class="k">print</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">sdb</span><span class="o">.</span><span class="n">list_arrays</span><span class="p">())</span>  <span class="c"># False</span>
+</pre></div>
+</div>
+<p>When <a class="reference internal" href="classes.html#scidbpy.interface.connect" title="scidbpy.interface.connect"><tt class="xref py py-func docutils literal"><span class="pre">connect()</span></tt></a> is used as a context manager, non-persistent
+arrays are reaped at the end of the context block:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">with</span> <span class="n">connect</span><span class="p">(</span><span class="n">url</span><span class="p">)</span> <span class="k">as</span> <span class="n">sdb</span><span class="p">:</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">sdb</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="c"># deleted here</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="access.html" class="btn btn-neutral float-right" title="Accessing array data"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="connection.html" class="btn btn-neutral" title="Introduction to SciDB arrays"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2014, SciDB-Py Developers.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'14.7.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,313 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Accessing array data &mdash; SciDB-Py 14.7.0 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="SciDB-Py 14.7.0 documentation" href="index.html"/>
+        <link rel="up" title="Basic Use" href="tutorial.html"/>
+        <link rel="next" title="Operations on SciDB array objects" href="operations.html"/>
+        <link rel="prev" title="Creating arrays" href="creation.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="index.html" class="fa fa-home"> SciDB-Py</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installing SciDB-Py</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="install.html#software-prerequisites">Software prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#python-prerequisites">Python Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#scidb-py-package-installation">SciDB-Py Package Installation</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="tutorial.html">Basic Use</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="connection.html">Introduction to SciDB arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="connection.html#loading-the-scidbpy-package-and-connecting-to-scidb">Loading the scidbpy package and connecting to SciDB</a></li>
+<li class="toctree-l2"><a class="reference internal" href="creation.html">Creating arrays</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Accessing array data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="operations.html">Operations on SciDB array objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="comparison_and_filtering.html">Comparing and Filtering Arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="query.html">The SciDB Query Interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="conversion.html">Downloading SciDBArrays</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="demos.html">Demos and Other Topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="classes.html">Class Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="afl.html">AFL Operator Reference</a></li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">SciDB-Py</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="tutorial.html">Basic Use</a> &raquo;</li>
+      
+    <li>Accessing array data</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="_sources/access.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            
+  <div class="section" id="accessing-array-data">
+<span id="access"></span><h1>Accessing array data<a class="headerlink" href="#accessing-array-data" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="converting-arrays-to-other-data-structures">
+<h2>Converting arrays to other data structures<a class="headerlink" href="#converting-arrays-to-other-data-structures" title="Permalink to this headline">¶</a></h2>
+<p>SciDB-Py is designed to perform operations on SciDB arrays in a
+natural Python dialect, computing those operations in SciDB while minimizing data traffic between the database and Python. However, it is useful to materialize SciDB array data to Python, for example to obtain and plot results.</p>
+<p><a class="reference internal" href="classes.html#scidbpy.SciDBArray" title="scidbpy.SciDBArray"><tt class="xref py py-class docutils literal"><span class="pre">SciDBArray</span></tt></a> objects provide several functions that materialize array
+data to Python:</p>
+<dl class="docutils">
+<dt><a class="reference internal" href="classes.html#scidbpy.SciDBArray.toarray" title="scidbpy.SciDBArray.toarray"><tt class="xref py py-meth docutils literal"><span class="pre">toarray()</span></tt></a></dt>
+<dd><p class="first">can be used to populate a <tt class="docutils literal"><span class="pre">numpy</span></tt> array from an
+<cite>N</cite>-dimensional array with any number of attributes:</p>
+<div class="last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">sdb</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
+<span class="go">array([  0. ,   2.5,   5. ,   7.5,  10. ])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">sdb</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sdb</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="n">sdb</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
+<span class="go">array([(0.0, 0), (2.0, 1), (4.0, 2), (6.0, 3), (8.0, 4)],</span>
+<span class="go">          dtype=[(&#39;f0&#39;, &#39;&lt;f8&#39;), (&#39;f0_2&#39;, &#39;&lt;i8&#39;)])</span>
+</pre></div>
+</div>
+</dd>
+<dt><a class="reference internal" href="classes.html#scidbpy.SciDBArray.tosparse" title="scidbpy.SciDBArray.tosparse"><tt class="xref py py-meth docutils literal"><span class="pre">tosparse()</span></tt></a></dt>
+<dd><p class="first">can be used to populate a <a class="reference external" href="http://docs.scipy.org/doc/scipy/reference/sparse.html">SciPy sparse matrix</a> from a 2-dimensional
+array with a single attribute:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">I</span> <span class="o">=</span> <span class="n">sdb</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">sparse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">I</span><span class="o">.</span><span class="n">tosparse</span><span class="p">(</span><span class="n">sparse_fmt</span><span class="o">=</span><span class="s">&#39;dia&#39;</span><span class="p">)</span>
+<span class="go">    &lt;5x5 sparse matrix of type &#39;&lt;type &#39;numpy.float64&#39;&gt;&#39;</span>
+<span class="go">        with 5 stored elements (1 diagonals) in DIAgonal format&gt;</span>
+</pre></div>
+</div>
+<p class="last"><a class="reference internal" href="classes.html#scidbpy.SciDBArray.tosparse" title="scidbpy.SciDBArray.tosparse"><tt class="xref py py-meth docutils literal"><span class="pre">tosparse()</span></tt></a> will also work with 1-dimensional arrays
+or multi-dimensional arrays; in this case the result cannot be exported
+to a SciPy sparse format, but will be returned as a
+<a class="reference external" href="http://docs.scipy.org/doc/numpy/reference/generated/numpy.recarray.html">Numpy record array</a> listing the indices and values.</p>
+</dd>
+<dt><a class="reference internal" href="classes.html#scidbpy.SciDBArray.todataframe" title="scidbpy.SciDBArray.todataframe"><tt class="xref py py-meth docutils literal"><span class="pre">todataframe()</span></tt></a></dt>
+<dd><p class="first">can be used to populate a <a class="reference external" href="http://pandas.pydata.org/pandas-docs/dev/dsintro.html#dataframe">Pandas dataframe</a> from a 1-dimensional
+array with any number of attributes:</p>
+<div class="last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">sdb</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sdb</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s">&#39;&lt;A:double&gt;&#39;</span><span class="p">),</span>
+<span class="go">                 sdb.arange(1, 6, dtype=&#39;&lt;B:int32&gt;&#39;),</span>
+<span class="go">                 sdb.ones(5, dtype=&#39;&lt;C:float&gt;&#39;))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="o">.</span><span class="n">todataframe</span><span class="p">()</span>
+<span class="go">   A  B  C</span>
+<span class="go">0  0  1  1</span>
+<span class="go">1  2  2  1</span>
+<span class="go">2  4  3  1</span>
+<span class="go">3  6  4  1</span>
+<span class="go">4  8  5  1</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>These methods are discussed in greater detail in <a class="reference internal" href="conversion.html#downloading"><em>Downloading SciDBArrays</em></a>.
+Element Access
+&#8212;&#8212;&#8212;&#8212;&#8211;</p>
+<p>Single elements of <a class="reference internal" href="classes.html#scidbpy.SciDBArray" title="scidbpy.SciDBArray"><tt class="xref py py-class docutils literal"><span class="pre">SciDBArray</span></tt></a> objects can be referenced with the
+standard numpy indexing syntax.  These single elements are returned by
+value:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">sdb</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="go">6</span>
+</pre></div>
+</div>
+<p>Note that element assignment (e.g. <tt class="docutils literal"><span class="pre">x[0,</span> <span class="pre">0]</span> <span class="pre">=</span> <span class="pre">4</span></tt>)is not supported.</p>
+</div>
+<div class="section" id="subarrays-and-slice-syntax">
+<h2>Subarrays and Slice Syntax<a class="headerlink" href="#subarrays-and-slice-syntax" title="Permalink to this headline">¶</a></h2>
+<p>SciDBArrays support NumPy&#8217;s slice syntax for extracting subregions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">sdb</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">6</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
+<span class="go">array([[ 0,  1,  2,  3,  4],</span>
+<span class="go">       [ 5,  6,  7,  8,  9],</span>
+<span class="go">       [10, 11, 12, 13, 14],</span>
+<span class="go">       [15, 16, 17, 18, 19],</span>
+<span class="go">       [20, 21, 22, 23, 24],</span>
+<span class="go">       [25, 26, 27, 28, 29]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span> <span class="c"># the first 2 rows</span>
+<span class="go">array([[0, 1, 2, 3, 4],</span>
+<span class="go">       [5, 6, 7, 8, 9]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>  <span class="c"># the second 2 columns</span>
+<span class="go">array([[ 1,  2],</span>
+<span class="go">       [ 6,  7],</span>
+<span class="go">       [11, 12],</span>
+<span class="go">       [16, 17],</span>
+<span class="go">       [21, 22],</span>
+<span class="go">       [26, 27]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">[::</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>  <span class="c"># every other row</span>
+<span class="go">array([[ 0,  1,  2,  3,  4],</span>
+<span class="go">       [10, 11, 12, 13, 14],</span>
+<span class="go">       [20, 21, 22, 23, 24]])</span>
+</pre></div>
+</div>
+<p>Some of NumPy&#8217;s &#8220;Fancy Indexing&#8221; operations, like indexing
+with a boolean array, are also supported; see <a class="reference internal" href="comparison_and_filtering.html#comparison-and-filtering"><em>Comparing and Filtering Arrays</em></a></p>
+</div>
+<div class="section" id="attribute-access">
+<h2>Attribute access<a class="headerlink" href="#attribute-access" title="Permalink to this headline">¶</a></h2>
+<p id="id1">You can access specific attributes of an array by
+passing their names in the brackets. You can also add new attributes
+by providing a SciDB expression:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">sdb</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">.</span><span class="n">att_names</span>
+<span class="go">[&#39;f0&#39;]</span>
+<span class="go"># extract the f0 attribute</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">[</span><span class="s">&#39;f0&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
+<span class="go">array([0, 1, 2, 3])</span>
+
+<span class="go"># add a new attribute, and access it</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">[</span><span class="s">&#39;y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;sin(f0 * 3)&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">[</span><span class="s">&#39;y&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
+<span class="go">array([ 0.        ,  0.14112001, -0.2794155 ,  0.41211849])</span>
+
+<span class="go"># multi-attribute access</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">[[</span><span class="s">&#39;y&#39;</span><span class="p">,</span> <span class="s">&#39;f0&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
+<span class="go">array([(0.0, 0), (0.1411200080598672, 1), (-0.27941549819892586, 2),</span>
+<span class="go">      (0.4121184852417566, 3)],</span>
+<span class="go">     dtype=[(&#39;y&#39;, &#39;&lt;f8&#39;), (&#39;f0&#39;, &#39;&lt;i8&#39;)])</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="operations.html" class="btn btn-neutral float-right" title="Operations on SciDB array objects"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="creation.html" class="btn btn-neutral" title="Creating arrays"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2014, SciDB-Py Developers.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'14.7.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

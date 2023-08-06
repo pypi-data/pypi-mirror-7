@@ -1,0 +1,276 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Comparing and Filtering Arrays &mdash; SciDB-Py 14.7.0 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="SciDB-Py 14.7.0 documentation" href="index.html"/>
+        <link rel="up" title="Basic Use" href="tutorial.html"/>
+        <link rel="next" title="The SciDB Query Interface" href="query.html"/>
+        <link rel="prev" title="Operations on SciDB array objects" href="operations.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="index.html" class="fa fa-home"> SciDB-Py</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installing SciDB-Py</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="install.html#software-prerequisites">Software prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#python-prerequisites">Python Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#scidb-py-package-installation">SciDB-Py Package Installation</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="tutorial.html">Basic Use</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="connection.html">Introduction to SciDB arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="connection.html#loading-the-scidbpy-package-and-connecting-to-scidb">Loading the scidbpy package and connecting to SciDB</a></li>
+<li class="toctree-l2"><a class="reference internal" href="creation.html">Creating arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="access.html">Accessing array data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="operations.html">Operations on SciDB array objects</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Comparing and Filtering Arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="query.html">The SciDB Query Interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="conversion.html">Downloading SciDBArrays</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="demos.html">Demos and Other Topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="classes.html">Class Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="afl.html">AFL Operator Reference</a></li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">SciDB-Py</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="tutorial.html">Basic Use</a> &raquo;</li>
+      
+    <li>Comparing and Filtering Arrays</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="_sources/comparison_and_filtering.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            
+  <div class="section" id="comparing-and-filtering-arrays">
+<span id="comparison-and-filtering"></span><h1>Comparing and Filtering Arrays<a class="headerlink" href="#comparing-and-filtering-arrays" title="Permalink to this headline">¶</a></h1>
+<p>SciDB-Py provides support for comparing and filtering
+SciDB arrays, using NumPy-like syntax.</p>
+<p>The standard inequality operators perform element-wise inequality testing between SciDB arrays, NumPy arrays,
+and scalars:</p>
+<div class="highlight-python"><div class="highlight"><pre>In [1]: from scidbpy import connect
+
+In [2]: sdb = connect()
+
+In [3]: x = sdb.arange(5)
+
+In [4]: x.toarray()
+Out[4]: array([0, 1, 2, 3, 4])
+
+In [5]: (x &lt; 2).toarray()
+Out[5]: array([ True,  True, False, False, False], dtype=bool)
+
+In [6]: y = np.array([5, 0, 3, 2, 1])
+
+In [7]: (x &lt; y).toarray()
+Out[7]: array([ True, False,  True, False, False], dtype=bool)
+
+In [13]: z = sdb.from_array(y)
+
+In [14]: (x &lt; z).toarray()
+Out[14]: array([ True, False,  True, False, False], dtype=bool)
+</pre></div>
+</div>
+<p>Array broadcasting is not currently performed when comparing two arrays &#8211; they must have identical shapes.</p>
+<p>As with NumPy arrays, boolean SciDB arrays can be used as masks, building a 1D array
+whose elements correspond to the True locations in the mask:</p>
+<div class="highlight-python"><div class="highlight"><pre>In [17]: r = sdb.random((3, 4))
+
+In [18]: r.toarray()
+Out[18]:
+array([[ 0.05799351,  0.84173237,  0.96347301,  0.34572826],
+       [ 0.94962912,  0.30928932,  0.74852295,  0.0920418 ],
+       [ 0.88262646,  0.49973551,  0.93622554,  0.31813278]])
+
+In [19]: r[r &gt; .5].toarray()
+Out[19]:
+array([ 0.84173237,  0.96347301,  0.94962912,  0.74852295,  0.88262646,
+        0.93622554])
+</pre></div>
+</div>
+<div class="section" id="extracting-values-along-a-particular-axis">
+<h2>Extracting values along a particular axis<a class="headerlink" href="#extracting-values-along-a-particular-axis" title="Permalink to this headline">¶</a></h2>
+<p>Use the <a class="reference internal" href="classes.html#scidbpy.SciDBArray.compress" title="scidbpy.SciDBArray.compress"><tt class="xref py py-meth docutils literal"><span class="pre">SciDBArray.compress()</span></tt></a> method to extract row or column subsets of an array. For example, to extract all rows where
+the sum across all columns exceeds a threshold:</p>
+<div class="highlight-python"><div class="highlight"><pre>In [3]: x = sdb.random((3,4))
+
+In [4]: x.toarray()
+Out[4]:
+array([[ 0.10111977,  0.5511177 ,  0.49532397,  0.4213646 ],
+       [ 0.3812068 ,  0.97679566,  0.20473656,  0.40256096],
+       [ 0.2387294 ,  0.88714084,  0.01064819,  0.48275173]])
+
+In [5]: x.mean(1).toarray()
+Out[5]: array([ 0.39223151,  0.491325  ,  0.40481754])
+
+In [6]: x.compress(x.mean(1) &gt; 0.4, axis=0).toarray()
+Out[6]:
+array([[ 0.3812068 ,  0.97679566,  0.20473656,  0.40256096],
+       [ 0.2387294 ,  0.88714084,  0.01064819,  0.48275173]])
+</pre></div>
+</div>
+</div>
+<div class="section" id="aggregation-based-on-masked-values">
+<h2>Aggregation based on masked values<a class="headerlink" href="#aggregation-based-on-masked-values" title="Permalink to this headline">¶</a></h2>
+<p>A future version of SciDB-Py will provide a groupby operator, allowing comparisons
+to be used to compute group-wise aggregates:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">sdb</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="mf">0.5</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Until that method is added, you can perform the same computation with
+two aggregate calls:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">mask</span> <span class="o">=</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="mf">0.5</span>
+<span class="n">x</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+<span class="n">x</span><span class="p">[</span><span class="o">~</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="comparison-with-scidb-r">
+<h2>Comparison with SciDB-R<a class="headerlink" href="#comparison-with-scidb-r" title="Permalink to this headline">¶</a></h2>
+<p>See <a class="reference external" href="https://github.com/Paradigm4/SciDBR/wiki/Comparing-and-filtering-values">this page</a> for SciDB-R&#8217;s syntax for comparing and filtering arrays.</p>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="query.html" class="btn btn-neutral float-right" title="The SciDB Query Interface"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="operations.html" class="btn btn-neutral" title="Operations on SciDB array objects"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2014, SciDB-Py Developers.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'14.7.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,328 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>The SciDB Query Interface &mdash; SciDB-Py 14.7.0 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="SciDB-Py 14.7.0 documentation" href="index.html"/>
+        <link rel="up" title="Basic Use" href="tutorial.html"/>
+        <link rel="next" title="Downloading SciDBArrays" href="conversion.html"/>
+        <link rel="prev" title="Comparing and Filtering Arrays" href="comparison_and_filtering.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="index.html" class="fa fa-home"> SciDB-Py</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installing SciDB-Py</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="install.html#software-prerequisites">Software prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#python-prerequisites">Python Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#scidb-py-package-installation">SciDB-Py Package Installation</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="tutorial.html">Basic Use</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="connection.html">Introduction to SciDB arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="connection.html#loading-the-scidbpy-package-and-connecting-to-scidb">Loading the scidbpy package and connecting to SciDB</a></li>
+<li class="toctree-l2"><a class="reference internal" href="creation.html">Creating arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="access.html">Accessing array data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="operations.html">Operations on SciDB array objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="comparison_and_filtering.html">Comparing and Filtering Arrays</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">The SciDB Query Interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="conversion.html">Downloading SciDBArrays</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="demos.html">Demos and Other Topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="classes.html">Class Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="afl.html">AFL Operator Reference</a></li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">SciDB-Py</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="tutorial.html">Basic Use</a> &raquo;</li>
+      
+    <li>The SciDB Query Interface</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="_sources/query.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            
+  <div class="section" id="the-scidb-query-interface">
+<span id="query"></span><h1>The SciDB Query Interface<a class="headerlink" href="#the-scidb-query-interface" title="Permalink to this headline">¶</a></h1>
+<p><tt class="docutils literal"><span class="pre">scidbpy</span></tt> provides python wrappers for many useful SciDB operations, but
+the SciDB AFL query language can provide even more customization
+of operations (For more information on SciDB&#8217;s AFL and AQL languages,
+see the <a class="reference external" href="http://www.scidb.org/HTMLmanual/">SciDB Manual</a>).  The <tt class="xref py py-meth docutils literal"><span class="pre">query()</span></tt> function provides
+a useful interface for generating raw queries by exploiting Python&#8217;s
+<a class="reference external" href="http://docs.python.org/2/whatsnew/2.6.html#pep-3101-advanced-string-formatting">String Formatting</a> syntax.  Through automatic insertion of the server-side
+identifiers of SciDB arrays, attributes, and dimensions, the query interface
+makes constructing complicated queries very convenient.</p>
+<p>The general approach first creates a new <a class="reference internal" href="classes.html#scidbpy.SciDBArray" title="scidbpy.SciDBArray"><tt class="xref py py-class docutils literal"><span class="pre">SciDBArray</span></tt></a> object and then
+issues a query to populate data.  For example, to build an array of zeros
+similar to the result of the <tt class="xref py py-meth docutils literal"><span class="pre">zeros()</span></tt> function shown
+above, the query can be constructed in the following way:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># first define an empty array to hold the result</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">zeros</span> <span class="o">=</span> <span class="n">sdb</span><span class="o">.</span><span class="n">new_array</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s">&#39;double&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># now execute a query to fill the array</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sdb</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s">&#39;store(build({A}, 0), {A})&#39;</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="n">zeros</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">zeros</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
+<span class="go">array([[ 0.,  0.,  0.,  0.,  0.],</span>
+<span class="go">       [ 0.,  0.,  0.,  0.,  0.],</span>
+<span class="go">       [ 0.,  0.,  0.,  0.,  0.],</span>
+<span class="go">       [ 0.,  0.,  0.,  0.,  0.],</span>
+<span class="go">       [ 0.,  0.,  0.,  0.,  0.]])</span>
+</pre></div>
+</div>
+<p>The result is that <tt class="docutils literal"><span class="pre">zeros</span></tt> is a 10x10 array filled with zeros.  Here the
+format statement <tt class="docutils literal"><span class="pre">{A}</span></tt> is replaced by the name of the desired array on
+the SciDB server.</p>
+<p>We can use this interface to quickly build more complex arrays.  For
+example, to create an identity matrix similar to the result of the
+<tt class="xref py py-meth docutils literal"><span class="pre">identity()</span></tt> function shown above, we add a boolean check:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ident</span> <span class="o">=</span> <span class="n">sdb</span><span class="o">.</span><span class="n">new_array</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s">&#39;double&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sdb</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s">&#39;store(build({A}, iif({A.d0}={A.d1}, 1, 0)), {A})&#39;</span><span class="p">,</span>
+<span class="gp">... </span>          <span class="n">A</span><span class="o">=</span><span class="n">ident</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ident</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
+<span class="go">array([[ 1.,  0.,  0.,  0.,  0.],</span>
+<span class="go">       [ 0.,  1.,  0.,  0.,  0.],</span>
+<span class="go">       [ 0.,  0.,  1.,  0.,  0.],</span>
+<span class="go">       [ 0.,  0.,  0.,  1.,  0.],</span>
+<span class="go">       [ 0.,  0.,  0.,  0.,  1.]])</span>
+</pre></div>
+</div>
+<p>Here the substitutions <tt class="docutils literal"><span class="pre">{A.d0}</span></tt> and <tt class="docutils literal"><span class="pre">{A.d1}</span></tt> are replaced by the first
+and second dimension names of the array referenced by <tt class="docutils literal"><span class="pre">A</span></tt>.</p>
+<p>Things can become even more complicated. The following example creates a
+5x5 tridiagonal array, similar to the one used in the above examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">tridiag</span> <span class="o">=</span> <span class="n">sdb</span><span class="o">.</span><span class="n">new_array</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sdb</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s">&#39;store(build({A}, </span><span class="se">\</span>
+<span class="gp">... </span><span class="s">              iif({A.d0}={A.d1}, 2, iif({A.d0} &lt;= {A.d1}+1 and {A.d0} &gt;= {A.d1}-1, -1, 0))), {A})&#39;</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="n">tridiag</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tridiag</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
+<span class="go">array([[ 2., -1.,  0.,  0.,  0.],</span>
+<span class="go">       [-1.,  2., -1.,  0.,  0.],</span>
+<span class="go">       [ 0., -1.,  2., -1.,  0.],</span>
+<span class="go">       [ 0.,  0., -1.,  2., -1.],</span>
+<span class="go">       [ 0.,  0.,  0., -1.,  2.]])</span>
+</pre></div>
+</div>
+<p>The query builds a tridiagonal array with 2 on the diagonal and -1 on
+the sub- and super-diagonals. This shows how the query-formatting syntax
+provided by the scidbpy package can be used to generate extremely powerful
+AFL queries.</p>
+<p>The full replacement syntax is outlined in the documentation of the
+<tt class="xref py py-meth docutils literal"><span class="pre">query()</span></tt> function.  It is a useful way to help
+streamline the process of writing SciDB queries if and when it becomes
+necessary.</p>
+<div class="section" id="working-with-the-array-functional-language">
+<span id="using-afl"></span><h2>Working with the Array Functional Language<a class="headerlink" href="#working-with-the-array-functional-language" title="Permalink to this headline">¶</a></h2>
+<p>In addtion to the <a class="reference internal" href="classes.html#scidbpy.SciDBArray" title="scidbpy.SciDBArray"><tt class="xref py py-class docutils literal"><span class="pre">SciDBArray</span></tt></a> class and <tt class="docutils literal"><span class="pre">query</span></tt> interface,
+SciDB-Py provides a <a class="reference internal" href="afl.html#afl"><em>direct binding</em></a> to SciDB&#8217;s Array Functional Language, or <a class="reference external" href="http://scidb.org/HTMLmanual/14.3/scidb_ug/ch17.html">AFL</a>.</p>
+<p>The AFL consists of approximately
+100 functions to perform array analysis. You can access these operators
+through the <tt class="docutils literal"><span class="pre">afl</span></tt> attribute of a SciDB instance. More information on these operators can be found
+on the <a class="reference external" href="http://scidb.org/HTMLmanual/14.3/scidb_ug/ch17.html">SciDB documentation</a>.</p>
+<p>AFL operators accept and return <a class="reference internal" href="classes.html#scidbpy.SciDBArray" title="scidbpy.SciDBArray"><tt class="xref py py-class docutils literal"><span class="pre">SciDBArray</span></tt></a> objects, and thus
+can be used interchangeably with methods on the <a class="reference internal" href="classes.html#scidbpy.SciDBArray" title="scidbpy.SciDBArray"><tt class="xref py py-class docutils literal"><span class="pre">SciDBArray</span></tt></a> class itself.</p>
+<div class="section" id="usage-example">
+<h3>Usage Example<a class="headerlink" href="#usage-example" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">scidbpy</span> <span class="kn">import</span> <span class="n">connect</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sdb</span> <span class="o">=</span> <span class="n">connect</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">sdb</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">afl</span> <span class="o">=</span> <span class="n">sdb</span><span class="o">.</span><span class="n">afl</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># the number of elements greater than 0.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cts</span> <span class="o">=</span> <span class="n">afl</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">afl</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s">&#39;f0 &gt; 0.5&#39;</span><span class="p">),</span> <span class="s">&#39;count(*)&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cts</span><span class="o">.</span><span class="n">query</span>
+<span class="go">&#39;aggregate(filter(py1100918363281_00001,f0 &gt; 0.5),count(*))&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cts</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
+<span class="go">array([8], dtype=uint64)</span>
+</pre></div>
+</div>
+<p>Note that each AFL operator includes documentation from the official
+SciDB manual:</p>
+<div class="highlight-python"><div class="highlight"><pre>In [37]: afl.filter?
+Type:        function
+String form: &lt;function filter at 0x104eb1c08&gt;
+File:        /Users/beaumont/scidbpy/scidbpy/afl.py
+Definition:  afl.filter(*args)
+Docstring:
+filter( srcArray, expression )
+
+Produces a result array by filtering out (mark as empty) the cells in the source array     for which the expression evaluates to False.
+
+Parameters
+----------
+
+    - srcArray: a source array with srcAttrs and srcDims.
+    - expression: an expression which takes a cell in the source array
+      as input and evaluates to either True or False.
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Some AFL functions, like <a class="reference internal" href="afldb.html#list" title="list"><tt class="xref py py-func docutils literal"><span class="pre">list()</span></tt></a>, expect single-quoted strings
+as input. These quotes must be explicitly provided (e.g. <tt class="docutils literal"><span class="pre">afl.list(&quot;'arrays'&quot;)</span></tt>).</p>
+</div>
+</div>
+<div class="section" id="chaining-afl-operators">
+<h3>Chaining AFL Operators<a class="headerlink" href="#chaining-afl-operators" title="Permalink to this headline">¶</a></h3>
+<p id="afl-chain">Many SciDB queries involve nesting several AFL calls, with
+the result of an inner call included as the first argument of an outer call.
+For example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">afl</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">afl</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">alf</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s">&#39;y&#39;</span><span class="p">,</span> <span class="s">&#39;f0+1&#39;</span><span class="p">),</span> <span class="s">&#39;y&#39;</span><span class="p">),</span> <span class="s">&#39;y &gt; 3&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>SciDB-py includes some syntactic sugar for building queries like this: for
+AFL operators whose names don&#8217;t collide with another <a class="reference internal" href="classes.html#scidbpy.SciDBArray" title="scidbpy.SciDBArray"><tt class="xref py py-class docutils literal"><span class="pre">SciDBArray</span></tt></a> method,
+<tt class="docutils literal"><span class="pre">x.operator(...)</span></tt> is equivalent to <tt class="docutils literal"><span class="pre">afl.operator(x,</span> <span class="pre">...)</span></tt>. Thus, the above
+query can be re-written as:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">x</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="s">&#39;y&#39;</span><span class="p">,</span> <span class="s">&#39;f0+1&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="s">&#39;y&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s">&#39;y &gt; 3&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>These two syntaxes are equivalent.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This syntax only applies to AFL operators that don&#8217;t collide
+with a <a class="reference internal" href="classes.html#scidbpy.SciDBArray" title="scidbpy.SciDBArray"><tt class="xref py py-class docutils literal"><span class="pre">SciDBArray</span></tt></a> method name.</p>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="conversion.html" class="btn btn-neutral float-right" title="Downloading SciDBArrays"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="comparison_and_filtering.html" class="btn btn-neutral" title="Comparing and Filtering Arrays"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2014, SciDB-Py Developers.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'14.7.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

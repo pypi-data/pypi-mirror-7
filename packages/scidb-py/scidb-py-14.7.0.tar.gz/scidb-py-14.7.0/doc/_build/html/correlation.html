@@ -1,0 +1,243 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Covariance and correlation matrices &mdash; SciDB-Py 14.7.0 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="SciDB-Py 14.7.0 documentation" href="index.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="index.html" class="fa fa-home"> SciDB-Py</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installing SciDB-Py</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="install.html#software-prerequisites">Software prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#python-prerequisites">Python Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#scidb-py-package-installation">SciDB-Py Package Installation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Basic Use</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="connection.html">Introduction to SciDB arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="connection.html#loading-the-scidbpy-package-and-connecting-to-scidb">Loading the scidbpy package and connecting to SciDB</a></li>
+<li class="toctree-l2"><a class="reference internal" href="creation.html">Creating arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="access.html">Accessing array data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="operations.html">Operations on SciDB array objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="comparison_and_filtering.html">Comparing and Filtering Arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="query.html">The SciDB Query Interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="conversion.html">Downloading SciDBArrays</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="demos.html">Demos and Other Topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="classes.html">Class Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="afl.html">AFL Operator Reference</a></li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">SciDB-Py</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Covariance and correlation matrices</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="_sources/correlation.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            
+  <div class="section" id="covariance-and-correlation-matrices">
+<span id="correlation"></span><h1>Covariance and correlation matrices<a class="headerlink" href="#covariance-and-correlation-matrices" title="Permalink to this headline">¶</a></h1>
+<p>We can use SciDB&#8217;s distributed parallel linear algebra operations to
+compute covariance and correlation matrices. This demonstrates SciDB-Py&#8217;s
+syntax for performing linear algebra and array arithmetic (with broadcasting).
+You can download this script <a class="reference download internal" href="_downloads/correlation.py"><tt class="xref download docutils literal"><span class="pre">here</span></tt></a>.</p>
+<p>The following example computes the covariance and correlation between
+the columns of the matrices X and Y. We break the example up into
+a few parts for clarity.</p>
+<p>Part 1, set up some example matrices</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#  connect to the database</span>
+<span class="kn">from</span> <span class="nn">scidbpy</span> <span class="kn">import</span> <span class="n">connect</span>
+<span class="n">sdb</span> <span class="o">=</span> <span class="n">connect</span><span class="p">()</span>
+
+<span class="c"># Two small arrays, each with 1000 rows, and with 5 and 3 columns</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">,</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]))</span>
+
+<span class="c"># Transfer to the database. All future computation happens there.</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">sdb</span><span class="o">.</span><span class="n">from_array</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="n">Y</span> <span class="o">=</span> <span class="n">sdb</span><span class="o">.</span><span class="n">from_array</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that, given how y is defined, we expect the correlation matrix to be
+approximately equal to:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+       <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span>   <span class="mi">0</span><span class="p">],</span>
+       <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>   <span class="mi">0</span><span class="p">],</span>
+       <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>   <span class="mi">0</span><span class="p">],</span>
+       <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>   <span class="mi">1</span><span class="p">]])</span>
+</pre></div>
+</div>
+<p>Part 2, center the example matrices:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Subtract the column means from X using broadcasting:</span>
+<span class="n">XC</span> <span class="o">=</span> <span class="n">X</span> <span class="o">-</span> <span class="n">X</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="c"># Similarly subtract the column means from Y:</span>
+<span class="n">YC</span> <span class="o">=</span> <span class="n">Y</span> <span class="o">-</span> <span class="n">Y</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that <tt class="docutils literal"><span class="pre">X.mean(0)</span></tt> computes the sum for each of the five columns of X.
+These 5 numbers are subtracted from each row of <tt class="docutils literal"><span class="pre">X</span></tt> to compute <tt class="docutils literal"><span class="pre">XC</span></tt>.</p>
+<p>Part 3, compute the covariance matrix:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">COV</span> <span class="o">=</span> <span class="n">sdb</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">XC</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">YC</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Part 4, compute the correlation matrix:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Column vector with column standard deviations of X matrix:</span>
+<span class="n">xsd</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="c"># Row vector with column standard deviations of Y matrix:</span>
+<span class="n">ysd</span> <span class="o">=</span> <span class="n">Y</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="c"># Their outer product:</span>
+<span class="n">outersd</span> <span class="o">=</span> <span class="n">sdb</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">xsd</span><span class="p">,</span> <span class="n">ysd</span><span class="p">)</span>
+<span class="n">COR</span> <span class="o">=</span> <span class="n">COV</span> <span class="o">/</span> <span class="n">outersd</span>
+<span class="k">print</span><span class="p">(</span><span class="n">COR</span><span class="o">.</span><span class="n">toarray</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>Which prints:</p>
+<div class="highlight-python"><div class="highlight"><pre>[[ 1.          0.42008436 -0.01186421]
+ [-0.02583465  0.89632943  0.00232589]
+ [-0.02296872 -0.00927478  0.00570587]
+ [-0.02791049 -0.00367841  0.06882341]
+ [-0.01186421 -0.0031508   1.        ]]
+</pre></div>
+</div>
+<p>The overhead of working interactively with SciDB can make these examples run
+somewhat slowly for small problems. But the same code shown here can be
+applied to arbitrarily large matrices, and those computations can run in
+parallel across a cluster.</p>
+</div>
+
+
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2014, SciDB-Py Developers.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'14.7.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

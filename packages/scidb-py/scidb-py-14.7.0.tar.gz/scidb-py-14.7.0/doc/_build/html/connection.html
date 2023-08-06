@@ -1,0 +1,228 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Introduction to SciDB arrays &mdash; SciDB-Py 14.7.0 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="SciDB-Py 14.7.0 documentation" href="index.html"/>
+        <link rel="up" title="Basic Use" href="tutorial.html"/>
+        <link rel="next" title="Creating arrays" href="creation.html"/>
+        <link rel="prev" title="Basic Use" href="tutorial.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="index.html" class="fa fa-home"> SciDB-Py</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installing SciDB-Py</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="install.html#software-prerequisites">Software prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#python-prerequisites">Python Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#scidb-py-package-installation">SciDB-Py Package Installation</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="tutorial.html">Basic Use</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="">Introduction to SciDB arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#loading-the-scidbpy-package-and-connecting-to-scidb">Loading the scidbpy package and connecting to SciDB</a></li>
+<li class="toctree-l2"><a class="reference internal" href="creation.html">Creating arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="access.html">Accessing array data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="operations.html">Operations on SciDB array objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="comparison_and_filtering.html">Comparing and Filtering Arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="query.html">The SciDB Query Interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="conversion.html">Downloading SciDBArrays</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="demos.html">Demos and Other Topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="classes.html">Class Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="afl.html">AFL Operator Reference</a></li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">SciDB-Py</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="tutorial.html">Basic Use</a> &raquo;</li>
+      
+    <li>Introduction to SciDB arrays</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="_sources/connection.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            
+  <div class="section" id="introduction-to-scidb-arrays">
+<h1>Introduction to SciDB arrays<a class="headerlink" href="#introduction-to-scidb-arrays" title="Permalink to this headline">¶</a></h1>
+<p>SciDB arrays are composed of <cite>cells</cite>. Each cell may contain one or more values
+referred to as <cite>attributes</cite>. The data types and number of attributes are
+consistent across all cells within one array. All the attribute values within a
+cell may be left undefined, in which case the cell is called empty. Arrays with
+empty cells are referred to as sparse arrays in the SciDB documentation.</p>
+<p>Individual attribute values may also be explicitly marked missing with one of
+several possible SciDB null codes.</p>
+<p>Cells are arranged by an integer coordinate system into n-dimensional arrays.
+SciDB uses signed 64-bit integers for coordinates. Each coordinate axis is
+typically referred to as a dimension in the SciDB documentation. SciDB is
+limited in theory to about 100 dimensions, but in practice that limit is
+typically much lower (up to say, 10 dimensions or so). While the default SciDB
+array origin is usually zero, SciDB arrays may use any signed 64-bit
+integer origin.</p>
+<p><a class="reference internal" href="classes.html#scidbpy.SciDBArray" title="scidbpy.SciDBArray"><tt class="xref py py-class docutils literal"><span class="pre">SciDBArray</span></tt></a> objects are Python representations of
+SciDB arrays that mimic numpy arrays in many ways.  <a class="reference internal" href="classes.html#scidbpy.SciDBArray" title="scidbpy.SciDBArray"><tt class="xref py py-class docutils literal"><span class="pre">SciDBArray</span></tt></a> array
+objects are limited to the following SciDB array attribute data types:
+<tt class="docutils literal"><span class="pre">bool</span></tt>, <tt class="docutils literal"><span class="pre">float32</span></tt>, <tt class="docutils literal"><span class="pre">float64</span></tt>, <tt class="docutils literal"><span class="pre">int8</span></tt>, <tt class="docutils literal"><span class="pre">int16</span></tt>, <tt class="docutils literal"><span class="pre">int32</span></tt>, <tt class="docutils literal"><span class="pre">int64</span></tt>,
+<tt class="docutils literal"><span class="pre">uint8</span></tt>, <tt class="docutils literal"><span class="pre">unit16</span></tt>, <tt class="docutils literal"><span class="pre">uint32</span></tt>, <tt class="docutils literal"><span class="pre">uint64</span></tt>, characters, and strings.</p>
+</div>
+<div class="section" id="loading-the-scidbpy-package-and-connecting-to-scidb">
+<h1>Loading the scidbpy package and connecting to SciDB<a class="headerlink" href="#loading-the-scidbpy-package-and-connecting-to-scidb" title="Permalink to this headline">¶</a></h1>
+<p>In order to use SciDB, Python needs an interface to a SciDB
+server.  This is accomlished through the <a class="reference internal" href="classes.html#scidbpy.interface.connect" title="scidbpy.interface.connect"><tt class="xref py py-func docutils literal"><span class="pre">connect()</span></tt></a> function.</p>
+<p>connect takes an optional URL specifying the location of the SciDB
+coordinator node (running <a class="reference external" href="http://github.com/paradigm4/shim">Shim</a>; see <a class="reference internal" href="install.html#installing-scidbpy"><em>Installing SciDB-Py</em></a>). If no URL is provided, it looks for a <tt class="docutils literal"><span class="pre">SCIDB_URL</span></tt> environment variable, and then
+defaults to <tt class="docutils literal"><span class="pre">http://localhost:8080</span></tt>.</p>
+<p>The following snippet imports SciDB-Py and establishes a connection
+with the database &#8211; adjust the
+host name as required if SciDB is on a different computer:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">scidbpy</span> <span class="kn">import</span> <span class="n">connect</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sdb</span> <span class="o">=</span> <span class="n">connect</span><span class="p">(</span><span class="s">&#39;http://localhost:8080&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Throughout this documentation, the <tt class="docutils literal"><span class="pre">sdb</span></tt> variable is used to refer
+to the connection to a SciDB instance, as above.</p>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="creation.html" class="btn btn-neutral float-right" title="Creating arrays"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="tutorial.html" class="btn btn-neutral" title="Basic Use"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2014, SciDB-Py Developers.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'14.7.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
