@@ -1,0 +1,1 @@
+Search.setIndex({titleterms:{size:0,indic:0,memori:0,limit:0,dogpil:0,backend:0,tabl:0,document:0,cach:0,welcom:0},objtypes:{},objects:{},filenames:["index"],envversion:42,terms:{search:0,content:0,index:0,modul:0,page:0},objnames:{},titles:["Welcome to Dogpile cache memory backend with size limit&#8217;s documentation!"]})
