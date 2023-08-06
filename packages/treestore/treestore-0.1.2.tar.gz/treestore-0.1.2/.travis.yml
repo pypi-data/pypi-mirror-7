@@ -1,0 +1,17 @@
+language: python
+addons:
+  postgresql: "9.3"
+env:
+  - DB=postgresql
+install:
+  - pip install tox
+before_script:
+  - cp tests/etc/unittest.ini.travis tests/etc/unittest.ini
+  - psql -c 'create database ci;' -U postgres
+  - psql ci -c 'CREATE EXTENSION IF NOT EXISTS hstore;' -U postgres
+  - psql ci -c 'CREATE EXTENSION IF NOT EXISTS ltree;' -U postgres
+  - pip install -r requirements.txt
+  - python ./setup.py develop
+  - treestore-db-manage --config-file tests/etc/unittest.ini upgrade head
+script:
+  - tox
