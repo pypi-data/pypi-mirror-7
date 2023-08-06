@@ -1,0 +1,70 @@
+language: python
+
+python:
+  # This is not actually used. Because it would take an overly long time
+  # to build scipy we cannot use the virtual env of travis. Instead, we
+  # use miniconda.
+  - 2.7
+
+install:
+  - sudo apt-get update -qq
+
+  # Workarounds exising conda recipies
+  # ----------------------------------
+  # Ensure that the systems freetype library is used and not the conda installed version due to testing issues.
+  - export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/
+
+  # Install miniconda
+  # -----------------
+  - if [[ "$TRAVIS_PYTHON_VERSION" == 2* ]]; then
+      wget http://repo.continuum.io/miniconda/Miniconda-3.4.2-Linux-x86_64.sh -O miniconda.sh;
+    else
+      wget http://repo.continuum.io/miniconda/Miniconda3-3.4.2-Linux-x86_64.sh -O miniconda.sh;
+    fi
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+
+  # Create the basic testing environment
+  # ------------------------------------
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update conda
+  - conda create -n test-environment python=$TRAVIS_PYTHON_VERSION
+  - source activate test-environment
+
+  # Customise the testing environment
+  # ---------------------------------
+  - conda config --add channels rsignell
+  - conda install numpy=1.7.1 matplotlib=1.3.1 scipy=0.12.0
+  - conda install cython
+  # The conda "pillow" build is broken, so we use "imaging" instead.
+  #     - https://github.com/ContinuumIO/anaconda-issues/issues/30
+  - conda install imaging
+  - conda install mock
+  - conda install nose
+  - conda install owslib
+  - conda install pep8=1.4.5
+  - conda install proj4
+  - conda install pyshp
+  - conda install shapely
+  - conda install six
+
+  - conda install requests
+  - conda install pip
+  - pip install pyepsg
+
+  - MPL_CONFIG_DIR=~/.config/matplotlib
+  - mkdir -p $MPL_CONFIG_DIR
+  - echo "backend" ":" "agg" > $MPL_CONFIG_DIR/matplotlibrc
+
+  # Install cartopy
+  # ---------------
+  - python setup.py --quiet install
+
+script:
+  - mkdir ../test_folder
+  - cd ../test_folder
+  - nosetests cartopy --with-doctest -sv
+
+after_failure:
+  - source activate test-environment
+  - python -c "import cartopy.tests.mpl; print cartopy.tests.mpl.failed_images_html()"
