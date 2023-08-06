@@ -1,0 +1,76 @@
+Metadata-Version: 1.0
+Name: email-filter
+Version: 0.2.9
+Summary: Adds the script, which process given emails to proxy them, replacing real email addresses by company's local ones taken from the contrib.auth module.
+Home-page: https://kavahq.com/42-coffee-cups/project/42-emailfilter/
+Author: 42 Coffee Cups
+Author-email: email_filter@42cc.co
+License: BSD(?) licence, see LICENCE.txt
+Description: ===========
+        EmailFilter
+        ===========
+        
+        Description
+        ===========
+        
+        Module provides proxying emails from external addresses to local ones according to ``django.contrib.User`` emails
+        
+        
+        Installation
+        ============
+        
+        1. Install emailfilter to your project's environment. If your env should be activated by hand, then create script (``mail_route.sh``) like this::
+        
+              #!/bin/sh
+              export PYTHONPATH=/path/to/settings_dir/:/path/to/project/
+        
+              echo "$(cat)" | /path/to/env/bin/python /path/to/env/bin/mail_route.py >> /path/to/logs/mail_route.log 2>&1
+        
+        2. Add new pipe to ``mail_route.py`` script in postfix (by default it should be placed in ``/etc/postfix/master.cf``)::
+        
+              mailproxy  unix  -       n       n       -       -       pipe
+                flags=FR user=user_that_runs_uwsgi_or_project argv=/path/to/mail_route.sh
+                ${nexthop} ${user}
+        
+        
+        3. Then this transport should be used to process mails.
+        
+           For example you want to process mails to ``domain.com`` and you are using cdb storage for postfix.
+           Add this to ``/etc/postfix/transport``::
+        
+              domain.com       mailproxy:
+        
+        
+           Then update cdb map::
+        
+              postmap cdb:/etc/postfix/transport
+        
+        
+        4. now you should create ``/path/where/you/place/mail_route_settings/mail_route_settings.py``::
+        
+           PROJECT_BASE_DIR = '/path/where/project/settings/can/be/imported/'
+           DJANGO_SETTINGS_MODULE = 'project.settings'
+           PROCESS_OUTGOING_EMAILS = False
+           SELF_ADDRESS = 'proxy@kavahq.com'
+        
+        
+        Settings
+        ========
+        
+        Some django settings are available for configuration:
+        
+        * ``EMAIL_HOST``, ``EMAIL_PORT`` — host and port used to "forward" emails
+        * ``EMAIL_SERVER_DOMAINS`` — list of domains that should be checked for mail forwarding. Example::
+        
+             EMAIL_SERVER_DOMAINS = ['@42cc.co', '@42coffeecups.com', '@khavr.com']
+        
+        Not Django settings in mail_route_settings.py file:
+        
+        * ``SELF_ADDRESS`` — email address of mail_rote. For example if you forwar all emails from somewhwere
+          to mail_route by bcc`ingthem then you should set ``SELF_ADDRESS`` to bcc address and it will be ignored
+          when forwarding address(es) is determined
+        * ``PROJECT_BASE_DIR`` — this directory will be added to PYTHONPATH
+        * ``DJANGO_SETTINGS_MODULE`` — env variable with same name will be set to value of this setting
+        * ``LOG_PATH`` — where logs should be saved
+        
+Platform: UNKNOWN
