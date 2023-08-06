@@ -1,0 +1,45 @@
+
+<div class="row-fluid">
+    <div class="accordion" id="acord_{{name}}">
+        <div class="accordion-group">
+            <div class="accordion-heading">
+                <a class="accordion-toggle" data-toggle="collapse" data-parent="#acord_{{name}}" href="#{{name}}">
+            Buscar
+          </a></div>
+            <div id="{{name}}" class="accordion-body collapse">
+                <div class="accordion-inner">
+
+                    <form id="form_{{name}}" action="{{action}}" class="form-horizontal" method="get">
+                    {%for fil in filtro.form %}
+                    <div class="control-group">
+                        <label class="control-label" for="{{fil.name}}">{{fil.label}}</label>
+                        <div class="controls">
+                            {{fil}}
+                        </div>
+                    </div>
+                    {%endfor%}
+                    <a onclick="submit('#form_{{name}}')" href="javascript:void(0)" class="btn btn-primary">Buscar</a>
+                </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    function submit(f_id){
+        {%if ajax_container%}
+        $.ajax({
+           type: "POST",
+           url: $(f_id).attr("action"),
+           data: $(f_id).serialize(),
+           success: function(data)
+           {
+               $("{{ajax_container}}").html(data); // show response from the php script.
+           }
+         });
+        {%else%}
+            $(f_id).submit()
+        {%endif%}
+    }
+
+</script>

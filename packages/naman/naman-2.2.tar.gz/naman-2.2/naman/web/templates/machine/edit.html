@@ -1,0 +1,106 @@
+{%extends 'base.html'%}
+{%load forms%}
+
+{%block breadcrumb%}
+  <li><a href="{%url "machine" obj.pk%}">{%if id == None%}New{%else%}Edit{%endif%} machine</a></li>
+{%endblock%}
+
+{%block middle_col%}
+    <div id="obj_id" i="{{id}}"></div>
+    {%if id != None%}
+        <form action="{%url "machine" id%}" method="POST" role="form" id="fmachine" class="form-horizontal">
+    {%else%}
+        <form action="{%url "machine"%}" method="POST" role="form" id="fmachine" class="form-horizontal">
+    {%endif%}
+    {% csrf_token %}
+    {%if id != None%}
+    <div class="panel-group" id="accordion">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h6 class="panel-title">
+              <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#collapse1">
+                <strong>{{obj}}</strong>
+              </a>
+            </h6>
+          </div>
+          <div id="collapse1" class="panel-collapse collapse">
+            <div class="panel-body">
+    {%endif%}
+                <div class="row">
+                    <div class="col-md-10">
+                        {% for field in form %}
+                            {%bootstrap_field field "col-md-6" "col-lg-3 col-md-2" "col-lg-9 col-md-4"%}
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-1">
+                        <a href="javascript:void(0)" onclick="$('#fmachine').submit()" class="btn btn-primary">Accept</a>
+                        <a href="javascript:void(0)" onclick="del_machine_form({{obj.pk}})" class="btn btn-warning">Delete</a>
+                    </div>
+                </div>
+    {%if id != None%}
+            </div>
+          </div>
+        </div>
+    {%endif%}
+    </form>
+    {%if id != None%}
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h6 class="panel-title">
+                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#collapse2">
+                      Network config
+                    </a>
+                </h6>
+            </div>
+            <div id="collapse2" class="panel-collapse collapse">
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-9" id="iface_div"></div>
+                        <div class="col-md-3">
+                            <div  id="btns_div" class="btn-group-vertical"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            </div>
+        </div>
+    </div>
+    {%endif%}
+
+{%endblock%}
+{%block script%}
+    function show_niface_btn(id) {
+        $("#niface_btn").remove()
+        $("#btns_div").append(
+          "<button type='button' onclick='iface_short_form()' id='niface_btn' class='btn btn-primary'>New Iface</button>"
+        )
+      }
+
+    function toggle_nvlanc_btn() {
+        var machine_id=$("#obj_id").attr("i")
+        $.ajax({
+          url: "{%url 'ifaces_by_machine_json'%}" + machine_id,
+          success: function(data){
+            if( data.length == 0 ){
+                if($("#nvconfig_btn").length == 0){
+                $("#btns_div").append("<button type='button' onclick='show_vconfig_form()' id='nvconfig_btn' class='btn btn-primary'>New vlan config</button>")}
+            }else{
+                $("#nvconfig_btn").fadeOut();$("#nvconfig_btn").remove()
+                }
+          }
+        });
+        delete machine_id
+      }
+    {%endblock%}
+{%block document_ready%}
+    load_dom_script_once("{%url 'machine_js'%}")
+    load_dom_script_once("{%url 'iface_js'%}")
+    load_dom_script_once("{%url 'vlanconfig_js'%}")
+    {%if id != None%}
+        load_url("#iface_div", "{%url 'ifaces_by_machine' id %}")
+        show_niface_btn()
+        toggle_nvlanc_btn()
+    {%endif%}
+
+{%endblock%}
