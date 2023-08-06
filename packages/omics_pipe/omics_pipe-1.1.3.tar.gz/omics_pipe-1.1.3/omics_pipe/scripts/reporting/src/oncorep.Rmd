@@ -1,0 +1,693 @@
+Oncogenomics Report for patient ID `r patientID`
+========================================================
+
+<!-- dataTables -->
+<script src="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.js"></script>
+<link rel="stylesheet" href="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css"/>
+<script src="http://next.datatables.net/release-datatables/examples/resources/bootstrap/3/dataTables.bootstrap.js"></script>
+<link rel="stylesheet" href="http://next.datatables.net/release-datatables/examples/resources/bootstrap/3/dataTables.bootstrap.css"/>
+
+<!-- TableTools -->
+<script src="http://cdn.aldu.net/jquery.datatables/extras/tabletools/2.0.3/js/TableTools.js"></script>
+<link rel="stylesheet" href="http://cdn.aldu.net/jquery.datatables/extras/tabletools/2.0.3/css/TableTools.css"/>
+
+<!-- ZeroClipboard -->
+<script src="http://cdn.aldu.net/jquery.datatables/extras/tabletools/2.0.3/js/ZeroClipboard.js"></script>
+
+<!-- ColViz -->
+<script src="http://cdn.eventcore.com/js/plugins/dataTables.ColVis-1.07.js"></script>
+
+<!-- read in external core code -->
+```{r external_code, echo=FALSE}
+  read_chunk(paste(config$R_SOURCE_PATH, '/src/core/setup.R', sep=''))
+  read_chunk(paste(config$R_SOURCE_PATH, '/src/core/dataIn.R', sep=''))
+  read_chunk(paste(config$R_SOURCE_PATH, '/src/core/gene_table.R', sep=''))
+```
+
+<!-- read in all optional modules from the module folder -->
+```{r module_code, echo=FALSE}
+  read_chunk(paste(config$R_SOURCE_PATH, '/src/modules/qual_ctrl.R', sep=''))
+  read_chunk(paste(config$R_SOURCE_PATH, '/src/modules/reliable_gep.R', sep=''))
+  read_chunk(paste(config$R_SOURCE_PATH, '/src/modules/diff_exp.R', sep=''))
+  read_chunk(paste(config$R_SOURCE_PATH, '/src/modules/brca_mol_class.R', sep=''))
+  read_chunk(paste(config$R_SOURCE_PATH, '/src/modules/spia.R', sep=''))
+  read_chunk(paste(config$R_SOURCE_PATH, '/src/modules/PW_tables_and_viz.R', sep=''))
+  read_chunk(paste(config$R_SOURCE_PATH, '/src/modules/fusion_catcher.R', sep=''))
+  read_chunk(paste(config$R_SOURCE_PATH, '/src/modules/intogen.R', sep=''))
+  read_chunk(paste(config$R_SOURCE_PATH, '/src/modules/dps.R', sep=''))
+  read_chunk(paste(config$R_SOURCE_PATH, '/src/modules/dog.R', sep=''))
+  read_chunk(paste(config$R_SOURCE_PATH, '/src/modules/snpAnnotation.R', sep=''))
+```
+
+```{r setup, echo=FALSE, warning=FALSE, message=FALSE}
+```
+
+```{r data, echo=FALSE}
+```
+
+# Quality Control & Preprocessing
+
+## Raw data QC
+
+The quality of the RNA-seq reads was assessed using FASTQC `r citep("http://www.bioinformatics.babraham.ac.uk/projects/fastqc")`. The table below lists basic QC statistics. Click on the provided links to open up the full FastQC report.
+
+
+```{r fastQC, echo=FALSE, results='asis'}
+```
+
+******
+
+## Alignment
+
+Reads were aligned to the human genome (hg19) using the STAR aligner `r citep("10.1093/bioinformatics/bts635")`. Resulting .SAM files were sorted and converted to .BAM files using SAMtools software `r citep("10.1093/bioinformatics/btp352")`. The table below lists the alignment statistics as provided by the STAR output:
+
+<div style="width:40%;padding:0 10pt 0 0;float:left;">
+```{r starQCTable, echo=FALSE, results='asis'}
+```
+</div>
+
+<div style="width:60%;padding:0 10pt 0 0;float:right;">
+```{r starQCPie, echo=FALSE, results='asis'}
+```
+</div>
+<div style="clear:both;"></div>
+
+## Insert size distribution
+
+Insert size distribution is calculated using Picard tools [CollectInsertSizeMetrics](http://picard.sourceforge.net/command-line-overview.shtml#CollectInsertSizeMetrics) function `r citep("http://picard.sourceforge.net/")`. The table lists statistics as provided by this tool:
+
+<div style="width:40%;padding:0 10pt 0 0;float:left;">
+```{r InsertSizeTable, echo=FALSE, results='asis'}
+```
+</div>
+
+<div style="width:60%;padding:0 10pt 0 0;float:right;">
+```{r InsertSizeImage, echo=FALSE, results='asis'}
+```
+</div>
+<div style="clear:both;"></div>
+
+## RNA sequencing metrics
+
+Metrics are assessed using Picard tools [CollectRnaSeqMetrics](http://picard.sourceforge.net/command-line-overview.shtml#CollectRnaSeqMetrics) function `r citep("http://picard.sourceforge.net/")`. Metrics about the alignment of RNA to various functional classes of loci in the genome are collected: coding, intronic, UTR, intergenic, ribosomal. The table below lists the metrics provided by this tool:
+
+<div style="width:40%;padding:0 10pt 0 0;float:left;">
+```{r RNASeqMetricsTable, echo=FALSE, results='asis'}
+```
+</div>
+
+<div style="width:60%;padding:0 10pt 0 0;float:right;">
+```{r RNASeqMetricsPie, echo=FALSE, warning=FALSE, results='asis'}
+```
+</div>
+<div style="clear:both;"></div>
+
+******
+
+## Gene expression quantification 
+
+Gene expression quantification was done using [htseq-count](http://www-huber.embl.de/users/anders/HTSeq/doc/count.html) function within the python HTSeq analysis package `r citep("http://www-huber.embl.de/users/anders/HTSeq/doc/overview.html")`, which counts all reads overlapping known exons.
+
+<div style="width:40%;padding:0 10pt 0 0;float:left;">
+```{r htseqQCTable, echo=FALSE, results='asis'}
+```
+</div>
+
+<div style="width:60%;padding:0 10pt 0 0;float:right;">
+```{r htseqQCPie, echo=FALSE, results='asis'}
+```
+</div>
+<div style="clear:both;"></div>
+
+## Gene expression reliability
+
+```{r reliableGEP, echo=FALSE, results='hide'}
+```
+
+Gene expresssion values are grouped into "reliable expressed genes" and "not so reliable expressed genes" based on a background distribution of `r length(patientREC$background)` genes which have a median expression value of 0 in the `r dim(reference)[2]` TCGA reference cohort:
+
+* **reliable expressed** Number of genes reliable expressed in the sample
+* **marginal expressed** Number of genes that are marginally (between 0.01 & 0.02) reliable expressed in the sample
+* **not reliable expressed** Number of genes that are not reliable expressed in the sample
+
+```{r reliableGEPTable, echo=FALSE}
+```
+
+```{r reliableGEPPlot, echo=FALSE, warning=FALSE, results='asis'}
+```
+
+******
+
+Expression density plot
+
+```{r reliableGEPDensityPlot, echo=FALSE, fig.width=20, fig.height=10, fig.align='center'}
+```
+
+******
+
+# Analysis
+
+## Differential Gene Expression
+
+Differential gene expression is defined as having a expression value 3 standard deviations above/below the respective gene in the reference cohort.
+
+<!-- run the differential expression on the patient samples -->
+```{r diffExpressionNBinom, echo=FALSE, message=FALSE, eval=TRUE}
+```
+
+```{r diffExpPlot, echo=FALSE, warning=FALSE, results='asis'}
+```
+
+******
+
+## Gene Expression Table
+
+<!-- create gene expression table including results from diff. expression calling if available -->
+* **Gene** HUGO Symbol for the gene 
+* **Diff_expressed** [upregulated/downregulated] above/below median expression value within the normal control +/- three standard deviations 
+* **Rank** gene rank within differentially expressed genes
+* **perRank** percentile rank within the distribution of all genes within the patient sample
+* **Patient** Deseq scaled and log2 transformed read count value of the patient sample
+* **Normal** Deseq scaled and log2 transformed median read count value of the normal reference cohort (n=`r ifelse(any(group=='Healthy'), length(which(group=='Healthy')), length(which(group=='Normal')))`)
+* **Normal_sd** standard deviation for each scaled read count value of the normal reference cohort
+* **d_normal** delta between patient sample read count value and median read count value of the normal reference cohort
+* **Ref** Deseq scaled and log2 transformed median read count value of the TCGA reference cohort (n=`r length(which(group==config$TUMOR_TYPE))`)
+* **perRankRef** percentile rank within the distribution of all genes within the reference cohort
+* **Ref_sd** standard deviation for each scaled read count value of the reference cohort
+* **d_ref** delta between patient sample read count value and median read count value of the reference cohort
+* **List_Gene** genes within the supplied gene list
+
+```{r GeneTable, echo=FALSE, results='asis', message=FALSE, eval=TRUE}
+```
+
+<table id="gep_table">
+    <thead>
+        <tr>
+            <th>Gene</th>
+            <th>Diff_expressed</th>
+            <th>Rank</th>
+            <th>perRank</th>
+            <th>Patient</th>
+            <th>Normal</th>
+            <th>Normal_sd</th>
+            <th>d_normal</th>
+            <th>Ref</th>
+            <th>perRankRef</th>
+            <th>Ref_sd</th>
+            <th>d_ref</th>
+            <th>List_Gene</th>
+            <th>GeneWiki</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<script type="text/javascript" charset="utf-8">
+    $(document).ready(function() {
+    var table = $('#gep_table').dataTable({
+      "sDom": 'T<"clear">lfrtip',
+      "oTableTools": {
+          "sSwfPath": "../media/swf/copy_csv_xls_pdf.swf",
+          "aButtons": [
+                "copy",
+                "csv"
+            ]
+      },
+      "aoColumns": [ 
+      null,
+      null,
+      {"bVisible": false},
+		  {"bVisible": false},
+      null,
+      null,
+      {"bVisible": false},
+      null,
+      {"bVisible": false},
+      {"bVisible": false},
+      {"bVisible": false},
+      {"bVisible": false},
+      {"bVisible": false},
+      null
+		], 
+    "iDisplayLength": 10,
+    "bPaginate": true,
+    "bProcessing": true,
+    "sAjaxSource": 'json/gepall.txt'
+    //"sScrollXInner": "110%",
+    });
+    });    
+</script>
+
+******
+
+## Prediction of Receptor Status
+
+```{r brcaMolClassData, echo=FALSE, message=FALSE}
+```
+
+* **Receptor** Receptor type
+* **Status** predicted receptor status for each receptor type
+* **Prediction_probability** prediction probability for each receptor type
+
+```{r brcaReceptorStatus, echo=FALSE, results='asis'}
+```
+
+<script type="text/javascript" charset="utf-8">
+    $(document).ready( function () {
+    $('#receptor_table').dataTable({
+          "sDom": 'T<"clear">lfrtip',
+          "oTableTools": {
+          "sSwfPath": "../media/swf/copy_csv_xls_pdf.swf",
+          "aButtons": [
+                "copy",
+                "csv"
+                ]
+          }
+    });
+    });
+</script>
+
+******
+
+## Prediction of molecular subtype
+
+* **Subtype** prediction of one of the subtypes [Luminal A / Luminal B / Basal / Her2]
+* **Prediction_probability** prediction probability for each receptor type
+
+```{r brcaMolClass, echo=FALSE, results='asis'}
+```
+
+<script type="text/javascript" charset="utf-8">
+    $(document).ready( function () {
+    $('#mol_table').dataTable({
+          "sDom": 'T<"clear">lfrtip',
+          "oTableTools": {
+          "sSwfPath": "../media/swf/copy_csv_xls_pdf.swf",
+          "aButtons": [
+                "copy",
+                "csv"
+                ]
+          }
+    });
+    });
+</script>
+
+******
+
+## Pathways
+
+```{r spiaPW, echo=FALSE, message=FALSE, warning=FALSE, eval=TRUE}
+```
+
+```{r PWFunctions, echo=FALSE, message=FALSE, warning=FALSE}
+```
+
+### KEGG
+
+```{r KEGGTable, message=FALSE, echo=FALSE, results='asis', eval=TRUE}
+```
+
+<script type="text/javascript" charset="utf-8">
+    $(document).ready( function () {
+    $('#kegg_table').dataTable({
+          "sDom": 'T<"clear">lfrtip',
+          "oTableTools": {
+          "sSwfPath": "../media/swf/copy_csv_xls_pdf.swf",
+          "aButtons": [
+                "copy",
+                "csv"
+                ]
+          },
+      "aoColumns": [ 
+      null,
+			{"bVisible": false},
+      {"bVisible": false},
+		  {"bVisible": false},
+      {"bVisible": false},
+      {"bVisible": false},
+      {"bVisible": false},
+      null,
+      {"bVisible": false},
+      null,
+      null
+		]
+    });
+    });
+</script>
+
+******
+
+### Biocarta
+
+```{r BiocartaPlots, echo=FALSE, fig.show='hide', fig.width=20, fig.height=10, message=FALSE, results='hide', eval=TRUE}
+```
+
+```{r BiocartaTable, echo=FALSE, message=FALSE, results='asis', eval=TRUE}
+```
+
+<script type="text/javascript" charset="utf-8">
+    $(document).ready( function () {
+    $('#biocarta_table').dataTable({
+          "sDom": 'T<"clear">lfrtip',
+          "oTableTools": {
+          "sSwfPath": "../media/swf/copy_csv_xls_pdf.swf",
+          "aButtons": [
+                "copy",
+                "csv"
+                ]
+          },
+      "aoColumns": [ 
+      null,
+  		{"bVisible": false},
+      {"bVisible": false},
+		  {"bVisible": false},
+      {"bVisible": false},
+      {"bVisible": false},
+      {"bVisible": false},
+      null,
+      {"bVisible": false},
+      null,
+      null
+		]        
+    });
+    });
+</script>
+
+******
+
+### NCI
+
+```{r NCIPlots, echo=FALSE, fig.show='hide', fig.width=20, fig.height=10, message=FALSE, results='hide', eval=TRUE}
+```
+
+```{r NCITable, echo=FALSE, message=FALSE, results='asis', eval=TRUE}
+```
+
+<script type="text/javascript" charset="utf-8">
+    $(document).ready( function () {
+    $('#nci_table').dataTable({
+          "sDom": 'T<"clear">lfrtip',
+          "oTableTools": {
+          "sSwfPath": "../media/swf/copy_csv_xls_pdf.swf",
+          "aButtons": [
+                "copy",
+                "csv"
+                ]
+          },
+      "aoColumns": [ 
+      null,
+  		{"bVisible": false},
+      {"bVisible": false},
+		  {"bVisible": false},
+      {"bVisible": false},
+      {"bVisible": false},
+      {"bVisible": false},
+      null,
+      {"bVisible": false},
+      null,
+      null
+		]        
+    });
+    });
+</script>
+
+******
+
+### Reactome
+
+```{r ReactomePlots, echo=FALSE, fig.show='hide', fig.width=20, fig.height=10, message=FALSE, results='hide', eval=TRUE}
+```
+
+```{r ReactomeTable, echo=FALSE, message=FALSE, results='asis', eval=TRUE}
+```
+
+<script type="text/javascript" charset="utf-8">
+    $(document).ready( function () {
+    $('#reactome_table').dataTable({
+          "sDom": 'T<"clear">lfrtip',
+          "oTableTools": {
+          "sSwfPath": "../media/swf/copy_csv_xls_pdf.swf",
+          "aButtons": [
+                "copy",
+                "csv"
+                ]
+          },
+      "aoColumns": [ 
+      null,
+  		{"bVisible": false},
+      {"bVisible": false},
+		  {"bVisible": false},
+      {"bVisible": false},
+      {"bVisible": false},
+      {"bVisible": false},
+      null,
+      {"bVisible": false},
+      null,
+      null
+		]          
+    });
+    });
+</script>
+
+******
+
+## Fusion Gene Candidates
+
+Fusion gene candidated are assessed using [Fusioncatcher](https://code.google.com/p/fusioncatcher/) `r citep("10.1186/gb-2011-12-1-r6")`. The oncogenicc potential of the fusion candidates is predicted using [OncoFuse](http://www.unav.es/genetica/oncofuse.html) `r citep("10.1093/bioinformatics/btt445")`.
+
+```{r fusionCatcher, echo=FALSE, warning=FALSE, results='asis'}
+```
+
+<script type="text/javascript" charset="utf-8">
+    $(document).ready(function() {
+    var stdTable1 = $('#fusion_table').dataTable({
+    "sDom": 'T<"clear">lfrtip',
+    "oTableTools": {
+          "sSwfPath": "../media/swf/copy_csv_xls_pdf.swf",
+          "aButtons": [
+                "copy",
+                "csv"
+                ]
+    },
+    "aoColumns": [ 
+  		null,
+			null,
+      null,
+		  {"bVisible": false},
+      {"bVisible": false},
+      {"bVisible": false},
+      {"bVisible": false},
+      {"bVisible": false},
+      {"bVisible": false},
+      {"bVisible": false},
+      {"bVisible": false},
+      {"bVisible": false},
+      {"bVisible": false},
+      null,
+      null      
+		], 
+    //"iDisplayLength": 10,
+    //"bPaginate": true,
+    //"bProcessing": true,
+    //"sScrollXInner": "110%",
+    });
+    
+    //var tableId = 'fusion_table';
+    //$('<div style="width: 100%; overflow: auto"></div>').append($('#' + tableId)).insertAfter($('#' + tableId + '_wrapper div').first())
+    });
+</script>
+
+******
+
+## SNPs/INDELs
+
+### Transcripts effected by the input mutations
+
+This table contains information about the transcripts affected by the input mutations. Results are mainly from the Variant Effect Predictor (VEP) results and TransFIC calculations.
+
+* **CHR** The mutation's chromosome.
+* **STRAND** The mutations's strand.
+* **START** The mutation's start position.
+* **ALLELE** The mutations's affected nucleotides. The reference and changed sequences are seperated by a slash '/'.
+* **TRANSCRIPT_ID** The Ensembl identifier of the transcript affected by the mutation.
+* **CT** The list of Sequence Ontology terms describing the consequence of the mutation.
+* **GENE_ID** The Ensembl identifier of the gene coded by the transcript.
+* **SYMBOL** The HUGO symbol of the gene.
+* **AA_CHANGE** The aminoacids change seperated by a slash '/'.
+* **SIFT_TRANSFIC_CLASS** Classification of this mutation based on the SIFT TransFIC and its separation of highly-recurrent and non-recurrent somatic mutations in COSMIC.
+* **PPH2_TRANSFIC_CLASS** Classification of this mutation based on the Polyphen2 TransFIC and its separation of highly-recurrent and non-recurrent somatic mutations in COSMIC.
+* **MA_TRANSFIC_CLASS** Classification of this mutation based on the MA TransFIC and its separation of highly-recurrent and non-recurrent somatic mutations in COSMIC.
+* **IMPACT** assessment of the functional impact of the mutation on the transcript. The possible values that can take are: (4) mutation that doesn’t affect the protein sequence, (3) non-synonymous mutation with low MA TransFIC, (2) non-synonymous mutation with medium MA TransFIC, (1) non-synonymous mutations with high MA TransFIC, stop mutation or frameshift causing indel.
+* **IMPACT_CLASS** Classification label for the impact: (4) none, (3) low, (2) medium, (1) high.
+
+
+```{r IntogenConsequences, echo=FALSE, results='asis'}
+```
+
+<script type="text/javascript" charset="utf-8">
+    $(document).ready(function() {
+    var dogtable = $('#intogenConsequences_table').dataTable({
+        "sDom": 'T<"clear">lfrtip',
+        "oTableTools": {
+            "sSwfPath": "../media/swf/copy_csv_xls_pdf.swf",
+            "aButtons": [
+                "copy",
+                "csv"
+            ]
+        },
+        "aoColumns": [ 
+        	null,
+    			{"bVisible": false},
+          null,
+    		  null,
+          {"bVisible": false},
+          null,
+          {"bVisible": false},
+          null,
+          null,
+          {"bVisible": false},
+          {"bVisible": false},
+          {"bVisible": false},
+          {"bVisible": false},
+          null     
+    		]       
+      })
+      });
+</script>
+
+******
+
+### Mutations affecting genes
+
+* **CHR** The mutation’s chromosome.
+* **STRAND** The mutations’s strand.
+* **START** The mutation’s start position.
+* **ALLELE** The mutation’s affected nucleotides. The reference and changed sequences are separated by a slash ‘/’.
+* **GENE_ID** The Ensembl identifier of the gene coded by the transcript.
+* **SYMBOL** The HUGO symbol of the gene.
+* **VAR_IMPACT** assessment of the functional impact of the mutation on the on the gene. The possible values that can take are: (4) mutation that doesn’t affect the protein sequence, (3) non-synonymous mutation with low MA TransFIC, (2) non-synonymous mutation with medium MA TransFIC, (1) non-synonymous mutations with high MA TransFIC, stop mutation or frameshift causing indel.
+* **VAR_IMPACT_CLASS** Classification label for the impact: (4) none, (3) low, (2) medium, (1) high.
+* **CODING_REGION** Whether the mutation affects to the coding region of the gene. It will take value 1 when at least one transcript have any of the following consequence terms: missense_variant, stop_gained, stop_lost, frameshift_variant, synonymous_variant, splice_donor_variant, splice_acceptor_variant, splice_region_variant. And 0 otherwise.
+* **PROTEIN_CHANGES** 
+* **XREFS** The comma separated list of external references. When the mutation is known and have an identifier in an external source (such as dbSNP or COSMIC).
+
+```{r IntogenVarGenes, echo=FALSE, results='asis'}
+```
+
+<script type="text/javascript" charset="utf-8">
+    $(document).ready(function() {
+    var dogtable = $('#intogenVarGenes_table').dataTable({
+        "sDom": 'T<"clear">lfrtip',
+        "oTableTools": {
+            "sSwfPath": "../media/swf/copy_csv_xls_pdf.swf",
+            "aButtons": [
+                "copy",
+                "csv"
+            ]
+        },
+        "aoColumns": [ 
+          null,
+    			{"bVisible": false},
+          null,
+    		  null,
+          {"bVisible": false},
+          null,
+          {"bVisible": false},
+          null,
+          {"bVisible": false},
+          null,
+          null,
+          null
+    		]         
+      })
+      });
+</script>
+
+****** 
+
+### SNP Annotation
+
+```{r snpAnnotation, results='asis'}
+```
+
+<script type="text/javascript" charset="utf-8">
+    $(document).ready(function() {
+    var dogtable = $('#SNPs_table').dataTable({
+        "sDom": 'T<"clear">lfrtip',
+        "oTableTools": {
+            "sSwfPath": "../media/swf/copy_csv_xls_pdf.swf",
+            "aButtons": [
+                "copy",
+                "csv"
+            ]
+        },
+        "aoColumns": [ 
+          null,
+      		null,
+          null,
+    		  null,
+      	  null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+    		]         
+      })
+      });
+</script>
+
+******
+
+## Predicted Drugs 
+
+using Drug Pair Seeker (DPS) from [http://www.maayanlab.net/DPS/](http://www.maayanlab.net/DPS/) `r citep("10.1681/ASN.2012060590")`.
+
+```{r DPS, echo=FALSE, results='asis'}
+```
+
+******
+
+# Drug matching based on overexpressed genes
+
+```{r DoG, echo=FALSE, results='asis', message=FALSE}
+```
+
+<script type="text/javascript" charset="utf-8">
+    $(document).ready(function() {
+    var dogtable = $('#dog_table').dataTable({
+        "sDom": 'T<"clear">lfrtip',
+        "oTableTools": {
+            "sSwfPath": "../media/swf/copy_csv_xls_pdf.swf",
+            "aButtons": [
+                "copy",
+                "csv"
+            ]
+        }
+      })
+      });
+</script>
+
+******
+
+# References 
+
+```{r references, echo=FALSE, results='asis'}
+bibliography()
+
+```
+
+
+# Session Info
+
+```{r, echo=FALSE}
+sessionInfo()
+date()
+```
