@@ -1,0 +1,512 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>circuits.core.events module &mdash; circuits 3.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/rtd.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '3.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="circuits 3.0 documentation" href="../index.html" />
+    <link rel="up" title="API Documentation" href="index.html" />
+    <link rel="next" title="circuits.core.handlers module" href="circuits.core.handlers.html" />
+    <link rel="prev" title="circuits.core.debugger module" href="circuits.core.debugger.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-18486793-1']);
+  _gaq.push(['_setDomainName', '.fabfile.org']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="circuits.core.handlers.html" title="circuits.core.handlers module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="circuits.core.debugger.html" title="circuits.core.debugger module"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">circuits 3.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">API Documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-circuits.core.events">
+<span id="circuits-core-events-module"></span><h1>circuits.core.events module<a class="headerlink" href="#module-circuits.core.events" title="Permalink to this headline">¶</a></h1>
+<p>This module defines the basic event class and common events.</p>
+<dl class="class">
+<dt id="circuits.core.events.EventType">
+<em class="property">class </em><tt class="descclassname">circuits.core.events.</tt><tt class="descname">EventType</tt><a class="headerlink" href="#circuits.core.events.EventType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">type</span></tt></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="circuits.core.events.Event">
+<em class="property">class </em><tt class="descclassname">circuits.core.events.</tt><tt class="descname">Event</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#circuits.core.events.Event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>An event is a message send to one or more channels.
+It is eventually dispatched to all components
+that have handlers for one of the channels and the event type.</p>
+<p>All normal arguments and keyword arguments passed to the constructor
+of an event are passed on to the handler. When declaring a
+handler, its argument list must therefore match the arguments
+used for creating the event.</p>
+<p>Every event has a <a class="reference internal" href="#circuits.core.events.Event.name" title="circuits.core.events.Event.name"><tt class="xref py py-attr docutils literal"><span class="pre">name</span></tt></a> attribute that is used for matching
+the event with the handlers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>channels</strong> &#8211; <p>an optional attribute that may be set before firing
+the event. If defined (usually as a class variable), the attribute
+specifies the channels that the event should be delivered
+to as a tuple. This overrides the default behavior
+of sending the event to the firing component&#8217;s channel.</p>
+<p>When an event is fired, the value in this attribute
+is replaced for the instance with the channels that
+the event is actually sent to. This information may be used
+e.g. when the event is passed as a parameter to a handler.</p>
+</li>
+<li><strong>value</strong> &#8211; this is a <a class="reference internal" href="circuits.core.values.html#circuits.core.values.Value" title="circuits.core.values.Value"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.values.Value</span></tt></a>
+object that holds the results returned by the handlers invoked
+for the event.</li>
+<li><strong>success</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">success</span></tt> (original name
+with &#8220;_success&#8221; appended) will automatically be fired when all
+handlers for the event have been invoked successfully.</li>
+<li><strong>success_channels</strong> &#8211; the success event is, by default, delivered
+to same channels as the successfully dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+<li><strong>complete</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">complete</span></tt> (original name
+with &#8220;_complete&#8221; appended) will automatically be fired when all
+handlers for the event and all events fired by these handlers
+(recursively) have been invoked successfully.</li>
+<li><strong>complete_channels</strong> &#8211; the complete event is, by default, delivered
+to same channels as the initially dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="circuits.core.events.Event.channels">
+<tt class="descname">channels</tt><em class="property"> = ()</em><a class="headerlink" href="#circuits.core.events.Event.channels" title="Permalink to this definition">¶</a></dt>
+<dd><p>The channels this message is sent to.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="circuits.core.events.Event.parent">
+<tt class="descname">parent</tt><em class="property"> = None</em><a class="headerlink" href="#circuits.core.events.Event.parent" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="circuits.core.events.Event.notify">
+<tt class="descname">notify</tt><em class="property"> = False</em><a class="headerlink" href="#circuits.core.events.Event.notify" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="circuits.core.events.Event.success">
+<tt class="descname">success</tt><em class="property"> = False</em><a class="headerlink" href="#circuits.core.events.Event.success" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="circuits.core.events.Event.failure">
+<tt class="descname">failure</tt><em class="property"> = False</em><a class="headerlink" href="#circuits.core.events.Event.failure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="circuits.core.events.Event.complete">
+<tt class="descname">complete</tt><em class="property"> = False</em><a class="headerlink" href="#circuits.core.events.Event.complete" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="circuits.core.events.Event.alert_done">
+<tt class="descname">alert_done</tt><em class="property"> = False</em><a class="headerlink" href="#circuits.core.events.Event.alert_done" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="circuits.core.events.Event.waitingHandlers">
+<tt class="descname">waitingHandlers</tt><em class="property"> = 0</em><a class="headerlink" href="#circuits.core.events.Event.waitingHandlers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="circuits.core.events.Event.create">
+<em class="property">classmethod </em><tt class="descname">create</tt><big>(</big><em>name</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#circuits.core.events.Event.create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="circuits.core.events.Event.child">
+<tt class="descname">child</tt><big>(</big><em>name</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#circuits.core.events.Event.child" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="circuits.core.events.Event.name">
+<tt class="descname">name</tt><em class="property"> = 'Event'</em><a class="headerlink" href="#circuits.core.events.Event.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="circuits.core.events.Event.cancel">
+<tt class="descname">cancel</tt><big>(</big><big>)</big><a class="headerlink" href="#circuits.core.events.Event.cancel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cancel the event from being processed (if not already)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="circuits.core.events.Event.stop">
+<tt class="descname">stop</tt><big>(</big><big>)</big><a class="headerlink" href="#circuits.core.events.Event.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stop further processing of this event</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="circuits.core.events.exception">
+<em class="property">class </em><tt class="descclassname">circuits.core.events.</tt><tt class="descname">exception</tt><big>(</big><em>type</em>, <em>value</em>, <em>traceback</em>, <em>handler=None</em>, <em>fevent=None</em><big>)</big><a class="headerlink" href="#circuits.core.events.exception" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#circuits.core.events.Event" title="circuits.core.events.Event"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.events.Event</span></tt></a></p>
+<p>exception Event</p>
+<p>This event is sent for any exceptions that occur during the execution
+of an event Handler that is not SystemExit or KeyboardInterrupt.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>type</strong> (<em>type</em>) &#8211; type of exception</li>
+<li><strong>value</strong> (<em>exceptions.TypeError</em>) &#8211; exception object</li>
+<li><strong>traceback</strong> (<em>traceback</em>) &#8211; traceback of exception</li>
+<li><strong>handler</strong> (<em>&#64;handler(&lt;method&gt;)</em>) &#8211; handler that raised the exception</li>
+<li><strong>fevent</strong> (<em>event</em>) &#8211; event that failed</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="circuits.core.events.exception.name">
+<tt class="descname">name</tt><em class="property"> = 'exception'</em><a class="headerlink" href="#circuits.core.events.exception.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="circuits.core.events.started">
+<em class="property">class </em><tt class="descclassname">circuits.core.events.</tt><tt class="descname">started</tt><big>(</big><em>manager</em><big>)</big><a class="headerlink" href="#circuits.core.events.started" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#circuits.core.events.Event" title="circuits.core.events.Event"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.events.Event</span></tt></a></p>
+<p>started Event</p>
+<p>This Event is sent when a Component or Manager has started running.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>manager</strong> (<em>Component or Manager</em>) &#8211; The component or manager that was started</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="circuits.core.events.started.name">
+<tt class="descname">name</tt><em class="property"> = 'started'</em><a class="headerlink" href="#circuits.core.events.started.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="circuits.core.events.stopped">
+<em class="property">class </em><tt class="descclassname">circuits.core.events.</tt><tt class="descname">stopped</tt><big>(</big><em>manager</em><big>)</big><a class="headerlink" href="#circuits.core.events.stopped" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#circuits.core.events.Event" title="circuits.core.events.Event"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.events.Event</span></tt></a></p>
+<p>stopped Event</p>
+<p>This Event is sent when a Component or Manager has stopped running.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>manager</strong> (<em>Component or Manager</em>) &#8211; The component or manager that has stopped</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="circuits.core.events.stopped.name">
+<tt class="descname">name</tt><em class="property"> = 'stopped'</em><a class="headerlink" href="#circuits.core.events.stopped.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="circuits.core.events.signal">
+<em class="property">class </em><tt class="descclassname">circuits.core.events.</tt><tt class="descname">signal</tt><big>(</big><em>signo</em>, <em>stack</em><big>)</big><a class="headerlink" href="#circuits.core.events.signal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#circuits.core.events.Event" title="circuits.core.events.Event"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.events.Event</span></tt></a></p>
+<p>signal Event</p>
+<p>This Event is sent when a Component receives a signal.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>signo</strong> &#8211; The signal number received.</li>
+<li><strong>stack</strong> &#8211; The interrupted stack frame.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="circuits.core.events.signal.name">
+<tt class="descname">name</tt><em class="property"> = 'signal'</em><a class="headerlink" href="#circuits.core.events.signal.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="circuits.core.events.registered">
+<em class="property">class </em><tt class="descclassname">circuits.core.events.</tt><tt class="descname">registered</tt><big>(</big><em>component</em>, <em>manager</em><big>)</big><a class="headerlink" href="#circuits.core.events.registered" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#circuits.core.events.Event" title="circuits.core.events.Event"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.events.Event</span></tt></a></p>
+<p>registered Event</p>
+<p>This Event is sent when a Component has registered with another Component
+or Manager. This Event is only sent if the Component or Manager being
+registered which is not itself.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>component</strong> (<em>Component</em>) &#8211; The Component being registered</li>
+<li><strong>manager</strong> (<em>Component or Manager</em>) &#8211; The Component or Manager being registered with</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="circuits.core.events.registered.name">
+<tt class="descname">name</tt><em class="property"> = 'registered'</em><a class="headerlink" href="#circuits.core.events.registered.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="circuits.core.events.unregistered">
+<em class="property">class </em><tt class="descclassname">circuits.core.events.</tt><tt class="descname">unregistered</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#circuits.core.events.unregistered" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#circuits.core.events.Event" title="circuits.core.events.Event"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.events.Event</span></tt></a></p>
+<p>unregistered Event</p>
+<p>This Event is sent when a Component has been unregistered from its
+Component or Manager.</p>
+<p>An event is a message send to one or more channels.
+It is eventually dispatched to all components
+that have handlers for one of the channels and the event type.</p>
+<p>All normal arguments and keyword arguments passed to the constructor
+of an event are passed on to the handler. When declaring a
+handler, its argument list must therefore match the arguments
+used for creating the event.</p>
+<p>Every event has a <a class="reference internal" href="#circuits.core.events.unregistered.name" title="circuits.core.events.unregistered.name"><tt class="xref py py-attr docutils literal"><span class="pre">name</span></tt></a> attribute that is used for matching
+the event with the handlers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>channels</strong> &#8211; <p>an optional attribute that may be set before firing
+the event. If defined (usually as a class variable), the attribute
+specifies the channels that the event should be delivered
+to as a tuple. This overrides the default behavior
+of sending the event to the firing component&#8217;s channel.</p>
+<p>When an event is fired, the value in this attribute
+is replaced for the instance with the channels that
+the event is actually sent to. This information may be used
+e.g. when the event is passed as a parameter to a handler.</p>
+</li>
+<li><strong>value</strong> &#8211; this is a <a class="reference internal" href="circuits.core.values.html#circuits.core.values.Value" title="circuits.core.values.Value"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.values.Value</span></tt></a>
+object that holds the results returned by the handlers invoked
+for the event.</li>
+<li><strong>success</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">success</span></tt> (original name
+with &#8220;_success&#8221; appended) will automatically be fired when all
+handlers for the event have been invoked successfully.</li>
+<li><strong>success_channels</strong> &#8211; the success event is, by default, delivered
+to same channels as the successfully dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+<li><strong>complete</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">complete</span></tt> (original name
+with &#8220;_complete&#8221; appended) will automatically be fired when all
+handlers for the event and all events fired by these handlers
+(recursively) have been invoked successfully.</li>
+<li><strong>complete_channels</strong> &#8211; the complete event is, by default, delivered
+to same channels as the initially dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="circuits.core.events.unregistered.name">
+<tt class="descname">name</tt><em class="property"> = 'unregistered'</em><a class="headerlink" href="#circuits.core.events.unregistered.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="circuits.core.events.generate_events">
+<em class="property">class </em><tt class="descclassname">circuits.core.events.</tt><tt class="descname">generate_events</tt><big>(</big><em>lock</em>, <em>max_wait</em><big>)</big><a class="headerlink" href="#circuits.core.events.generate_events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#circuits.core.events.Event" title="circuits.core.events.Event"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.events.Event</span></tt></a></p>
+<p>generate_events Event</p>
+<p>This Event is sent by the circuits core. All components that generate
+timed events or events from external sources (e.g. data becoming
+available) should fire any pending events in their &#8220;generate_events&#8221;
+handler.</p>
+<p>The handler must either call <tt class="xref py py-meth docutils literal"><span class="pre">stop()</span></tt> (<a href="#id1"><span class="problematic" id="id2">*</span></a>preventing other handlers
+from being called in the same iteration)
+or must invoke <a class="reference internal" href="#circuits.core.events.generate_events.reduce_time_left" title="circuits.core.events.generate_events.reduce_time_left"><tt class="xref py py-meth docutils literal"><span class="pre">reduce_time_left()</span></tt></a> with parameter 0.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>max_wait</strong> &#8211; maximum time available for generating events.</td>
+</tr>
+</tbody>
+</table>
+<p>Components that actually consume time waiting for events to be generated,
+thus suspending normal execution, must provide a method <tt class="docutils literal"><span class="pre">resume</span></tt>
+that interrupts waiting for events.</p>
+<dl class="attribute">
+<dt id="circuits.core.events.generate_events.time_left">
+<tt class="descname">time_left</tt><a class="headerlink" href="#circuits.core.events.generate_events.time_left" title="Permalink to this definition">¶</a></dt>
+<dd><p>The time left for generating events. A value less than 0
+indicates unlimited time. You should have only
+one component in your system (usually a poller component) that
+spends up to &#8220;time left&#8221; until it generates an event.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="circuits.core.events.generate_events.reduce_time_left">
+<tt class="descname">reduce_time_left</tt><big>(</big><em>time_left</em><big>)</big><a class="headerlink" href="#circuits.core.events.generate_events.reduce_time_left" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the time left for generating events. This is typically
+used by event generators that currently don&#8217;t want to generate
+an event but know that they will within a certain time. By
+reducing the time left, they make sure that they are reinvoked
+when the time for generating the event has come (at the latest).</p>
+<p>This method can only be used to reduce the time left. If the
+parameter is larger than the current value of time left, it is
+ignored.</p>
+<p>If the time left is reduced to 0 and the event is currently
+being handled, the handler&#8217;s <em>resume</em> method is invoked.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="circuits.core.events.generate_events.lock">
+<tt class="descname">lock</tt><a class="headerlink" href="#circuits.core.events.generate_events.lock" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="circuits.core.events.generate_events.name">
+<tt class="descname">name</tt><em class="property"> = 'generate_events'</em><a class="headerlink" href="#circuits.core.events.generate_events.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="circuits.core.debugger.html"
+                        title="previous chapter">circuits.core.debugger module</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="circuits.core.handlers.html"
+                        title="next chapter">circuits.core.handlers module</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/api/circuits.core.events.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="circuits.core.handlers.html" title="circuits.core.handlers module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="circuits.core.debugger.html" title="circuits.core.debugger module"
+             >previous</a> |</li>
+        <li><a href="../index.html">circuits 3.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" >API Documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2004-2013, James Mills.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

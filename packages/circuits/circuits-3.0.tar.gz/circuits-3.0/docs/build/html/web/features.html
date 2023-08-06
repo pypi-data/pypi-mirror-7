@@ -1,0 +1,820 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Features &mdash; circuits 3.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/rtd.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '3.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="circuits 3.0 documentation" href="../index.html" />
+    <link rel="up" title="circuits.web User Manual" href="index.html" />
+    <link rel="next" title="How To Guides" href="howtos.html" />
+    <link rel="prev" title="Getting Started" href="gettingstarted.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-18486793-1']);
+  _gaq.push(['_setDomainName', '.fabfile.org']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="howtos.html" title="How To Guides"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="gettingstarted.html" title="Getting Started"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">circuits 3.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">circuits.web User Manual</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <span class="target" id="module-circuits.web"></span><div class="section" id="features">
+<h1>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h1>
+<p>circuits.web is not a <strong>Full Stack</strong> or <strong>High Level</strong> web framework, rather
+it is more closely aligned with <a class="reference external" href="http://www.cherrypy.org/">CherryPy</a> and offers enough functionality
+to make quickly developing web applications easy and as flexible as possible.</p>
+<p>circuits.web does not provide high level features such as:</p>
+<ul class="simple">
+<li>Templating</li>
+<li>Database access</li>
+<li>Form Validation</li>
+<li>Model View Controller</li>
+<li>Object Relational Mapper</li>
+</ul>
+<p>The functionality that circutis.web <strong>does</strong> provide ensures that
+circuits.web is fully HTTP/1.1 and WSGI/1.0 compliant and offers all the
+essential tools you need to build your web application or website.</p>
+<p>To demonstrate each feature, we&#8217;re going to use the classical &#8220;Hello World!&#8221;
+example as demonstrated earlier in <a class="reference internal" href="gettingstarted.html"><em>Getting Started</em></a>.</p>
+<p>Here&#8217;s the code again for easy reference:</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10</pre></div></td><td class="code"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">circuits.web</span> <span class="kn">import</span> <span class="n">Server</span><span class="p">,</span> <span class="n">Controller</span>
+
+
+<span class="k">class</span> <span class="nc">Root</span><span class="p">(</span><span class="n">Controller</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;Hello World!&quot;</span>
+
+
+<span class="p">(</span><span class="n">Server</span><span class="p">(</span><span class="mi">8000</span><span class="p">)</span> <span class="o">+</span> <span class="n">Root</span><span class="p">())</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+<div class="section" id="logging">
+<h2>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h2>
+<p>circuits.web&#8217;s <a class="reference internal" href="../api/circuits.web.loggers.html#circuits.web.loggers.Logger" title="circuits.web.loggers.Logger"><tt class="xref py py-class docutils literal"><span class="pre">Logger</span></tt></a> component  allows
+you to add logging support compatible with Apache
+log file formats to your web application.</p>
+<p>To use the <tt class="xref py py-class docutils literal"><span class="pre">Logger</span></tt> simply add it to your application:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">(</span><span class="n">Server</span><span class="p">(</span><span class="mi">8000</span><span class="p">)</span> <span class="o">+</span> <span class="n">Logger</span><span class="p">()</span> <span class="o">+</span> <span class="n">Root</span><span class="p">())</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Example Log Output:</p>
+<div class="highlight-python"><div class="highlight"><pre>127.0.0.1 - - [05/Apr/2014:10:13:01] &quot;GET / HTTP/1.1&quot; 200 12 &quot;&quot; &quot;curl/7.35.0&quot;
+127.0.0.1 - - [05/Apr/2014:10:13:02] &quot;GET /docs/build/html/index.html HTTP/1.1&quot; 200 22402 &quot;&quot; &quot;curl/7.35.0&quot;
+</pre></div>
+</div>
+</div>
+<div class="section" id="cookies">
+<h2>Cookies<a class="headerlink" href="#cookies" title="Permalink to this headline">¶</a></h2>
+<p>Access to cookies are provided through the <a class="reference internal" href="../api/circuits.web.wrappers.html#circuits.web.wrappers.Request" title="circuits.web.wrappers.Request"><tt class="xref py py-class docutils literal"><span class="pre">Request</span></tt></a> Object which holds data
+about the request. The attribute <tt class="xref py py-attr docutils literal"><span class="pre">cookie</span></tt> is provided as part of the
+<a class="reference internal" href="../api/circuits.web.wrappers.html#circuits.web.wrappers.Request" title="circuits.web.wrappers.Request"><tt class="xref py py-class docutils literal"><span class="pre">Request</span></tt></a> Object. It is a dict-like object, an instance of <tt class="docutils literal"><span class="pre">Cookie.SimpleCookie</span></tt>
+from the python standard library.</p>
+<p>To demonstrate &#8220;Using Cookies&#8221; we&#8217;ll write a very simple application that
+remembers who we are:</p>
+<p>If a cookie <strong>name</strong> is found, display &#8220;Hello &lt;name&gt;!&#8221;.
+Otherwise, display &#8220;Hello World!&#8221;
+If an argument is given or a query parameter <strong>name</strong> is given,
+store this as the <strong>name</strong> for the cookie.
+Here&#8217;s how we do it:</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16</pre></div></td><td class="code"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">circuits.web</span> <span class="kn">import</span> <span class="n">Server</span><span class="p">,</span> <span class="n">Controller</span>
+
+
+<span class="k">class</span> <span class="nc">Root</span><span class="p">(</span><span class="n">Controller</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cookie</span><span class="p">[</span><span class="s">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cookie</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;World!&quot;</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span> <span class="k">else</span> <span class="n">name</span><span class="o">.</span><span class="n">value</span>
+
+        <span class="k">return</span> <span class="s">&quot;Hello {0:s}!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+
+<span class="p">(</span><span class="n">Server</span><span class="p">(</span><span class="mi">8000</span><span class="p">)</span> <span class="o">+</span> <span class="n">Root</span><span class="p">())</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">To access the actual value of a cookie use the <tt class="docutils literal"><span class="pre">.value</span></tt> attribute.</p>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Cookies can be vulnerable to XSS (<em>Cross Site Scripting</em>) attacks
+so use them at your own risk. See: <a class="reference external" href="http://en.wikipedia.org/wiki/Cross-site_scripting#Cookie_security">http://en.wikipedia.org/wiki/Cross-site_scripting#Cookie_security</a></p>
+</div>
+</div>
+<div class="section" id="dispatchers">
+<h2>Dispatchers<a class="headerlink" href="#dispatchers" title="Permalink to this headline">¶</a></h2>
+<p>circuits.web provides several dispatchers in the <a class="reference internal" href="../api/circuits.web.dispatchers.html#module-circuits.web.dispatchers" title="circuits.web.dispatchers"><tt class="xref py py-mod docutils literal"><span class="pre">dispatchers</span></tt></a> module.
+Most of these are available directly from the circuits.web namespace by
+simply importing the required &#8220;dispatcher&#8221; from circuits.web.</p>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">circuits.web</span> <span class="kn">import</span> <span class="n">Static</span>
+</pre></div>
+</div>
+<p>The most important &#8220;dispatcher&#8221; is the default <a class="reference internal" href="../api/circuits.web.dispatchers.dispatcher.html#circuits.web.dispatchers.dispatcher.Dispatcher" title="circuits.web.dispatchers.dispatcher.Dispatcher"><tt class="xref py py-class docutils literal"><span class="pre">Dispatcher</span></tt></a> used by the
+circuits.web <a class="reference internal" href="../api/circuits.web.servers.html#circuits.web.servers.Server" title="circuits.web.servers.Server"><tt class="xref py py-class docutils literal"><span class="pre">Server</span></tt></a> to dispatch incoming requests onto a channel mapping
+(<em>remember that circuits is event-driven and uses channels</em>), quite similar to that of CherryPy
+or any other web framework that supports object traversal.</p>
+<p>Normally you don&#8217;t have to worry about any of the details of the <em>default</em>
+<a class="reference internal" href="../api/circuits.web.dispatchers.dispatcher.html#circuits.web.dispatchers.dispatcher.Dispatcher" title="circuits.web.dispatchers.dispatcher.Dispatcher"><tt class="xref py py-class docutils literal"><span class="pre">Dispatcher</span></tt></a> nor do you have to import it or use it in any way as it&#8217;s already
+included as part of the circuits.web <a class="reference internal" href="../api/circuits.web.servers.html#circuits.web.servers.Server" title="circuits.web.servers.Server"><tt class="xref py py-class docutils literal"><span class="pre">Server</span></tt></a> Component structure.</p>
+<div class="section" id="static">
+<h3>Static<a class="headerlink" href="#static" title="Permalink to this headline">¶</a></h3>
+<p>The <a class="reference internal" href="../api/circuits.web.dispatchers.static.html#circuits.web.dispatchers.static.Static" title="circuits.web.dispatchers.static.Static"><tt class="xref py py-class docutils literal"><span class="pre">Static</span></tt></a> &#8220;dispatcher&#8221; is used for serving static resources/files
+in your application. To use this, simply add it to your application. It takes
+some optional configuration which affects it&#8217;s behavior.</p>
+<p>The simplest example (<em>as per our Base Example</em>):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">(</span><span class="n">Server</span><span class="p">(</span><span class="mi">8000</span><span class="p">)</span> <span class="o">+</span> <span class="n">Static</span><span class="p">()</span> <span class="o">+</span> <span class="n">Root</span><span class="p">())</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>This will serve up files in the <em>current directory</em> as static resources.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This may override your <strong>index</strong> request handler of your top-most
+(<tt class="docutils literal"><span class="pre">Root</span></tt>) <a class="reference internal" href="../api/circuits.web.controllers.html#circuits.web.controllers.Controller" title="circuits.web.controllers.Controller"><tt class="xref py py-class docutils literal"><span class="pre">Controller</span></tt></a>. As this might be undesirable and
+it&#8217;s normally  common to serve static resources via a different path
+and even have them stored in a separate physical file path, you can
+configure the Static &#8220;dispatcher&#8221;.</p>
+</div>
+<p>Static files stored in <tt class="docutils literal"><span class="pre">/home/joe/www/</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">(</span><span class="n">Server</span><span class="p">(</span><span class="mi">8000</span><span class="p">)</span> <span class="o">+</span> <span class="n">Static</span><span class="p">(</span><span class="n">docroot</span><span class="o">=</span><span class="s">&quot;/home/joe/www/&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="n">Root</span><span class="p">())</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Static files stored in <tt class="docutils literal"><span class="pre">/home/joe/www/</span></tt> <strong>and</strong> we want them served up as
+<tt class="docutils literal"><span class="pre">/static</span></tt> URI(s):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">(</span><span class="n">Server</span><span class="p">(</span><span class="mi">8000</span><span class="p">)</span> <span class="o">+</span> <span class="n">Static</span><span class="p">(</span><span class="s">&quot;/static&quot;</span><span class="p">,</span> <span class="n">docroot</span><span class="o">=</span><span class="s">&quot;/home/joe/www/&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="n">Root</span><span class="p">())</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="dispatcher">
+<h3>Dispatcher<a class="headerlink" href="#dispatcher" title="Permalink to this headline">¶</a></h3>
+<p>The <a class="reference internal" href="../api/circuits.web.dispatchers.dispatcher.html#circuits.web.dispatchers.dispatcher.Dispatcher" title="circuits.web.dispatchers.dispatcher.Dispatcher"><tt class="xref py py-class docutils literal"><span class="pre">Dispatcher</span></tt></a> (<em>the default</em>) is used to dispatch requests
+and map them onto channels with a similar URL Mapping as CherryPy&#8217;s.
+A set of &#8220;paths&#8221; are maintained by the Dispatcher as Controller(s) are
+registered to the system or unregistered from it. A channel mapping is
+found by traversing the set of known paths (<em>Controller(s)</em>) and
+successively matching parts of the path (<em>split by /</em>) until a suitable
+Controller and Request Handler is found. If no Request Handler is found
+that matches but there is a &#8220;default&#8221; Request Handler, it is used.</p>
+<p>This Dispatcher also included support for matching against HTTP methods:</p>
+<ul class="simple">
+<li>GET</li>
+<li>POST</li>
+<li>PUT</li>
+<li>DELETE.</li>
+</ul>
+<p>Here are some examples:</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13</pre></div></td><td class="code"><div class="highlight"><pre><span class="k">class</span> <span class="nc">Root</span><span class="p">(</span><span class="n">Controller</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;Hello World!&quot;</span>
+
+    <span class="k">def</span> <span class="nf">foo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg1</span><span class="p">,</span> <span class="n">arg2</span><span class="p">,</span> <span class="n">arg3</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;Foo: </span><span class="si">%r</span><span class="s">, </span><span class="si">%r</span><span class="s">, </span><span class="si">%r</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">arg1</span><span class="p">,</span> <span class="n">arg2</span><span class="p">,</span> <span class="n">arg3</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">bar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kwarg1</span><span class="o">=</span><span class="s">&quot;foo&quot;</span><span class="p">,</span> <span class="n">kwarg2</span><span class="o">=</span><span class="s">&quot;bar&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;Bar: kwarg1=</span><span class="si">%r</span><span class="s">, kwarg2=</span><span class="si">%r</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">kwarg1</span><span class="p">,</span> <span class="n">kwarg2</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">foobar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg1</span><span class="p">,</span> <span class="n">kwarg1</span><span class="o">=</span><span class="s">&quot;foo&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;FooBar: </span><span class="si">%r</span><span class="s">, kwarg1=</span><span class="si">%r</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">arg1</span><span class="p">,</span> <span class="n">kwarg1</span><span class="p">)</span>
+</pre></div>
+</td></tr></table></div>
+<p>With the following requests:</p>
+<div class="highlight-python"><div class="highlight"><pre>http://127.0.0.1:8000/
+http://127.0.0.1:8000/foo/1/2/3
+http://127.0.0.1:8000/bar?kwarg1=1
+http://127.0.0.1:8000/bar?kwarg1=1&amp;kwarg=2
+http://127.0.0.1:8000/foobar/1
+http://127.0.0.1:8000/foobar/1?kwarg1=1
+</pre></div>
+</div>
+<p>The following output is produced:</p>
+<div class="highlight-python"><div class="highlight"><pre>Hello World!
+Foo: &#39;1&#39;, &#39;2&#39;, &#39;3&#39;
+Bar: kwargs1=&#39;1&#39;, kwargs2=&#39;bar&#39;
+Bar: kwargs1=&#39;1&#39;, kwargs2=&#39;bar&#39;
+FooBar: &#39;1&#39;, kwargs1=&#39;foo&#39;
+FooBar: &#39;1&#39;, kwargs1=&#39;1&#39;
+</pre></div>
+</div>
+<p>This demonstrates how the Dispatcher handles basic paths and how it handles
+extra parts of a path as well as the query string. These are essentially
+translated into arguments and keyword arguments.</p>
+<p>To define a Request Handler that is specifically for the HTTP <tt class="docutils literal"><span class="pre">POST</span></tt> method, simply define a Request Handler like:</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12</pre></div></td><td class="code"><div class="highlight"><pre><span class="k">class</span> <span class="nc">Root</span><span class="p">(</span><span class="n">Controller</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;Hello World!&quot;</span>
+
+
+<span class="k">class</span> <span class="nc">Test</span><span class="p">(</span><span class="n">Controller</span><span class="p">):</span>
+
+    <span class="n">channel</span> <span class="o">=</span> <span class="s">&quot;/test&quot;</span>
+
+    <span class="k">def</span> <span class="nf">POST</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span> <span class="c">#***</span>
+        <span class="k">return</span> <span class="s">&quot;</span><span class="si">%r</span><span class="s"> </span><span class="si">%r</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+</td></tr></table></div>
+<p>This will handles <tt class="docutils literal"><span class="pre">POST</span></tt> requests to &#8220;/test&#8221;, which brings us to the final
+point of creating URL structures in your application. As seen above to create
+a sub-structure of Request Handlers (<em>a tree</em>) simply create another
+<a class="reference internal" href="../api/circuits.web.controllers.html#circuits.web.controllers.Controller" title="circuits.web.controllers.Controller"><tt class="xref py py-class docutils literal"><span class="pre">Controller</span></tt></a> Component giving it a different channel and add it to the system
+along with your existing Controller(s).</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">All public methods defined in your <tt class="xref py py-class docutils literal"> <span class="pre">If</span> <span class="pre">you</span> <span class="pre">don't</span> <span class="pre">want</span>
+<span class="pre">something</span> <span class="pre">exposed</span> <span class="pre">either</span> <span class="pre">subclass</span> <span class="pre">from</span> <span class="pre">:class:`~BaseController</span></tt> whereby
+you have to explicitly use <tt class="xref py py-meth docutils literal"><span class="pre">expose()</span></tt> or use <tt class="docutils literal"><span class="pre">&#64;expose(False)</span></tt>
+to decorate a public method as <strong>NOT Exposed</strong> or simply prefix the desired
+method with an underscore (e.g: <tt class="docutils literal"><span class="pre">def</span> <span class="pre">_foo(...):</span></tt>).</p>
+</div>
+</div>
+<div class="section" id="virtualhosts">
+<h3>VirtualHosts<a class="headerlink" href="#virtualhosts" title="Permalink to this headline">¶</a></h3>
+<p>The <a class="reference internal" href="../api/circuits.web.dispatchers.virtualhosts.html#circuits.web.dispatchers.virtualhosts.VirtualHosts" title="circuits.web.dispatchers.virtualhosts.VirtualHosts"><tt class="xref py py-class docutils literal"><span class="pre">VirtualHosts</span></tt></a> &#8220;dispatcher&#8221; allows you to serves up different parts of
+your application for different &#8220;virtual&#8221; hosts.</p>
+<p>Consider for example you have the following hosts defined:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">localdomain</span>
+<span class="n">foo</span><span class="o">.</span><span class="n">localdomain</span>
+<span class="n">bar</span><span class="o">.</span><span class="n">localdomain</span>
+</pre></div>
+</div>
+<p>You want to display something different on the default domain name
+&#8220;localdomain&#8221; and something different for each of the sub-domains
+&#8220;foo.localdomain&#8221; and &#8220;bar.localdomain&#8221;.</p>
+<p>To do this, we use the VirtualHosts &#8220;dispatcher&#8221;:</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32</pre></div></td><td class="code"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">circuits.web</span> <span class="kn">import</span> <span class="n">Server</span><span class="p">,</span> <span class="n">Controller</span><span class="p">,</span> <span class="n">VirtualHosts</span>
+
+
+<span class="k">class</span> <span class="nc">Root</span><span class="p">(</span><span class="n">Controller</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;I am the main vhost&quot;</span>
+
+
+<span class="k">class</span> <span class="nc">Foo</span><span class="p">(</span><span class="n">Controller</span><span class="p">):</span>
+
+    <span class="n">channel</span> <span class="o">=</span> <span class="s">&quot;/foo&quot;</span>
+
+    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;I am foo.&quot;</span>
+
+
+<span class="k">class</span> <span class="nc">Bar</span><span class="p">(</span><span class="n">Controller</span><span class="p">):</span>
+
+    <span class="n">channel</span> <span class="o">=</span> <span class="s">&quot;/bar&quot;</span>
+
+    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;I am bar.&quot;</span>
+
+
+<span class="n">domains</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&quot;foo.localdomain:8000&quot;</span><span class="p">:</span> <span class="s">&quot;foo&quot;</span><span class="p">,</span>
+    <span class="s">&quot;bar.localdomain:8000&quot;</span><span class="p">:</span> <span class="s">&quot;bar&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<span class="p">(</span><span class="n">Server</span><span class="p">(</span><span class="mi">8000</span><span class="p">)</span> <span class="o">+</span> <span class="n">VirtualHosts</span><span class="p">(</span><span class="n">domains</span><span class="p">)</span> <span class="o">+</span> <span class="n">Root</span><span class="p">()</span> <span class="o">+</span> <span class="n">Foo</span><span class="p">()</span> <span class="o">+</span> <span class="n">Bar</span><span class="p">())</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+<p>With the following requests:</p>
+<div class="highlight-python"><div class="highlight"><pre>http://localdomain:8000/
+http://foo.localdomain:8000/
+http://bar.localdomain:8000/
+</pre></div>
+</div>
+<p>The following output is produced:</p>
+<div class="highlight-python"><div class="highlight"><pre>I am the main vhost
+I am foo.
+I am bar.
+</pre></div>
+</div>
+<p>The argument <strong>domains</strong> pasted to VirtualHosts&#8217; constructor is a mapping
+(<em>dict</em>) of: domain -&gt; channel</p>
+</div>
+<div class="section" id="xmlrpc">
+<h3>XMLRPC<a class="headerlink" href="#xmlrpc" title="Permalink to this headline">¶</a></h3>
+<p>The <a class="reference internal" href="../api/circuits.web.dispatchers.xmlrpc.html#circuits.web.dispatchers.xmlrpc.XMLRPC" title="circuits.web.dispatchers.xmlrpc.XMLRPC"><tt class="xref py py-class docutils literal"><span class="pre">XMLRPC</span></tt></a> &#8220;dispatcher&#8221; provides a circuits.web application with the capability of serving up RPC Requests encoded in XML (XML-RPC).</p>
+<p>Without going into too much details (<em>if you&#8217;re using any kind of RPC &#8220;dispatcher&#8221; you should know what you&#8217;re doing...</em>), here is a simple example:</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11</pre></div></td><td class="code"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">circuits</span> <span class="kn">import</span> <span class="n">Component</span>
+<span class="kn">from</span> <span class="nn">circuits.web</span> <span class="kn">import</span> <span class="n">Server</span><span class="p">,</span> <span class="n">Logger</span><span class="p">,</span> <span class="n">XMLRPC</span>
+
+
+<span class="k">class</span> <span class="nc">Test</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">foo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span>
+
+
+<span class="p">(</span><span class="n">Server</span><span class="p">(</span><span class="mi">8000</span><span class="p">)</span> <span class="o">+</span> <span class="n">Logger</span><span class="p">()</span> <span class="o">+</span> <span class="n">XMLRPC</span><span class="p">()</span> <span class="o">+</span> <span class="n">Test</span><span class="p">())</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+<p>Here is a simple interactive session:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">xmlrpclib</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">xmlrpc</span> <span class="o">=</span> <span class="n">xmlrpclib</span><span class="o">.</span><span class="n">ServerProxy</span><span class="p">(</span><span class="s">&quot;http://127.0.0.1:8000/rpc/&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">xmlrpc</span><span class="o">.</span><span class="n">foo</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">[1, 2, 3]</span>
+<span class="go">&gt;&gt;&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="jsonrpc">
+<h3>JSONRPC<a class="headerlink" href="#jsonrpc" title="Permalink to this headline">¶</a></h3>
+<p>The <a class="reference internal" href="../api/circuits.web.dispatchers.jsonrpc.html#circuits.web.dispatchers.jsonrpc.JSONRPC" title="circuits.web.dispatchers.jsonrpc.JSONRPC"><tt class="xref py py-class docutils literal"><span class="pre">JSONRPC</span></tt></a> &#8220;dispatcher&#8221; is Identical in functionality to the <a class="reference internal" href="../api/circuits.web.dispatchers.xmlrpc.html#circuits.web.dispatchers.xmlrpc.XMLRPC" title="circuits.web.dispatchers.xmlrpc.XMLRPC"><tt class="xref py py-class docutils literal"><span class="pre">XMLRPC</span></tt></a> &#8220;dispatcher&#8221;.</p>
+<p>Example:</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11</pre></div></td><td class="code"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">circuits</span> <span class="kn">import</span> <span class="n">Component</span>
+<span class="kn">from</span> <span class="nn">circuits.web</span> <span class="kn">import</span> <span class="n">Server</span><span class="p">,</span> <span class="n">Logger</span><span class="p">,</span> <span class="n">JSONRPC</span>
+
+
+<span class="k">class</span> <span class="nc">Test</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">foo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span>
+
+
+<span class="p">(</span><span class="n">Server</span><span class="p">(</span><span class="mi">8000</span><span class="p">)</span> <span class="o">+</span> <span class="n">Logger</span><span class="p">()</span> <span class="o">+</span> <span class="n">JSONRPC</span><span class="p">()</span> <span class="o">+</span> <span class="n">Test</span><span class="p">())</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+<p>Interactive session (<em>requires the `jsonrpclib &lt;https://pypi.python.org/pypi/jsonrpc&gt;`_ library</em>):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">jsonrpclib</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">jsonrpc</span> <span class="o">=</span> <span class="n">jsonrpclib</span><span class="o">.</span><span class="n">ServerProxy</span><span class="p">(</span><span class="s">&quot;http://127.0.0.1:8000/rpc/&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">jsonrpc</span><span class="o">.</span><span class="n">foo</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">{&#39;result&#39;: [1, 2, 3], &#39;version&#39;: &#39;1.1&#39;, &#39;id&#39;: 2, &#39;error&#39;: None}</span>
+<span class="go">&gt;&gt;&gt;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="caching">
+<h2>Caching<a class="headerlink" href="#caching" title="Permalink to this headline">¶</a></h2>
+<p>circuits.web includes all the usual <strong>Cache Control</strong>, <strong>Expires</strong>
+and <strong>ETag</strong> caching mechanisms.</p>
+<p>For simple expires style caching use the <tt class="xref py py-meth docutils literal"><span class="pre">expires()</span></tt> tool from <a class="reference internal" href="../api/circuits.web.tools.html#module-circuits.web.tools" title="circuits.web.tools"><tt class="xref py py-mod docutils literal"><span class="pre">circuits.web.tools</span></tt></a>.</p>
+<p>Example:</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11</pre></div></td><td class="code"><div class="highlight"><pre> <span class="kn">from</span> <span class="nn">circuits.web</span> <span class="kn">import</span> <span class="n">Server</span><span class="p">,</span> <span class="n">Controller</span>
+
+
+ <span class="k">class</span> <span class="nc">Root</span><span class="p">(</span><span class="n">Controller</span><span class="p">):</span>
+
+     <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">expires</span><span class="p">(</span><span class="mi">3600</span><span class="p">)</span>
+         <span class="k">return</span> <span class="s">&quot;Hello World!&quot;</span>
+
+
+ <span class="p">(</span><span class="n">Server</span><span class="p">(</span><span class="mi">8000</span><span class="p">)</span> <span class="o">+</span> <span class="n">Root</span><span class="p">())</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+<p>For other caching mechanisms and validation please
+refer to the <a class="reference internal" href="../api/circuits.web.tools.html#module-circuits.web.tools" title="circuits.web.tools"><tt class="xref py py-mod docutils literal"><span class="pre">circuits.web.tools</span></tt></a> documentation.</p>
+<p>See in particular:</p>
+<ul class="simple">
+<li><tt class="xref py py-meth docutils literal"><span class="pre">expires()</span></tt></li>
+<li><tt class="xref py py-meth docutils literal"><span class="pre">validate_since()</span></tt></li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>In the example above we used <tt class="docutils literal"><span class="pre">self.expires(3600)</span></tt> which is
+just a convenience method built into the <a class="reference internal" href="../api/circuits.web.controllers.html#circuits.web.controllers.Controller" title="circuits.web.controllers.Controller"><tt class="xref py py-class docutils literal"><span class="pre">Controller</span></tt></a>.
+The <a class="reference internal" href="../api/circuits.web.controllers.html#circuits.web.controllers.Controller" title="circuits.web.controllers.Controller"><tt class="xref py py-class docutils literal"><span class="pre">Controller</span></tt></a> has other such convenience methods
+such as <tt class="docutils literal"><span class="pre">.uri</span></tt>, <tt class="docutils literal"><span class="pre">.forbidden()</span></tt>, <tt class="docutils literal"><span class="pre">.redirect()</span></tt>, <tt class="docutils literal"><span class="pre">.notfound()</span></tt>,
+<tt class="docutils literal"><span class="pre">.serve_file()</span></tt>, <tt class="docutils literal"><span class="pre">.serve_download()</span></tt> and <tt class="docutils literal"><span class="pre">.expires()</span></tt>.</p>
+<p class="last">These are just wrappers around <a class="reference internal" href="../api/circuits.web.tools.html#module-circuits.web.tools" title="circuits.web.tools"><tt class="xref py py-mod docutils literal"><span class="pre">tools</span></tt></a> and <a class="reference internal" href="../api/circuits.web.events.html#module-circuits.web.events" title="circuits.web.events"><tt class="xref py py-mod docutils literal"><span class="pre">events</span></tt></a>.</p>
+</div>
+</div>
+<div class="section" id="compression">
+<h2>Compression<a class="headerlink" href="#compression" title="Permalink to this headline">¶</a></h2>
+<p>circuits.web includes the necessary low-level tools in order to achieve
+compression. These tools are provided as a set of functions that can be
+applied to the response before it is sent to the client.</p>
+<p>Here&#8217;s how you can create a simple Component that enables compression
+in your web application or website.</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20</pre></div></td><td class="code"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">circuits</span> <span class="kn">import</span> <span class="n">handler</span><span class="p">,</span> <span class="n">Component</span>
+
+<span class="kn">from</span> <span class="nn">circuits.web.tools</span> <span class="kn">import</span> <span class="n">gzip</span>
+<span class="kn">from</span> <span class="nn">circuits.web</span> <span class="kn">import</span> <span class="n">Server</span><span class="p">,</span> <span class="n">Controller</span><span class="p">,</span> <span class="n">Logger</span>
+
+
+<span class="k">class</span> <span class="nc">Gzip</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+
+    <span class="nd">@handler</span><span class="p">(</span><span class="s">&quot;response&quot;</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">compress_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">response</span><span class="p">):</span>
+        <span class="n">event</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">gzip</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">Root</span><span class="p">(</span><span class="n">Controller</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;Hello World!&quot;</span>
+
+
+<span class="p">(</span><span class="n">Server</span><span class="p">(</span><span class="mi">8000</span><span class="p">)</span> <span class="o">+</span> <span class="n">Gzip</span><span class="p">()</span> <span class="o">+</span> <span class="n">Root</span><span class="p">())</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+<p>Please refer to the documentation for further details:</p>
+<ul class="simple">
+<li><a class="reference internal" href="../api/circuits.web.tools.html#circuits.web.tools.gzip" title="circuits.web.tools.gzip"><tt class="xref py py-func docutils literal"><span class="pre">tools.gzip()</span></tt></a></li>
+<li><a class="reference internal" href="../api/circuits.web.utils.html#circuits.web.utils.compress" title="circuits.web.utils.compress"><tt class="xref py py-func docutils literal"><span class="pre">utils.compress()</span></tt></a></li>
+</ul>
+</div>
+<div class="section" id="authentication">
+<h2>Authentication<a class="headerlink" href="#authentication" title="Permalink to this headline">¶</a></h2>
+<p>circuits.web provides both HTTP Plain and Digest Authentication provided by the functions in <a class="reference internal" href="../api/circuits.web.tools.html#module-circuits.web.tools" title="circuits.web.tools"><tt class="xref py py-mod docutils literal"><span class="pre">circuits.web.tools</span></tt></a>:</p>
+<ul class="simple">
+<li><a class="reference internal" href="../api/circuits.web.tools.html#circuits.web.tools.basic_auth" title="circuits.web.tools.basic_auth"><tt class="xref py py-func docutils literal"><span class="pre">tools.basic_auth()</span></tt></a></li>
+<li><a class="reference internal" href="../api/circuits.web.tools.html#circuits.web.tools.check_auth" title="circuits.web.tools.check_auth"><tt class="xref py py-func docutils literal"><span class="pre">tools.check_auth()</span></tt></a></li>
+<li><a class="reference internal" href="../api/circuits.web.tools.html#circuits.web.tools.digest_auth" title="circuits.web.tools.digest_auth"><tt class="xref py py-func docutils literal"><span class="pre">tools.digest_auth()</span></tt></a></li>
+</ul>
+<p>The first 2 arguments are always (<em>as with most circuits.web tools</em>):</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">(request,</span> <span class="pre">response)</span></tt></li>
+</ul>
+<p>An example demonstrating the use of &#8220;Basic Auth&#8221;:</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18</pre></div></td><td class="code"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">circuits.web</span> <span class="kn">import</span> <span class="n">Server</span><span class="p">,</span> <span class="n">Controller</span>
+<span class="kn">from</span> <span class="nn">circuits.web.tools</span> <span class="kn">import</span> <span class="n">check_auth</span><span class="p">,</span> <span class="n">basic_auth</span>
+
+
+<span class="k">class</span> <span class="nc">Root</span><span class="p">(</span><span class="n">Controller</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">realm</span> <span class="o">=</span> <span class="s">&quot;Test&quot;</span>
+        <span class="n">users</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;admin&quot;</span><span class="p">:</span> <span class="s">&quot;admin&quot;</span><span class="p">}</span>
+        <span class="n">encrypt</span> <span class="o">=</span> <span class="nb">str</span>
+
+        <span class="k">if</span> <span class="n">check_auth</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">response</span><span class="p">,</span> <span class="n">realm</span><span class="p">,</span> <span class="n">users</span><span class="p">,</span> <span class="n">encrypt</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s">&quot;Hello </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">login</span>
+
+        <span class="k">return</span> <span class="n">basic_auth</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">response</span><span class="p">,</span> <span class="n">realm</span><span class="p">,</span> <span class="n">users</span><span class="p">,</span> <span class="n">encrypt</span><span class="p">)</span>
+
+
+<span class="p">(</span><span class="n">Server</span><span class="p">(</span><span class="mi">8000</span><span class="p">)</span> <span class="o">+</span> <span class="n">Root</span><span class="p">())</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+<p>For &#8220;Digest Auth&#8221;:</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18</pre></div></td><td class="code"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">circuits.web</span> <span class="kn">import</span> <span class="n">Server</span><span class="p">,</span> <span class="n">Controller</span>
+<span class="kn">from</span> <span class="nn">circuits.web.tools</span> <span class="kn">import</span> <span class="n">check_auth</span><span class="p">,</span> <span class="n">digest_auth</span>
+
+
+<span class="k">class</span> <span class="nc">Root</span><span class="p">(</span><span class="n">Controller</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">realm</span> <span class="o">=</span> <span class="s">&quot;Test&quot;</span>
+        <span class="n">users</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;admin&quot;</span><span class="p">:</span> <span class="s">&quot;admin&quot;</span><span class="p">}</span>
+        <span class="n">encrypt</span> <span class="o">=</span> <span class="nb">str</span>
+
+        <span class="k">if</span> <span class="n">check_auth</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">response</span><span class="p">,</span> <span class="n">realm</span><span class="p">,</span> <span class="n">users</span><span class="p">,</span> <span class="n">encrypt</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s">&quot;Hello </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">login</span>
+
+        <span class="k">return</span> <span class="n">digest_auth</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">response</span><span class="p">,</span> <span class="n">realm</span><span class="p">,</span> <span class="n">users</span><span class="p">,</span> <span class="n">encrypt</span><span class="p">)</span>
+
+
+<span class="p">(</span><span class="n">Server</span><span class="p">(</span><span class="mi">8000</span><span class="p">)</span> <span class="o">+</span> <span class="n">Root</span><span class="p">())</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="session-handling">
+<h2>Session Handling<a class="headerlink" href="#session-handling" title="Permalink to this headline">¶</a></h2>
+<p>Session Handling in circuits.web is very similar to Cookies.
+A dict-like object called <strong>.session</strong> is attached to every
+Request Object during the life-cycle of that request. Internally
+a Cookie named <strong>circuits.session</strong> is set in the response.</p>
+<p>Rewriting the Cookie Example to use a session instead:</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15</pre></div></td><td class="code"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">circuits.web</span> <span class="kn">import</span> <span class="n">Server</span><span class="p">,</span> <span class="n">Controller</span><span class="p">,</span> <span class="n">Sessions</span>
+
+
+<span class="k">class</span> <span class="nc">Root</span><span class="p">(</span><span class="n">Controller</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="s">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">,</span> <span class="s">&quot;World!&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s">&quot;Hello </span><span class="si">%s</span><span class="s">!&quot;</span> <span class="o">%</span> <span class="n">name</span>
+
+
+<span class="p">(</span><span class="n">Server</span><span class="p">(</span><span class="mi">8000</span><span class="p">)</span> <span class="o">+</span> <span class="n">Sessions</span><span class="p">()</span> <span class="o">+</span> <span class="n">Root</span><span class="p">())</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The only Session Handling provided is a
+temporary in-memory based one and will
+not persist. No future Session Handling
+components are planned. For persistent
+data you should use some kind of Database.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+
+
+
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Features</a><ul>
+<li><a class="reference internal" href="#logging">Logging</a></li>
+<li><a class="reference internal" href="#cookies">Cookies</a></li>
+<li><a class="reference internal" href="#dispatchers">Dispatchers</a><ul>
+<li><a class="reference internal" href="#static">Static</a></li>
+<li><a class="reference internal" href="#dispatcher">Dispatcher</a></li>
+<li><a class="reference internal" href="#virtualhosts">VirtualHosts</a></li>
+<li><a class="reference internal" href="#xmlrpc">XMLRPC</a></li>
+<li><a class="reference internal" href="#jsonrpc">JSONRPC</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#caching">Caching</a></li>
+<li><a class="reference internal" href="#compression">Compression</a></li>
+<li><a class="reference internal" href="#authentication">Authentication</a></li>
+<li><a class="reference internal" href="#session-handling">Session Handling</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="gettingstarted.html"
+                        title="previous chapter">Getting Started</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="howtos.html"
+                        title="next chapter">How To Guides</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/web/features.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="howtos.html" title="How To Guides"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="gettingstarted.html" title="Getting Started"
+             >previous</a> |</li>
+        <li><a href="../index.html">circuits 3.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" >circuits.web User Manual</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2004-2013, James Mills.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

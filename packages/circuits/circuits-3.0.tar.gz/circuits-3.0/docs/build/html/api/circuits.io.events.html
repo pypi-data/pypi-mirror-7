@@ -1,0 +1,1237 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>circuits.io.events module &mdash; circuits 3.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/rtd.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '3.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="circuits 3.0 documentation" href="../index.html" />
+    <link rel="up" title="API Documentation" href="index.html" />
+    <link rel="next" title="circuits.io.file module" href="circuits.io.file.html" />
+    <link rel="prev" title="circuits.io.serial module" href="circuits.io.serial.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-18486793-1']);
+  _gaq.push(['_setDomainName', '.fabfile.org']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="circuits.io.file.html" title="circuits.io.file module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="circuits.io.serial.html" title="circuits.io.serial module"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">circuits 3.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">API Documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-circuits.io.events">
+<span id="circuits-io-events-module"></span><h1>circuits.io.events module<a class="headerlink" href="#module-circuits.io.events" title="Permalink to this headline">¶</a></h1>
+<p>I/O Events</p>
+<p>This module implements commonly used I/O events used by other I/O modules.</p>
+<dl class="class">
+<dt id="circuits.io.events.eof">
+<em class="property">class </em><tt class="descclassname">circuits.io.events.</tt><tt class="descname">eof</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#circuits.io.events.eof" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="circuits.core.events.html#circuits.core.events.Event" title="circuits.core.events.Event"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.events.Event</span></tt></a></p>
+<p>eof Event</p>
+<p>An event is a message send to one or more channels.
+It is eventually dispatched to all components
+that have handlers for one of the channels and the event type.</p>
+<p>All normal arguments and keyword arguments passed to the constructor
+of an event are passed on to the handler. When declaring a
+handler, its argument list must therefore match the arguments
+used for creating the event.</p>
+<p>Every event has a <a class="reference internal" href="#circuits.io.events.eof.name" title="circuits.io.events.eof.name"><tt class="xref py py-attr docutils literal"><span class="pre">name</span></tt></a> attribute that is used for matching
+the event with the handlers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>channels</strong> &#8211; <p>an optional attribute that may be set before firing
+the event. If defined (usually as a class variable), the attribute
+specifies the channels that the event should be delivered
+to as a tuple. This overrides the default behavior
+of sending the event to the firing component&#8217;s channel.</p>
+<p>When an event is fired, the value in this attribute
+is replaced for the instance with the channels that
+the event is actually sent to. This information may be used
+e.g. when the event is passed as a parameter to a handler.</p>
+</li>
+<li><strong>value</strong> &#8211; this is a <a class="reference internal" href="circuits.core.values.html#circuits.core.values.Value" title="circuits.core.values.Value"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.values.Value</span></tt></a>
+object that holds the results returned by the handlers invoked
+for the event.</li>
+<li><strong>success</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">success</span></tt> (original name
+with &#8220;_success&#8221; appended) will automatically be fired when all
+handlers for the event have been invoked successfully.</li>
+<li><strong>success_channels</strong> &#8211; the success event is, by default, delivered
+to same channels as the successfully dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+<li><strong>complete</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">complete</span></tt> (original name
+with &#8220;_complete&#8221; appended) will automatically be fired when all
+handlers for the event and all events fired by these handlers
+(recursively) have been invoked successfully.</li>
+<li><strong>complete_channels</strong> &#8211; the complete event is, by default, delivered
+to same channels as the initially dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="circuits.io.events.eof.name">
+<tt class="descname">name</tt><em class="property"> = 'eof'</em><a class="headerlink" href="#circuits.io.events.eof.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="circuits.io.events.seek">
+<em class="property">class </em><tt class="descclassname">circuits.io.events.</tt><tt class="descname">seek</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#circuits.io.events.seek" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="circuits.core.events.html#circuits.core.events.Event" title="circuits.core.events.Event"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.events.Event</span></tt></a></p>
+<p>seek Event</p>
+<p>An event is a message send to one or more channels.
+It is eventually dispatched to all components
+that have handlers for one of the channels and the event type.</p>
+<p>All normal arguments and keyword arguments passed to the constructor
+of an event are passed on to the handler. When declaring a
+handler, its argument list must therefore match the arguments
+used for creating the event.</p>
+<p>Every event has a <a class="reference internal" href="#circuits.io.events.seek.name" title="circuits.io.events.seek.name"><tt class="xref py py-attr docutils literal"><span class="pre">name</span></tt></a> attribute that is used for matching
+the event with the handlers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>channels</strong> &#8211; <p>an optional attribute that may be set before firing
+the event. If defined (usually as a class variable), the attribute
+specifies the channels that the event should be delivered
+to as a tuple. This overrides the default behavior
+of sending the event to the firing component&#8217;s channel.</p>
+<p>When an event is fired, the value in this attribute
+is replaced for the instance with the channels that
+the event is actually sent to. This information may be used
+e.g. when the event is passed as a parameter to a handler.</p>
+</li>
+<li><strong>value</strong> &#8211; this is a <a class="reference internal" href="circuits.core.values.html#circuits.core.values.Value" title="circuits.core.values.Value"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.values.Value</span></tt></a>
+object that holds the results returned by the handlers invoked
+for the event.</li>
+<li><strong>success</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">success</span></tt> (original name
+with &#8220;_success&#8221; appended) will automatically be fired when all
+handlers for the event have been invoked successfully.</li>
+<li><strong>success_channels</strong> &#8211; the success event is, by default, delivered
+to same channels as the successfully dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+<li><strong>complete</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">complete</span></tt> (original name
+with &#8220;_complete&#8221; appended) will automatically be fired when all
+handlers for the event and all events fired by these handlers
+(recursively) have been invoked successfully.</li>
+<li><strong>complete_channels</strong> &#8211; the complete event is, by default, delivered
+to same channels as the initially dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="circuits.io.events.seek.name">
+<tt class="descname">name</tt><em class="property"> = 'seek'</em><a class="headerlink" href="#circuits.io.events.seek.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="circuits.io.events.read">
+<em class="property">class </em><tt class="descclassname">circuits.io.events.</tt><tt class="descname">read</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#circuits.io.events.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="circuits.core.events.html#circuits.core.events.Event" title="circuits.core.events.Event"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.events.Event</span></tt></a></p>
+<p>read Event</p>
+<p>An event is a message send to one or more channels.
+It is eventually dispatched to all components
+that have handlers for one of the channels and the event type.</p>
+<p>All normal arguments and keyword arguments passed to the constructor
+of an event are passed on to the handler. When declaring a
+handler, its argument list must therefore match the arguments
+used for creating the event.</p>
+<p>Every event has a <a class="reference internal" href="#circuits.io.events.read.name" title="circuits.io.events.read.name"><tt class="xref py py-attr docutils literal"><span class="pre">name</span></tt></a> attribute that is used for matching
+the event with the handlers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>channels</strong> &#8211; <p>an optional attribute that may be set before firing
+the event. If defined (usually as a class variable), the attribute
+specifies the channels that the event should be delivered
+to as a tuple. This overrides the default behavior
+of sending the event to the firing component&#8217;s channel.</p>
+<p>When an event is fired, the value in this attribute
+is replaced for the instance with the channels that
+the event is actually sent to. This information may be used
+e.g. when the event is passed as a parameter to a handler.</p>
+</li>
+<li><strong>value</strong> &#8211; this is a <a class="reference internal" href="circuits.core.values.html#circuits.core.values.Value" title="circuits.core.values.Value"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.values.Value</span></tt></a>
+object that holds the results returned by the handlers invoked
+for the event.</li>
+<li><strong>success</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">success</span></tt> (original name
+with &#8220;_success&#8221; appended) will automatically be fired when all
+handlers for the event have been invoked successfully.</li>
+<li><strong>success_channels</strong> &#8211; the success event is, by default, delivered
+to same channels as the successfully dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+<li><strong>complete</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">complete</span></tt> (original name
+with &#8220;_complete&#8221; appended) will automatically be fired when all
+handlers for the event and all events fired by these handlers
+(recursively) have been invoked successfully.</li>
+<li><strong>complete_channels</strong> &#8211; the complete event is, by default, delivered
+to same channels as the initially dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="circuits.io.events.read.name">
+<tt class="descname">name</tt><em class="property"> = 'read'</em><a class="headerlink" href="#circuits.io.events.read.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="circuits.io.events.close">
+<em class="property">class </em><tt class="descclassname">circuits.io.events.</tt><tt class="descname">close</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#circuits.io.events.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="circuits.core.events.html#circuits.core.events.Event" title="circuits.core.events.Event"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.events.Event</span></tt></a></p>
+<p>close Event</p>
+<p>An event is a message send to one or more channels.
+It is eventually dispatched to all components
+that have handlers for one of the channels and the event type.</p>
+<p>All normal arguments and keyword arguments passed to the constructor
+of an event are passed on to the handler. When declaring a
+handler, its argument list must therefore match the arguments
+used for creating the event.</p>
+<p>Every event has a <a class="reference internal" href="#circuits.io.events.close.name" title="circuits.io.events.close.name"><tt class="xref py py-attr docutils literal"><span class="pre">name</span></tt></a> attribute that is used for matching
+the event with the handlers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>channels</strong> &#8211; <p>an optional attribute that may be set before firing
+the event. If defined (usually as a class variable), the attribute
+specifies the channels that the event should be delivered
+to as a tuple. This overrides the default behavior
+of sending the event to the firing component&#8217;s channel.</p>
+<p>When an event is fired, the value in this attribute
+is replaced for the instance with the channels that
+the event is actually sent to. This information may be used
+e.g. when the event is passed as a parameter to a handler.</p>
+</li>
+<li><strong>value</strong> &#8211; this is a <a class="reference internal" href="circuits.core.values.html#circuits.core.values.Value" title="circuits.core.values.Value"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.values.Value</span></tt></a>
+object that holds the results returned by the handlers invoked
+for the event.</li>
+<li><strong>success</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">success</span></tt> (original name
+with &#8220;_success&#8221; appended) will automatically be fired when all
+handlers for the event have been invoked successfully.</li>
+<li><strong>success_channels</strong> &#8211; the success event is, by default, delivered
+to same channels as the successfully dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+<li><strong>complete</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">complete</span></tt> (original name
+with &#8220;_complete&#8221; appended) will automatically be fired when all
+handlers for the event and all events fired by these handlers
+(recursively) have been invoked successfully.</li>
+<li><strong>complete_channels</strong> &#8211; the complete event is, by default, delivered
+to same channels as the initially dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="circuits.io.events.close.name">
+<tt class="descname">name</tt><em class="property"> = 'close'</em><a class="headerlink" href="#circuits.io.events.close.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="circuits.io.events.write">
+<em class="property">class </em><tt class="descclassname">circuits.io.events.</tt><tt class="descname">write</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#circuits.io.events.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="circuits.core.events.html#circuits.core.events.Event" title="circuits.core.events.Event"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.events.Event</span></tt></a></p>
+<p>write Event</p>
+<p>An event is a message send to one or more channels.
+It is eventually dispatched to all components
+that have handlers for one of the channels and the event type.</p>
+<p>All normal arguments and keyword arguments passed to the constructor
+of an event are passed on to the handler. When declaring a
+handler, its argument list must therefore match the arguments
+used for creating the event.</p>
+<p>Every event has a <a class="reference internal" href="#circuits.io.events.write.name" title="circuits.io.events.write.name"><tt class="xref py py-attr docutils literal"><span class="pre">name</span></tt></a> attribute that is used for matching
+the event with the handlers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>channels</strong> &#8211; <p>an optional attribute that may be set before firing
+the event. If defined (usually as a class variable), the attribute
+specifies the channels that the event should be delivered
+to as a tuple. This overrides the default behavior
+of sending the event to the firing component&#8217;s channel.</p>
+<p>When an event is fired, the value in this attribute
+is replaced for the instance with the channels that
+the event is actually sent to. This information may be used
+e.g. when the event is passed as a parameter to a handler.</p>
+</li>
+<li><strong>value</strong> &#8211; this is a <a class="reference internal" href="circuits.core.values.html#circuits.core.values.Value" title="circuits.core.values.Value"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.values.Value</span></tt></a>
+object that holds the results returned by the handlers invoked
+for the event.</li>
+<li><strong>success</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">success</span></tt> (original name
+with &#8220;_success&#8221; appended) will automatically be fired when all
+handlers for the event have been invoked successfully.</li>
+<li><strong>success_channels</strong> &#8211; the success event is, by default, delivered
+to same channels as the successfully dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+<li><strong>complete</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">complete</span></tt> (original name
+with &#8220;_complete&#8221; appended) will automatically be fired when all
+handlers for the event and all events fired by these handlers
+(recursively) have been invoked successfully.</li>
+<li><strong>complete_channels</strong> &#8211; the complete event is, by default, delivered
+to same channels as the initially dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="circuits.io.events.write.name">
+<tt class="descname">name</tt><em class="property"> = 'write'</em><a class="headerlink" href="#circuits.io.events.write.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="circuits.io.events.error">
+<em class="property">class </em><tt class="descclassname">circuits.io.events.</tt><tt class="descname">error</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#circuits.io.events.error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="circuits.core.events.html#circuits.core.events.Event" title="circuits.core.events.Event"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.events.Event</span></tt></a></p>
+<p>error Event</p>
+<p>An event is a message send to one or more channels.
+It is eventually dispatched to all components
+that have handlers for one of the channels and the event type.</p>
+<p>All normal arguments and keyword arguments passed to the constructor
+of an event are passed on to the handler. When declaring a
+handler, its argument list must therefore match the arguments
+used for creating the event.</p>
+<p>Every event has a <a class="reference internal" href="#circuits.io.events.error.name" title="circuits.io.events.error.name"><tt class="xref py py-attr docutils literal"><span class="pre">name</span></tt></a> attribute that is used for matching
+the event with the handlers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>channels</strong> &#8211; <p>an optional attribute that may be set before firing
+the event. If defined (usually as a class variable), the attribute
+specifies the channels that the event should be delivered
+to as a tuple. This overrides the default behavior
+of sending the event to the firing component&#8217;s channel.</p>
+<p>When an event is fired, the value in this attribute
+is replaced for the instance with the channels that
+the event is actually sent to. This information may be used
+e.g. when the event is passed as a parameter to a handler.</p>
+</li>
+<li><strong>value</strong> &#8211; this is a <a class="reference internal" href="circuits.core.values.html#circuits.core.values.Value" title="circuits.core.values.Value"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.values.Value</span></tt></a>
+object that holds the results returned by the handlers invoked
+for the event.</li>
+<li><strong>success</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">success</span></tt> (original name
+with &#8220;_success&#8221; appended) will automatically be fired when all
+handlers for the event have been invoked successfully.</li>
+<li><strong>success_channels</strong> &#8211; the success event is, by default, delivered
+to same channels as the successfully dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+<li><strong>complete</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">complete</span></tt> (original name
+with &#8220;_complete&#8221; appended) will automatically be fired when all
+handlers for the event and all events fired by these handlers
+(recursively) have been invoked successfully.</li>
+<li><strong>complete_channels</strong> &#8211; the complete event is, by default, delivered
+to same channels as the initially dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="circuits.io.events.error.name">
+<tt class="descname">name</tt><em class="property"> = 'error'</em><a class="headerlink" href="#circuits.io.events.error.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="circuits.io.events.open">
+<em class="property">class </em><tt class="descclassname">circuits.io.events.</tt><tt class="descname">open</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#circuits.io.events.open" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="circuits.core.events.html#circuits.core.events.Event" title="circuits.core.events.Event"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.events.Event</span></tt></a></p>
+<p>open Event</p>
+<p>An event is a message send to one or more channels.
+It is eventually dispatched to all components
+that have handlers for one of the channels and the event type.</p>
+<p>All normal arguments and keyword arguments passed to the constructor
+of an event are passed on to the handler. When declaring a
+handler, its argument list must therefore match the arguments
+used for creating the event.</p>
+<p>Every event has a <a class="reference internal" href="#circuits.io.events.open.name" title="circuits.io.events.open.name"><tt class="xref py py-attr docutils literal"><span class="pre">name</span></tt></a> attribute that is used for matching
+the event with the handlers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>channels</strong> &#8211; <p>an optional attribute that may be set before firing
+the event. If defined (usually as a class variable), the attribute
+specifies the channels that the event should be delivered
+to as a tuple. This overrides the default behavior
+of sending the event to the firing component&#8217;s channel.</p>
+<p>When an event is fired, the value in this attribute
+is replaced for the instance with the channels that
+the event is actually sent to. This information may be used
+e.g. when the event is passed as a parameter to a handler.</p>
+</li>
+<li><strong>value</strong> &#8211; this is a <a class="reference internal" href="circuits.core.values.html#circuits.core.values.Value" title="circuits.core.values.Value"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.values.Value</span></tt></a>
+object that holds the results returned by the handlers invoked
+for the event.</li>
+<li><strong>success</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">success</span></tt> (original name
+with &#8220;_success&#8221; appended) will automatically be fired when all
+handlers for the event have been invoked successfully.</li>
+<li><strong>success_channels</strong> &#8211; the success event is, by default, delivered
+to same channels as the successfully dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+<li><strong>complete</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">complete</span></tt> (original name
+with &#8220;_complete&#8221; appended) will automatically be fired when all
+handlers for the event and all events fired by these handlers
+(recursively) have been invoked successfully.</li>
+<li><strong>complete_channels</strong> &#8211; the complete event is, by default, delivered
+to same channels as the initially dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="circuits.io.events.open.name">
+<tt class="descname">name</tt><em class="property"> = 'open'</em><a class="headerlink" href="#circuits.io.events.open.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="circuits.io.events.opened">
+<em class="property">class </em><tt class="descclassname">circuits.io.events.</tt><tt class="descname">opened</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#circuits.io.events.opened" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="circuits.core.events.html#circuits.core.events.Event" title="circuits.core.events.Event"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.events.Event</span></tt></a></p>
+<p>opened Event</p>
+<p>An event is a message send to one or more channels.
+It is eventually dispatched to all components
+that have handlers for one of the channels and the event type.</p>
+<p>All normal arguments and keyword arguments passed to the constructor
+of an event are passed on to the handler. When declaring a
+handler, its argument list must therefore match the arguments
+used for creating the event.</p>
+<p>Every event has a <a class="reference internal" href="#circuits.io.events.opened.name" title="circuits.io.events.opened.name"><tt class="xref py py-attr docutils literal"><span class="pre">name</span></tt></a> attribute that is used for matching
+the event with the handlers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>channels</strong> &#8211; <p>an optional attribute that may be set before firing
+the event. If defined (usually as a class variable), the attribute
+specifies the channels that the event should be delivered
+to as a tuple. This overrides the default behavior
+of sending the event to the firing component&#8217;s channel.</p>
+<p>When an event is fired, the value in this attribute
+is replaced for the instance with the channels that
+the event is actually sent to. This information may be used
+e.g. when the event is passed as a parameter to a handler.</p>
+</li>
+<li><strong>value</strong> &#8211; this is a <a class="reference internal" href="circuits.core.values.html#circuits.core.values.Value" title="circuits.core.values.Value"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.values.Value</span></tt></a>
+object that holds the results returned by the handlers invoked
+for the event.</li>
+<li><strong>success</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">success</span></tt> (original name
+with &#8220;_success&#8221; appended) will automatically be fired when all
+handlers for the event have been invoked successfully.</li>
+<li><strong>success_channels</strong> &#8211; the success event is, by default, delivered
+to same channels as the successfully dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+<li><strong>complete</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">complete</span></tt> (original name
+with &#8220;_complete&#8221; appended) will automatically be fired when all
+handlers for the event and all events fired by these handlers
+(recursively) have been invoked successfully.</li>
+<li><strong>complete_channels</strong> &#8211; the complete event is, by default, delivered
+to same channels as the initially dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="circuits.io.events.opened.name">
+<tt class="descname">name</tt><em class="property"> = 'opened'</em><a class="headerlink" href="#circuits.io.events.opened.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="circuits.io.events.closed">
+<em class="property">class </em><tt class="descclassname">circuits.io.events.</tt><tt class="descname">closed</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#circuits.io.events.closed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="circuits.core.events.html#circuits.core.events.Event" title="circuits.core.events.Event"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.events.Event</span></tt></a></p>
+<p>closed Event</p>
+<p>An event is a message send to one or more channels.
+It is eventually dispatched to all components
+that have handlers for one of the channels and the event type.</p>
+<p>All normal arguments and keyword arguments passed to the constructor
+of an event are passed on to the handler. When declaring a
+handler, its argument list must therefore match the arguments
+used for creating the event.</p>
+<p>Every event has a <a class="reference internal" href="#circuits.io.events.closed.name" title="circuits.io.events.closed.name"><tt class="xref py py-attr docutils literal"><span class="pre">name</span></tt></a> attribute that is used for matching
+the event with the handlers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>channels</strong> &#8211; <p>an optional attribute that may be set before firing
+the event. If defined (usually as a class variable), the attribute
+specifies the channels that the event should be delivered
+to as a tuple. This overrides the default behavior
+of sending the event to the firing component&#8217;s channel.</p>
+<p>When an event is fired, the value in this attribute
+is replaced for the instance with the channels that
+the event is actually sent to. This information may be used
+e.g. when the event is passed as a parameter to a handler.</p>
+</li>
+<li><strong>value</strong> &#8211; this is a <a class="reference internal" href="circuits.core.values.html#circuits.core.values.Value" title="circuits.core.values.Value"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.values.Value</span></tt></a>
+object that holds the results returned by the handlers invoked
+for the event.</li>
+<li><strong>success</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">success</span></tt> (original name
+with &#8220;_success&#8221; appended) will automatically be fired when all
+handlers for the event have been invoked successfully.</li>
+<li><strong>success_channels</strong> &#8211; the success event is, by default, delivered
+to same channels as the successfully dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+<li><strong>complete</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">complete</span></tt> (original name
+with &#8220;_complete&#8221; appended) will automatically be fired when all
+handlers for the event and all events fired by these handlers
+(recursively) have been invoked successfully.</li>
+<li><strong>complete_channels</strong> &#8211; the complete event is, by default, delivered
+to same channels as the initially dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="circuits.io.events.closed.name">
+<tt class="descname">name</tt><em class="property"> = 'closed'</em><a class="headerlink" href="#circuits.io.events.closed.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="circuits.io.events.ready">
+<em class="property">class </em><tt class="descclassname">circuits.io.events.</tt><tt class="descname">ready</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#circuits.io.events.ready" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="circuits.core.events.html#circuits.core.events.Event" title="circuits.core.events.Event"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.events.Event</span></tt></a></p>
+<p>ready Event</p>
+<p>An event is a message send to one or more channels.
+It is eventually dispatched to all components
+that have handlers for one of the channels and the event type.</p>
+<p>All normal arguments and keyword arguments passed to the constructor
+of an event are passed on to the handler. When declaring a
+handler, its argument list must therefore match the arguments
+used for creating the event.</p>
+<p>Every event has a <a class="reference internal" href="#circuits.io.events.ready.name" title="circuits.io.events.ready.name"><tt class="xref py py-attr docutils literal"><span class="pre">name</span></tt></a> attribute that is used for matching
+the event with the handlers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>channels</strong> &#8211; <p>an optional attribute that may be set before firing
+the event. If defined (usually as a class variable), the attribute
+specifies the channels that the event should be delivered
+to as a tuple. This overrides the default behavior
+of sending the event to the firing component&#8217;s channel.</p>
+<p>When an event is fired, the value in this attribute
+is replaced for the instance with the channels that
+the event is actually sent to. This information may be used
+e.g. when the event is passed as a parameter to a handler.</p>
+</li>
+<li><strong>value</strong> &#8211; this is a <a class="reference internal" href="circuits.core.values.html#circuits.core.values.Value" title="circuits.core.values.Value"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.values.Value</span></tt></a>
+object that holds the results returned by the handlers invoked
+for the event.</li>
+<li><strong>success</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">success</span></tt> (original name
+with &#8220;_success&#8221; appended) will automatically be fired when all
+handlers for the event have been invoked successfully.</li>
+<li><strong>success_channels</strong> &#8211; the success event is, by default, delivered
+to same channels as the successfully dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+<li><strong>complete</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">complete</span></tt> (original name
+with &#8220;_complete&#8221; appended) will automatically be fired when all
+handlers for the event and all events fired by these handlers
+(recursively) have been invoked successfully.</li>
+<li><strong>complete_channels</strong> &#8211; the complete event is, by default, delivered
+to same channels as the initially dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="circuits.io.events.ready.name">
+<tt class="descname">name</tt><em class="property"> = 'ready'</em><a class="headerlink" href="#circuits.io.events.ready.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="circuits.io.events.started">
+<em class="property">class </em><tt class="descclassname">circuits.io.events.</tt><tt class="descname">started</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#circuits.io.events.started" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="circuits.core.events.html#circuits.core.events.Event" title="circuits.core.events.Event"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.events.Event</span></tt></a></p>
+<p>started Event</p>
+<p>An event is a message send to one or more channels.
+It is eventually dispatched to all components
+that have handlers for one of the channels and the event type.</p>
+<p>All normal arguments and keyword arguments passed to the constructor
+of an event are passed on to the handler. When declaring a
+handler, its argument list must therefore match the arguments
+used for creating the event.</p>
+<p>Every event has a <a class="reference internal" href="#circuits.io.events.started.name" title="circuits.io.events.started.name"><tt class="xref py py-attr docutils literal"><span class="pre">name</span></tt></a> attribute that is used for matching
+the event with the handlers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>channels</strong> &#8211; <p>an optional attribute that may be set before firing
+the event. If defined (usually as a class variable), the attribute
+specifies the channels that the event should be delivered
+to as a tuple. This overrides the default behavior
+of sending the event to the firing component&#8217;s channel.</p>
+<p>When an event is fired, the value in this attribute
+is replaced for the instance with the channels that
+the event is actually sent to. This information may be used
+e.g. when the event is passed as a parameter to a handler.</p>
+</li>
+<li><strong>value</strong> &#8211; this is a <a class="reference internal" href="circuits.core.values.html#circuits.core.values.Value" title="circuits.core.values.Value"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.values.Value</span></tt></a>
+object that holds the results returned by the handlers invoked
+for the event.</li>
+<li><strong>success</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">success</span></tt> (original name
+with &#8220;_success&#8221; appended) will automatically be fired when all
+handlers for the event have been invoked successfully.</li>
+<li><strong>success_channels</strong> &#8211; the success event is, by default, delivered
+to same channels as the successfully dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+<li><strong>complete</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">complete</span></tt> (original name
+with &#8220;_complete&#8221; appended) will automatically be fired when all
+handlers for the event and all events fired by these handlers
+(recursively) have been invoked successfully.</li>
+<li><strong>complete_channels</strong> &#8211; the complete event is, by default, delivered
+to same channels as the initially dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="circuits.io.events.started.name">
+<tt class="descname">name</tt><em class="property"> = 'started'</em><a class="headerlink" href="#circuits.io.events.started.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="circuits.io.events.stopped">
+<em class="property">class </em><tt class="descclassname">circuits.io.events.</tt><tt class="descname">stopped</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#circuits.io.events.stopped" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="circuits.core.events.html#circuits.core.events.Event" title="circuits.core.events.Event"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.events.Event</span></tt></a></p>
+<p>stopped Event</p>
+<p>An event is a message send to one or more channels.
+It is eventually dispatched to all components
+that have handlers for one of the channels and the event type.</p>
+<p>All normal arguments and keyword arguments passed to the constructor
+of an event are passed on to the handler. When declaring a
+handler, its argument list must therefore match the arguments
+used for creating the event.</p>
+<p>Every event has a <a class="reference internal" href="#circuits.io.events.stopped.name" title="circuits.io.events.stopped.name"><tt class="xref py py-attr docutils literal"><span class="pre">name</span></tt></a> attribute that is used for matching
+the event with the handlers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>channels</strong> &#8211; <p>an optional attribute that may be set before firing
+the event. If defined (usually as a class variable), the attribute
+specifies the channels that the event should be delivered
+to as a tuple. This overrides the default behavior
+of sending the event to the firing component&#8217;s channel.</p>
+<p>When an event is fired, the value in this attribute
+is replaced for the instance with the channels that
+the event is actually sent to. This information may be used
+e.g. when the event is passed as a parameter to a handler.</p>
+</li>
+<li><strong>value</strong> &#8211; this is a <a class="reference internal" href="circuits.core.values.html#circuits.core.values.Value" title="circuits.core.values.Value"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.values.Value</span></tt></a>
+object that holds the results returned by the handlers invoked
+for the event.</li>
+<li><strong>success</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">success</span></tt> (original name
+with &#8220;_success&#8221; appended) will automatically be fired when all
+handlers for the event have been invoked successfully.</li>
+<li><strong>success_channels</strong> &#8211; the success event is, by default, delivered
+to same channels as the successfully dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+<li><strong>complete</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">complete</span></tt> (original name
+with &#8220;_complete&#8221; appended) will automatically be fired when all
+handlers for the event and all events fired by these handlers
+(recursively) have been invoked successfully.</li>
+<li><strong>complete_channels</strong> &#8211; the complete event is, by default, delivered
+to same channels as the initially dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="circuits.io.events.stopped.name">
+<tt class="descname">name</tt><em class="property"> = 'stopped'</em><a class="headerlink" href="#circuits.io.events.stopped.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="circuits.io.events.moved">
+<em class="property">class </em><tt class="descclassname">circuits.io.events.</tt><tt class="descname">moved</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#circuits.io.events.moved" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="circuits.core.events.html#circuits.core.events.Event" title="circuits.core.events.Event"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.events.Event</span></tt></a></p>
+<p>moved Event</p>
+<p>An event is a message send to one or more channels.
+It is eventually dispatched to all components
+that have handlers for one of the channels and the event type.</p>
+<p>All normal arguments and keyword arguments passed to the constructor
+of an event are passed on to the handler. When declaring a
+handler, its argument list must therefore match the arguments
+used for creating the event.</p>
+<p>Every event has a <a class="reference internal" href="#circuits.io.events.moved.name" title="circuits.io.events.moved.name"><tt class="xref py py-attr docutils literal"><span class="pre">name</span></tt></a> attribute that is used for matching
+the event with the handlers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>channels</strong> &#8211; <p>an optional attribute that may be set before firing
+the event. If defined (usually as a class variable), the attribute
+specifies the channels that the event should be delivered
+to as a tuple. This overrides the default behavior
+of sending the event to the firing component&#8217;s channel.</p>
+<p>When an event is fired, the value in this attribute
+is replaced for the instance with the channels that
+the event is actually sent to. This information may be used
+e.g. when the event is passed as a parameter to a handler.</p>
+</li>
+<li><strong>value</strong> &#8211; this is a <a class="reference internal" href="circuits.core.values.html#circuits.core.values.Value" title="circuits.core.values.Value"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.values.Value</span></tt></a>
+object that holds the results returned by the handlers invoked
+for the event.</li>
+<li><strong>success</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">success</span></tt> (original name
+with &#8220;_success&#8221; appended) will automatically be fired when all
+handlers for the event have been invoked successfully.</li>
+<li><strong>success_channels</strong> &#8211; the success event is, by default, delivered
+to same channels as the successfully dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+<li><strong>complete</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">complete</span></tt> (original name
+with &#8220;_complete&#8221; appended) will automatically be fired when all
+handlers for the event and all events fired by these handlers
+(recursively) have been invoked successfully.</li>
+<li><strong>complete_channels</strong> &#8211; the complete event is, by default, delivered
+to same channels as the initially dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="circuits.io.events.moved.name">
+<tt class="descname">name</tt><em class="property"> = 'moved'</em><a class="headerlink" href="#circuits.io.events.moved.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="circuits.io.events.created">
+<em class="property">class </em><tt class="descclassname">circuits.io.events.</tt><tt class="descname">created</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#circuits.io.events.created" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="circuits.core.events.html#circuits.core.events.Event" title="circuits.core.events.Event"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.events.Event</span></tt></a></p>
+<p>created Event</p>
+<p>An event is a message send to one or more channels.
+It is eventually dispatched to all components
+that have handlers for one of the channels and the event type.</p>
+<p>All normal arguments and keyword arguments passed to the constructor
+of an event are passed on to the handler. When declaring a
+handler, its argument list must therefore match the arguments
+used for creating the event.</p>
+<p>Every event has a <a class="reference internal" href="#circuits.io.events.created.name" title="circuits.io.events.created.name"><tt class="xref py py-attr docutils literal"><span class="pre">name</span></tt></a> attribute that is used for matching
+the event with the handlers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>channels</strong> &#8211; <p>an optional attribute that may be set before firing
+the event. If defined (usually as a class variable), the attribute
+specifies the channels that the event should be delivered
+to as a tuple. This overrides the default behavior
+of sending the event to the firing component&#8217;s channel.</p>
+<p>When an event is fired, the value in this attribute
+is replaced for the instance with the channels that
+the event is actually sent to. This information may be used
+e.g. when the event is passed as a parameter to a handler.</p>
+</li>
+<li><strong>value</strong> &#8211; this is a <a class="reference internal" href="circuits.core.values.html#circuits.core.values.Value" title="circuits.core.values.Value"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.values.Value</span></tt></a>
+object that holds the results returned by the handlers invoked
+for the event.</li>
+<li><strong>success</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">success</span></tt> (original name
+with &#8220;_success&#8221; appended) will automatically be fired when all
+handlers for the event have been invoked successfully.</li>
+<li><strong>success_channels</strong> &#8211; the success event is, by default, delivered
+to same channels as the successfully dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+<li><strong>complete</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">complete</span></tt> (original name
+with &#8220;_complete&#8221; appended) will automatically be fired when all
+handlers for the event and all events fired by these handlers
+(recursively) have been invoked successfully.</li>
+<li><strong>complete_channels</strong> &#8211; the complete event is, by default, delivered
+to same channels as the initially dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="circuits.io.events.created.name">
+<tt class="descname">name</tt><em class="property"> = 'created'</em><a class="headerlink" href="#circuits.io.events.created.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="circuits.io.events.deleted">
+<em class="property">class </em><tt class="descclassname">circuits.io.events.</tt><tt class="descname">deleted</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#circuits.io.events.deleted" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="circuits.core.events.html#circuits.core.events.Event" title="circuits.core.events.Event"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.events.Event</span></tt></a></p>
+<p>deleted Event</p>
+<p>An event is a message send to one or more channels.
+It is eventually dispatched to all components
+that have handlers for one of the channels and the event type.</p>
+<p>All normal arguments and keyword arguments passed to the constructor
+of an event are passed on to the handler. When declaring a
+handler, its argument list must therefore match the arguments
+used for creating the event.</p>
+<p>Every event has a <a class="reference internal" href="#circuits.io.events.deleted.name" title="circuits.io.events.deleted.name"><tt class="xref py py-attr docutils literal"><span class="pre">name</span></tt></a> attribute that is used for matching
+the event with the handlers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>channels</strong> &#8211; <p>an optional attribute that may be set before firing
+the event. If defined (usually as a class variable), the attribute
+specifies the channels that the event should be delivered
+to as a tuple. This overrides the default behavior
+of sending the event to the firing component&#8217;s channel.</p>
+<p>When an event is fired, the value in this attribute
+is replaced for the instance with the channels that
+the event is actually sent to. This information may be used
+e.g. when the event is passed as a parameter to a handler.</p>
+</li>
+<li><strong>value</strong> &#8211; this is a <a class="reference internal" href="circuits.core.values.html#circuits.core.values.Value" title="circuits.core.values.Value"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.values.Value</span></tt></a>
+object that holds the results returned by the handlers invoked
+for the event.</li>
+<li><strong>success</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">success</span></tt> (original name
+with &#8220;_success&#8221; appended) will automatically be fired when all
+handlers for the event have been invoked successfully.</li>
+<li><strong>success_channels</strong> &#8211; the success event is, by default, delivered
+to same channels as the successfully dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+<li><strong>complete</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">complete</span></tt> (original name
+with &#8220;_complete&#8221; appended) will automatically be fired when all
+handlers for the event and all events fired by these handlers
+(recursively) have been invoked successfully.</li>
+<li><strong>complete_channels</strong> &#8211; the complete event is, by default, delivered
+to same channels as the initially dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="circuits.io.events.deleted.name">
+<tt class="descname">name</tt><em class="property"> = 'deleted'</em><a class="headerlink" href="#circuits.io.events.deleted.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="circuits.io.events.accessed">
+<em class="property">class </em><tt class="descclassname">circuits.io.events.</tt><tt class="descname">accessed</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#circuits.io.events.accessed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="circuits.core.events.html#circuits.core.events.Event" title="circuits.core.events.Event"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.events.Event</span></tt></a></p>
+<p>accessed Event</p>
+<p>An event is a message send to one or more channels.
+It is eventually dispatched to all components
+that have handlers for one of the channels and the event type.</p>
+<p>All normal arguments and keyword arguments passed to the constructor
+of an event are passed on to the handler. When declaring a
+handler, its argument list must therefore match the arguments
+used for creating the event.</p>
+<p>Every event has a <a class="reference internal" href="#circuits.io.events.accessed.name" title="circuits.io.events.accessed.name"><tt class="xref py py-attr docutils literal"><span class="pre">name</span></tt></a> attribute that is used for matching
+the event with the handlers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>channels</strong> &#8211; <p>an optional attribute that may be set before firing
+the event. If defined (usually as a class variable), the attribute
+specifies the channels that the event should be delivered
+to as a tuple. This overrides the default behavior
+of sending the event to the firing component&#8217;s channel.</p>
+<p>When an event is fired, the value in this attribute
+is replaced for the instance with the channels that
+the event is actually sent to. This information may be used
+e.g. when the event is passed as a parameter to a handler.</p>
+</li>
+<li><strong>value</strong> &#8211; this is a <a class="reference internal" href="circuits.core.values.html#circuits.core.values.Value" title="circuits.core.values.Value"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.values.Value</span></tt></a>
+object that holds the results returned by the handlers invoked
+for the event.</li>
+<li><strong>success</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">success</span></tt> (original name
+with &#8220;_success&#8221; appended) will automatically be fired when all
+handlers for the event have been invoked successfully.</li>
+<li><strong>success_channels</strong> &#8211; the success event is, by default, delivered
+to same channels as the successfully dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+<li><strong>complete</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">complete</span></tt> (original name
+with &#8220;_complete&#8221; appended) will automatically be fired when all
+handlers for the event and all events fired by these handlers
+(recursively) have been invoked successfully.</li>
+<li><strong>complete_channels</strong> &#8211; the complete event is, by default, delivered
+to same channels as the initially dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="circuits.io.events.accessed.name">
+<tt class="descname">name</tt><em class="property"> = 'accessed'</em><a class="headerlink" href="#circuits.io.events.accessed.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="circuits.io.events.modified">
+<em class="property">class </em><tt class="descclassname">circuits.io.events.</tt><tt class="descname">modified</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#circuits.io.events.modified" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="circuits.core.events.html#circuits.core.events.Event" title="circuits.core.events.Event"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.events.Event</span></tt></a></p>
+<p>modified Event</p>
+<p>An event is a message send to one or more channels.
+It is eventually dispatched to all components
+that have handlers for one of the channels and the event type.</p>
+<p>All normal arguments and keyword arguments passed to the constructor
+of an event are passed on to the handler. When declaring a
+handler, its argument list must therefore match the arguments
+used for creating the event.</p>
+<p>Every event has a <a class="reference internal" href="#circuits.io.events.modified.name" title="circuits.io.events.modified.name"><tt class="xref py py-attr docutils literal"><span class="pre">name</span></tt></a> attribute that is used for matching
+the event with the handlers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>channels</strong> &#8211; <p>an optional attribute that may be set before firing
+the event. If defined (usually as a class variable), the attribute
+specifies the channels that the event should be delivered
+to as a tuple. This overrides the default behavior
+of sending the event to the firing component&#8217;s channel.</p>
+<p>When an event is fired, the value in this attribute
+is replaced for the instance with the channels that
+the event is actually sent to. This information may be used
+e.g. when the event is passed as a parameter to a handler.</p>
+</li>
+<li><strong>value</strong> &#8211; this is a <a class="reference internal" href="circuits.core.values.html#circuits.core.values.Value" title="circuits.core.values.Value"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.values.Value</span></tt></a>
+object that holds the results returned by the handlers invoked
+for the event.</li>
+<li><strong>success</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">success</span></tt> (original name
+with &#8220;_success&#8221; appended) will automatically be fired when all
+handlers for the event have been invoked successfully.</li>
+<li><strong>success_channels</strong> &#8211; the success event is, by default, delivered
+to same channels as the successfully dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+<li><strong>complete</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">complete</span></tt> (original name
+with &#8220;_complete&#8221; appended) will automatically be fired when all
+handlers for the event and all events fired by these handlers
+(recursively) have been invoked successfully.</li>
+<li><strong>complete_channels</strong> &#8211; the complete event is, by default, delivered
+to same channels as the initially dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="circuits.io.events.modified.name">
+<tt class="descname">name</tt><em class="property"> = 'modified'</em><a class="headerlink" href="#circuits.io.events.modified.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="circuits.io.events.unmounted">
+<em class="property">class </em><tt class="descclassname">circuits.io.events.</tt><tt class="descname">unmounted</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#circuits.io.events.unmounted" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="circuits.core.events.html#circuits.core.events.Event" title="circuits.core.events.Event"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.events.Event</span></tt></a></p>
+<p>unmounted Event</p>
+<p>An event is a message send to one or more channels.
+It is eventually dispatched to all components
+that have handlers for one of the channels and the event type.</p>
+<p>All normal arguments and keyword arguments passed to the constructor
+of an event are passed on to the handler. When declaring a
+handler, its argument list must therefore match the arguments
+used for creating the event.</p>
+<p>Every event has a <a class="reference internal" href="#circuits.io.events.unmounted.name" title="circuits.io.events.unmounted.name"><tt class="xref py py-attr docutils literal"><span class="pre">name</span></tt></a> attribute that is used for matching
+the event with the handlers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>channels</strong> &#8211; <p>an optional attribute that may be set before firing
+the event. If defined (usually as a class variable), the attribute
+specifies the channels that the event should be delivered
+to as a tuple. This overrides the default behavior
+of sending the event to the firing component&#8217;s channel.</p>
+<p>When an event is fired, the value in this attribute
+is replaced for the instance with the channels that
+the event is actually sent to. This information may be used
+e.g. when the event is passed as a parameter to a handler.</p>
+</li>
+<li><strong>value</strong> &#8211; this is a <a class="reference internal" href="circuits.core.values.html#circuits.core.values.Value" title="circuits.core.values.Value"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.values.Value</span></tt></a>
+object that holds the results returned by the handlers invoked
+for the event.</li>
+<li><strong>success</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">success</span></tt> (original name
+with &#8220;_success&#8221; appended) will automatically be fired when all
+handlers for the event have been invoked successfully.</li>
+<li><strong>success_channels</strong> &#8211; the success event is, by default, delivered
+to same channels as the successfully dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+<li><strong>complete</strong> &#8211; if this optional attribute is set to
+<tt class="docutils literal"><span class="pre">True</span></tt>, an associated event <tt class="docutils literal"><span class="pre">complete</span></tt> (original name
+with &#8220;_complete&#8221; appended) will automatically be fired when all
+handlers for the event and all events fired by these handlers
+(recursively) have been invoked successfully.</li>
+<li><strong>complete_channels</strong> &#8211; the complete event is, by default, delivered
+to same channels as the initially dispatched event itself.
+This may be overridden by specifying an alternative list of
+destinations using this attribute.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="circuits.io.events.unmounted.name">
+<tt class="descname">name</tt><em class="property"> = 'unmounted'</em><a class="headerlink" href="#circuits.io.events.unmounted.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="circuits.io.serial.html"
+                        title="previous chapter">circuits.io.serial module</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="circuits.io.file.html"
+                        title="next chapter">circuits.io.file module</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/api/circuits.io.events.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="circuits.io.file.html" title="circuits.io.file module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="circuits.io.serial.html" title="circuits.io.serial module"
+             >previous</a> |</li>
+        <li><a href="../index.html">circuits 3.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" >API Documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2004-2013, James Mills.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

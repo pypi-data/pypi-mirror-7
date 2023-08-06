@@ -1,0 +1,190 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>circuits.web.websockets.client module &mdash; circuits 3.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/rtd.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '3.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="circuits 3.0 documentation" href="../index.html" />
+    <link rel="up" title="API Documentation" href="index.html" />
+    <link rel="next" title="circuits.web.websockets.dispatcher module" href="circuits.web.websockets.dispatcher.html" />
+    <link rel="prev" title="circuits.web.websockets.dispatcher module" href="circuits.web.websockets.dispatcher.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-18486793-1']);
+  _gaq.push(['_setDomainName', '.fabfile.org']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="circuits.web.websockets.dispatcher.html" title="circuits.web.websockets.dispatcher module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="circuits.web.websockets.dispatcher.html" title="circuits.web.websockets.dispatcher module"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">circuits 3.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">API Documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-circuits.web.websockets.client">
+<span id="circuits-web-websockets-client-module"></span><h1>circuits.web.websockets.client module<a class="headerlink" href="#module-circuits.web.websockets.client" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="circuits.web.websockets.client.WebSocketClient">
+<em class="property">class </em><tt class="descclassname">circuits.web.websockets.client.</tt><tt class="descname">WebSocketClient</tt><big>(</big><em>url</em>, <em>channel='wsclient'</em>, <em>wschannel='ws'</em>, <em>headers={}</em><big>)</big><a class="headerlink" href="#circuits.web.websockets.client.WebSocketClient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="circuits.core.components.html#circuits.core.components.BaseComponent" title="circuits.core.components.BaseComponent"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.components.BaseComponent</span></tt></a></p>
+<p>An RFC 6455 compliant WebSocket client component. Upon receiving a
+<tt class="xref py py-class docutils literal"><span class="pre">circuits.web.client.Connect</span></tt> event, the component tries to
+establish the connection to the server in a two stage process. First, a
+<a class="reference internal" href="circuits.net.events.html#circuits.net.events.connect" title="circuits.net.events.connect"><tt class="xref py py-class docutils literal"><span class="pre">circuits.net.events.connect</span></tt></a> event is sent to a child
+<a class="reference internal" href="circuits.net.sockets.html#circuits.net.sockets.TCPClient" title="circuits.net.sockets.TCPClient"><tt class="xref py py-class docutils literal"><span class="pre">TCPClient</span></tt></a>. When the TCP connection has been established,
+the HTTP request for opening the WebSocket is sent to the server.
+A failure in this setup process is signaled by raising an
+<a class="reference internal" href="circuits.web.client.html#circuits.web.client.NotConnected" title="circuits.web.client.NotConnected"><tt class="xref py py-class docutils literal"><span class="pre">NotConnected</span></tt></a> exception.</p>
+<p>When the server accepts the request, the WebSocket connection is
+established and can be used very much like an ordinary socket
+by handling <a class="reference internal" href="circuits.net.events.html#circuits.net.events.read" title="circuits.net.events.read"><tt class="xref py py-class docutils literal"><span class="pre">read</span></tt></a> events on and sending
+<a class="reference internal" href="circuits.net.events.html#circuits.net.events.write" title="circuits.net.events.write"><tt class="xref py py-class docutils literal"><span class="pre">write</span></tt></a> events to the channel
+specified as the <tt class="docutils literal"><span class="pre">wschannel</span></tt> parameter of the constructor. Firing
+a <a class="reference internal" href="circuits.net.events.html#circuits.net.events.close" title="circuits.net.events.close"><tt class="xref py py-class docutils literal"><span class="pre">close</span></tt></a> event on that channel closes the
+connection in an orderly fashion (i.e. as specified by the
+WebSocket protocol).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>url</strong> &#8211; the URL to connect to.</li>
+<li><strong>channel</strong> &#8211; the channel used by this component</li>
+<li><strong>wschannel</strong> &#8211; the channel used for the actual WebSocket
+communication (read, write, close events)</li>
+<li><strong>headers</strong> &#8211; additional headers to be passed with the
+WebSocket setup HTTP request</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="circuits.web.websockets.client.WebSocketClient.channel">
+<tt class="descname">channel</tt><em class="property"> = 'wsclient'</em><a class="headerlink" href="#circuits.web.websockets.client.WebSocketClient.channel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="circuits.web.websockets.client.WebSocketClient.close">
+<tt class="descname">close</tt><big>(</big><big>)</big><a class="headerlink" href="#circuits.web.websockets.client.WebSocketClient.close" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="circuits.web.websockets.client.WebSocketClient.connected">
+<tt class="descname">connected</tt><a class="headerlink" href="#circuits.web.websockets.client.WebSocketClient.connected" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="circuits.web.websockets.dispatcher.html"
+                        title="previous chapter">circuits.web.websockets.dispatcher module</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="circuits.web.websockets.dispatcher.html"
+                        title="next chapter">circuits.web.websockets.dispatcher module</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/api/circuits.web.websockets.client.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="circuits.web.websockets.dispatcher.html" title="circuits.web.websockets.dispatcher module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="circuits.web.websockets.dispatcher.html" title="circuits.web.websockets.dispatcher module"
+             >previous</a> |</li>
+        <li><a href="../index.html">circuits 3.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" >API Documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2004-2013, James Mills.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

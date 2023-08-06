@@ -1,0 +1,308 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Components &mdash; circuits 3.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/rtd.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '3.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="circuits 3.0 documentation" href="../index.html" />
+    <link rel="up" title="circuits User Manual" href="index.html" />
+    <link rel="next" title="Debugger" href="debugger.html" />
+    <link rel="prev" title="circuits User Manual" href="index.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-18486793-1']);
+  _gaq.push(['_setDomainName', '.fabfile.org']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="debugger.html" title="Debugger"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="circuits User Manual"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">circuits 3.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">circuits User Manual</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <span class="target" id="module-circuits.core.components"></span><div class="section" id="components">
+<h1>Components<a class="headerlink" href="#components" title="Permalink to this headline">¶</a></h1>
+<p>The architectural concept of circuits is to encapsulate system
+functionality into discrete manageable and reusable units, called <em>Components</em>,
+that interact by sending and handling events that flow throughout the system.</p>
+<p>Technically, a circuits <em>Component</em> is a Python class that inherits
+(<em>directly or indirectly</em>) from
+<a class="reference internal" href="../api/circuits.core.components.html#circuits.core.components.BaseComponent" title="circuits.core.components.BaseComponent"><tt class="xref py py-class docutils literal"><span class="pre">BaseComponent</span></tt></a>.</p>
+<p>Components can be sub-classed like any other normal Python class, however
+components can also be composed of other components and it is natural
+to do so. These are called <em>Complex Components</em>. An example of a Complex
+Component within the circuits library is the
+<a class="reference internal" href="../api/circuits.web.servers.html#circuits.web.servers.Server" title="circuits.web.servers.Server"><tt class="xref py py-class docutils literal"><span class="pre">circuits.web.servers.Server</span></tt></a> Component which is comprised of:</p>
+<ul class="simple">
+<li><a class="reference internal" href="../api/circuits.net.sockets.html#circuits.net.sockets.TCPServer" title="circuits.net.sockets.TCPServer"><tt class="xref py py-class docutils literal"><span class="pre">circuits.net.sockets.TCPServer</span></tt></a></li>
+<li><a class="reference internal" href="../api/circuits.web.servers.html#circuits.web.servers.BaseServer" title="circuits.web.servers.BaseServer"><tt class="xref py py-class docutils literal"><span class="pre">circuits.web.servers.BaseServer</span></tt></a></li>
+<li><a class="reference internal" href="../api/circuits.web.http.html#circuits.web.http.HTTP" title="circuits.web.http.HTTP"><tt class="xref py py-class docutils literal"><span class="pre">circuits.web.http.HTTP</span></tt></a></li>
+<li><a class="reference internal" href="../api/circuits.web.dispatchers.dispatcher.html#circuits.web.dispatchers.dispatcher.Dispatcher" title="circuits.web.dispatchers.dispatcher.Dispatcher"><tt class="xref py py-class docutils literal"><span class="pre">circuits.web.dispatchers.dispatcher.Dispatcher</span></tt></a></li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">There is no class or other technical means to mark a component
+as a complex component. Rather, all component instances in a circuits
+based application belong to some component tree (there may be several),
+with Complex Components being a subtree within that structure.</p>
+</div>
+<p>A Component is attached to the tree by registering with the parent and
+detached by unregistering itself. See methods:</p>
+<ul class="simple">
+<li><a class="reference internal" href="../api/circuits.core.components.html#circuits.core.components.BaseComponent.register" title="circuits.core.components.BaseComponent.register"><tt class="xref py py-meth docutils literal"><span class="pre">register()</span></tt></a></li>
+<li><a class="reference internal" href="../api/circuits.core.components.html#circuits.core.components.BaseComponent.unregister" title="circuits.core.components.BaseComponent.unregister"><tt class="xref py py-meth docutils literal"><span class="pre">unregister()</span></tt></a></li>
+</ul>
+<div class="section" id="component-registration">
+<h2>Component Registration<a class="headerlink" href="#component-registration" title="Permalink to this headline">¶</a></h2>
+<p>To register a component use the <tt class="xref py py-meth docutils literal"><span class="pre">register()</span></tt> method.</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17</pre></div></td><td class="code"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">circuits</span> <span class="kn">import</span> <span class="n">Component</span>
+
+
+<span class="k">class</span> <span class="nc">Foo</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Foo Component&quot;&quot;&quot;</span>
+
+
+<span class="k">class</span>  <span class="nc">App</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;App Component&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">Foo</span><span class="p">()</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">App</span><span class="p">()</span>
+<span class="n">debugger</span> <span class="o">=</span> <span class="n">Debugger</span><span class="p">()</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="unregistering-components">
+<h2>Unregistering Components<a class="headerlink" href="#unregistering-components" title="Permalink to this headline">¶</a></h2>
+<p>Components are unregistered via the <tt class="xref py py-meth docutils literal"><span class="pre">unregister()</span></tt> method.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">debugger</span><span class="o">.</span><span class="n">unregister</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You need a reference to the component you wish to
+unregister. The <tt class="xref py py-meth docutils literal"><span class="pre">register()</span></tt> method
+returns you a reference of the component that was
+registered.</p>
+</div>
+</div>
+<div class="section" id="convenient-shorthand-form">
+<h2>Convenient Shorthand Form<a class="headerlink" href="#convenient-shorthand-form" title="Permalink to this headline">¶</a></h2>
+<p>After a while when your application becomes rather large
+and complex with many components and component registrations
+you will find it cumbersome to type <tt class="docutils literal"><span class="pre">.register(blah)</span></tt>.</p>
+<p>circuits has several convenient methods for component
+registration and deregistration that work in an identical
+fashion to their <tt class="xref py py-meth docutils literal"><span class="pre">register()</span></tt> and
+<tt class="xref py py-meth docutils literal"><span class="pre">unregister()</span></tt> counterparts.</p>
+<p>These convenience methods follow normal mathematical
+operator precedence rules and are implemented by
+overloading the Python <tt class="docutils literal"><span class="pre">__add__</span></tt>, <tt class="docutils literal"><span class="pre">__iadd__</span></tt>,
+<tt class="docutils literal"><span class="pre">__sub__</span></tt> and <tt class="docutils literal"><span class="pre">__isub__</span></tt>.</p>
+<p>The mapping is as follow:</p>
+<ul class="simple">
+<li><tt class="xref py py-meth docutils literal"><span class="pre">register()</span></tt> map to <tt class="docutils literal"><span class="pre">+</span></tt> and <tt class="docutils literal"><span class="pre">+=</span></tt></li>
+<li><tt class="xref py py-meth docutils literal"><span class="pre">unregister()</span></tt> map to&gt; <tt class="docutils literal"><span class="pre">-</span></tt> and <tt class="docutils literal"><span class="pre">-=</span></tt></li>
+</ul>
+<p>For example the above could have been written as:</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15</pre></div></td><td class="code"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">circuits</span> <span class="kn">import</span> <span class="n">Component</span>
+
+
+<span class="k">class</span> <span class="nc">Foo</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Foo Component&quot;&quot;&quot;</span>
+
+
+<span class="k">class</span>  <span class="nc">App</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;App Component&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span> <span class="o">+=</span> <span class="n">Foo</span><span class="p">()</span>
+
+
+<span class="p">(</span><span class="n">App</span><span class="p">()</span> <span class="o">+</span> <span class="n">Debugger</span><span class="p">())</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="implicit-component-registration-s">
+<h2>Implicit Component Registration(s)<a class="headerlink" href="#implicit-component-registration-s" title="Permalink to this headline">¶</a></h2>
+<p>Sometimes it&#8217;s handy to implicitly register
+components into another component by simply
+referencing the other component instance as
+a class attribute of the other.</p>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">circuits</span> <span class="kn">import</span> <span class="n">Component</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Foo</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="sd">&quot;&quot;&quot;Foo Component&quot;&quot;&quot;</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">App</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="sd">&quot;&quot;&quot;App Component&quot;&quot;&quot;</span>
+<span class="gp">...</span>
+<span class="gp">... </span>    <span class="n">foo</span> <span class="o">=</span> <span class="n">Foo</span><span class="p">()</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">app</span> <span class="o">=</span> <span class="n">App</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">app</span><span class="o">.</span><span class="n">components</span>
+<span class="go">set([&lt;Foo/* 28599:MainThread (queued=0) [S]&gt;])</span>
+<span class="go">&gt;&gt;&gt;</span>
+</pre></div>
+</div>
+<p>The <a class="reference external" href="https://bitbucket.org/circuits/circuits/src/tip/examples/telnet.py">telnet Example</a>
+does this for example.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+
+
+
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Components</a><ul>
+<li><a class="reference internal" href="#component-registration">Component Registration</a></li>
+<li><a class="reference internal" href="#unregistering-components">Unregistering Components</a></li>
+<li><a class="reference internal" href="#convenient-shorthand-form">Convenient Shorthand Form</a></li>
+<li><a class="reference internal" href="#implicit-component-registration-s">Implicit Component Registration(s)</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">circuits User Manual</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="debugger.html"
+                        title="next chapter">Debugger</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/man/components.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="debugger.html" title="Debugger"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="circuits User Manual"
+             >previous</a> |</li>
+        <li><a href="../index.html">circuits 3.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" >circuits User Manual</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2004-2013, James Mills.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

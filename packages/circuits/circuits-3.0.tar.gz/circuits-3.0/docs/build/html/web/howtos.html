@@ -1,0 +1,707 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>How To Guides &mdash; circuits 3.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/rtd.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '3.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="circuits 3.0 documentation" href="../index.html" />
+    <link rel="up" title="circuits.web User Manual" href="index.html" />
+    <link rel="next" title="Miscellaneous" href="miscellaneous.html" />
+    <link rel="prev" title="Features" href="features.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-18486793-1']);
+  _gaq.push(['_setDomainName', '.fabfile.org']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="miscellaneous.html" title="Miscellaneous"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="features.html" title="Features"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">circuits 3.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">circuits.web User Manual</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <span class="target" id="module-circuits"></span><div class="section" id="how-to-guides">
+<h1>How To Guides<a class="headerlink" href="#how-to-guides" title="Permalink to this headline">¶</a></h1>
+<p>These &#8220;How To&#8221; guides will steer you in the right direction for common
+aspects of modern web applications and website design.</p>
+<div class="section" id="how-do-i-use-a-templating-engine">
+<h2>How Do I: Use a Templating Engine<a class="headerlink" href="#how-do-i-use-a-templating-engine" title="Permalink to this headline">¶</a></h2>
+<p>circuits.web tries to stay out of your way as much as possible and doesn&#8217;t
+impose any restrictions on what external libraries and tools you can use
+throughout your web application or website. As such you can use any template
+language/engine you wish.</p>
+<div class="section" id="example-using-mako">
+<h3>Example: Using Mako<a class="headerlink" href="#example-using-mako" title="Permalink to this headline">¶</a></h3>
+<p>This basic example of using the Mako Templating Language.
+First a TemplateLookup instance is created. Finally a function called
+<tt class="docutils literal"><span class="pre">render(name,</span> <span class="pre">**d)</span></tt> is created that is used by Request Handlers to
+render a given template and apply data to it.</p>
+<p>Here is the basic example:</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37</pre></div></td><td class="code"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+
+
+<span class="kn">import</span> <span class="nn">mako</span>
+<span class="kn">from</span> <span class="nn">mako.lookup</span> <span class="kn">import</span> <span class="n">TemplateLookup</span>
+
+
+<span class="kn">from</span> <span class="nn">circuits.web</span> <span class="kn">import</span> <span class="n">Server</span><span class="p">,</span> <span class="n">Controller</span>
+
+
+<span class="n">templates</span> <span class="o">=</span> <span class="n">TemplateLookup</span><span class="p">(</span>
+    <span class="n">directories</span><span class="o">=</span><span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">__file__</span><span class="p">),</span> <span class="s">&quot;tpl&quot;</span><span class="p">)],</span>
+    <span class="n">module_directory</span><span class="o">=</span><span class="s">&quot;/tmp&quot;</span><span class="p">,</span>
+    <span class="n">output_encoding</span><span class="o">=</span><span class="s">&quot;utf-8&quot;</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">d</span><span class="p">):</span> <span class="c">#**</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">templates</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="o">**</span><span class="n">d</span><span class="p">)</span> <span class="c">#**</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">mako</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">html_error_template</span><span class="p">()</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
+
+
+<span class="k">class</span> <span class="nc">Root</span><span class="p">(</span><span class="n">Controller</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="s">&quot;index.html&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">submit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">firstName</span><span class="p">,</span> <span class="n">lastName</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s">&quot;Thank you </span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">firstName</span><span class="p">,</span> <span class="n">lastName</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="s">&quot;index.html&quot;</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="n">msg</span><span class="p">)</span>
+
+
+<span class="p">(</span><span class="n">Server</span><span class="p">(</span><span class="mi">8000</span><span class="p">)</span> <span class="o">+</span> <span class="n">Root</span><span class="p">())</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="other-examples">
+<h3>Other Examples<a class="headerlink" href="#other-examples" title="Permalink to this headline">¶</a></h3>
+<p>Other Templating engines will be quite similar to integrate.</p>
+</div>
+</div>
+<div class="section" id="how-do-i-integrate-with-a-database">
+<h2>How Do I: Integrate with a Database<a class="headerlink" href="#how-do-i-integrate-with-a-database" title="Permalink to this headline">¶</a></h2>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p>Using databases in an asynchronous framework is problematic
+because most database implementations don&#8217;t support asynchronous
+I/O operations.</p>
+<p class="last">Generally the solution is to use threading to hand off
+database operations to a separate thread.</p>
+</div>
+<p>Here are some ways to help integrate databases into your application:</p>
+<ol class="arabic simple">
+<li>Ensure your queries are optimized and do not block
+for extensive periods of time.</li>
+<li>Use a library like <a class="reference external" href="http://www.sqlalchemy.org/">SQLAlchemy</a>
+that supports multi-threaded database operations
+to help prevent your circuits.web web application
+from blocking.</li>
+<li><em>Optionally</em> take advantage of the <tt class="xref py py-class docutils literal"><span class="pre">Worker</span></tt>
+component to fire <tt class="xref py py-class docutils literal"><span class="pre">task</span></tt> events wrapping
+database calls in a thread or process pool. You can then use
+the <tt class="xref py py-meth docutils literal"><span class="pre">call()</span></tt> and <tt class="xref py py-meth docutils literal"><span class="pre">wait()</span></tt>
+synchronization primitives to help with the control flow of
+your requests and responses.</li>
+</ol>
+<p>Another way you can help improve performance
+is by load balancing across multiple backends
+of your web application. Using things like
+<a class="reference external" href="http://haproxy.1wt.eu/">haproxy</a> or
+<a class="reference external" href="http://nginx.org/en/">nginx</a> for load balancing
+can really help.</p>
+</div>
+<div class="section" id="how-do-i-use-websockets">
+<h2>How Do I: Use WebSockets<a class="headerlink" href="#how-do-i-use-websockets" title="Permalink to this headline">¶</a></h2>
+<p>Since the <tt class="xref py py-class docutils literal"><span class="pre">WebSocketDispatcher</span></tt>
+id a circuits.web &#8220;dispatcher&#8221; it&#8217;s quite easy to
+integrate into your web application. Here&#8217;s a simple
+trivial example:</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30</pre></div></td><td class="code"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+
+<span class="kn">from</span> <span class="nn">circuits.net.events</span> <span class="kn">import</span> <span class="n">write</span>
+<span class="kn">from</span> <span class="nn">circuits</span> <span class="kn">import</span> <span class="n">Component</span><span class="p">,</span> <span class="n">Debugger</span>
+<span class="kn">from</span> <span class="nn">circuits.web.dispatchers</span> <span class="kn">import</span> <span class="n">WebSockets</span>
+<span class="kn">from</span> <span class="nn">circuits.web</span> <span class="kn">import</span> <span class="n">Controller</span><span class="p">,</span> <span class="n">Logger</span><span class="p">,</span> <span class="n">Server</span><span class="p">,</span> <span class="n">Static</span>
+
+
+<span class="k">class</span> <span class="nc">Echo</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+
+    <span class="n">channel</span> <span class="o">=</span> <span class="s">&quot;wsserver&quot;</span>
+
+    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sock</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fireEvent</span><span class="p">(</span><span class="n">write</span><span class="p">(</span><span class="n">sock</span><span class="p">,</span> <span class="s">&quot;Received: &quot;</span> <span class="o">+</span> <span class="n">data</span><span class="p">))</span>
+
+
+<span class="k">class</span> <span class="nc">Root</span><span class="p">(</span><span class="n">Controller</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;Hello World!&quot;</span>
+
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">Server</span><span class="p">((</span><span class="s">&quot;0.0.0.0&quot;</span><span class="p">,</span> <span class="mi">8000</span><span class="p">))</span>
+<span class="n">Debugger</span><span class="p">()</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+<span class="n">Static</span><span class="p">()</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+<span class="n">Echo</span><span class="p">()</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+<span class="n">Root</span><span class="p">()</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+<span class="n">Logger</span><span class="p">()</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+<span class="n">WebSockets</span><span class="p">(</span><span class="s">&quot;/websocket&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+<p>See the <a class="reference external" href="https://bitbucket.org/circuits/circuits/src/tip/examples/web">circuits.web examples</a>.</p>
+</div>
+<div class="section" id="how-do-i-build-a-simple-form">
+<h2>How do I: Build a Simple Form<a class="headerlink" href="#how-do-i-build-a-simple-form" title="Permalink to this headline">¶</a></h2>
+<p>circuits.web parses all POST data as a request comes through and creates a
+dictionary of kwargs (Keyword Arguments) that are passed to Request Handlers.</p>
+<p>Here is a simple example of handling form data:</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49</pre></div></td><td class="code"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+
+<span class="kn">from</span> <span class="nn">circuits.web</span> <span class="kn">import</span> <span class="n">Server</span><span class="p">,</span> <span class="n">Controller</span>
+
+
+<span class="k">class</span> <span class="nc">Root</span><span class="p">(</span><span class="n">Controller</span><span class="p">):</span>
+
+    <span class="n">html</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s">&lt;html&gt;</span>
+<span class="s"> &lt;head&gt;</span>
+<span class="s">  &lt;title&gt;Basic Form Handling&lt;/title&gt;</span>
+<span class="s"> &lt;/head&gt;</span>
+<span class="s"> &lt;body&gt;</span>
+<span class="s">  &lt;h1&gt;Basic Form Handling&lt;/h1&gt;</span>
+<span class="s">  &lt;p&gt;</span>
+<span class="s">   Example of using</span>
+<span class="s">   &lt;a href=&quot;http://code.google.com/p/circuits/&quot;&gt;circuits&lt;/a&gt; and it&#39;s</span>
+<span class="s">   &lt;b&gt;Web Components&lt;/b&gt; to build a simple web application that handles</span>
+<span class="s">   some basic form data.</span>
+<span class="s">  &lt;/p&gt;</span>
+<span class="s">  &lt;form action=&quot;submit&quot; method=&quot;POST&quot;&gt;</span>
+<span class="s">   &lt;table border=&quot;0&quot; rules=&quot;none&quot;&gt;</span>
+<span class="s">    &lt;tr&gt;</span>
+<span class="s">     &lt;td&gt;First Name:&lt;/td&gt;</span>
+<span class="s">     &lt;td&gt;&lt;input type=&quot;text&quot; name=&quot;firstName&quot;&gt;&lt;/td&gt;</span>
+<span class="s">    &lt;/tr&gt;</span>
+<span class="s">    &lt;tr&gt;</span>
+<span class="s">     &lt;td&gt;Last Name:&lt;/td&gt;</span>
+<span class="s">     &lt;td&gt;&lt;input type=&quot;text&quot; name=&quot;lastName&quot;&gt;&lt;/td&gt;</span>
+<span class="s">    &lt;/tr&gt;</span>
+<span class="s">     &lt;tr&gt;</span>
+<span class="s">      &lt;td colspan=2&quot; align=&quot;center&quot;&gt;</span>
+<span class="s">       &lt;input type=&quot;submit&quot; value=&quot;Submit&quot;&gt;</span>
+<span class="s">     &lt;/td&gt;</span>
+<span class="s">     &lt;/tr&gt;</span>
+<span class="s">   &lt;/table&gt;</span>
+<span class="s">  &lt;/form&gt;</span>
+<span class="s"> &lt;/body&gt;</span>
+<span class="s">&lt;/html&gt;&quot;&quot;&quot;</span>
+
+
+    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">html</span>
+
+    <span class="k">def</span> <span class="nf">submit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">firstName</span><span class="p">,</span> <span class="n">lastName</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;Hello </span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">firstName</span><span class="p">,</span> <span class="n">lastName</span><span class="p">)</span>
+
+
+<span class="p">(</span><span class="n">Server</span><span class="p">(</span><span class="mi">8000</span><span class="p">)</span> <span class="o">+</span> <span class="n">Root</span><span class="p">())</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="how-do-i-upload-a-file">
+<h2>How Do I: Upload a File<a class="headerlink" href="#how-do-i-upload-a-file" title="Permalink to this headline">¶</a></h2>
+<p>You can easily handle File Uploads as well using the same techniques as above.
+Basically the &#8220;name&#8221; you give your &lt;input&gt; tag of type=&#8221;file&#8221; will get passed
+as the Keyword Argument to your Request Handler. It has the following two
+attributes:</p>
+<div class="highlight-python"><div class="highlight"><pre>.filename - The name of the uploaded file.
+.value - The contents of the uploaded file.
+</pre></div>
+</div>
+<p>Here&#8217;s the code!</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52</pre></div></td><td class="code"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+
+<span class="kn">from</span> <span class="nn">circuits.web</span> <span class="kn">import</span> <span class="n">Server</span><span class="p">,</span> <span class="n">Controller</span>
+
+
+<span class="n">UPLOAD_FORM</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
+<span class="s">&lt;html&gt;</span>
+<span class="s"> &lt;head&gt;</span>
+<span class="s">  &lt;title&gt;Upload Form&lt;/title&gt;</span>
+<span class="s"> &lt;/head&gt;</span>
+<span class="s"> &lt;body&gt;</span>
+<span class="s">  &lt;h1&gt;Upload Form&lt;/h1&gt;</span>
+<span class="s">  &lt;form method=&quot;POST&quot; action=&quot;/&quot; enctype=&quot;multipart/form-data&quot;&gt;</span>
+<span class="s">   Description: &lt;input type=&quot;text&quot; name=&quot;desc&quot;&gt;&lt;br&gt;</span>
+<span class="s">   &lt;input type=&quot;file&quot; name=&quot;file&quot;&gt;</span>
+<span class="s">   &lt;input type=&quot;submit&quot; value=&quot;Submit&quot;&gt;</span>
+<span class="s">  &lt;/form&gt;</span>
+<span class="s"> &lt;/body&gt;</span>
+<span class="s">&lt;/html&gt;</span>
+<span class="s">&quot;&quot;&quot;</span>
+
+<span class="n">UPLOADED_FILE</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
+<span class="s">&lt;html&gt;</span>
+<span class="s"> &lt;head&gt;</span>
+<span class="s">  &lt;title&gt;Uploaded File&lt;/title&gt;</span>
+<span class="s"> &lt;/head&gt;</span>
+<span class="s"> &lt;body&gt;</span>
+<span class="s">  &lt;h1&gt;Uploaded File&lt;/h1&gt;</span>
+<span class="s">  &lt;p&gt;</span>
+<span class="s">   Filename: </span><span class="si">%s</span><span class="s">&lt;br&gt;</span>
+<span class="s">   Description: </span><span class="si">%s</span><span class="s"></span>
+<span class="s">  &lt;/p&gt;</span>
+<span class="s">  &lt;p&gt;&lt;b&gt;File Contents:&lt;/b&gt;&lt;/p&gt;</span>
+<span class="s">  &lt;pre&gt;</span>
+<span class="s">  </span><span class="si">%s</span><span class="s"></span>
+<span class="s">  &lt;/pre&gt;</span>
+<span class="s"> &lt;/body&gt;</span>
+<span class="s">&lt;/html&gt;</span>
+<span class="s">&quot;&quot;&quot;</span>
+
+
+<span class="k">class</span> <span class="nc">Root</span><span class="p">(</span><span class="n">Controller</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">file</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s">&quot;&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">file</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">UPLOAD_FORM</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="nb">file</span><span class="o">.</span><span class="n">filename</span>
+            <span class="k">return</span> <span class="n">UPLOADED_FILE</span> <span class="o">%</span> <span class="p">(</span><span class="nb">file</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="n">desc</span><span class="p">,</span> <span class="nb">file</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+
+<span class="p">(</span><span class="n">Server</span><span class="p">(</span><span class="mi">8000</span><span class="p">)</span> <span class="o">+</span> <span class="n">Root</span><span class="p">())</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+<p>circuits.web automatically handles form and file uploads and gives you access
+to the uploaded file via arguments to the request handler after they&#8217;ve been
+processed by the dispatcher.</p>
+</div>
+<div class="section" id="how-do-i-integrate-with-wsgi-applications">
+<h2>How Do I: Integrate with WSGI Applications<a class="headerlink" href="#how-do-i-integrate-with-wsgi-applications" title="Permalink to this headline">¶</a></h2>
+<p>Integrating with other WSGI Applications is
+quite easy to do. Simply add in an instance
+of the <a class="reference internal" href="../api/circuits.web.wsgi.html#circuits.web.wsgi.Gateway" title="circuits.web.wsgi.Gateway"><tt class="xref py py-class docutils literal"><span class="pre">Gateway</span></tt></a>
+component into your circuits.web application.</p>
+<p>Example:</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22</pre></div></td><td class="code"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+
+<span class="kn">from</span> <span class="nn">circuits.web.wsgi</span> <span class="kn">import</span> <span class="n">Gateway</span>
+<span class="kn">from</span> <span class="nn">circuits.web</span> <span class="kn">import</span> <span class="n">Controller</span><span class="p">,</span> <span class="n">Server</span>
+
+
+<span class="k">def</span> <span class="nf">foo</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">start_response</span><span class="p">):</span>
+    <span class="n">start_response</span><span class="p">(</span><span class="s">&quot;200 OK&quot;</span><span class="p">,</span> <span class="p">[(</span><span class="s">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="s">&quot;text/plain&quot;</span><span class="p">)])</span>
+    <span class="k">return</span> <span class="p">[</span><span class="s">&quot;Foo!&quot;</span><span class="p">]</span>
+
+
+<span class="k">class</span> <span class="nc">Root</span><span class="p">(</span><span class="n">Controller</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;App Rot&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;Hello World!&quot;</span>
+
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">Server</span><span class="p">((</span><span class="s">&quot;0.0.0.0&quot;</span><span class="p">,</span> <span class="mi">10000</span><span class="p">))</span>
+<span class="n">Root</span><span class="p">()</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+<span class="n">Gateway</span><span class="p">({</span><span class="s">&quot;/foo&quot;</span><span class="p">:</span> <span class="n">foo</span><span class="p">})</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+<p>The <tt class="docutils literal"><span class="pre">apps</span></tt> argument of the <a class="reference internal" href="../api/circuits.web.wsgi.html#circuits.web.wsgi.Gateway" title="circuits.web.wsgi.Gateway"><tt class="xref py py-class docutils literal"><span class="pre">Gateway</span></tt></a>
+component takes a key/value pair of <tt class="docutils literal"><span class="pre">path</span> <span class="pre">-&gt;</span> <span class="pre">callable</span></tt>
+(<em>a Python dictionary</em>) that maps each URI to a given
+WSGI callable.</p>
+</div>
+<div class="section" id="how-do-i-deploy-with-apache-and-mod-wsgi">
+<h2>How Do I: Deploy with Apache and mod_wsgi<a class="headerlink" href="#how-do-i-deploy-with-apache-and-mod-wsgi" title="Permalink to this headline">¶</a></h2>
+<p>Here&#8217;s how to deploy your new Circuits powered Web Application on Apache
+using mod_wsgi.</p>
+<p>Let&#8217;s say you have a Web Hosting account with some provider.</p>
+<ul class="simple">
+<li>Your Username is: &#8220;joblogs&#8221;</li>
+<li>Your URL is: <a class="reference external" href="http://example.com/~joeblogs/">http://example.com/~joeblogs/</a></li>
+<li>Your Docroot is: /home/joeblogs/www/</li>
+</ul>
+<div class="section" id="configuring-apache">
+<h3>Configuring Apache<a class="headerlink" href="#configuring-apache" title="Permalink to this headline">¶</a></h3>
+<p>The first step is to add in the following .htaccess file to tell Apache
+hat we want any and all requests to <a class="reference external" href="http://example.com/~joeblogs/">http://example.com/~joeblogs/</a> to be
+served up by our circuits.web application.</p>
+<p>Created the .htaccess file in your <strong>Docroot</strong>:</p>
+<div class="highlight-python"><div class="highlight"><pre>ReWriteEngine On
+ReWriteCond %{REQUEST_FILENAME} !-f
+ReWriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ /~joeblogs/index.wsgi/$1 [QSA,PT,L]
+</pre></div>
+</div>
+</div>
+<div class="section" id="running-your-application-with-apache-mod-wsgi">
+<h3>Running your Application with Apache/mod_wsgi<a class="headerlink" href="#running-your-application-with-apache-mod-wsgi" title="Permalink to this headline">¶</a></h3>
+<p>The get your Web Application working and deployed on Apache using mod_wsgi,
+you need to make a few changes to your code. Based on our Basic Hello World
+example earlier, we modify it to the following:</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13</pre></div></td><td class="code"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+
+<span class="kn">from</span> <span class="nn">circuits.web</span> <span class="kn">import</span> <span class="n">Controller</span>
+<span class="kn">from</span> <span class="nn">circuits.web.wsgi</span> <span class="kn">import</span> <span class="n">Application</span>
+
+
+<span class="k">class</span> <span class="nc">Root</span><span class="p">(</span><span class="n">Controller</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;Hello World!&quot;</span>
+
+
+<span class="n">application</span> <span class="o">=</span> <span class="n">Application</span><span class="p">()</span> <span class="o">+</span> <span class="n">Root</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+<p>That&#8217;s it! To run this, save it as index.wsgi and place it in your Web Root
+(public-html or www directory) as per the above guidelines and point your
+favorite Web Browser to: <a class="reference external" href="http://example.com/~joeblogs/">http://example.com/~joeblogs/</a></p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>It is recommended that you actually use a reverse proxy
+setup for deploying circuits.web web application so that
+you don&#8217;t loose the advantages and functionality of using
+an event-driven component architecture in your web apps.</p>
+<p class="last">In <strong>production</strong> you should use a load balance and reverse
+proxy combination for best performance.</p>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+
+
+
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">How To Guides</a><ul>
+<li><a class="reference internal" href="#how-do-i-use-a-templating-engine">How Do I: Use a Templating Engine</a><ul>
+<li><a class="reference internal" href="#example-using-mako">Example: Using Mako</a></li>
+<li><a class="reference internal" href="#other-examples">Other Examples</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#how-do-i-integrate-with-a-database">How Do I: Integrate with a Database</a></li>
+<li><a class="reference internal" href="#how-do-i-use-websockets">How Do I: Use WebSockets</a></li>
+<li><a class="reference internal" href="#how-do-i-build-a-simple-form">How do I: Build a Simple Form</a></li>
+<li><a class="reference internal" href="#how-do-i-upload-a-file">How Do I: Upload a File</a></li>
+<li><a class="reference internal" href="#how-do-i-integrate-with-wsgi-applications">How Do I: Integrate with WSGI Applications</a></li>
+<li><a class="reference internal" href="#how-do-i-deploy-with-apache-and-mod-wsgi">How Do I: Deploy with Apache and mod_wsgi</a><ul>
+<li><a class="reference internal" href="#configuring-apache">Configuring Apache</a></li>
+<li><a class="reference internal" href="#running-your-application-with-apache-mod-wsgi">Running your Application with Apache/mod_wsgi</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="features.html"
+                        title="previous chapter">Features</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="miscellaneous.html"
+                        title="next chapter">Miscellaneous</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/web/howtos.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="miscellaneous.html" title="Miscellaneous"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="features.html" title="Features"
+             >previous</a> |</li>
+        <li><a href="../index.html">circuits 3.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" >circuits.web User Manual</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2004-2013, James Mills.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

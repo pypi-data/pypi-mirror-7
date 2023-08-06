@@ -1,0 +1,270 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Miscellaneous &mdash; circuits 3.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/rtd.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '3.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="circuits 3.0 documentation" href="../index.html" />
+    <link rel="up" title="circuits.web User Manual" href="index.html" />
+    <link rel="next" title="API Documentation" href="../api/index.html" />
+    <link rel="prev" title="How To Guides" href="howtos.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-18486793-1']);
+  _gaq.push(['_setDomainName', '.fabfile.org']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../api/index.html" title="API Documentation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="howtos.html" title="How To Guides"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">circuits 3.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">circuits.web User Manual</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="miscellaneous">
+<h1>Miscellaneous<a class="headerlink" href="#miscellaneous" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="writing-tools">
+<h2>Writing Tools<a class="headerlink" href="#writing-tools" title="Permalink to this headline">¶</a></h2>
+<p>Most of the internal tools used by circuits.web in circuits.web.tools are
+simply functions that modify the Request or Response objects in some way or
+another... We won&#8217;t be covering that here... What we will cover is how to
+build simple tools that do something to the Request or Response along it&#8217;s
+life-cycle.</p>
+<p>Here is a simple example of a tool that uses the pytidylib library to tidy
+up the HTML output before it gets sent back to the requesting client.</p>
+<p>Code:</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15</pre></div></td><td class="code"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+<span class="kn">from</span> <span class="nn">tidylib</span> <span class="kn">import</span> <span class="n">tidy_document</span>
+
+<span class="kn">from</span> <span class="nn">circuits</span> <span class="kn">import</span> <span class="n">Component</span>
+
+<span class="k">class</span> <span class="nc">Tidy</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+
+    <span class="n">channel</span> <span class="o">=</span> <span class="s">&quot;http&quot;</span>
+
+    <span class="k">def</span> <span class="nf">response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">):</span>
+        <span class="n">document</span><span class="p">,</span> <span class="n">errors</span> <span class="o">=</span> <span class="n">tidy_document</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">body</span><span class="p">))</span>
+        <span class="n">response</span><span class="o">.</span><span class="n">body</span> <span class="o">=</span> <span class="n">document</span>
+<span class="n">Usage</span><span class="p">:</span>
+
+<span class="p">(</span><span class="n">Server</span><span class="p">(</span><span class="mi">8000</span><span class="p">)</span> <span class="o">+</span> <span class="n">Tidy</span><span class="p">()</span> <span class="o">+</span> <span class="n">Root</span><span class="p">())</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+<p><strong>How it works:</strong></p>
+<p>This tool works by intercepting the Response Event on the &#8220;response&#8221; channel
+of the &#8220;http&#8221; target (<em>or Component</em>). For more information about the
+life cycle of Request and Response events, their channels and where and
+how they can be intercepted to perform various tasks read the Request/Response
+Life Cycle section.</p>
+</div>
+<div class="section" id="writing-dispatchers">
+<h2>Writing Dispatchers<a class="headerlink" href="#writing-dispatchers" title="Permalink to this headline">¶</a></h2>
+<p>In circuits.web writing a custom &#8220;dispatcher&#8221; is only a matter of writing a
+Component that listens for incoming Request events on the &#8220;request&#8221; channel
+of the &#8220;web&#8221; target. The simplest kind of &#8220;dispatcher&#8221; is one that simply
+modifies the request.path in some way. To demonstrate this we&#8217;ll illustrate
+and describe how the !VirtualHosts &#8220;dispatcher&#8221; works.</p>
+<p>VirtualHosts code:</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20</pre></div></td><td class="code"><div class="highlight"><pre><span class="k">class</span> <span class="nc">VirtualHosts</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+
+    <span class="n">channel</span> <span class="o">=</span> <span class="s">&quot;web&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">domains</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">VirtualHosts</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">domains</span> <span class="o">=</span> <span class="n">domains</span>
+
+    <span class="nd">@handler</span><span class="p">(</span><span class="s">&quot;request&quot;</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">response</span><span class="p">):</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">)</span>
+
+        <span class="n">header</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span>
+        <span class="n">domain</span> <span class="o">=</span> <span class="n">header</span><span class="p">(</span><span class="s">&quot;X-Forwarded-Host&quot;</span><span class="p">,</span> <span class="n">header</span><span class="p">(</span><span class="s">&quot;Host&quot;</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">))</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">domains</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">domain</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">prefix</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">_urljoin</span><span class="p">(</span><span class="s">&quot;/</span><span class="si">%s</span><span class="s">/&quot;</span> <span class="o">%</span> <span class="n">prefix</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+            <span class="n">request</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+</pre></div>
+</td></tr></table></div>
+<p>The important thing here to note is the Event Handler listening on the
+appropriate channel and the request.path being modified appropriately.</p>
+<p>You&#8217;ll also note that in [source:circuits/web/dispatchers.py] all of the
+dispatchers have a set priority. These priorities are defined as:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ grin &quot;priority&quot; circuits/web/dispatchers/
+circuits/web/dispatchers/dispatcher.py:
+   92 :     @handler(&quot;request&quot;, filter=True, priority=0.1)
+circuits/web/dispatchers/jsonrpc.py:
+   38 :     @handler(&quot;request&quot;, filter=True, priority=0.2)
+circuits/web/dispatchers/static.py:
+   59 :     @handler(&quot;request&quot;, filter=True, priority=0.9)
+circuits/web/dispatchers/virtualhosts.py:
+   49 :     @handler(&quot;request&quot;, filter=True, priority=1.0)
+circuits/web/dispatchers/websockets.py:
+   53 :     @handler(&quot;request&quot;, filter=True, priority=0.2)
+circuits/web/dispatchers/xmlrpc.py:
+   36 :     @handler(&quot;request&quot;, filter=True, priority=0.2)
+</pre></div>
+</div>
+<p>in web applications that use multiple dispatchers these priorities set
+precedences for each &#8220;dispatcher&#8221; over another in terms of who&#8217;s handling
+the Request Event before the other.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Some dispatchers are designed to filter the Request Event and prevent it from being processed by other dispatchers in the system.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+
+
+
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Miscellaneous</a><ul>
+<li><a class="reference internal" href="#writing-tools">Writing Tools</a></li>
+<li><a class="reference internal" href="#writing-dispatchers">Writing Dispatchers</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="howtos.html"
+                        title="previous chapter">How To Guides</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../api/index.html"
+                        title="next chapter">API Documentation</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/web/miscellaneous.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../api/index.html" title="API Documentation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="howtos.html" title="How To Guides"
+             >previous</a> |</li>
+        <li><a href="../index.html">circuits 3.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" >circuits.web User Manual</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2004-2013, James Mills.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

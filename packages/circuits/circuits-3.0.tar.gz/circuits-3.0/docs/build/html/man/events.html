@@ -1,0 +1,334 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Events &mdash; circuits 3.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/rtd.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '3.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="circuits 3.0 documentation" href="../index.html" />
+    <link rel="up" title="circuits User Manual" href="index.html" />
+    <link rel="next" title="Handlers" href="handlers.html" />
+    <link rel="prev" title="Debugger" href="debugger.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-18486793-1']);
+  _gaq.push(['_setDomainName', '.fabfile.org']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="handlers.html" title="Handlers"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="debugger.html" title="Debugger"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">circuits 3.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">circuits User Manual</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="events">
+<h1>Events<a class="headerlink" href="#events" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="basic-usage">
+<h2>Basic usage<a class="headerlink" href="#basic-usage" title="Permalink to this headline">¶</a></h2>
+<p>Events are objects that contain data (<em>arguments and keyword arguments</em>)
+about the message being sent to a receiving component. Events are triggered
+by using the <a class="reference internal" href="../api/circuits.core.manager.html#circuits.core.manager.Manager.fire" title="circuits.core.manager.Manager.fire"><tt class="xref py py-meth docutils literal"><span class="pre">fire()</span></tt></a> method of any
+registered component.</p>
+<p>Some events in circuits are fired implicitly by the circuits core
+like the <a class="reference internal" href="../api/circuits.core.events.html#circuits.core.events.started" title="circuits.core.events.started"><tt class="xref py py-class docutils literal"><span class="pre">started</span></tt></a> event used in the tutorial
+or explicitly by components while handling some other event. Once fired,
+events are dispatched to the components that are interested in these events
+(<em>components whose event handlers match events of interest</em>).</p>
+<p>Events are usually fired on one or more channels, allowing components
+to gather in &#8220;interest groups&#8221;. This is especially useful if you want to
+reuse basic components such as a <a class="reference internal" href="../api/circuits.net.sockets.html#circuits.net.sockets.TCPServer" title="circuits.net.sockets.TCPServer"><tt class="xref py py-class docutils literal"><span class="pre">TCPServer</span></tt></a>.
+A <a class="reference internal" href="../api/circuits.net.sockets.html#circuits.net.sockets.TCPServer" title="circuits.net.sockets.TCPServer"><tt class="xref py py-class docutils literal"><span class="pre">TCPServer</span></tt></a> component fires a
+<a class="reference internal" href="../api/circuits.net.events.html#circuits.net.events.read" title="circuits.net.events.read"><tt class="xref py py-class docutils literal"><span class="pre">read</span></tt></a> event for every package of data that it receives.
+If we did not have support for channels, it would be very difficult to build two
+servers in a single process without their read events colliding.</p>
+<p>Using channels, we can put one server and all components interested in its events on one channel,
+and another server and the components interested in this other server&#8217;s events on another channel.</p>
+<p>Components are associated with a channel by setting their <tt class="docutils literal"><span class="pre">channel</span></tt> class or instance attribute.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="../api/circuits.core.components.html#circuits.core.components.Component" title="circuits.core.components.Component"><tt class="xref py py-class docutils literal"><span class="pre">Component</span></tt></a></p>
+</div>
+<p>Besides having a name, events carry additional arbitrary information.
+This information is passed as arguments or keyword arguments to the
+constructor. It is then delivered to the event handler method that must have
+exactly the same number of arguments and keyword arguments. Of course,
+as is usual in Python, you can also pass additional information by setting
+attributes of the event object, though this usage pattern is discouraged.</p>
+</div>
+<div class="section" id="filtering">
+<h2>Filtering<a class="headerlink" href="#filtering" title="Permalink to this headline">¶</a></h2>
+<p>Events can be filtered by stopping other event handlers from continuing to process the event.</p>
+<p>To do this, simply call the <a class="reference internal" href="../api/circuits.core.events.html#circuits.core.events.Event.stop" title="circuits.core.events.Event.stop"><tt class="xref py py-meth docutils literal"><span class="pre">stop()</span></tt></a> method.</p>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@handler</span><span class="p">(</span><span class="s">&quot;foo&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">stop_foo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">event</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Here any other event handlers also listening to &#8220;foo&#8221; will not be processed.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">It&#8217;s important to use priority event handlers here in this case as all event handlers and events run with the same priority unless explicitly
+told otherwise.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified">Changed in version 3.0: </span>In circuits 2.x you declared your event handler to be a filter by using <tt class="docutils literal"><span class="pre">&#64;handler(filter=True)</span></tt> and
+returned a <tt class="docutils literal"><span class="pre">True</span></tt>-ish value from the respective event handler to achieve the same effect.
+This is <strong>no longer</strong> the case in circuits 3.x Please use <tt class="docutils literal"><span class="pre">event.stop()</span></tt> as noted above.</p>
+</div>
+</div>
+<div class="section" id="events-as-result-collectors">
+<h2>Events as result collectors<a class="headerlink" href="#events-as-result-collectors" title="Permalink to this headline">¶</a></h2>
+<p>Apart from delivering information to handlers, event objects may also collect
+information. If a handler returns something that is not <tt class="docutils literal"><span class="pre">None</span></tt>, it is
+stored in the event&#8217;s <tt class="docutils literal"><span class="pre">value</span></tt> attribute. If a second (or any subsequent)
+handler invocation also returns a value, the values are stored as a list.
+Note that the value attribute is of type <a class="reference internal" href="../api/circuits.core.values.html#circuits.core.values.Value" title="circuits.core.values.Value"><tt class="xref py py-class docutils literal"><span class="pre">Value</span></tt></a> and you
+must access its property <tt class="docutils literal"><span class="pre">value</span></tt> to access the data stored
+(<tt class="docutils literal"><span class="pre">collected_information</span> <span class="pre">=</span> <span class="pre">event.value.value</span></tt>).</p>
+<p>The collected information can be accessed by handlers in order to find out
+about any return values from the previously invoked handlers. More useful
+though, is the possibility to access the information after all handlers
+have been invoked. After all handlers have run successfully (i.e. no
+handler has thrown an error) circuits may generate an event that indicates
+the successful handling. This event has the name of the event
+just handled with &#8220;Success&#8221; appended. So if the event is called <tt class="docutils literal"><span class="pre">Identify</span></tt>
+then the success event is called <tt class="docutils literal"><span class="pre">IdentifySuccess</span></tt>. Success events aren&#8217;t
+delivered by default. If you want successful handling to be indicated
+for an event, you have to set the optional attribute <tt class="docutils literal"><span class="pre">success</span></tt> of this
+event to <tt class="docutils literal"><span class="pre">True</span></tt>.</p>
+<p>The handler for a success event must be defined with two arguments. When
+invoked, the first argument is the event just having been handled
+successfully and the second argument is (as a convenience) what has been
+collected in <tt class="docutils literal"><span class="pre">event.value.value</span></tt> (note that the first argument may not
+be called <tt class="docutils literal"><span class="pre">event</span></tt>, for an explanation of this restriction as well as
+for an explanation why the method is called <tt class="docutils literal"><span class="pre">identify_success</span></tt>
+see the section on handlers).</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45</pre></div></td><td class="code"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+
+<span class="kn">from</span> <span class="nn">circuits</span> <span class="kn">import</span> <span class="n">Component</span><span class="p">,</span> <span class="n">Debugger</span><span class="p">,</span> <span class="n">Event</span>
+
+
+<span class="k">class</span> <span class="nc">Identify</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Identify Event&quot;&quot;&quot;</span>
+
+    <span class="n">success</span> <span class="o">=</span> <span class="bp">True</span>
+
+
+<span class="k">class</span> <span class="nc">Pound</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Pound</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+
+        <span class="n">Debugger</span><span class="p">()</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">Bob</span><span class="p">()</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">Fred</span><span class="p">()</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">started</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fire</span><span class="p">(</span><span class="n">Identify</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">Identify_success</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evt</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="n">result</span><span class="p">]</span>
+        <span class="k">print</span> <span class="s">&quot;In pound:&quot;</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+            <span class="k">print</span> <span class="n">name</span>
+
+
+<span class="k">class</span> <span class="nc">Dog</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">Identify</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span>
+
+
+<span class="k">class</span> <span class="nc">Bob</span><span class="p">(</span><span class="n">Dog</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Bob&quot;&quot;&quot;</span>
+
+
+<span class="k">class</span> <span class="nc">Fred</span><span class="p">(</span><span class="n">Dog</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Fred&quot;&quot;&quot;</span>
+
+<span class="n">Pound</span><span class="p">()</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+<p><a class="reference download internal" href="../_downloads/handler_returns.py"><tt class="xref download docutils literal"><span class="pre">Download</span> <span class="pre">handler_returns.py</span></tt></a></p>
+</div>
+<div class="section" id="advanced-usage">
+<h2>Advanced usage<a class="headerlink" href="#advanced-usage" title="Permalink to this headline">¶</a></h2>
+<p>Sometimes it may be necessary to take some action when all state changes
+triggered by an event are in effect. In this case it is not sufficient
+to wait for the completion of all handlers for this particular event.
+Rather, we also have to wait until all events that have been fired by
+those handlers have been processed (and again wait for the events fired by
+those events&#8217; handlers, and so on). To support this scenario, circuits
+can fire a <tt class="docutils literal"><span class="pre">Complete</span></tt> event. The usage is similar to the previously
+described success event. Details can be found in the API description of
+<a class="reference internal" href="../api/circuits.core.events.html#circuits.core.events.Event" title="circuits.core.events.Event"><tt class="xref py py-class docutils literal"><span class="pre">circuits.core.events.Event</span></tt></a>.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+
+
+
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Events</a><ul>
+<li><a class="reference internal" href="#basic-usage">Basic usage</a></li>
+<li><a class="reference internal" href="#filtering">Filtering</a></li>
+<li><a class="reference internal" href="#events-as-result-collectors">Events as result collectors</a></li>
+<li><a class="reference internal" href="#advanced-usage">Advanced usage</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="debugger.html"
+                        title="previous chapter">Debugger</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="handlers.html"
+                        title="next chapter">Handlers</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/man/events.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="handlers.html" title="Handlers"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="debugger.html" title="Debugger"
+             >previous</a> |</li>
+        <li><a href="../index.html">circuits 3.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" >circuits User Manual</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2004-2013, James Mills.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
