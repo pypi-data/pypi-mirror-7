@@ -1,0 +1,105 @@
+Metadata-Version: 1.1
+Name: dio
+Version: 0.2.2
+Summary: Python package for backing up and managing digitalocean droplets.
+Home-page: http://corndogcomputers.github.io/python-dio
+Author: Rob Johnson
+Author-email: info@corndogcomputers.com
+License: UNKNOWN
+Download-URL: https://github.com/corndogcomputers/python-dio/tarball/master
+Description: # Dio
+        
+        ### Python package for backing up and managing digitalocean droplets.
+        
+        #### version 0.2.2
+         
+        ### How to install
+        
+        You can install dio using **pip**
+        
+            pip install -U dio
+        
+        or via sources:
+        
+            python setup.py install
+        
+        
+        ### Features
+        * **DROPLET BACKUP!!! (rsync and snapshot a droplet)**
+        * **Uses digitalocean v2.0 API**
+        * Running API call count
+        * Running API remaining call count
+        * All objects have a details function to return properties and values
+        * Get user's Droplets
+        * Get user's Images (Snapshot and Backups)
+        * Get public Images
+        * Create and Remove a Droplet
+        * Resize a Droplet
+        * Shutdown, restart and boot a Droplet
+        * Power off, power on and "power cycle" a Droplet
+        * Perform Snapshot
+        * Enable/Disable automatic Backups
+        * Restore root password of a Droplet
+        
+        
+        ### Example cronjob:
+        
+        ```sh
+        # DigitalOcean backup script
+        30 * * * * /usr/bin/python /Users/username/bin/backup.py
+        ```
+        
+        ### Example usage:
+        
+        ```python
+        
+        import dio
+        
+        """ Your digitalocean API v2.0 token """
+        token = "YOUR_TOKEN"
+        
+        """ Ignore list of droplets to bypass in operations """
+        ignore = ["production.example.com"]
+        
+        """ Droplet backup options. Only needed when doing backup """
+        options = {
+          "dev.example.com": {
+            "ssh_user"        : "root",
+            "ssh_key"         : "ssh_key",
+            "backup_dir"      : "/Users/username/Droplets",
+            "remote_dir"      : "/root",
+            "use_ip"          : True,
+            "snapshot_hour"   : 3,
+            "snapshots_keep"  : 2,
+            "snapshot_delete" : True,
+          },
+          "production.example.com": {
+            "ssh_user"        : "root",
+            "ssh_key"         : "ssh_key",
+            "backup_dir"      : "/Users/username/Droplets",
+            "remote_dir"      : "/var/www",
+            "use_ip"          : True,
+            "snapshot_hour"   : 3,
+            "snapshots_keep"  : 7,
+            "snapshot_delete" : True,
+          }
+        }
+        
+        """ Manager init will automaticly get the droplets """
+        manager = dio.Manager( token, ignore )
+        
+        """ backup your droplet with rsync """
+        for droplet in manager.droplets:
+          dio.Backup( options, droplet )
+        
+        """ See how many api calls you used """
+        print dio.api.calls
+        
+        """ See how many remaining api calls you have left for the hour """
+        print dio.api.remaining
+        
+        ```
+        
+        Designed to be compatible with [python-digitalocean](https://github.com/koalalorenzo/python-digitalocean)
+Keywords: digitalocean,backup,vps,rsync,api
+Platform: UNKNOWN
