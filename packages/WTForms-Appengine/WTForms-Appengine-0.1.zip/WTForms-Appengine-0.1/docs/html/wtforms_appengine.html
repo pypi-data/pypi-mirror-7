@@ -1,0 +1,346 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>WTForms-Appengine &mdash; WTForms-Appengine 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="WTForms-Appengine 0.1 documentation" href="index.html" />
+    <link rel="prev" title="Welcome to WTForms-Appengine’s documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to WTForms-Appengine’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">WTForms-Appengine 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-wtforms_appengine">
+<span id="wtforms-appengine"></span><h1>WTForms-Appengine<a class="headerlink" href="#module-wtforms_appengine" title="Permalink to this headline">¶</a></h1>
+<p>WTForms-Appengine includes support for AppEngine fields as well as auto-form
+generation from models.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">WTForms-Appengine supports both <cite>appengine.ext.db</cite> and <cite>appengine.ext.ndb</cite>
+style models now, and there is some overlap between them. For the near
+future, we will continue to support both, but at some point will go to
+only supporting AppEngine for python 2.7 and drop support for ext.db
+models as well.</p>
+</div>
+<div class="section" id="module-wtforms_appengine.db">
+<span id="model-forms"></span><h2>Model Forms<a class="headerlink" href="#module-wtforms_appengine.db" title="Permalink to this headline">¶</a></h2>
+<p>Form generation utilities for App Engine&#8217;s <tt class="docutils literal"><span class="pre">db.Model</span></tt> class.</p>
+<p>The goal of <tt class="docutils literal"><span class="pre">model_form()</span></tt> is to provide a clean, explicit and predictable
+way to create forms based on <tt class="docutils literal"><span class="pre">db.Model</span></tt> classes. No malabarism or black
+magic should be necessary to generate a form for models, and to add custom
+non-model related fields: <tt class="docutils literal"><span class="pre">model_form()</span></tt> simply generates a form class
+that can be used as it is, or that can be extended directly or even be used
+to create other forms using <tt class="docutils literal"><span class="pre">model_form()</span></tt>.</p>
+<p>Example usage:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">google.appengine.ext</span> <span class="kn">import</span> <span class="n">db</span>
+<span class="kn">from</span> <span class="nn">tipfy.ext.model.form</span> <span class="kn">import</span> <span class="n">model_form</span>
+
+<span class="c"># Define an example model and add a record.</span>
+<span class="k">class</span> <span class="nc">Contact</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">city</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">()</span>
+    <span class="n">age</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">IntegerProperty</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">is_admin</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">BooleanProperty</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+<span class="n">new_entity</span> <span class="o">=</span> <span class="n">Contact</span><span class="p">(</span><span class="n">key_name</span><span class="o">=</span><span class="s">&#39;test&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&#39;Test Name&#39;</span><span class="p">,</span> <span class="n">age</span><span class="o">=</span><span class="mi">17</span><span class="p">)</span>
+<span class="n">new_entity</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+
+<span class="c"># Generate a form based on the model.</span>
+<span class="n">ContactForm</span> <span class="o">=</span> <span class="n">model_form</span><span class="p">(</span><span class="n">Contact</span><span class="p">)</span>
+
+<span class="c"># Get a form populated with entity data.</span>
+<span class="n">entity</span> <span class="o">=</span> <span class="n">Contact</span><span class="o">.</span><span class="n">get_by_key_name</span><span class="p">(</span><span class="s">&#39;test&#39;</span><span class="p">)</span>
+<span class="n">form</span> <span class="o">=</span> <span class="n">ContactForm</span><span class="p">(</span><span class="n">obj</span><span class="o">=</span><span class="n">entity</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Properties from the model can be excluded from the generated form, or it can
+include just a set of properties. For example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Generate a form based on the model, excluding &#39;city&#39; and &#39;is_admin&#39;.</span>
+<span class="n">ContactForm</span> <span class="o">=</span> <span class="n">model_form</span><span class="p">(</span><span class="n">Contact</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;city&#39;</span><span class="p">,</span> <span class="s">&#39;is_admin&#39;</span><span class="p">))</span>
+
+<span class="c"># or...</span>
+
+<span class="c"># Generate a form based on the model, only including &#39;name&#39; and &#39;age&#39;.</span>
+<span class="n">ContactForm</span> <span class="o">=</span> <span class="n">model_form</span><span class="p">(</span><span class="n">Contact</span><span class="p">,</span> <span class="n">only</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;name&#39;</span><span class="p">,</span> <span class="s">&#39;age&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>The form can be generated setting field arguments:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">ContactForm</span> <span class="o">=</span> <span class="n">model_form</span><span class="p">(</span><span class="n">Contact</span><span class="p">,</span> <span class="n">only</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;name&#39;</span><span class="p">,</span> <span class="s">&#39;age&#39;</span><span class="p">),</span> <span class="n">field_args</span><span class="o">=</span><span class="p">{</span>
+    <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s">&#39;label&#39;</span><span class="p">:</span> <span class="s">&#39;Full name&#39;</span><span class="p">,</span>
+        <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">&#39;Your name&#39;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s">&#39;age&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s">&#39;label&#39;</span><span class="p">:</span> <span class="s">&#39;Age&#39;</span><span class="p">,</span>
+        <span class="s">&#39;validators&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">validators</span><span class="o">.</span><span class="n">NumberRange</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">99</span><span class="p">)],</span>
+    <span class="p">}</span>
+<span class="p">})</span>
+</pre></div>
+</div>
+<p>The class returned by <tt class="docutils literal"><span class="pre">model_form()</span></tt> can be used as a base class for forms
+mixing non-model fields and/or other model forms. For example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Generate a form based on the model.</span>
+<span class="n">BaseContactForm</span> <span class="o">=</span> <span class="n">model_form</span><span class="p">(</span><span class="n">Contact</span><span class="p">)</span>
+
+<span class="c"># Generate a form based on other model.</span>
+<span class="n">ExtraContactForm</span> <span class="o">=</span> <span class="n">model_form</span><span class="p">(</span><span class="n">MyOtherModel</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">ContactForm</span><span class="p">(</span><span class="n">BaseContactForm</span><span class="p">):</span>
+    <span class="c"># Add an extra, non-model related field.</span>
+    <span class="n">subscribe_to_news</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">BooleanField</span><span class="p">()</span>
+
+    <span class="c"># Add the other model form as a subform.</span>
+    <span class="n">extra</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">FormField</span><span class="p">(</span><span class="n">ExtraContactForm</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The class returned by <tt class="docutils literal"><span class="pre">model_form()</span></tt> can also extend an existing form
+class:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">BaseContactForm</span><span class="p">(</span><span class="n">Form</span><span class="p">):</span>
+    <span class="c"># Add an extra, non-model related field.</span>
+    <span class="n">subscribe_to_news</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">BooleanField</span><span class="p">()</span>
+
+<span class="c"># Generate a form based on the model.</span>
+<span class="n">ContactForm</span> <span class="o">=</span> <span class="n">model_form</span><span class="p">(</span><span class="n">Contact</span><span class="p">,</span> <span class="n">base_class</span><span class="o">=</span><span class="n">BaseContactForm</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="function">
+<dt id="wtforms_appengine.db.model_form">
+<tt class="descclassname">wtforms_appengine.db.</tt><tt class="descname">model_form</tt><big>(</big><em>model</em>, <em>base_class=Form</em>, <em>only=None</em>, <em>exclude=None</em>, <em>field_args=None</em>, <em>converter=None</em><big>)</big><a class="headerlink" href="#wtforms_appengine.db.model_form" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates and returns a dynamic <tt class="docutils literal"><span class="pre">wtforms.Form</span></tt> class for a given
+<tt class="docutils literal"><span class="pre">db.Model</span></tt> class. The form class can be used as it is or serve as a base
+for extended form classes, which can then mix non-model related fields,
+subforms with other model forms, among other possibilities.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>model</strong> &#8211; The <tt class="docutils literal"><span class="pre">db.Model</span></tt> class to generate a form for.</li>
+<li><strong>base_class</strong> &#8211; Base form class to extend from. Must be a <tt class="docutils literal"><span class="pre">wtforms.Form</span></tt> subclass.</li>
+<li><strong>only</strong> &#8211; An optional iterable with the property names that should be included in
+the form. Only these properties will have fields.</li>
+<li><strong>exclude</strong> &#8211; An optional iterable with the property names that should be excluded
+from the form. All other properties will have fields.</li>
+<li><strong>field_args</strong> &#8211; An optional dictionary of field names mapping to keyword arguments
+used to construct each field object.</li>
+<li><strong>converter</strong> &#8211; A converter to generate the fields based on the model properties. If
+not set, <tt class="docutils literal"><span class="pre">ModelConverter</span></tt> is used.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-wtforms_appengine.fields">
+<span id="datastore-backed-fields"></span><h2>Datastore-backed Fields<a class="headerlink" href="#module-wtforms_appengine.fields" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="wtforms_appengine.fields.ReferencePropertyField">
+<em class="property">class </em><tt class="descclassname">wtforms_appengine.fields.</tt><tt class="descname">ReferencePropertyField</tt><big>(</big><em>default field arguments</em>, <em>reference_class=None</em>, <em>get_label=None</em>, <em>allow_blank=False</em>, <em>blank_text=''</em><big>)</big><a class="headerlink" href="#wtforms_appengine.fields.ReferencePropertyField" title="Permalink to this definition">¶</a></dt>
+<dd><p>A field for <tt class="docutils literal"><span class="pre">db.ReferenceProperty</span></tt>. The list items are rendered in a
+select.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>reference_class</strong> &#8211; A db.Model class which will be used to generate the default query
+to make the list of items. If this is not specified, The <cite>query</cite>
+property must be overridden before validation.</li>
+<li><strong>get_label</strong> &#8211; If a string, use this attribute on the model class as the label
+associated with each option. If a one-argument callable, this callable
+will be passed model instance and expected to return the label text.
+Otherwise, the model object&#8217;s <cite>__str__</cite> or <cite>__unicode__</cite> will be used.</li>
+<li><strong>allow_blank</strong> &#8211; If set to true, a blank choice will be added to the top of the list
+to allow <cite>None</cite> to be chosen.</li>
+<li><strong>blank_text</strong> &#8211; Use this to override the default blank option&#8217;s label.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="wtforms_appengine.fields.StringListPropertyField">
+<em class="property">class </em><tt class="descclassname">wtforms_appengine.fields.</tt><tt class="descname">StringListPropertyField</tt><big>(</big><em>default field arguments</em><big>)</big><a class="headerlink" href="#wtforms_appengine.fields.StringListPropertyField" title="Permalink to this definition">¶</a></dt>
+<dd><p>A field for <tt class="docutils literal"><span class="pre">db.StringListProperty</span></tt>. The list items are rendered in a
+textarea.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="wtforms_appengine.fields.IntegerListPropertyField">
+<em class="property">class </em><tt class="descclassname">wtforms_appengine.fields.</tt><tt class="descname">IntegerListPropertyField</tt><big>(</big><em>default field arguments</em><big>)</big><a class="headerlink" href="#wtforms_appengine.fields.IntegerListPropertyField" title="Permalink to this definition">¶</a></dt>
+<dd><p>A field for <tt class="docutils literal"><span class="pre">db.StringListProperty</span></tt>. The list items are rendered in a
+textarea.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="wtforms_appengine.fields.GeoPtPropertyField">
+<em class="property">class </em><tt class="descclassname">wtforms_appengine.fields.</tt><tt class="descname">GeoPtPropertyField</tt><big>(</big><em>default field arguments</em><big>)</big><a class="headerlink" href="#wtforms_appengine.fields.GeoPtPropertyField" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="ndb">
+<h2>NDB<a class="headerlink" href="#ndb" title="Permalink to this headline">¶</a></h2>
+<p>WTForms now includes support for NDB models and can support mapping the
+relationship fields as well as generating forms from models.</p>
+<dl class="class">
+<dt id="wtforms_appengine.fields.KeyPropertyField">
+<em class="property">class </em><tt class="descclassname">wtforms_appengine.fields.</tt><tt class="descname">KeyPropertyField</tt><big>(</big><em>default field arguments</em>, <em>reference_class=None</em>, <em>get_label=None</em>, <em>allow_blank=False</em>, <em>blank_text=''</em><big>)</big><a class="headerlink" href="#wtforms_appengine.fields.KeyPropertyField" title="Permalink to this definition">¶</a></dt>
+<dd><p>A field for <tt class="docutils literal"><span class="pre">ndb.KeyProperty</span></tt>. The list items are rendered in a select.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>reference_class</strong> &#8211; A db.Model class which will be used to generate the default query
+to make the list of items. If this is not specified, The <cite>query</cite>
+property must be overridden before validation.</li>
+<li><strong>get_label</strong> &#8211; If a string, use this attribute on the model class as the label
+associated with each option. If a one-argument callable, this callable
+will be passed model instance and expected to return the label text.
+Otherwise, the model object&#8217;s <cite>__str__</cite> or <cite>__unicode__</cite> will be used.</li>
+<li><strong>allow_blank</strong> &#8211; If set to true, a blank choice will be added to the top of the list
+to allow <cite>None</cite> to be chosen.</li>
+<li><strong>blank_text</strong> &#8211; Use this to override the default blank option&#8217;s label.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<span class="target" id="module-wtforms_appengine.ndb"></span><dl class="function">
+<dt id="wtforms_appengine.ndb.model_form">
+<tt class="descclassname">wtforms_appengine.ndb.</tt><tt class="descname">model_form</tt><big>(</big><em>model</em>, <em>base_class=Form</em>, <em>only=None</em>, <em>exclude=None</em>, <em>field_args=None</em>, <em>converter=None</em><big>)</big><a class="headerlink" href="#wtforms_appengine.ndb.model_form" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates and returns a dynamic <tt class="docutils literal"><span class="pre">wtforms.Form</span></tt> class for a given
+<tt class="docutils literal"><span class="pre">ndb.Model</span></tt> class. The form class can be used as it is or serve as a base
+for extended form classes, which can then mix non-model related fields,
+subforms with other model forms, among other possibilities.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>model</strong> &#8211; The <tt class="docutils literal"><span class="pre">ndb.Model</span></tt> class to generate a form for.</li>
+<li><strong>base_class</strong> &#8211; Base form class to extend from. Must be a <tt class="docutils literal"><span class="pre">wtforms.Form</span></tt> subclass.</li>
+<li><strong>only</strong> &#8211; An optional iterable with the property names that should be included in
+the form. Only these properties will have fields.</li>
+<li><strong>exclude</strong> &#8211; An optional iterable with the property names that should be excluded
+from the form. All other properties will have fields.</li>
+<li><strong>field_args</strong> &#8211; An optional dictionary of field names mapping to keyword arguments
+used to construct each field object.</li>
+<li><strong>converter</strong> &#8211; A converter to generate the fields based on the model properties. If
+not set, <tt class="docutils literal"><span class="pre">ModelConverter</span></tt> is used.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">WTForms-Appengine</a><ul>
+<li><a class="reference internal" href="#module-wtforms_appengine.db">Model Forms</a></li>
+<li><a class="reference internal" href="#module-wtforms_appengine.fields">Datastore-backed Fields</a></li>
+<li><a class="reference internal" href="#ndb">NDB</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to WTForms-Appengine&#8217;s documentation!</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/wtforms_appengine.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to WTForms-Appengine’s documentation!"
+             >previous</a> |</li>
+        <li><a href="index.html">WTForms-Appengine 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, WTForms Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
