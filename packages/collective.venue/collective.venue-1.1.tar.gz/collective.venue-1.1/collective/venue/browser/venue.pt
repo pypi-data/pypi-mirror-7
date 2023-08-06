@@ -1,0 +1,89 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:metal="http://xml.zope.org/namespaces/metal"
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+      lang="en"
+      metal:use-macro="context/main_template/macros/master"
+      i18n:domain="collective.venue">
+<body>
+
+<metal:content-core fill-slot="content-core">
+<metal:block define-macro="content-core"
+    tal:define="data view/data;
+                latitude data/latitude;
+                longitude data/longitude">
+
+<h3 i18n:translate="label_address">Address</h3>
+<p>
+<tal:cond condition="data/street">
+  <span
+      class="street"
+      i18n:attributes="title label_street"
+      i18n:domain="collective.address"
+      tal:content="data/street">Street</span><br/>
+</tal:cond>
+<tal:cond condition="data/zip_code">
+  <span
+      class="zip_code"
+      i18n:attributes="title label_zip_code"
+      i18n:domain="collective.address"
+      tal:content="data/zip_code">Zip Code</span>
+</tal:cond>
+<tal:cond condition="data/city">
+  <span
+      class="city"
+      i18n:attributes="title label_city"
+      i18n:domain="collective.address"
+      tal:content="data/city">City</span>
+</tal:cond>
+<tal:cond condition="data/country">
+  <span
+      class="country"
+      i18n:attributes="title label_country"
+      i18n:domain="collective.address"
+      tal:content="data/country">Country</span>
+</tal:cond>
+</p>
+
+<div class="documentByLine" tal:condition="data/has_geo">
+  <dfn
+    i18n:domain="collective.geolocationbehavior"
+    i18n:translate="">Geolocation</dfn>
+  <span
+      class="latitude"
+      i18n:attributes="title label_latitude"
+      i18n:domain="plone.formwidget.geolocation"
+      tal:content="latitude">Latitude</span>
+  <span
+      class="longitude"
+      i18n:attributes="title label_longitude"
+      i18n:domain="plone.formwidget.geolocation"
+      tal:content="longitude">Longitude</span>
+</div>
+
+<div class="geolocation_wrapper" tal:condition="data/has_geo">
+  <div class="geolocation" tal:attributes="data-latitude data/latitude; data-longitude data/longitude; data-description data/popup"></div>
+  <div id="map"></div>
+</div>
+
+<p tal:condition="data/notes" tal:content="structure data/notes">Venue notes</p>
+
+
+<tal:all_ref define="refs view/get_brefs" condition="refs">
+  <h3 i18n:translate="all_events">All events at this location</h3>
+  <ul>
+    <li tal:repeat="ref refs">
+      <a tal:attributes="href ref/absolute_url">
+        <span class="title" tal:content="ref/Title"/>
+        <span class="description documentByLine"
+            tal:condition="ref/Description" tal:content="ref/Description"/>
+      </a>
+    </li>
+  </ul>
+</tal:all_ref>
+
+</metal:block>
+</metal:content-core>
+
+</body>
+</html>
