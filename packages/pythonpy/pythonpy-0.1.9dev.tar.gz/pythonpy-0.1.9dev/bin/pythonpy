@@ -1,0 +1,96 @@
+#!/usr/bin/env python
+import argparse
+import glob
+import itertools
+import json
+import math
+import os
+import random
+import re
+import shutil
+import sys
+
+parser = argparse.ArgumentParser()
+parser.add_argument('evaluation', nargs='?', default='None')
+parser.add_argument('-x', dest='lines_of_stdin', action='store_const',
+                    const=True, default=False,
+                    help='treat each row as x')
+parser.add_argument('-fx', dest='filter_result', action='store_const',
+                    const=True, default=False,
+                    help='keep rows satisfying condition(x)')
+parser.add_argument('-l', dest='list_of_stdin', action='store_const',
+                    const=True, default=False,
+                    help='treat list of stdin as l')
+parser.add_argument('-c', dest='cmd', help='run code before expression')
+parser.add_argument('--i', '--ignore_exceptions',
+                    dest='ignore_exceptions', action='store_const',
+                    const=True, default=False,
+                    help='')
+parser.add_argument('--si', '--split_input', dest='split_input',
+                    help='pre-process each row with re.split(delimiter)')
+parser.add_argument('--so', '--split_output', dest='split_output',
+                    help='post-process each row with delimiter.join(row)')
+parser.add_argument('--ji' '--json_input',
+                    dest='json_input', action='store_const',
+                    const=True, default=False,
+                    help='pre-process each row with json.loads(row)')
+parser.add_argument('--jo' '--json_output',
+                    dest='json_output', action='store_const',
+                    const=True, default=False,
+                    help='post-process each row with json.dumps(row)')
+
+args = parser.parse_args()
+
+if args.json_input:
+    stdin = (json.loads(x.rstrip()) for x in sys.stdin)
+elif args.split_input:
+    stdin = (re.split(args.split_input, x.rstrip()) for x in sys.stdin)
+else:
+    stdin = (x.rstrip() for x in sys.stdin)
+
+if args.evaluation:
+    args.evaluation = args.evaluation.replace("`", "'")
+if args.cmd:
+    args.cmd = args.cmd.replace("`", "'")
+
+if args.cmd:
+    exec(args.cmd)
+
+if args.lines_of_stdin:
+    if args.ignore_exceptions:
+        def safe_eval(text, x):
+            try:
+                return eval(text)
+            except:
+                return None
+        result = (safe_eval(args.evaluation, x) for x in stdin)
+    else:
+        result = (eval(args.evaluation) for x in stdin)
+elif args.list_of_stdin:
+    l = list(stdin)
+    result = eval(args.evaluation)
+elif args.filter_result:
+    result = (x for x in stdin if eval(args.evaluation))
+else:
+    result = eval(args.evaluation)
+
+def format(output):
+    if output == None:
+        return None
+    elif args.json_output:
+        return json.dumps(output)
+    elif args.split_output:
+        return args.split_output.join(output)
+    else:
+        return output
+    
+
+if hasattr(result, '__iter__'):
+    for x in result:
+        formatted = format(x)
+        if formatted:
+            print formatted
+else:
+    formatted = format(result)
+    if formatted:
+        print formatted
