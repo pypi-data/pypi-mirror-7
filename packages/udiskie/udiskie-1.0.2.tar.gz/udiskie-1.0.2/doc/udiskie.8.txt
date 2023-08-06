@@ -1,0 +1,235 @@
+/////
+vim:set ts=4 sw=4 syntax=asciidoc noet:
+/////
+udiskie(8)
+==========
+
+
+Name
+----
+udiskie - automatic disk mounting service using UDisks
+
+
+Synopsis
+--------
+'udiskie' [OPTIONS]
+
+'udiskie-mount' [OPTIONS] (-a | DEVICE...)
+
+'udiskie-umount' [OPTIONS] (-a | PATH...)
+
+
+Description
+-----------
+*udiskie* uses UDisks to automatically mount removable media, such as CDs and flash drives. It will mount the media in a new directory under '/media' or '/run/media', using the device name if available. It is lightweight and runs as a daemon.
+
+
+Common options
+--------------
+*-h, \--help*::
+	Show help message and exit.
+
+*-V, \--version*::
+	Show help message and exit.
+
+*-v, \--verbose*::
+	Verbose output.
+
+*-q, \--quiet*::
+	Quiet output.
+
+*-0, \--udisks-auto*::
+	Auto discover UDisks version (default).
+
+*-1, \--use-udisks1*::
+	Use UDisks1 as DBus backend.
+
+*-2, \--use-udisks2*::
+	Use UDisks2 as DBus backend (experimental).
+
+*-c FILE, \--config=FILE*::
+    Specify config file.
+
+*-C, \--no-config*::
+	Don't use any config file.
+
+
+Daemon options
+--------------
+*-a, \--automount*::
+	Enable automounting new devices (default).
+
+*-A, \--no-automount*::
+	Disable automounting new devices.
+
+*-n, \--notify*::
+	Enable pop-up notifications (default).
+
+*-N, \--disable-notify*::
+	Disable pop-up notifications.
+
+*-t, \--tray*::
+	Show tray icon.
+
+*-s, \--smart-tray*::
+	Show tray icon that automatically hides when there is no action available.
+
+*-T, \--no-tray*::
+	Disable tray icon (default).
+
+*-f PROGRAM, \--file-manager=PROGRAM*::
+	Set program to open mounted directories. Default is \'+xdg-open+'. Pass an empty string to disable this feature. This option is deprecated and will probably be replaced by a python commands file.
+
+*-F, \--no-file-manager*::
+	Disable browsing.
+
+
+Mount options
+-------------
+*-a, \--all*::
+	Mount all handled devices.
+
+*-r, \--recursive*::
+	Recursively mount cleartext partitions after unlocking a LUKS device. This will happen by default when running the udiskie daemon.
+
+*-R, \--no-recursive*::
+	Disable recursive mounting (default).
+
+*-o OPTIONS, \--options=OPTIONS*::
+	Set mount options.
+
+
+Unmount options
+---------------
+*-a, \--all*::
+	Unmount all handled devices.
+
+*-d, \--detach*::
+	Detach drive by e.g. powering down its physical port.
+
+*-D, \--no-detach*::
+	Don't detach drive (default).
+
+*-e, \--eject*::
+	Eject media from the drive, e.g CDROM.
+
+*-E, \--no-eject*::
+	Don't eject media (default).
+
+*-f, \--force*::
+	Force removal (recursive unmounting).
+
+*-F, \--no-force*::
+	Don't force removal (default).
+
+*-l, \--lock*::
+	Lock device after unmounting (default).
+
+*-L, \--no-lock*::
+	Don't lock device.
+
+
+Dependencies
+------------
+
+*UDisks1* or *UDisks2*::
+	backend service required for all operation modes.
+
+*PyGObject*::
+	Python binding for GTK3+.
+
+*PyYAML*::
+	to read the config file
+
+*docopt*::
+	Pythonic command line arguments parser, that will make you smile
+
+
+Example Usage[[EU]]
+-------------------
+Start *udiskie* in '~/.xinitrc':
+
+	udiskie &
+
+Unmount media and power down USB device:
+
+	udiskie-umount --detach /media/Sticky
+
+Mount all media:
+
+	udiskie-mount -a
+
+Mount '/dev/sdb1':
+
+	udiskie-mount /dev/sdb1
+
+
+Configuration
+-------------
+The file 'config.yml' in '$XDG_CONFIG_HOME/udiskie' or '~/.config/udiskie' can be used to configure defaults for some command line parameters and customize ignore-rules for devices. The following example demonstrates the usage of the configuration file:
+
+----------------------------------------------------------------------
+program_options:
+  udisks_version: 2         # 1, 2
+  tray: auto                # auto, true, false
+  automount: false
+  notify: true
+  file_manager: xdg-open
+
+mount_options:              # the first matching entry is used:
+- id_type: vfat             # match file system type
+  options: ro               # list of mount options
+- id_uuid: 9d53-13ba        # match by device UUID
+  options: [noexec, nodev]  # mount options can be given as list
+
+ignore_device:              # the first matching entry is used:
+- id_uuid: abcd-ef01        # ignore this device
+- device_file: /dev/dm-5
+  ignore: false             # never ignore this device
+
+notifications:
+  timeout: 1.5              # Default timeout in seconds
+  device_mounted: 5         # overwrite
+  device_unmounted: false   # disable
+  device_added: false
+  device_removed: false
+  device_unlocked: -1       # Use the libnotify default timeout
+  device_locked: -1
+  job_failed: -1
+----------------------------------------------------------------------
+
+See Also
+--------
+linkman:udisks[1]
+
+http://www.freedesktop.org/wiki/Software/udisks/
+
+https://wiki.gnome.org/action/show/Projects/PyGObject
+
+https://pypi.python.org/pypi/PyYAML
+
+http://docopt.org/
+
+
+API references for development:
+
+http://udisks.freedesktop.org/docs/1.0.5/
+
+http://udisks.freedesktop.org/docs/latest/
+
+http://lazka.github.io/pgi-docs/index.html
+
+
+Authors
+-------
+Byron Clark <byron@theclarkfamily.name>
+
+
+Contact
+-------
+You can use the github issues to report any issues you encounter, ask general questions or suggest new features. There is also a public mailing list on sourceforge if you prefer email:
+
+https://github.com/coldfix/udiskie/issues
+
+https://lists.sourceforge.net/lists/listinfo/udiskie-users
+
