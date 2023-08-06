@@ -1,0 +1,217 @@
+description: Nova API,Keystone,Heat Engine and API,Glance,Neutron,Dedicated MySQL
+  server,Dedicated RabbitMQ Server
+heat_template_version: 2013-05-23
+parameters:
+  AdminToken:
+    type: string
+  BootstrapDumpPassword:
+    default: ''
+    description: Password to use for mysqldump from Bootstrap Host
+    type: string
+    hidden: true
+  BootstrapHost:
+    default: ''
+    description: Load mysqldump from this Host
+    type: string
+  BootstrapRootPassword:
+    default: ''
+    description: Root password for localhost access after bootstrap
+    type: string
+    hidden: true
+  BootstrapSlavePassword:
+    default: ''
+    description: Password to use with BootstrapSlaveUser
+    type: string
+    hidden: true
+  BootstrapSlaveUser:
+    default: ''
+    description: User to use for replication from bootstrap host
+    type: string
+  GlanceDBPassword:
+    description: Password for connecting to glance database
+    type: string
+    hidden: true
+  GlanceNotifierStrategy:
+    description: Strategy to use for Glance notification queue
+    type: string
+    default: noop
+  GlanceLogFile:
+    description: The filepath of the file to use for logging messages from Glance.
+    type: string
+    default: ''
+  HeatDBPassword:
+    description: Password for accessing Heat database.
+    type: string
+    hidden: true
+  InstanceType:
+    default: baremetal
+    description: Use this flavor
+    type: string
+  KeyName:
+    default: default
+    description: Name of an existing EC2 KeyPair to enable SSH access to the instances
+    type: string
+  KeystoneDBPassword:
+    description: Password for connecting to keystone
+    type: string
+    hidden: true
+  NovaDBPassword:
+    description: Password for connecting to nova database
+    type: string
+    hidden: true
+  NovaInterfaces:
+    default: eth0
+    type: string
+  NeutronDBPassword:
+    description: Password for connecting to neutron database
+    type: string
+    hidden: true
+  NeutronInterfaces:
+    default: eth0
+    type: string
+  RabbitMQPassword:
+    description: Password for RabbitMQ
+    type: string
+    hidden: true
+  RabbitUserName:
+    type: string
+  RabbitPassword:
+    type: string
+    hidden: true
+  ServicePassword:
+    description: admin_password for setting up auth in nova.
+    type: string
+    hidden: true
+  controllerImage:
+    type: string
+  HeatStackDomainAdminPassword:
+    description: Password for heat_domain_admin user.
+    type: string
+    default: ''
+    hidden: true
+resources:
+  AccessPolicy:
+    properties:
+      AllowedResources:
+      - controller0
+    type: OS::Heat::AccessPolicy
+  controller0Key:
+    properties:
+      UserName:
+        get_resource: User
+    type: AWS::IAM::AccessKey
+  User:
+    properties:
+      Policies:
+      - get_resource: AccessPolicy
+    type: AWS::IAM::User
+  controller0:
+    metadata:
+      admin-password:
+        get_param: ServicePassword
+      admin-token:
+        get_param: AdminToken
+      mysql:
+        create-users:
+          - database: keystone
+            username: keystone
+            password: {get_param: KeystoneDBPassword}
+          - database: heat
+            username: heat
+            password: {get_param: HeatDBPassword}
+          - database: glance
+            username: glance
+            password: {get_param: GlanceDBPassword}
+          - database: nova
+            username: nova
+            password: {get_param: NovaDBPassword}
+          - database: neutron
+            username: neutron
+            password: {get_param: NeutronDBPassword}
+      glance:
+        db:
+          Fn::Join:
+            - ''
+            - - 'mysql://glance:'
+              - {get_param: GlanceDBPassword}
+              - '@127.0.0.1/glance'
+          notifier-strategy:
+            get_param: GlanceNotifierStrategy
+          log-file:
+            get_param: GlanceLogFile
+      heat:
+        db:
+          Fn::Join:
+            - ''
+            - - 'mysql://heat:'
+              - {get_param: HeatDBPassword}
+              - '@127.0.0.1/heat'
+        access_key_id:
+          get_resource: controller0Key
+        refresh:
+        - resource: controller0
+        secret_key:
+          get_attr:
+          - controller0Key
+          - SecretAccessKey
+        stack:
+          name:
+            get_param: AWS::StackName
+          region:
+            get_param: AWS::Region
+        auth_encryption_key: unset
+        stack_domain_admin_password: {get_param: HeatStackDomainAdminPassword}
+      interfaces:
+        control:
+          get_param: NovaInterfaces
+      keystone:
+        host:
+          '127.0.0.1'
+        db:
+          Fn::Join:
+            - ''
+            - - 'mysql://keystone:'
+              - {get_param: KeystoneDBPassword}
+              - '@127.0.0.1/keystone'
+      nova:
+        db:
+          Fn::Join:
+            - ''
+            - - 'mysql://nova:'
+              - {get_param: NovaDBPassword}
+              - '@127.0.0.1/nova'
+      neutron:
+        host:
+          '127.0.0.1'
+        ovs_db:
+          Fn::Join:
+            - ''
+            - - 'mysql://neutron:'
+              - {get_param: NeutronDBPassword}
+              - '@127.0.0.1/ovs_neutron'
+      rabbit:
+        host:
+          '127.0.0.1'
+        username:
+          get_param: RabbitUserName
+        password:
+          get_param: RabbitPassword
+        users:
+          username:
+            get_param: RabbitUserName
+          password:
+            get_param: RabbitPassword
+        cookie:
+          get_attr:
+          - RabbitCookie
+          - value
+      service-password:
+        get_param: ServicePassword
+    properties:
+      ImageId:
+        get_param: controllerImage
+      InstanceType:
+        get_param: InstanceType
+      KeyName:
+        get_param: KeyName
+    type: AWS::EC2::Instance
