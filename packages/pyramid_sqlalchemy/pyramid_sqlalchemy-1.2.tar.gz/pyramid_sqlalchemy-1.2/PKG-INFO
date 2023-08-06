@@ -1,0 +1,102 @@
+Metadata-Version: 1.1
+Name: pyramid_sqlalchemy
+Version: 1.2
+Summary: SQLAlchemy integration for pyramid
+Home-page: https://pyramid-sqlalchemy.readthedocs.org
+Author: Wichert Akkerman
+Author-email: wichert@wiggy.net
+License: BSD
+Description: .. image:: https://travis-ci.org/wichert/pyramid_sqlalchemy.svg?branch=master
+            :target: https://travis-ci.org/wichert/pyramid_sqlalchemy
+        
+        `pyramid_sqlalchemy` provides some basic glue to facilitate using
+        `SQLAlchemy <http://www.sqlalchemy.org/>`_ with `Pyramid
+        <http://docs.pylonsproject.org/projects/pyramid/en/latest/>`_.
+        
+        SQLAlchemy relies on global state for a few things: 
+        
+        * A ``MetaData`` instance which tracks all known SQL tables.
+        * A base class for all models using the ORM.
+        * A session factory.
+        
+        Every application using SQLAlchemy must provides its own instance of these.
+        This makes it hard create add-on packages that also use SQLAlchemy, since they
+        either need to have their own SQLAlchemy state, which makes it hard to
+        integrate them into your application, or they need to jump through multiple
+        complex hoops to allow them share state with your application.
+        
+        pyramid_sqlalchemy helps by providing a canonical location for the global
+        SQLAlchemy state. In addition it provides a convenient way to configure
+        SQLAlchemy in a Pyramid application.
+        
+        ::
+        
+            from pyramid.config import Configurator
+            from pyramid_sqlalchemy import BaseObject
+        
+            class MyModel(BaseObject):
+                __tablename__ = 'my_model'
+                ...
+        
+            def main():
+                config = Configurator()
+                # Configure SQLAlchemy using settings from the .ini file
+                config.include('pyramid_sqlalchemy')
+                ...
+                return config.make_wsgi_app()
+        
+        Changelog
+        =========
+        
+        1.2 - August 30, 2014
+        ---------------------
+        
+        - Use `unittest.mock` when available. This removes the `mock` dependency on
+          Python 3.
+        
+        - Tests no longer need to mock out pyramid_sqlalchemy.includeme; this is now
+          handled by ``DatabaseTestCase`` and the py.test fixtures.
+        
+        - Automatically make py.test fixtures available externally. This removes the
+          need to copy & paste them over from the documentation.
+        
+        - Fix error on pytest fixture example.
+        
+        - Setup `Travis <https://travis-ci.org/wichert/pyramid_sqlalchemy>`_ to
+          automatically run tests on CPython 2.6, CPython 2.7, CPython 3.3, CPython 3.4
+          and PyPy.
+        
+        
+        1.1 - July 14, 2014
+        -------------------
+        
+        - Add missing schema to the Pyramid-URL in the package description. This broke
+          ReST rendering on the PyPI page.
+        
+        - Add a new ``enable_sql_two_phase_commit()`` configuration directive to enable
+          two-phase commit.
+        
+        - Enable foreign key constraint checking for SQLite in DatabaseTestCase.
+        
+        - Use SQLAlchemy events instead of ZopeTransactionExtension to handle
+          integration of zope.sqlalchemy and SQLAlchemy.
+        
+        
+        1.0 - July 13, 2014
+        -------------------
+        
+        - First release.
+        
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Framework :: Pyramid
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.6
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Topic :: Database
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
