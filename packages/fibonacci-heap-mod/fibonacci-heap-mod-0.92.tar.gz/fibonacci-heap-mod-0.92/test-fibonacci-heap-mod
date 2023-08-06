@@ -1,0 +1,339 @@
+#!/usr/local/cpython-3.4/bin/python
+
+# pylint: disable=superfluous-parens
+# superfluous-parens: Parentheses are important for clarity and portability
+
+'''
+Test fibonacci_heap_mod
+'''
+
+import sys
+import pprint
+import random
+
+import fibonacci_heap_mod
+
+
+def test_simple_creation():
+    # pylint: disable=bare-except
+    # bare-except: We want to catch all exceptions in this case
+    '''Test merely creating a fibonacci heap'''
+    try:
+        dummy = fibonacci_heap_mod.Fibonacci_heap()
+    except:
+        sys.stderr.write('{0}: Error creating a heap\n'.format(sys.argv[0]))
+        return False
+    else:
+        return True
+
+
+def test_single_addition():
+    # pylint: disable=bare-except
+    # bare-except: We want to catch all exceptions in this case
+    '''Test creating a fibonacci heap and adding a single value to it'''
+    fib_heap = fibonacci_heap_mod.Fibonacci_heap()
+    try:
+        fib_heap.enqueue(1, 1)
+    except:
+        sys.stderr.write('{0}: Error adding a single value to a heap\n'.format(sys.argv[0]))
+        return False
+    else:
+        return True
+
+
+def test_triple_addition():
+    # pylint: disable=bare-except
+    # bare-except: We want to catch all exceptions in this case
+    '''Test creating a fibonacci heap and adding three values to it'''
+    fib_heap = fibonacci_heap_mod.Fibonacci_heap()
+    try:
+        fib_heap.enqueue(1, 1)
+        fib_heap.enqueue(5, 3)
+        fib_heap.enqueue(10, 2)
+    except:
+        sys.stderr.write('{0}: Error adding 3 values to a heap\n'.format(sys.argv[0]))
+        return False
+    else:
+        return True
+
+
+def test_addition_of_100():
+    # pylint: disable=bare-except
+    # bare-except: We want to catch all exceptions in this case
+    '''Test creating a fibonacci heap and adding 100 values to it'''
+    fib_heap = fibonacci_heap_mod.Fibonacci_heap()
+    random.seed(0)
+    try:
+        for repetition in range(100):
+            dummy = repetition
+            random_value = random.randint(0, 99)
+            random_priority = random.randint(0, 99)
+            fib_heap.enqueue(random_value, random_priority)
+    except:
+        sys.stderr.write('{0}: Error adding 100 values to a heap: value #{1}\n'.format(sys.argv[0], repetition))
+        return False
+    else:
+        return True
+
+
+def test_get_min_of_1():
+    '''Test creating a fibonacci heap, adding a single value to it, and retrieving it'''
+    fib_heap = fibonacci_heap_mod.Fibonacci_heap()
+    fib_heap.enqueue(1, 1)
+    entry = fib_heap.min()
+    value = entry.get_value()
+    if value == 1:
+        return True
+    else:
+        sys.stderr.write('{0}: Minimum value from a single-element heap is not correct: {1}\n'.format(sys.argv[0], value))
+        return False
+
+
+def test_get_min_of_3():
+    '''Test creating a fibonacci heap, adding 3 values, and retrieving the minimum-priority entry'''
+    fib_heap = fibonacci_heap_mod.Fibonacci_heap()
+    fib_heap.enqueue(1, 1)
+    fib_heap.enqueue(10, 0)
+    fib_heap.enqueue(20, 100)
+    entry = fib_heap.min()
+    value = entry.get_value()
+    if value == 10:
+        return True
+    else:
+        sys.stderr.write('{0}: Minimum value from a single-element heap is not correct: {1}\n'.format(sys.argv[0], value))
+        return False
+
+
+def test_empty():
+    '''Test an empty heap to see if it's Falsy'''
+    if fibonacci_heap_mod.Fibonacci_heap():
+        sys.stderr.write('{0}: Empty heap not empty\n'.format(sys.argv[0]))
+        return False
+    else:
+        return True
+
+
+def test_nonempty():
+    '''Test creating a fibonacci, adding a value, and checking if it's Truthy'''
+    fib_heap = fibonacci_heap_mod.Fibonacci_heap()
+    fib_heap.enqueue(1, 1)
+    if fib_heap:
+        return True
+    else:
+        sys.stderr.write('{0}: Nonempty heap empty\n'.format(sys.argv[0]))
+        return False
+
+
+def test_len(intended_length):
+    '''Test creating a fibonacci heap, adding "intended_length" values, and checking for correct length '''
+    fib_heap = fibonacci_heap_mod.Fibonacci_heap()
+    random.seed(0)
+    for repetition in range(intended_length):
+        dummy = repetition
+        random_value = random.randint(0, intended_length - 1)
+        random_priority = random.randint(0, intended_length - 1)
+        fib_heap.enqueue(random_value, random_priority)
+    if len(fib_heap) == intended_length:
+        return True
+    else:
+        sys.stderr.write('{0}: Incorrect length, should be {1}\n'.format(sys.argv[0], intended_length))
+        return False
+
+
+def test_dequeue_min(intended_length):
+    '''Test creating a fibonacci heap, adding "intended_length" values, and checking for correct dequeue_min values'''
+    # Note that at least so far, this is the only thing that tests priority numbers
+    #print('\ntest_dequeue_min {0}'.format(intended_length))
+    fib_heap = fibonacci_heap_mod.Fibonacci_heap()
+    # random.seed(0) gives too-consistent priorities
+    random.seed(1)
+    expected_priorities_list = []
+    for repetition in range(intended_length):
+        dummy = repetition
+        #print('adding value #{0}'.format(repetition))
+        random_value = random.randint(0, intended_length - 1)
+        random_priority = random.randint(0, intended_length - 1)
+        fib_heap.enqueue(random_value, random_priority)
+        expected_priorities_list.append(random_priority)
+    expected_priorities_list.sort()
+
+    actual_priorities_list = []
+    for repetition in range(intended_length):
+        dummy = repetition
+        #print('removing value #{0}'.format(repetition))
+        #print('len(fib_heap) is {0}'.format(len(fib_heap)))
+        entry = fib_heap.dequeue_min()
+        actual_priorities_list.append(entry.get_priority())
+    # We can't just compare lists, because this is basically a heapsort, which isn't stable.  So
+    # instead we compare all the priorities
+    if expected_priorities_list != actual_priorities_list:
+        message = '{0}: test_dequeue_min failed with intended_length {1}: {2} != {3}\n'
+        formatted_message = message.format(
+            sys.argv[0],
+            intended_length,
+            pprint.pformat(expected_priorities_list),
+            pprint.pformat(actual_priorities_list),
+        )
+        sys.stderr.write(formatted_message)
+        return False
+    if len(fib_heap) != 0:
+        sys.stderr.write('{0}: Incorrect length, should be {1}\n'.format(sys.argv[0], intended_length))
+        return False
+    return True
+
+
+def test_dequeue_min_sort(intended_length):
+    # pylint: disable=star-args
+    # star-args: I like * magic!
+    '''Test creating a fibonacci heap, adding "intended_length" values, and checking for correct dequeue_min values'''
+    # Note that at least so far, this is the only thing that tests priority numbers
+    #print('\ntest_dequeue_min {0}'.format(intended_length))
+    fib_heap = fibonacci_heap_mod.Fibonacci_heap()
+    # random.seed(0) gives too-consistent priorities
+    random.seed(1)
+    random_values = list(range(intended_length))
+    random_priorities = list(range(intended_length))
+    tuples = list(zip(random_priorities, random_values))
+    random.shuffle(tuples)
+
+    for tuple_ in tuples:
+        #print('adding value #{0}'.format(repetition))
+        fib_heap.enqueue(*tuple_)
+    expected_list = tuples[:]
+    expected_list.sort()
+
+    actual_list = []
+    for repetition in range(intended_length):
+        dummy = repetition
+        #print('removing value #{0}'.format(repetition))
+        #print('len(fib_heap) is {0}'.format(len(fib_heap)))
+        entry = fib_heap.dequeue_min()
+        tuple_ = (entry.get_priority(), entry.get_value())
+        actual_list.append(tuple_)
+    # We can just compare lists, because although this is basically a heapsort, which isn't stable,
+    # we have no duplicate priorities or duplicate values, so the instability doesn't matter.
+    if expected_list != actual_list:
+        message = '{0}: test_dequeue_min_sort failed with intended_length {1}: {2} != {3}\n'
+        formatted_message = message.format(
+            sys.argv[0],
+            intended_length,
+            pprint.pformat(expected_list),
+            pprint.pformat(actual_list),
+        )
+        sys.stderr.write(formatted_message)
+        return False
+    if len(fib_heap) != 0:
+        sys.stderr.write('{0}: Incorrect length, should be {1}\n'.format(sys.argv[0], intended_length))
+        return False
+    return True
+
+
+def test_decrease_key():
+    '''Test decrease_key method'''
+    fib_heap = fibonacci_heap_mod.Fibonacci_heap()
+    fib_heap.enqueue(1, 1)
+    entry3 = fib_heap.enqueue(3, 3)
+    fib_heap.enqueue(5, 5)
+
+    fib_heap.decrease_key(entry3, -1)
+
+    actual_list = []
+    while fib_heap:
+        entry = fib_heap.dequeue_min()
+        tuple_ = (entry.get_priority(), entry.get_value())
+        actual_list.append(tuple_)
+
+    expected_list = [
+        (-1, 3),
+        (1, 1),
+        (5, 5),
+        ]
+
+    if actual_list == expected_list:
+        return True
+    else:
+        sys.stderr.write('{0}: test_decrease_key: actual_list != expected_list\n'.format(sys.argv[0]))
+        return False
+
+
+def test_merge():
+    '''Test merging two heaps'''
+    heap1 = fibonacci_heap_mod.Fibonacci_heap()
+    heap2 = fibonacci_heap_mod.Fibonacci_heap()
+
+    heap1.enqueue(1, 1)
+    heap1.enqueue(3, 3)
+    heap1.enqueue(5, 5)
+
+    heap2.enqueue(2, 2)
+    heap2.enqueue(3, 3)
+    heap2.enqueue(4, 4)
+    heap2.enqueue(6, 6)
+
+    merged_heap = fibonacci_heap_mod.merge(heap1, heap2)
+
+    if len(merged_heap) != 7:
+        sys.stderr.write('{0}: Incorrect number of elements in merged_heap\n'.format(sys.argv[0]))
+        return False
+
+    actual_list = []
+    while merged_heap:
+        entry = merged_heap.dequeue_min()
+        tuple_ = (entry.get_priority(), entry.get_value())
+        actual_list.append(tuple_)
+
+    expected_list = [
+        (1, 1),
+        (2, 2),
+        (2, 2),
+        (3, 3),
+        (4, 4),
+        (5, 5),
+        (6, 6),
+        ]
+
+    if actual_list == expected_list:
+        return True
+    else:
+        sys.stderr.write('{0}: test_merge: actual_list != expected_list\n'.format(sys.argv[0]))
+        return False
+
+
+def main():
+    '''Main function'''
+    all_good = True
+
+    all_good &= test_simple_creation()
+    all_good &= test_single_addition()
+    all_good &= test_triple_addition()
+    all_good &= test_addition_of_100()
+    all_good &= test_get_min_of_1()
+    all_good &= test_get_min_of_3()
+    all_good &= test_empty()
+    all_good &= test_len(0)
+    all_good &= test_len(1)
+    all_good &= test_len(3)
+    all_good &= test_len(100)
+    all_good &= test_dequeue_min(0)
+    all_good &= test_dequeue_min(1)
+    all_good &= test_dequeue_min(2)
+    all_good &= test_dequeue_min(3)
+    all_good &= test_dequeue_min(10)
+    all_good &= test_dequeue_min(100)
+    all_good &= test_dequeue_min_sort(0)
+    all_good &= test_dequeue_min_sort(1)
+    all_good &= test_dequeue_min_sort(2)
+    all_good &= test_dequeue_min_sort(3)
+    all_good &= test_dequeue_min_sort(10)
+    all_good &= test_dequeue_min_sort(100)
+    all_good &= test_decrease_key()
+    all_good &= test_merge()
+
+    if all_good:
+        sys.stderr.write('{0}: All tests passed\n'.format(sys.argv[0]))
+        sys.exit(0)
+    else:
+        sys.stderr.write('{0}: One or more tests failed\n'.format(sys.argv[0]))
+        sys.exit(0)
+
+main()
