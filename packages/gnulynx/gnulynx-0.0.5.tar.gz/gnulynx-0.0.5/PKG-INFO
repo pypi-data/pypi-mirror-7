@@ -1,0 +1,478 @@
+Metadata-Version: 1.1
+Name: gnulynx
+Version: 0.0.5
+Summary: a task-based command line interface for analytics data
+Home-page: http://github.com/newslynx/gnulynx
+Author: Brian Abelson
+Author-email: brian@newslynx.org
+License: MIT
+Description: |travis-img| gnulynx ====== ``gnulynx`` is a collection of tasks for
+        connecting to api's, retrieving and cleaning data, and returning json.
+        It provides access to these methods via import in a script or through a
+        command line interface. In addition, it provides a base "GnuTask" class
+        for creating custom tasks which mirror the execution patterns of the
+        tasks already provided in ``gnulynx``.
+        
+        Install
+        -------
+        
+        for now:
+        
+        ::
+        
+            pip install git+https://github.com/newslynx/gnulynx.git
+        
+        Dependencies
+        ------------
+        
+        ``gnulynx`` builds upon a bunch of our libraries which in turn build
+        upon other libraries. This means that there are a lot of dependencies.
+        We manage this by making many of them optional and checking for import
+        errors.
+        
+        Principles
+        ----------
+        
+        -  All dates should be input and output in UTC. Any localized date
+           operations in the function should be handled by converting to the
+           local time, executing the function, and converting any resulting
+           dates back into UTC
+        -  All dates should be serialized as isoformat strings.
+        -  All urls should be unshortened using ``siegfried.unshorten_url``.
+        -  All urls should be normalized using ``siegfried.prepare_url``.
+        
+        Basic CLI Usage:
+        ----------------
+        
+        All tasks can accept input in the following manners:
+        
+        We're using ``rss-feed`` here for example, but every task works the
+        same.
+        
+        **NOTE** For now tasks simply accept kwargs and stream those kwargs to
+        stdout. We'll shortly implement each method.
+        
+        stdin
+        ~~~~~
+        
+        .. code:: bash
+        
+            $ echo '{"kw": "value"}' | gnulynx rss-feed | jq '.'
+            >>> {
+            >>>  "kw": "value"
+            >>> }
+        
+        **NOTE**: By passing in line-separated json via stdin, we can perform a
+        task N times.
+        
+        .. code:: bash
+        
+            $ echo '{"kw": "value"}\n{"kw": "value"}' | gnulynx rss-feed | jq '.'
+            >>> {
+            >>>  "kw": "value"
+            >>> }
+            >>> {
+            >>>  "kw": "value"
+            >>> }
+        
+        string
+        ~~~~~~
+        
+        json:
+        
+        .. code:: bash
+        
+            $ gnulynx rss-feed '{"kw": "value"}' | jq '.'
+            >>> {
+            >>>  "kw": "value"
+            >>> }
+        
+        file
+        ~~~~
+        
+        json:
+        
+        .. code:: bash
+        
+            $ gnulynx rss-feed path/to/input.json | jq '.'
+        
+        yaml:
+        
+        .. code:: bash
+        
+            $ gnulynx rss-feed path/to/input.yaml | jq '.'
+        
+        yml too:
+        
+        .. code:: bash
+        
+            $ gnulynx rss-feed path/to/input.yml | jq '.'
+        
+        Tasks
+        -----
+        
+        ``gnulynx`` will initially consist of the following set of tasks, each
+        grouped by its source:
+        
+        ``twitter``
+        -----------
+        
+        ``gnulynx twitter-list``
+        ~~~~~~~~~~~~~~~~~~~~~~~~
+        
+        Retrive tweets from a specific twitter list.
+        
+        Imports From:
+        ^^^^^^^^^^^^^
+        
+        -  ``birdfeeder.list_timeline``
+        
+        Requires:
+        ^^^^^^^^^
+        
+        -  ``owner_screen_name`` - The screen\_name of the list creator.
+        -  ``slug`` - The slug of the list, i.e. "members-of-congress".
+        
+        Accepts:
+        ^^^^^^^^
+        
+        -  ``paginate`` - Whether or not to paginate through results via
+           additional requests.
+        -  ``concurrent`` - Whether or not to run the task concurrently.
+        -  ``throttle`` - The number of seconds to wait between requests.
+        -  ``count`` - The number of tweets to return per request.
+        -  ``max_requests`` - The maximum number of requests to make in this
+           task.
+        -  ``access_token`` - An authenticated user's access token.
+        -  ``wait`` - How long to wait in between errors (seconds)
+        -  ``backoff`` - The factor by which to increase ``wait`` exponentially
+           after successive errors.
+        -  ``timeout`` - The time (in seconds) at which to raise a timeout
+           error.
+        -  ``since_id`` - The twitter id to start from (useful for polling).
+        
+        Returns:
+        ^^^^^^^^
+        
+        A generator of objects containing: \* ``twitter_id`` - String \*
+        ``text`` - String \* ``datetime`` - Datetime \*
+        ``in_reply_to_screen_name`` - String \* ``in_reply_to_status_id`` -
+        String \* ``urls`` - Array of Strings \* ``hashtags`` - Array of Strings
+        \* ``user_mentions`` - Array of Strings \* ``img_urls`` - Array of
+        Strings \* ``screen_name`` - String \* ``verified`` - Numeric \*
+        ``user_location`` - String
+        
+        ``gnulynx twitter-search``
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
+        Retrive tweets which match a given query.
+        
+        Imports From:
+        ^^^^^^^^^^^^^
+        
+        -  ``birdfeeder.search``
+        
+        Requires:
+        ^^^^^^^^^
+        
+        -  ``q`` - A twitter search query, see
+           `here <https://dev.twitter.com/docs/using-search>`__.
+        
+        Accepts:
+        ^^^^^^^^
+        
+        -  ``paginate`` - Whether or not to paginate through results via
+           additional requests.
+        -  ``concurrent`` - Whether or not to run the task concurrently.
+        -  ``throttle`` - The number of seconds to wait between requests.
+        -  ``count`` - The number of tweets to return per request.
+        -  ``max_requests`` - The maximum number of requests to make in this
+           task.
+        -  ``access_token`` - An authenticated user's access token.
+        -  ``wait`` - How long to wait in between errors (seconds)
+        -  ``backoff`` - The factor by which to increase ``wait`` exponentially
+           after successive errors.
+        -  ``timeout`` - The time (in seconds) at which to raise a timeout
+           error.
+        -  ``since_id`` - The twitter id to start from (useful for polling).
+        -  ``result_type`` - mixed / popular / recemt, see
+           `here <https://dev.twitter.com/docs/api/1/get/search>`__.
+        
+        Returns:
+        ^^^^^^^^
+        
+        A generator of objects containing: \* ``twitter_id`` - Primary Key \*
+        ``text`` - String \* ``datetime`` - Datetime \*
+        ``in_reply_to_screen_name`` - String \* ``in_reply_to_status_id`` -
+        String \* ``urls`` - Array of Strings \* ``hashtags`` - Array of Strings
+        \* ``user_mentions`` - Array of Strings \* ``img_urls`` - Array of
+        Strings \* ``screen_name`` - String \* ``verified`` - Numeric \*
+        ``user_location`` - String
+        
+        ``gnulynx twitter-user``
+        ~~~~~~~~~~~~~~~~~~~~~~~~
+        
+        Retrive tweets from a user's timeline.
+        
+        Imports From:
+        ^^^^^^^^^^^^^
+        
+        -  ``birdfeeder.user_timeline``
+        
+        Requires:
+        ^^^^^^^^^
+        
+        -  ``screen_name``
+        
+        Accepts:
+        ^^^^^^^^
+        
+        -  ``paginate`` - Whether or not to paginate through results via
+           additional requests.
+        -  ``concurrent`` - Whether or not to run the task concurrently.
+        -  ``throttle`` - The number of seconds to wait between requests.
+        -  ``count`` - The number of tweets to return per request.
+        -  ``max_requests`` - The maximum number of requests to make in this
+           task.
+        -  ``access_token`` - An authenticated user's access token.
+        -  ``wait`` - How long to wait in between errors (seconds)
+        -  ``backoff`` - The factor by which to increase ``wait`` exponentially
+           after successive errors.
+        -  ``timeout`` - The time (in seconds) at which to raise a timeout
+           error.
+        -  ``since_id`` - The twitter id to start from (useful for polling).
+        
+        Returns:
+        ^^^^^^^^
+        
+        A generator of objects containing: \* ``twitter_id`` - Primary Key \*
+        ``text`` - String \* ``datetime`` - Datetime \*
+        ``in_reply_to_screen_name`` - String \* ``in_reply_to_status_id`` -
+        String \* ``urls`` - Array of Strings \* ``hashtags`` - Array of Strings
+        \* ``user_mentions`` - Array of Strings \* ``img_urls`` - Array of
+        Strings \* ``screen_name`` - String \* ``verified`` - Numeric \*
+        ``user_location`` - String
+        
+        ``gnulynx twitter-stream``
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
+        Filter twitter's streaming api for matching tweets.
+        
+        Imports From:
+        ^^^^^^^^^^^^^
+        
+        -  ``birdfeeder.Stream``
+        
+        Accepts:
+        ^^^^^^^^
+        
+        See more info for all
+        `here <https://dev.twitter.com/docs/api/1.1/post/statuses/filter>`__. \*
+        ``track`` \* ``follow`` \* ``locations`` \* ``stall_warnings``
+        
+        Returns:
+        ^^^^^^^^
+        
+        A generator of objects containing: \* ``twitter_id`` - Primary Key \*
+        ``text`` - String \* ``datetime`` - Datetime \*
+        ``in_reply_to_screen_name`` - String \* ``in_reply_to_status_id`` -
+        String \* ``urls`` - Array of Strings \* ``hashtags`` - Array of Strings
+        \* ``user_mentions`` - Array of Strings \* ``img_urls`` - Array of
+        Strings \* ``screen_name`` - String \* ``verified`` - Numeric \*
+        ``user_location`` - String
+        
+        ``gnulynx twitter-user-stats``
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
+        Get stats about a twitter user.
+        
+        Imports From:
+        ^^^^^^^^^^^^^
+        
+        -  ``birdfeeder.user_stats``
+        
+        Requires:
+        ^^^^^^^^^
+        
+        -  ``screen_name`` - A user's screen name.
+        
+        Accepts:
+        ^^^^^^^^
+        
+        -  ``access_token``- An authenticated user's access token.
+        
+        Returns:
+        ^^^^^^^^
+        
+        An object containing: \* ``datetime`` - Datetime \* ``screen_name`` -
+        String \* ``favorites`` - Numeric \* ``followers`` - Numeric \*
+        ``friends`` - Numeric \* ``listed`` - Numeric \* ``statuses`` - Numeric
+        
+        ``facebook``
+        ------------
+        
+        ``gnulynx facebook-page``
+        ~~~~~~~~~~~~~~~~~~~~~~~~~
+        
+        Get posts from a facebook page.
+        
+        Imports From:
+        ^^^^^^^^^^^^^
+        
+        -  ``zuckup.page``
+        
+        Requires:
+        ^^^^^^^^^
+        
+        -  ``page_id``
+        
+        Accepts:
+        ^^^^^^^^
+        
+        -  ``paginate`` - Whether or not to paginate through results via
+           additional requests.
+        -  ``concurrent`` - Whether or not to run t!he task concurrently.
+        -  ``throttle`` - The number of seconds to wait between requests.
+        -  ``limit`` - The number of tweets to return per request.
+        -  ``max_requests`` - The maximum number of requests to make in this
+           task.
+        -  ``access_token`` - An authenticated user's access token.
+        -  ``wait`` - How long to wait in between errors (seconds)
+        -  ``backoff`` - The factor by which to increase ``wait`` exponentially
+           after successive errors.
+        -  ``timeout`` - The time (in seconds) at which to raise a timeout
+           error.
+        -  ``since`` - The post id to start from (useful for polling).
+        -  ``until`` - The post id to to stop at (useful for polling).
+        
+        Returns:
+        ^^^^^^^^
+        
+        A generator of objects containing: \* ``post_id`` - Primary Key \*
+        ``page_id`` - String \* ``urls`` - Array of Strings \* ``img_url`` -
+        String \* ``datetime`` - Datetime \* ``message`` - String \*
+        ``description`` - String \* ``status_type`` - String \* ``type`` -
+        String
+        
+        ``gnulynx facebook-insights``
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
+        Imports From:
+        ^^^^^^^^^^^^^
+        
+        -  ``zuckup.insights``
+        
+        Requires:
+        ^^^^^^^^^
+        
+        -  ``page_id``
+        
+        Accepts:
+        ^^^^^^^^
+        
+        -  ``paginate`` - Whether or not to paginate through results via
+           additional requests.
+        -  ``concurrent`` - Whether or not to run the task concurrently.
+        -  ``throttle`` - The number of seconds to wait between requests.
+        -  ``limit`` - The number of tweets to return per request.
+        -  ``max_requests`` - The maximum number of requests to make in this
+           task.
+        -  ``access_token`` - An authenticated user's access token.
+        -  ``wait`` - How long to wait in between errors (seconds)
+        -  ``backoff`` - The factor by which to increase ``wait`` exponentially
+           after successive errors.
+        -  ``timeout`` - The time (in seconds) at which to raise a timeout
+           error.
+        -  ``since`` - The post id to start from (useful for polling).
+        -  ``until`` - The post id to to stop at (useful for polling).
+        
+        Returns:
+        ^^^^^^^^
+        
+        A generator of objects containing: \* ``page_id`` - String \*
+        ``post_id`` String \* ``datetime`` Datetime \* ``pub_datetime`` Datetime
+        \* **TK** - insights data, all Numeric
+        
+        ``gnulynx facebook-page-stats``
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
+        Get stats about a facebook page.
+        
+        Imports From:
+        ^^^^^^^^^^^^^
+        
+        -  ``zuckup.page_stats``
+        
+        Requires:
+        ^^^^^^^^^
+        
+        -  ``page_id``
+        
+        Accepts:
+        ^^^^^^^^
+        
+        -  ``access_token`` - An authenticated user's token
+        
+        Returns:
+        ^^^^^^^^
+        
+        An object containing: \* ``page_id`` - String \*
+        ``page_talking_about_count`` - Numeric \* ``page_likes`` - Numeric \*
+        ``datetime`` - Datetime
+        
+        ``galerts``
+        -----------
+        
+        ``gnulynx google-alerts-feed``
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
+        ``google-analytics``
+        --------------------
+        
+        ``gnulynx ganalytics-TK``
+        ~~~~~~~~~~~~~~~~~~~~~~~~~
+        
+        ``rss``
+        -------
+        
+        ``gnulynx rss-feed``
+        ~~~~~~~~~~~~~~~~~~~~
+        
+        ``hacker-news``
+        ---------------
+        
+        ``gnulynx hacker-news-search-posts``
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
+        ``gnulynx hacker-news-search-comments``
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
+        ``reddit``
+        ----------
+        
+        ``gnulynx reddit-search``
+        ~~~~~~~~~~~~~~~~~~~~~~~~~
+        
+        ``homepage``
+        ------------
+        
+        ``gnulynx homepage-articles``
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
+        ``gnulynx hompeage-link-stats``
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
+        ``scrape``
+        ----------
+        
+        ``gnulynx scrape muck-rack``
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
+        .. |travis-img| image:: https://travis-ci.org/newslynx/gnulynx.svg
+        
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
