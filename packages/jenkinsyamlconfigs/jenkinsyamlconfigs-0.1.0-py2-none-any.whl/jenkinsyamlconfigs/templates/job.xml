@@ -1,0 +1,113 @@
+<?xml version='1.0' encoding='UTF-8'?>
+{% import 'macros.xml' as utils %}
+<project>
+  <logRotator class="hudson.tasks.LogRotator">
+    <daysToKeep>{{ job.log_keep_days or 30 }}</daysToKeep>
+    <numToKeep>{{ job.log_keep_builds or 50 }}</numToKeep>
+    <artifactDaysToKeep>{{ job.artifact_keep_days or -1 }}</artifactDaysToKeep>
+    <artifactNumToKeep>{{ job.artifact_keep_num or -1 }}</artifactNumToKeep>
+  </logRotator>
+  <actions/>
+  <description>{{ job.description or '' }}</description>
+  <keepDependencies>false</keepDependencies>
+  <disabled>{{ job.disabled or 'false' }}</disabled>
+  <concurrentBuild>{{ job.concurrent or 'false' }}</concurrentBuild>
+  {% if job.auth_token %}
+  <authToken>{{ job.auth_token }}</authToken>
+  {% endif %}
+  {% if job.assigned_node %}
+  <canRoam>false</canRoam>
+  <assignedNode>{{ job.assigned_node }}</assignedNode>
+  {% else %}
+  <canRoam>true</canRoam>
+  {% endif %}
+  
+  
+  
+  {% if job.scms %}
+    {% for scm in job.scms %}
+    {% include 'scms/' + scm.type + '.xml' %}
+    {% endfor %}
+  {% else %}
+  <scm class="hudson.scm.NullSCM"/>
+  {% endif %}
+  
+  
+  
+  {% if job.properties or job.parameters %}
+  <properties>
+  {% if job.properties %}
+    {% for property in job.properties %}
+    {% include 'properties/' + property.type + '.xml' %}
+    {% endfor %}
+  {% endif %}
+  
+  {% if job.parameters %}
+  <hudson.model.ParametersDefinitionProperty>
+    <parameterDefinitions>
+    
+    {% for parameter in job.parameters %}
+    {% include 'parameters/' + parameter.type + '.xml' %}
+    {% endfor %}
+    
+    </parameterDefinitions>
+  </hudson.model.ParametersDefinitionProperty>
+  {% endif %}
+  
+  </properties>
+  {% else %}
+  <properties/>
+  {% endif %}
+  
+  
+  
+  
+  {% if job.triggers %}
+  <triggers class="vector">
+    {% for trigger in job.triggers %}
+    {% include 'triggers/' + trigger.type + '.xml' %}
+    {% endfor %}
+  </triggers>
+  {% else %}
+  <triggers class="vector"/>
+  {% endif %}
+
+
+
+
+
+  {% if job.builders %}
+  <builders>
+    {% for builder in job.builders %}
+    {% include 'builders/' + builder.type + '.xml' %}
+    {% endfor %}
+  </builders>
+  {% else %}
+  <builders/>
+  {% endif %}
+  
+  
+  {% if job.publishers %}
+  <publishers>
+    {% for publisher in job.publishers %}
+    {% include 'publishers/' + publisher.type + '.xml' %}
+    {% endfor %}
+  </publishers>
+  {% else %}
+  <publishers/>
+  {% endif %}
+  
+  
+  
+  
+  {% if job.buildWrappers %}
+  <buildWrappers>
+    {% for buildWrapper in job.buildWrappers %}
+    {% include 'buildWrappers/' + buildWrapper.type + '.xml' %}
+    {% endfor %}
+  </buildWrappers>
+  {% else %}
+  <buildWrappers/>
+  {% endif %}
+
+</project>

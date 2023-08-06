@@ -1,0 +1,45 @@
+name: example
+description: "This is an example YAML job config"
+assigned_node: build01
+log_keep_days: 7
+concurrent: true
+disabled: true
+
+parameters:
+- type: string
+  label: BRANCH
+  value: master
+  
+properties:
+- type: throttle
+  enabled: true
+  per_node: 4
+  
+scms:
+- type: git
+  repo_url: git@git.example.com:example.git
+  branches:
+  - 'origin/${BRANCH}'
+
+builders:
+- type: shell
+  command: !insert example.sh
+  
+publishers:
+- type: report_violations
+  entries:
+  - type: checkstyle
+    pattern: "validation_output/checkstyle-*.xml"
+  - type: jslint
+    pattern: "validation_output/jslint.xml"
+- type: email
+  send_to_individuals: true
+  
+buildWrappers:
+- type: namesetter
+  name_format: '#${BUILD_NUMBER}-${ENV,var="BRANCH"}'
+  
+
+
+  
+
