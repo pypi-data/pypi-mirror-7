@@ -1,0 +1,286 @@
+<dl class="portlet portletDragdrop portlet-static-drag-drop"
+    i18n:domain="ityou.dragdrop" >
+    <dt class="portletHeader">
+        <span class="portletTopLeft"></span>
+        <span i18n:translate="drag_and_drop">Drag & Drop</span>
+        <span class="portletTopRight"></span>
+    </dt>
+    
+<dd class="portletItem odd">
+    <p id="dragdrop-container">
+        <span id="dragdrop-portlet-text" i18n:translate="drop_docs_here">Drop Documents here to copy or move.</span>
+    </p>
+        
+    <span class="portletBottomLeft"></span>
+    <span class="portletBottomRight"></span>
+        
+    <div class="copy-move-container border-box border-radius clear-fix-drag-drop">
+    	<div class="action-bar border-box copy" i18n:translate="copy">Copy</div>
+    	<div class="action-bar border-box move state-active" i18n:translate="move">Move</div>
+    </div>
+    
+    <div id="delete-container">
+    	<a tal:attributes="href view/trash_folder">
+        	<i class="icon-trash"></i>
+        </a>
+    </div>
+</dd>
+
+    <dd id="debug-imessage" class="debug"></dd>
+    
+    
+    
+    <!--  ================= JQ-TMPL ================= -->
+
+    <div id="no-tal" tal:replace='structure string:
+    
+        <script type="text/x-jsrender" id="dragdrop-dragdropcontainer-tmpl">
+            
+            <div class="drag-drop-container border-box border-radius clearfix" id="{{:uid}}"
+                data-id="{{:id}}"
+                data-uid="{{:uid}}"
+                data-portal-type="{{:portal_type}}"
+                data-url="{{:url}}"
+                data-thumbnail="{{:thumbnail_class}}"
+                data-contenticon="{{:icon}}"
+                data-addinfo-author="{{:author}}"
+                data-addinfo-date-created="{{:created}}"
+                data-addinfo-date-edited="{{:edited}}"
+                data-addinfo-description="{{:description}}"
+            >
+                <div class="action-bar border-box clearfix">
+                    <span class="copy-move-item fa fa-arrow-left"></span>
+                    <input type="checkbox" name="{{:uid}}">
+                    <span class="loader fa fa-spinner fa-spin"></span>
+                    <span class="delete-item fa fa-times"></span>
+                </div>
+                
+                <div class="thumbnail-wrapper border-box">
+                    <img src="{{:thumbnail_url}}" class="img-thumbnail">
+                </div>
+                
+                <div class="item-title border-box break-word">{{:title}}</div>
+            </div>
+            
+        </script>
+    
+
+        <script type="text/x-jsrender" id="dragdrop-draggableFolder-tmpl">
+        
+            <div id="{{:uid}}" class="folder-item {{:portal_type}} {{:currentView}}" style="width: {{:elWidth}}px !important; height: {{:elHeight}}px !important;">
+                <div class="thumbnail clearfix">
+                    <a href="{{:ahref}}" class="col-xs-4 col-sm-2">
+                        <img src="{{:imgsrc}}" class="img-responsive {{:portal_type}}">
+                    </a>
+                    
+                    <div class="caption col-xs-8 col-sm-10">
+                        <a href="{{:ahref}}">
+                            <div class="item-title">{{:title}}</div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        
+        </script>
+        
+        <script type="text/x-jsrender" id="dragdrop-draggableFile-tmpl">
+        
+            <div id="{{:uid}}" class="folder-item {{:portal_type}} {{:currentView}}" style="width: {{:elWidth}}px !important; height: {{:elHeight}}px !important;">
+                <div class="thumbnail clearfix">
+                    <a href="{{:ahref}}" class="linked-document link-overlay col-xs-4 col-sm-2">
+                        <img src="{{:imgsrc}}" class="img-responsive {{:portal_type}}">
+                    </a>
+                    
+                    <div class="caption col-xs-8 col-sm-10">
+                        <a class="document-download" href="{{:ahref}}" title="{{:title}}">
+                            <div class="contenttype-{{:portal-type}} item-title">{{:title}}</div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+        </script>
+        
+        
+        <script type="text/x-jsrender" id="dragdrop-droppablePlaceholder-tmpl">
+        
+            <div class="thumbnail" style="text-align: center; border: 1px solid red;">
+                <i class="fa fa-spinner fa-spin" style="font-size: 72px;"></i>
+            </div>
+        
+        </script>
+        
+        
+        <script type="text/x-jsrender" id="dragdrop-droppableFolder-tmpl">
+        
+            <div class="thumbnail" style="height: {{:elHeight}}px;">
+                <a href="{{:url}}" class="thumbnail-holder">
+                    <img src="{{:imgsrc}}" class="img-responsive Folder">
+                </a>
+                
+                <div class="caption">
+                    <a href="{{:url}}" title="{{:title}}">
+                        <div class="item-title">{{:title}}</div>
+                    </a>
+                </div>
+                
+                <div class="toolbar">
+                    <div class="holder">
+                        <input type="checkbox">
+                        <i class="fa fa-trash-o delete"></i>
+                    </div>
+                </div>
+                
+                <div class="additional-information-trigger">
+    	            <div class="inner">
+    	                <i class="fa fa-plus-circle"></i>
+    	            </div>
+    	        </div>
+                
+                <div class="additional-information">
+                    <div class="holder">
+                        <i class="fa fa-user"></i> <span class="author"><{{:author}}/span><br>
+        	            <i class="fa fa-pencil"></i> <span class="date_created">{{:created}}</span><br>
+        	            <i class="fa fa-edit"></i> <span class="date_edited">{{:edited}}</span>
+    	            </div>
+                </div>
+            </div>
+        
+        </script>
+        
+        <script type="text/x-jsrender" id="dragdrop-droppableItem-tmpl">
+        
+            <div class="thumbnail" style="height: {{:elHeight}}px;">
+                <a href="{{:url}}" class="linked-document link-overlay thumbnail-holder" title="{{:title}}" rel="pb_{{:relpb}}" style="cursor: pointer;">
+                    <img src="{{:imgsrc}}" class="img-responsive {{:portal_type}}">
+                </a>
+                
+                <div class="caption">
+                    <a href="{{:ahref}}" class="document-download" title="{{:title}}">
+                        <div class="item-title {{:contenttype}}">{{:title}}</div>
+                    </a>
+                </div>
+                
+                <div class="toolbar">
+                    <div class="holder">
+                        <input type="checkbox">
+                        <i class="fa fa-trash-o delete"></i>
+                    </div>
+                </div>
+                
+                <div class="additional-information-trigger">
+    	            <div class="inner">
+    	                <i class="fa fa-plus-circle"></i>
+    	            </div>
+    	        </div>
+                
+                <div class="additional-information">
+                    <div class="holder">
+                        <i class="fa fa-user"></i> <span class="author">{{:author}}</span><br>
+        	            <i class="fa fa-pencil"></i> <span class="date_created">{{:created}}</span><br>
+        	            <i class="fa fa-edit"></i> <span class="date_edited">{{:edited}}</span>
+    	            </div>
+                </div>
+            </div>
+        
+        </script>
+        
+        <script type="text/x-jsrender" id="dragdrop-droppableFolder-wrapper-tmpl">
+            
+            <div id="{{:uid}}" class="folder-item {{:portal_type}} {{:id}}" style="display: block;">
+                {{include tmpl="#dragdrop-droppableFolder-tmpl" /}}
+            </div>    
+            
+        </script>
+        
+        <script type="text/x-jsrender" id="dragdrop-droppableItem-wrapper-tmpl">
+        
+            <div id="{{:uid}}" class="folder-item {{:portal_type}} {{:id}}" style="display: block;">
+                {{include tmpl="#dragdrop-droppableItem-tmpl" /}}
+            </div>
+        
+        </script>
+        
+    '/>
+    
+    
+    <div id="no-tal" tal:replace='structure string:
+    
+        <script id="dragdrop-folderitem-folder-key-tmpl" type="text/x-jquery-tmpl">
+            <div id="$${uid}" class="folder-item $${portal_type} $${id}" style="display: block;">
+                <div class="toolbar clear-fix-drag-drop">
+                    <div>
+                        <input class="noborder" type="checkbox" name="$${uid}" />
+                        <i class="icon-trash delete"></i>
+                    </div>
+                </div>
+                <a class="$${aclass}" href="$${url}" rel="#pb_$${relpb}" style="cursor: pointer;">
+                    <div class="thumbnail-wrapper">
+                        <img class="thumbnail $${portal_type}" src="$${imgsrc}" />
+                    </div>
+                    <div class="item-title">$${title}</div>
+                </a>
+                <div class="additional-information">
+                    <i class="icon-file-text-alt">
+                        <div class="item-title">$${title}</div>
+                    </i>
+                    <div class="item-description">$${description}</div>
+                    <i class="icon-user">
+                        <div class="item-author">$${author}</div>
+                    </i>
+                    <i class="icon-pencil">
+                        <div class="item-created">$${created}</div>
+                    </i>
+                    <i class="icon-edited">
+                        <div class="item-edited">$${edited}</div>
+                    </i>
+                </div>
+            </div>
+        </script>
+    '/>
+    
+    <div id="no-tal" tal:replace='structure string:
+    
+        <script id="dragdrop-folderitem-key-tmpl" type="text/x-jquery-tmpl">
+            <div id="$${uid}" class="folder-item $${portal_type} $${id}" style="display: block;">
+                <div class="toolbar clear-fix-drag-drop">
+                    <div>
+                        <input class="noborder" type="checkbox" name="$${uid}" />
+                        <i class="icon-trash delete"></i>
+                    </div>
+                </div>
+                <a class="document-download" href="$${url}">
+                    <div class="$${contenttype} item-title">
+                        <img src="$${contenticon}" />
+                        <span>$${title}</span>
+                    </div>
+                </a>
+                <a class="$${aclass}" href="$${url}" rel="#pb_$${relpb}" style="cursor: pointer;">
+                    <div class="thumbnail-wrapper">
+                        <img class="thumbnail $${portal_type}" src="$${imgsrc}" />
+                    </div>
+                </a>
+                <div class="additional-information">
+                    <i class="icon-file-text-alt">
+                        <div class="item-title">$${title}</div>
+                    </i>
+                    <div class="item-description">$${description}</div>
+                    <i class="icon-user">
+                        <div class="item-author">$${author}</div>
+                    </i>
+                    <i class="icon-pencil">
+                        <div class="item-created">$${created}</div>
+                    </i>
+                    <i class="icon-edited">
+                        <div class="item-edited">$${edited}</div>
+                    </i>
+                </div>
+            </div>
+        </script>
+    '/>
+
+    <!--  ================= /JQ-TMPL ================= -->
+    
+    
+    
+</dl>
