@@ -1,0 +1,46 @@
+Summary
+-------
+
+Cube for elections data from data.gouv.fr
+
+
+Installation
+------------
+
+Create an instance::
+
+  cubicweb create elections my_instance_elections
+
+Create the database::
+
+  cubicweb db-create my_instance_elections
+
+**Do not launch the db-init**
+
+Insert postgis::
+
+  psql my_instance_elections -f /usr/share/postgresql/9.1/contrib/postgis-1.5/postgis.sql
+  psql my_instance_elections -f /usr/share/postgresql/9.1/contrib/postgis-1.5/spatial_ref_sys.sql
+
+Finish the db initialization::
+
+  cubicweb db-init my_instance_elections
+
+
+Push the osm data (see README of osmfrance cube for more details):
+
+* Shapefiles are taken from http://osm13.openstreetmap.fr/~cquest/openfla/export/
+  (also shared on https://www.data.gouv.fr/fr/organization/openstreetmap)
+
+* Launch the command::
+
+    cubicweb-ctl osmfrance_import_shp my_instance_elections --regions=/path/to/osm/dataosm/regions-20140306-100m-shp.zip --departements=/path/to/osm/dataosm/departements-20140306-100m-shp.zip --arrondissements=/path/to/osm/dataosm/arrondissements-20131220-100m-shp.zip  --epci=/path/to/osm/dataosm/epci-20140306-100m-shp.zip --communes=/path/to/osm/dataosm/communes-20140306-100m-shp.zip
+
+
+Push the elections data::
+
+  cubicweb-ctl elections-import my_instance_elections
+
+Rebuild the FTI index::
+
+  cubicweb-ctl db-rebuild-fti my_instance_elections
