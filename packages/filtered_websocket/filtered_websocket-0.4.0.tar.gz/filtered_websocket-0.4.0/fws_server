@@ -1,0 +1,59 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import importlib
+
+from twisted.internet import reactor
+from filtered_websocket.storage_objects.base import BasePubSubStorageObject
+from filtered_websocket.config_deserializer import config_deserializer
+from filtered_websocket.server import default_parser, build_reactor
+
+# Storage objects are configured via env variables for now,
+# consider .conf files in the future
+STORAGE_OBJECT_MODULE = os.environ.get("STORAGE_OBJECT_MODULE", None)
+if STORAGE_OBJECT_MODULE is None:
+    STORAGE_OBJECT_MODULE = \
+        "filtered_websocket.storage_objects.default"
+
+storage_object = importlib.import_module(STORAGE_OBJECT_MODULE)
+StorageObject = storage_object.StorageObject  # NOQA
+
+parser = default_parser()
+parser = StorageObject.parser(parser)
+options = parser.parse_args(sys.argv[1:])
+
+# A passed in config file will overwrite all other args
+if options.config is not None:
+    options = parser.parse_args(config_deserializer(options.config))
+
+# If no filters are specified this will be imported.
+# the broadcast_by_message filter just creates a simple broadcast server
+FILTERS = [
+    "filtered_websocket.filters.broadcast_messages",
+    "filtered_websocket.filters.stdout_messages",
+]
+
+storage_object_instance = StorageObject(options)
+if issubclass(StorageObject, BasePubSubStorageObject):
+    storage_object_subscriber = StorageObject.get_subscriber()(
+        client=storage_object_instance.get_client(),
+        options=options,
+    )
+    # Build our server reactor.
+    web_socket_instance = build_reactor(
+        options,
+        storage_object=storage_object_instance,
+        subscriber=storage_object_subscriber
+    )
+else:
+    build_reactor(options)
+
+if options.filters is not None:
+    FILTERS = options.filters
+
+# Importing the filters will inject them into event handlers at runtime
+for _filter in FILTERS:
+    importlib.import_module(_filter)
+
+reactor.run()
