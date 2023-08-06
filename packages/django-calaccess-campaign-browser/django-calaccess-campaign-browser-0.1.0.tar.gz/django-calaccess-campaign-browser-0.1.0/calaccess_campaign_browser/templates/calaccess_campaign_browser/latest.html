@@ -1,0 +1,52 @@
+{% extends 'calaccess_campaign_browser/base.html' %}
+
+{% block title %}Latest - {{ block.super }}{% endblock %}
+
+{% block content %}
+  <div class="row">
+    <div class="col-12-lg">
+        <h1>Latest</h1>
+    </div>
+  </div>
+
+  {% include "calaccess_campaign_browser/paginator.html" %}
+
+  <div class="row">
+    <div class="col-12-lg">
+        <table class="table table-bordered table-hover">
+          <thead>
+            <tr>
+              <th>Filing no.</th>
+              <th>Filed</th>
+              <th>Committee</th>
+              <th>Form</th>
+              <th>Duplicate</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for object in object_list %}
+            <tr>
+              <td>
+                <a href="{{ object.get_absolute_url }}">{{ object.filing_id_raw }}</a>
+              </td>
+              <td>{{ object.date_filed }}</td>
+              <td>
+                <a href="{{ object.committee.get_absolute_url }}">{{ object.committee.short_name }}</a>
+              </td>
+              <td>{{ object.form_id }}</td>
+              <td>
+                {% if object.dupe %}
+                    <i class="fa fa-check-square-o"></i>
+                {% else %}
+                    <i class="fa fa-square-o"></i>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+    </div>
+  </div>
+
+  {% include "calaccess_campaign_browser/paginator.html" %}
+{% endblock %}
