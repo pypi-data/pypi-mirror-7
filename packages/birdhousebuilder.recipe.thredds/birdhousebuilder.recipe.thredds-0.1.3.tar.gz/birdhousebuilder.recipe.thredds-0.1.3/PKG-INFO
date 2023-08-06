@@ -1,0 +1,99 @@
+Metadata-Version: 1.1
+Name: birdhousebuilder.recipe.thredds
+Version: 0.1.3
+Summary: A Buildout recipe to install and configure thredds server with Anaconda.
+Home-page: http://www.dkrz.de
+Author: Carsten Ehbrecht
+Author-email: ehbrecht@dkrz.de
+License: BSD
+Description: *******************************
+        birdhousebuilder.recipe.thredds
+        *******************************
+        
+        .. contents::
+        
+        Introduction
+        ************
+        
+        ``birdhousebuilder.recipe.thredds`` is a `Buildout`_ recipe to install and configure `Thredds`_ server with `Anaconda`_.
+        
+        .. _`Buildout`: http://buildout.org/
+        .. _`Anaconda`: http://www.continuum.io/
+        .. _`Supervisor`: http://supervisord.org/
+        .. _`Thredds`: http://www.unidata.ucar.edu/software/thredds/current/tds/TDS.html
+        .. _`Tomcat`: https://tomcat.apache.org/
+        
+        
+        Usage
+        *****
+        
+        The recipe requires that Anaconda is already installed. It assumes that Anaconda is installed at the default location in your home directory ``~/anaconda``. Otherwise you need to set the Buildout option ``anaconda-home`` to the correct location.
+        
+        It installs the ``thredds`` and ``apache-tomcat`` package from a conda channel and setups `Tomcat`_ with Thredds. It deploys a `Supervisor`_ configuration for Tomcat in ``~/anaconda/etc/supervisor/conf.d/tomcat.conf``. Supervisor can be started with ``~/anaconda/etc/init.d/supervisord start``.
+        
+        By default Thredds will be available on http://localhost:8080/thredds.
+        
+        The recipe depends on ``birdhousebuilder.recipe.conda``, ``birdhousebuilder.recipe.supervisor`` and ``birdhousebuilder.recipe.tomcat``.
+        
+        Supported options
+        =================
+        
+        This recipe supports the following options:
+        
+        ``anaconda-home``
+           Buildout option with the root folder of the Anaconda installation. Default: ``$HOME/anaconda``.
+        
+        ``data_root``
+          Root Path of data files (NetCDF) for Thredds.
+        
+        Example usage
+        =============
+        
+        The following example ``buildout.cfg`` installs Thredds with Anaconda and given ``data_root`` directory::
+        
+          [buildout]
+          parts = thredds
+        
+          anaconda-home = /home/myself/anaconda
+        
+          [thredds]
+          recipe = birdhousebuilder.recipe.thredds
+          data_root = ${buildout:anaconda-home}/var/lib/thredds/data_root
+        
+        
+        
+        Authors
+        *******
+        
+        Carsten Ehbrecht ehbrecht at dkrz.de
+        
+        Changes
+        *******
+        
+        0.1.3 (2014-08-27)
+        ==================
+        
+        * Added web.xml config template.
+        
+        0.1.2 (2014-08-01)
+        ==================
+        
+        * Updated documentation.
+        
+        0.1.1 (2014-07-22)
+        ==================
+        
+        * Fixed deployment of thredds config.
+        
+        0.1.0 (2014-07-10)
+        ==================
+        
+        * Initial Release.
+        
+Keywords: buildout recipe
+Platform: UNKNOWN
+Classifier: Framework :: Buildout
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Software Development :: Build Tools
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: License :: OSI Approved :: BSD License
