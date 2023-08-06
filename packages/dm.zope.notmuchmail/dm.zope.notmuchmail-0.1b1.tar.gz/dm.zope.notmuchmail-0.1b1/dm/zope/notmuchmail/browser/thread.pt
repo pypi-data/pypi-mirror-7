@@ -1,0 +1,50 @@
+<html metal:use-macro="view/@@standard_macros/page">
+  <body>
+    <div metal:fill-slot="body" i18n:domain="dm_zope_notmuchmail"
+	 tal:define="
+	   jqui view/jqui;
+	   info view/info;
+	 "
+      >
+      <h2><span i18n:translate="">Thread</span> <span tal:content="info/tid"/> <span>for your search</span> "<span tal:content="info/search_terms"/>"</h2>
+      <div tal:define="msgs info/msgs" id="main">
+	<metal:macro define-macro="msgs_level">
+	  <table>
+	  <tal:msg tal:repeat="msg msgs">
+	  <tr
+	       tal:attributes="class python:'jqui message ' + (repeat['msg'].odd() and 'odd' or 'even')"
+	       >
+	    <td tal:condition="jqui" class="notmuchmail-open"><div></div></td>
+	    <td>
+	    <metal:macro define-macro="message_header">
+	      <tal:condition condition="msg/matched"><span i18n:translate="" class="message-matches">matches</span><br /></tal:condition>
+	      <tal:repeat repeat="hdr msg/header_items">
+	      <span i18n:translate="" class="message-header" tal:content="python: hdr[0]">To</span>: <span tal:content="python: hdr[1]"/><br />
+											      </tal:repeat>
+	      <span i18n:translate="" class="message-header">Tags</span>: <span tal:content="msg/tags"/><br />
+	    </metal:macro>
+	    <a tal:attributes="href msg/url" target="message" i18n:translate="">view this message
+            </a>
+	    <tal:condition condition="not:jqui">
+	    <div tal:define="msgs msg/msgs" tal:condition="msgs"
+	      class="message-replies">
+	      <metal:use-macro use-macro="context/@@email_search_thread/macros/msgs_level" />
+            </div>
+	    </tal:condition>
+	  </td>
+	</tr>
+	<tal:condition condition="jqui">
+	<tr tal:define="msgs msg/msgs" tal:condition="msgs">
+	  <td></td>
+	  <td class="message-replies">
+	     <metal:use-macro use-macro="context/@@email_search_thread/macros/msgs_level" />
+	  </td>
+	</tr>
+	</tal:condition>
+	</tal:msg>
+	</table>
+	</metal:macro>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,38 @@
+<html metal:use-macro="view/@@standard_macros/page">
+  <body>
+    <div metal:fill-slot="body" i18n:domain="dm_zope_notmuchmail"
+	 tal:define="
+	   jqui view/jqui;
+	   msg view/info;
+	 "
+      >
+      <h2><span i18n:translate="">Message</span> <span tal:content="msg/msgid"/> <span>for your search</span> "<span tal:content="msg/search_terms"/>"</h2>
+      <div tal:define="msgs msg/msgs" class="message" id="main">
+	<tal:condition condition="not:jqui">
+	<metal:macro use-macro="context/@@email_search_thread/macros/message_header" />
+        <br />
+	</tal:condition>
+        <div i18n:translate="" tal:condition="not:msg/body">
+          <em>This message lacks a 'text/plain' part and cannot be displayed.</em>
+        </div>
+        <div class="message-body" tal:condition="msg/body" tal:content="msg/body"/>
+	<tal:condition condition="not:jqui">
+	<br />
+	<a i18n:translate="" tal:define="msg msg/prev" tal:condition="msg"
+	   tal:attributes="href msg/url">Previous in thread</a>
+	<a i18n:translate="" tal:define="msg msg/parent" tal:condition="msg"
+	   tal:attributes="href msg/url">Parent in thread</a>
+	<a i18n:translate="" tal:define="msg msg/next" tal:condition="msg"
+	   tal:attributes="href msg/url">Next in thread</a>
+        <div tal:define="msgs msg/msgs" tal:condition="msgs">
+	  <h3 i18n:translate="">Replies</h3>
+	  <div
+           class="message-replies">
+           <metal:use-macro use-macro="context/@@email_search_thread/macros/msgs_level" />
+	  </div>
+        </div>
+	</tal:condition>
+      </div>
+    </div>
+  </body>
+</html>

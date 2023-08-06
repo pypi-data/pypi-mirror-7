@@ -1,0 +1,218 @@
+This package contains a Zope [2] interface to the ``notmuch``
+package (http://notmuchmail.org/). ``notmuch`` is used for email
+indexing and fast retrieval. This package exposes its retrieval
+capabilities through Zope.
+
+
+Functionality
+=============
+
+The package defines two email search views ``email_search_simple``
+and ``email_search_combined``.
+
+``email_search_simple`` presents a simple search form with
+a single field ``Search terms``. In this field, you specify
+what should be retrieved according to the following
+extract from the ``notmuch`` documentation::
+
+       The  search  terms  can  consist of free-form text (and quoted phrases)
+       which  will  match  all  messages  that  contain  all  of   the   given
+       terms/phrases in the body, the subject, or any of the sender or recipient headers.
+
+       As a special case, a search  string  consisting  of  exactly  a  single
+       asterisk ("*") will match all messages.
+
+       In  addition  to free text, the following prefixes can be used to force
+       terms to match against specific portions of an email, (where <brackets>
+       indicate user-supplied values):
+
+            from:<name-or-address>
+
+            to:<name-or-address>
+
+            subject:<word-or-quoted-phrase>
+
+            attachment:<word>
+
+            tag:<tag> (or is:<tag>)
+
+            id:<message-id>
+
+            thread:<thread-id>
+
+            folder:<directory-path>
+
+       The  from: prefix is used to match the name or address of the sender of
+       an email message.
+
+       The to: prefix is used to match the names or addresses of any recipient
+       of an email message, (whether To, Cc, or Bcc).
+
+       Any  term  prefixed with subject: will match only text from the subject
+       of an email. Searching for a phrase in  the  subject  is  supported  by
+       including quotation marks around the phrase, immediately following subject:.
+
+       The attachment: prefix can be used to search for specific filenames (or
+       extensions) of attachments to email messages.
+
+       For  tag:  and is: valid tag values include inbox and unread by default
+       for new messages added by notmuch new as well as any other  tag  values
+       added manually with notmuch tag.
+
+       For  id:, message ID values are the literal contents of the Message-ID:
+       header of email messages, but without the '<', '>' delimiters.
+
+       The thread: prefix can be used with the thread ID values that are  generated  internally  by  notmuch  (and do not appear in email messages).
+       These thread ID values can be seen in the first column of  output  from
+       notmuch search
+
+       The  folder:  prefix can be used to search for email message files that
+       are contained within particular directories within the mail store. Only
+       the  directory  components  below  the top-level mail database path are
+       available to be searched.
+
+       In addition to individual terms, multiple terms can  be  combined  with
+       Boolean  operators  ( and, or, not , etc.). Each term in the query will
+       be implicitly connected by a logical AND if  no  explicit  operator  is
+       provided,  (except  that  terms with a common prefix will be implicitly
+       combined with OR until we get Xapian defect #402 fixed).
+
+       Parentheses can also be used to control the combination of the  Boolean
+       operators.
+
+       Finally, results can be restricted to only messages within a particular
+       time range, (based on the Date: header) with a syntax of:
+
+            <initial-timestamp>..<final-timestamp>
+
+       Each timestamp is a number representing the  number  of  seconds  since
+       1970-01-01  00:00:00  UTC.  This  is  not  the most convenient means of
+       expressing date ranges, but until notmuch is fixed  to  accept  a  more
+       convenient  form, one can use the date program to construct timestamps.
+       For example, with the bash shell the following syntax would  specify  a
+       date range to return messages from 2009-10-01 until the current time:
+
+            $(date +%s -d 2009-10-01)..$(date +%s)
+
+
+When you submit the form, an overview of those threads will be presented
+containing at least one matching message. You can then examine
+a selected thread: this shows you selected header information for
+the contained messages. Finally, you can examine a selected message.
+Currently, the package does not yet show message attachments
+and is tested only for plain text messages (as I do not use
+HTML messages, for security and privacy reasons).
+
+``email_search_combined`` combines the search form and the thread overview
+in a single page. It is this view, you would usually use.
+
+
+User interfaces
+===============
+
+The package currently supports 2 user interfaces: one based
+on JavaScript (more precisely ``jquery`` (http://jquery.com/))
+and a pure HTML interface.
+
+In the JavaScript based interface, thread and message details
+are shown directly on the threads overview page (using AJAX calls
+and dynamic HTML); in the pure HTML interface, those details
+are shown in separate windows (or tabs).
+
+The interfaces are not switched automatically based on
+JavaScript availability in the browser. However, the
+JavaScript based interface should work similar to the
+pure HTML interface if JavaScript is disabled (though it looks
+a bit funny in this setup).
+
+You decide during configuration which of the two interfaces
+is used.
+
+
+Installation
+============
+
+This package requires Zope 2.12 or higher.
+
+This package should be installable by any of the typical means used
+in a Zope 2 environment ("buildout", "easy_install", "pip").
+
+However, it depends on the ``notmuch`` Python package
+(https://pypi.python.org/pypi/notmuch). In order to facilitate
+the use of a corresponding operating system package (called
+``python-notmuch`` in Debian systems), this dependency is not
+declared and you must make this package manually available in
+your Zope environment.
+
+In addition, this packages is only useful, when you have set up
+a ``notmuch`` database which indexes the email messages you are
+interested in. Consult the ``notmuch`` documentation for details.
+
+
+Configuration
+=============
+
+The configuration consists of 3 mandatory parts:
+
+ 1.
+
+   register the package's views.
+
+   This currently is done by including the ZCML
+   of ``dm.zope2.notmuchmail.browser.standalone``
+   in your overall ZCML configuration.
+
+   I plan to support a Plone integration in the future.
+   This integration would use Plone's ``formlib`` integration
+   and Plone's ``main_template`` as base rather than provide
+   a standalone base. Looking at the source of ``standalone``,
+   it should not be difficult to implement a Plone integration
+   (in case, you need one before I support it).
+
+ 2.
+ 
+   provide access to the ``notmuch`` database which indexes
+   the interesting mails.
+
+   This is done by registering a
+   ``dm.zope.notmuchmail.interfaces.INotMuchDatabase`` utility.
+   To implement such a utility, you can use
+   ``dm.zope.notmuchmail.notmuchmail.NotMuchDatabase``.
+   Its constructor gets the path to the maildir indexed by
+   ``notmuch``. If you do not provide the path, then
+   standard ``notmuch`` configuration decides where to find
+   the database - usually one configured for the user running
+   the Zope process.
+   ``dm.zope.notmuchmail:user.zcml`` registers the utility in
+   such a way.
+
+ 3.
+
+   define at what objects (in the Zope hierarchy) which
+   user interface should be available.
+
+   The JavaScript based interface is available at an object,
+   if this objects provides
+   ``dm.zope.notmuchmail.browser.interfaces.IJqUi``;
+   the pure HTML based interface is available, if it
+   does not provide
+   ``dm.zope.notmuchmail.browser.interfaces.IJqUi``
+   but provides ``dm.zope.notmuchmail.browser.interfaces.IUi``.
+
+   You can use the ``Interfaces`` tab of the
+   "Zope Management Interface" (aka "ZMI")
+   of an object, to add interfaces to its set of provided interfaces.
+   Alternatively, you could use a ZCML ``class`` directive
+   to let all objects of the respective class provide a specified
+   interface.
+
+Beside these mandatory configuration steps (whithout them, you
+cannot use the functionality), there is an optional configuration:
+you can define additional message header fields.
+To do this, you register an adapter providing
+``dm.zope.notmuchmail.interfaces.IAdditionalHeaderItems``
+for ``dm.zope.notmuchmail.notmuchmail._Delegator`` objects (those
+are wrappers around ``notmuch`` messages). It must return
+a sequence of name/value items. Each element
+in the sequence is interpreted as an additional message header field
+(with its corresponding value).

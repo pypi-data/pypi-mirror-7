@@ -1,0 +1,59 @@
+<metal:macro define-macro="page">
+<html metal:use-macro="view/@@standard_macros/page">
+  <body>
+    <div metal:fill-slot="body" i18n:domain="dm_zope_notmuchmail" >
+      <metal:form define-slot="form-slot" />
+      <tal:condition condition="request/search_terms|nothing">
+      <tal:div define="
+	   jqui view/jqui;
+	   info view/info;
+	   batch info/batch;
+	   b_prev info/b_prev;
+	   b_next info/b_next;
+	   b_url info/b_url;
+	 "
+      >
+      <h2><span i18n:translate="">Threads for your search</span> "<span tal:content="request/search_terms"/>"</h2>
+      <div tal:condition="info/b_range">
+	<span i18n:translate="">Thread</span> <span tal:content="info/b_range"> </span>
+      </div>
+      <div tal:condition="batch">
+	<table class="listing">
+	  <thead>
+	    <tr>
+	      <th tal:condition="jqui" />
+	      <th class="column" i18n:translate="">Thread-Id</th>
+	      <th class="column" i18n:translate="">Message Nos</th>
+	      <th class="column" i18n:translate="">Authors</th>
+	      <th class="column" i18n:translate="">Subject</th>
+	      <th class="column" i18n:translate="">Dates</th>
+	      <th class="column" i18n:translate="">Tags</th>
+	    </tr>
+	  </thead>
+	  <tbody>
+	    <tr tal:repeat="t batch"
+		tal:attributes="class python:'jqui ' + (repeat['t'].odd() and 'odd' or 'even')">
+	      <td tal:condition="jqui" class="notmuchmail-open"><div></div></td>
+	      <td>
+		<a target="thread"
+		  tal:attributes="href t/url"
+		  tal:content="t/id"
+		  />
+              </td>
+	      <td tal:content="t/msgnos" />
+	      <td tal:content="t/authors" />
+	      <td tal:content="t/subject" />
+	      <td tal:content="t/dates" />
+	      <td tal:content="t/tags" />
+	    </tr>
+	  </tbody>
+	</table>
+      <a tal:condition="python: b_prev is not None" tal:attributes="href string:$b_url&b_start:int=$b_prev">Previous</a>
+      <a tal:condition="python: b_next is not None" tal:attributes="href string:$b_url&b_start:int=$b_next">Next</a>
+      </div>
+      </tal:div>
+      </tal:condition>
+    </div>
+  </body>
+</html>
+</metal:macro>
