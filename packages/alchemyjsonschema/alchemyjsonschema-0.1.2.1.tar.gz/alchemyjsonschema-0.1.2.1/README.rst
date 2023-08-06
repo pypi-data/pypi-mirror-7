@@ -1,0 +1,200 @@
+alchemyjsonschema
+=================
+
+.. code:: python
+
+   # -*- coding:utf-8 -*-
+   import sqlalchemy as sa
+   import sqlalchemy.orm as orm
+   from sqlalchemy.ext.declarative import declarative_base
+
+   Base = declarative_base()
+
+
+   class Group(Base):
+       """model for test"""
+       __tablename__ = "Group"
+
+       pk = sa.Column(sa.Integer, primary_key=True, doc="primary key")
+       name = sa.Column(sa.String(255), default="", nullable=False)
+
+
+   class User(Base):
+       __tablename__ = "User"
+
+       pk = sa.Column(sa.Integer, primary_key=True, doc="primary key")
+       name = sa.Column(sa.String(255), default="", nullable=True)
+       group_id = sa.Column(sa.Integer, sa.ForeignKey(Group.pk), nullable=False)
+       group = orm.relationship(Group, uselist=False, backref="users")
+
+
+   ## ------SingleModelWalker--------
+   import pprint as pp
+   from alchemyjsonschema import SchemaFactory
+   from alchemyjsonschema import SingleModelWalker
+
+   factory = SchemaFactory(SingleModelWalker)
+   pp.pprint(factory.create(User))
+
+   """
+   {'properties': {'group_id': {'type': 'integer'},
+                   'name': {'maxLength': 255, 'type': 'string'},
+                   'pk': {'description': 'primary key', 'type': 'integer'}},
+    'required': ['pk', 'group_id'],
+    'title': 'User',
+    'type': 'object'}
+   """
+
+
+   ## ------OneModelOnlyWalker--------
+   import pprint as pp
+   from alchemyjsonschema import SchemaFactory
+   from alchemyjsonschema import OneModelOnlyWalker
+
+   factory = SchemaFactory(OneModelOnlyWalker)
+   pp.pprint(factory.create(User))
+
+   """
+   {'properties': {'name': {'maxLength': 255, 'type': 'string'},
+                   'pk': {'description': 'primary key', 'type': 'integer'}},
+    'required': ['pk'],
+    'title': 'User',
+    'type': 'object'}
+   """
+
+
+   ## ------AlsoChildrenWalker--------
+   import pprint as pp
+   from alchemyjsonschema import SchemaFactory
+   from alchemyjsonschema import AlsoChildrenWalker
+
+   factory = SchemaFactory(AlsoChildrenWalker)
+   pp.pprint(factory.create(User))
+
+   """
+   {'properties': {'group': {'name': {'maxLength': 255, 'type': 'string'},
+                             'pk': {'description': 'primary key',
+                                    'type': 'integer'}},
+                   'name': {'maxLength': 255, 'type': 'string'},
+                   'pk': {'description': 'primary key', 'type': 'integer'}},
+    'required': ['pk'],
+    'title': 'User',
+    'type': 'object'}
+   """
+
+   pp.pprint(factory.create(Group))
+
+   """
+   {'description': 'model for test',
+    'properties': {'name': {'maxLength': 255, 'type': 'string'},
+                   'pk': {'description': 'primary key', 'type': 'integer'},
+                   'users': {'items': {'name': {'maxLength': 255,
+                                                'type': 'string'},
+                                       'pk': {'description': 'primary key',
+                                              'type': 'integer'}},
+                             'type': 'array'}},
+    'required': ['pk', 'name'],
+    'title': 'Group',
+    'type': 'object'}
+   """
+
+has alchemyjsonschema command
+----------------------------------------
+
+help
+
+.. code:: bash
+
+    $ alchemyjsonschema -h
+    usage: alchemyjsonschema [-h] [--walker {onlyone,single,alsochildren}]
+                             program model
+
+    positional arguments:
+      program
+      model
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      --walker {onlyone,single,alsochildren}
+
+
+target models
+
+.. code:: python
+
+    class Group(Base):
+        __tablename__ = "Group"
+        query = Session.query_property()
+
+        pk = sa.Column(sa.Integer, primary_key=True, doc="primary key")
+        name = sa.Column(sa.String(255), default="", nullable=False)
+        color = sa.Column(sa.Enum("red", "green", "yellow", "blue"))
+        created_at = sa.Column(sa.DateTime, nullable=True)
+
+
+    class User(Base):
+        __tablename__ = "User"
+        query = Session.query_property()
+
+        pk = sa.Column(sa.Integer, primary_key=True, doc="primary key")
+        name = sa.Column(sa.String(255), default="", nullable=False)
+        group_id = sa.Column(sa.Integer, sa.ForeignKey(Group.pk), nullable=False)
+        group = orm.relationship(Group, uselist=False, backref="users")
+        created_at = sa.Column(sa.DateTime, nullable=True)
+
+
+dump schema (commandline)
+
+.. code:: bash
+
+    $ alchemyjsonschema alchemyjsonschema.tests.models:Group --walker alsochildren
+
+    {
+      "title": "Group", 
+      "required": [
+        "pk", 
+        "name"
+      ], 
+      "type": "object", 
+      "properties": {
+        "pk": {
+          "type": "integer", 
+          "description": "primary key"
+        }, 
+        "name": {
+          "maxLength": 255, 
+          "type": "string"
+        }, 
+        "color": {
+          "maxLength": 6, 
+          "type": "string", 
+          "enum": [
+            "red", 
+            "green", 
+            "yellow", 
+            "blue"
+          ]
+        }, 
+        "created_at": {
+          "type": "string", 
+          "format": "date-time"
+        }, 
+        "users": {
+          "type": "array", 
+          "items": {
+            "pk": {
+              "type": "integer", 
+              "description": "primary key"
+            }, 
+            "name": {
+              "maxLength": 255, 
+              "type": "string"
+            }, 
+            "created_at": {
+              "type": "string", 
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    }
