@@ -1,0 +1,82 @@
+heat_template_version: 2013-05-23
+description: 'Common Swift Storage Configuration'
+parameters:
+  SwiftStorageImage:
+    type: string
+    default: overcloud-swift-storage
+  SwiftReplicas:
+    type: number
+    default: 1
+    description: How many replicas to use in the swift rings.
+  OvercloudSwiftStorageFlavor:
+    default: baremetal
+    description: Flavor for Swift storage nodes to request when deploying.
+    type: string
+  NeutronNetworkType:
+    type: string
+    default: 'gre'
+  NeutronEnableTunnelling:
+    type: string
+    default: True
+resources:
+  SwiftStorage0:
+    type: OS::Nova::Server
+    properties:
+      image: {get_param: SwiftStorageImage}
+      flavor: {get_param: OvercloudSwiftStorageFlavor}
+      key_name: {get_param: KeyName}
+      user_data_format: SOFTWARE_CONFIG
+  SwiftKeystoneConfig:
+    type: OS::Heat::StructuredConfig
+    properties:
+      config:
+        keystone:
+          host: {get_input: keystone_host}
+  SwiftStorage0Keystone:
+    type: OS::Heat::StructuredDeployment
+    properties:
+      server: {get_resource: SwiftStorage0}
+      config: {get_resource: SwiftKeystoneConfig}
+      signal_transport: NO_SIGNAL
+      input_values:
+        keystone_host: {get_attr: [ControlVirtualIP, fixed_ips, 0, ip_address]}
+  SwiftStorage0Deploy:
+    type: OS::Heat::StructuredDeployment
+    properties:
+      server: {get_resource: SwiftStorage0}
+      config: {get_resource: SwiftConfig}
+      signal_transport: NO_SIGNAL
+      input_values:
+        neutron_local_ip: {get_attr: [SwiftStorage0, networks, ctlplane, 0]}
+        neutron_tenant_network_type: {get_param: NeutronNetworkType}
+        neutron_enable_tunneling: {get_param: NeutronEnableTunnelling}
+        swift_hash_suffix: {get_param: SwiftHashSuffix}
+        swift_password: {get_param: SwiftPassword}
+        swift_devices:
+          Fn::Join:
+          - ', '
+          - Merge::Map:
+              controller0:
+                Fn::Join:
+                - ''
+                - - 'r1z1-'
+                  - {get_attr: [controller0, networks, ctlplane, 0]}
+                  - ':%PORT%/d1'
+              SwiftStorage0:
+                Fn::Join:
+                - ''
+                - - 'r1z1-'
+                  - {get_attr: [SwiftStorage0, networks, ctlplane, 0]}
+                  - ':%PORT%/d1'
+        swift_proxy_memcache:
+          Fn::Join:
+            - ','
+            - Merge::Map:
+                controller0:
+                  Fn::Join:
+                    - ', '
+                    - - Fn::Join:
+                        - ''
+                        - - {get_attr: [controller0, networks, ctlplane, 0]}
+                          - ':11211'
+        swift_replicas: { get_param: SwiftReplicas}

@@ -1,0 +1,25 @@
+parameters:
+  NeutronPublicInterface:
+    default: eth2
+    description: What interface to bridge onto br-ex for network nodes.
+    type: string
+  PowerManager:
+    default: nova.virt.baremetal.ipmi.IPMI
+    description: Bare metal power manager driver.
+    type: string
+  PxeDeployTimeout:
+    default: 2400
+    description: Timeout for PXE deployment of baremetal nodes
+    type: number
+resources:
+  undercloudNovaDeployment:
+    type: OS::Heat::StructuredDeployment
+    properties:
+      config: {get_resource: undercloudNovaConfig}
+      server: {get_resource: undercloud}
+      signal_transport: NO_SIGNAL
+      input_values:
+        nova_arch: {get_param: BaremetalArch}
+        power_manager: {get_param: PowerManager}
+        pxe_deploy_timeout: {get_param: PxeDeployTimeout}
+        nova_service_password: {get_param: NovaPassword}
