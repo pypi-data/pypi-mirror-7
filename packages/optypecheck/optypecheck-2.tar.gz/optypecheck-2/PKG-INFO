@@ -1,0 +1,230 @@
+Metadata-Version: 1.1
+Name: optypecheck
+Version: 2
+Summary: A non intrusive optional type checking for Python 3 using annotations
+Home-page: https://bitbucket.org/carlopires/optypecheck
+Author: Carlo Pires
+Author-email: carlopires@gmail.com
+License: UNKNOWN
+Description: optypecheck
+        ===========
+        
+        A non intrusive optional type checking for Python 3 using annotations
+        
+        Now that Python 3 supports annotations many people are using the feature
+        to describe the valid types for the input and output of functions and
+        methods. This kind of usage turns the reading of code more easy besides
+        simplifly the documentation.
+        
+        Once types are listed in the annotations, why not use them to check the
+        types? The type checking is especially valuable in the development
+        phase.
+        
+        This idea is not new and there are several implementations on the
+        internet. Most of them using function decorators. The problem with this
+        kind to implementation is that it pollutes the code and overloads the
+        functions calls with type checking.
+        
+        This package implements a non intrusive alternative for type checking in
+        functions and methods. Once types are defined in annotations, no changes
+        are required to make the verification of types. And, because it is
+        completely optional, it can be used only in the desired environmens,
+        like unit testings, for instance. This way, the performance of
+        production code is not affected.
+        
+        Installation
+        ------------
+        
+        ::
+        
+            pip3 install optypecheck
+        
+        Example
+        -------
+        
+        Create a python module, for instance **utils.py**
+        
+        ::
+        
+            #!python
+        
+            def gencode(a: bytes, b: str) -> str:
+                return '{}{}'.format(a[0], b)
+            
+            def valid_number(n) -> 'decimal.Decimal':
+                return n
+        
+            assert __import__('typecheck').typecheck(__name__) 
+        
+        Create a module to test, for instance **test.py**
+        
+        ::
+        
+            #!python
+            from utils import gencode
+        
+            def test1():
+                return gencode('a', 'b') # raises TypeCheckError
+                
+            def test2():
+                return gencode(b'a', 'b') # no error
+        
+            def test3():
+                return gencode(b'a', b'b') # raises TypeCheckError
+        
+            def test4():
+                return valid_number(2.4) # raises TypeCheckError
+        
+            def test5():
+                import decimal
+                return valid_number(decimal.Decimal('2.4')) # no error
+                
+            if __name__ == '__main__':
+                import sys
+                if len(sys.argv) == 2:
+                    test = getattr(sys.modules[__name__], sys.argv[1], None)
+                    if test: 
+                        print(test())
+                        exit(0)
+                print('Use: {} test1|test2|test3|test4|test5'.format(sys.argv[0]))
+        
+        Testing with type checking:
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
+        Test1 - raises TypeCheckError for utils.test1()
+        
+        ::
+        
+            #!bash
+            $python3 test.py test1
+            Traceback (most recent call last):
+              File "test.py", line 21, in <module>
+                test()
+              File "test.py", line 8, in test1
+                print(gencode('a', 'b')) # raises TypeCheckError
+              File "/opt/python34/lib/python3.4/site-packages/typecheck/__init__.py", line 46, in decorated
+                raise TypeCheckError(arg_error_fmt.format(name, argtype, args[i].__class__))
+            typecheck.TypeCheckError: Argument a expects an instance of <class 'bytes'>, <class 'str'> found
+        
+        Test2 - no error for utils.test2()
+        
+        ::
+        
+            #!bash
+            $python3 test.py test2
+            97b
+        
+        Test3 - raises TypeCheckError for utils.test3()
+        
+        ::
+        
+            #!bash
+            $python3 test.py test3
+            Traceback (most recent call last):
+              File "test.py", line 21, in <module>
+                test()
+              File "test.py", line 14, in test3
+                print(gencode(b'a', b'b')) # raises TypeCheckError
+              File "/opt/python34/lib/python3.4/site-packages/typecheck/__init__.py", line 46, in decorated
+                raise TypeCheckError(arg_error_fmt.format(name, argtype, args[i].__class__))
+            typecheck.TypeCheckError: Argument b expects an instance of <class 'str'>, <class 'bytes'> found
+        
+        Test4 - raises TypeCheckError for utils.test4()
+        
+        ::
+        
+            #!bash
+            $python3 test.py test4
+        	Traceback (most recent call last):
+        	  File "test.py", line 28, in <module>
+        	    print(test())
+        	  File "test.py", line 17, in test4
+        	    return valid_number(2.4) # raises TypeCheckError
+        	  File "/opt/python34/lib/python3.4/site-packages/typecheck/__init__.py", line 62, in decorated
+        	    raise TypeCheckError(ret_error_fmt.format(returntype, result.__class__))
+        	typecheck.TypeCheckError: Return type is expected to be <class 'decimal.Decimal'>, <class 'float'> found
+        
+        Test5 - no error for utils.test5()
+        
+        ::
+        
+            #!bash
+            $python3 test.py test5
+            2.4
+        
+        Testing with no type checking:
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
+        Because we use **assert** to call typecheck() if python is called with
+        debug mode disabled, typecheck() is not called. This way we got rid of
+        the overload of type checking in functions and methods.
+        
+        Test1 - result of utils.test1() is wrong, but no error is reported!
+        
+        ::
+        
+            #!bash
+            $python3 -O test.py test1
+            ab
+        
+        Test2 - no error for utils.test2()
+        
+        ::
+        
+            #!bash
+            $python3 -O test.py test2
+            97b
+        
+        Test3 - result of utils.test3() is wrong, but no error is reported
+        again!
+        
+        ::
+        
+            #!bash
+            $python3 -O test.py test3
+            97b'b'
+        
+        Test4 - result of utils.test4() is wrong, but no error is reported
+        again!
+        
+        ::
+        
+            #!bash
+            $python3 -O test.py test4
+            2.4
+        
+        Test5 - no error for utils.test5()
+        
+        ::
+        
+            #!bash
+            $python3 -O test.py test5
+            2.4
+        
+        
+        Cost of type checking
+        ~~~~~~~~~~~~~~~~~~~~~
+        
+        Let's see te cost of type checking for utils.test2():
+        
+        ::
+        
+            #!bash
+            $python3 -m timeit -s 'from test import test2' 'test2()' # with type checking
+            100000 loops, best of 3: 3.06 usec per loop
+        
+            $python3 -O -m timeit -s 'from test import test2' 'test2()' # without type checking
+            1000000 loops, best of 3: 0.445 usec per loop
+        
+        In this case, type checked function is 6.87 times slower. That's why 
+        it's better to use it only for development and testing and, when the
+        code is ready for production, remove then with no penalties.
+        
+Platform: any
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
