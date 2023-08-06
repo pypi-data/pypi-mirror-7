@@ -1,0 +1,110 @@
+#!/usr/bin/python
+from pymeteostation import *
+import ConfigParser, sys, os, time
+
+class MyDaemon(Daemon):
+	def run(self):
+		pathToConfigFile = os.path.expanduser("~")+"/.pymeteostation"
+		parser = ConfigParser.SafeConfigParser()
+		if os.path.exists(pathToConfigFile):
+			parser.read(pathToConfigFile)
+		else:
+			sys.exit("Configuration file probably does not exist. Try using -g argument to generate new.")
+
+		try:
+			delay = float(parser.get("Meteostation","uploadinterval"))   # delay between uplading (sec)
+			username = parser.get("Meteostation","username")   # username for uploading meteo data
+			password = parser.get("Meteostation","password")   # password for uploading meteo data
+		except:
+			sys.exit("Bad format of configuration file.")
+
+		m = Meteostation(pathToConfigFile)
+		while True:
+			data = m.getData()
+			result = m.sendData(username,password,data)
+			m.log(dict(data.items() + result[1].items()))
+			time.sleep(delay)
+
+def printHelp():
+	print "Usage: meteostation [arguments]"
+	print "Arguments:"
+	print " start|stop|restart:            Controlls pymeteostation."
+	print " -n or --no-service:            Starts pymeteostation, but not as service."
+	print " -h or --help:                  Displays this message."
+	print " -g or --generate-config-file:  Generates new config file."
+
+def generateConfigFile():
+	pathToConfigFile = os.path.expanduser("~")+"/.pymeteostation"
+	parser = ConfigParser.SafeConfigParser()
+	parser.add_section("Meteostation")
+	for optionName in ["username","password","uploadinterval","logpath","stationname","latitude","longitude","altitude"]:
+		parser.set("Meteostation",optionName,"")
+
+	parser.add_section("I2C_Device")
+
+	parser.add_section("Translation_Into_POST")
+	for optionName in ["wind_dir","wind_speed","wind_gust","temp","humidity","pressure","rain_1h","rain_24h","rain_today","snow","lum","radiation","dew_point","uv"]:
+		parser.set("Translation_Into_POST",optionName,"")
+
+	try:
+		with open(pathToConfigFile,"w") as f:
+			parser.write(f)
+	except Exception, e:
+		print "Cannot create config file: "+str(e)
+	else:
+		print "Done"
+
+if __name__ == "__main__":
+	daemon = MyDaemon('/tmp/pymeteostation.pid')
+	if len(sys.argv) == 2:
+		if 'start' == sys.argv[1]:
+			print "Starting pymeteostation"
+			daemon.start()
+		elif 'stop' == sys.argv[1]:
+			print "Stopping pymeteostation"
+			daemon.stop()
+		elif 'restart' == sys.argv[1]:
+			print "Restarting pymeteostation"
+			daemon.restart()
+
+		elif sys.argv[1] in ("-n","--no-service"):
+			print "Pymeteostation"
+			pathToConfigFile = os.path.expanduser("~")+"/.pymeteostation"
+			parser = ConfigParser.SafeConfigParser()
+			if os.path.exists(pathToConfigFile):
+				parser.read(pathToConfigFile)
+			else:
+				sys.exit("Configuration file probably does not exist. Try using -g argument to generate new.")
+
+			try:
+				delay = float(parser.get("Meteostation","uploadinterval"))   # delay between uplading (sec)
+				username = parser.get("Meteostation","username")   # username for uploading meteo data
+				password = parser.get("Meteostation","password")   # password for uploading meteo data
+			except:
+				sys.exit("Bad format of configuration file.")
+
+			m = Meteostation(pathToConfigFile)
+			i = 0
+			while True:
+				data = m.getData()
+				result = m.sendData(username,password,data)
+				m.log(dict(data.items() + result[1].items()))
+				print "["+str(i)+"]["+time.strftime("%H:%M:%S", time.gmtime())+"] "+str(data)+" || result: "+str(result[1]["cod"])+" stationID: "+str(result[1]["id"])
+				i += 1
+				time.sleep(delay)
+		elif sys.argv[1] in ("-g","--generate-config-file"):
+			if os.path.exists(os.path.expanduser("~")+"/.pymeteostation"):
+				usersDecision = raw_input("This action will overwrite existing configuration file. Continue? (y/n)  ")
+				if usersDecision == "y":
+					generateConfigFile()
+				else:
+					sys.exit()
+			else:
+				generateConfigFile()
+
+		else:
+			printHelp()
+		sys.exit()
+	else:
+		printHelp()
+		sys.exit()
