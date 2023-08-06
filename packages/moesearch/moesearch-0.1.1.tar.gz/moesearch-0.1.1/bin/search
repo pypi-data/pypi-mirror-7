@@ -1,0 +1,25 @@
+#!/usr/bin/python3
+from __future__ import unicode_literals, print_function
+
+#seems __future__.unicode_literals does not have any effect on py2 code. weird.
+
+import sys
+if sys.version_info[0] == 2:
+  reload(sys) #adds setdefaultencoding in the available attributes
+  sys.setdefaultencoding('utf-8')
+
+import moesearch
+import argparse
+
+parser = argparse.ArgumentParser(description="Search on archive.moe")
+parser.add_argument("--subject", help="the subject you're looking for")
+parser.add_argument("--board", default="a", help="the board you want to search on.")
+parser.add_argument("--text", help="the text you want to look for")
+
+args = parser.parse_args(sys.argv[1:])
+posts = moesearch.search(**vars(args))
+
+for post in posts:
+  print(post.num, "on", post.board.short_name)
+  print(post.comment)
+  print("-----------------------------------")
