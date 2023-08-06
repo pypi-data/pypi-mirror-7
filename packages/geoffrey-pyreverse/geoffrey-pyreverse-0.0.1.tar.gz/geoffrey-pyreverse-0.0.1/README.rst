@@ -1,0 +1,32 @@
+============================
+geoffrey-pyreverse
+============================
+
+.. image:: https://badge.fury.io/py/geoffrey-pyreverse.png
+    :target: http://badge.fury.io/py/geoffrey-pyreverse
+    
+.. image:: https://travis-ci.org/GeoffreyCI/geoffrey-pyreverse.png?branch=master
+        :target: https://travis-ci.org/GeoffreyCI/geoffrey-pyreverse
+
+.. image:: https://pypip.in/d/geoffrey-pyreverse/badge.png
+        :target: https://pypi.python.org/pypi/geoffrey-pyreverse
+
+
+Pyreverse : UML Diagrams for Python
+
+Geoffrey wrapper for pyreverse utility: http://www.logilab.org/6883
+
+* Free software: GPLv3
+* Documentation: http://geoffrey-pyreverse.readthedocs.org.
+
+
+Configuration
+-------------
+
+To correctly use this plugin you must define the variable *pyreverse_path* in the plugin's section of your project
+
+
+Features
+--------
+
+* TODO
