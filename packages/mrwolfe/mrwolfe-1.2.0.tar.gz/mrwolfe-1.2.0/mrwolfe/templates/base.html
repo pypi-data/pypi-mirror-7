@@ -1,0 +1,151 @@
+{% load compress %}
+{% load mrwolfe_tags %}
+
+<!DOCTYPE html>
+
+<html lang="nl">
+  <head>
+
+    <meta charset="utf-8">
+
+    <title>Mr. Wolfe Support Centre</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" 
+          href="{{STATIC_URL}}bootstrap/dist/css/bootstrap.min.css" 
+          type="text/css">
+    <link rel="stylesheet" 
+          href="{{STATIC_URL}}jqueryui/themes/base/minified/jquery-ui.min.css" 
+          type="text/css">
+
+    {% compress css %}
+    <link rel="stylesheet" href="{{STATIC_URL}}css/mrwolfe.css" type="text/css">
+    <link rel="stylesheet" 
+          href="{{STATIC_URL}}fontawesome/css/font-awesome.css" 
+          type="text/css">
+    <link rel="stylesheet" 
+          href="{{STATIC_URL}}fileupload/css/jquery.fileupload-ui.css" 
+          type="text/css">
+    {% endcompress %}
+
+    {% list_plugin_css %}
+
+    <script src="{{ STATIC_URL }}jquery/dist/jquery.min.js"></script>
+    <script src="{{STATIC_URL}}jqueryui/ui/minified/jquery-ui.min.js"></script>
+    <script src="{{STATIC_URL}}bootstrap/dist/js/bootstrap.min.js"></script> 
+
+    {% compress js %}
+    <script type="text/javascript" 
+            src="{{STATIC_URL}}fileupload/js/jquery.fileupload.js">
+    </script>     
+    <script type="text/javascript" 
+            src="{{STATIC_URL}}fileupload/js/jquery.iframe-transport.js">
+    </script>     
+    <script src="{{STATIC_URL}}js/mrwolfe.js"></script>    
+    {% endcompress %}
+
+  </head>
+
+  <body>
+
+    {% csrf_token %}
+
+    {% block container %}
+    <div class="container">
+
+      <nav class="navbar navbar-inverse" role="navigation">
+        <div class="container-fluid">
+
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#navbar-collapse">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">Mr.Wolfe</a>
+          </div>
+
+          <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+
+              <li><a href="/"><i class="fa fa-tachometer">
+                  </i> {% username request.user %}</a>
+              </li>
+              <li><a href="/config"><i class="fa fa-wrench"></i> 
+                  Settings</a>
+              </li>
+              
+              {% if "wiki" in "INSTALLED_APPS"|get_django_setting %}
+              <li><a href="/wiki"><i class="fa fa-info"></i> Wiki</a></li>
+              {% endif %}
+              
+              <li><a href="/help"><i class="fa fa-support"></i> Help</a></li>
+            </ul>
+
+            <form class="navbar-form navbar-right" action="/search/"
+                  method="GET" role="search">
+              {% csrf_token %}
+              <div class="form-group">
+                <input type="text" name="q"
+                       class="form-control"
+                       placeholder="Search issues">
+                <input type="hidden" name="models" value="mrwolfe.issue"/>
+              </div>
+              <button type="submit" class="btn">
+                <i class="fa fa-search"></i>
+              </button>
+            </form>
+
+          </div>
+        </div>
+      </nav>
+
+      <div class="alert 
+                  {% if request.GET.status == "0" %}alert-success{% endif %}
+                  {% if request.GET.status == "-1" %}alert-error{% endif %}
+                  {% if not request.GET.message %}hide{% endif %}
+                  " id="alerts">
+        <button class="close" data-dismiss="alert">×</button>
+        <span class="alert-body">{{ request.GET.message }}</span>
+      </div>
+
+      <div class="btn-toolbar well" role="toolbar">
+        {% block toolbar %}
+        <a class="btn btn-success" 
+           href="{% url 'create_issue' %}">
+          <i class="fa fa-plus"></i> New issue
+        </a>
+
+        {% if "notification"|get_setting == "on" %}
+        <a class="btn btn-warning inline" 
+           href="{% url 'set_notification' %}?name=notification&value=off">
+          <i class="fa fa-volume-off"></i> Disable notification
+        </a>
+        {% else %}
+        <a class="btn btn-warning inline" 
+           href="{% url 'set_notification' %}?name=notification&value=on">
+          <i class="fa fa-volume-up"></i> Enable notification
+        </a>
+        {% endif %}
+        {% endblock %}
+      </div>
+
+      <div id="main">
+        {% block content %}
+        {% endblock %}
+      </div>
+      
+      <div id="footer">
+      </div>
+      
+    </div>
+    {% endblock %}
+
+    <div id="modalcontainer"></div>
+    
+  </body>
+
+</html>
