@@ -1,0 +1,86 @@
+{% extends "admin/base_site.html" %}
+{% load cycle from future %}
+{% load humanize i18n %}
+
+{% block breadcrumbs %}
+
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label='userlog' %}">{% trans 'User logs' %}</a>
+&rsaquo; {% trans 'Live logs' %}
+</div>
+
+{% endblock %}
+
+{% block content %}
+
+<form action="{% url 'admin:userlog_static' %}" method="GET">
+<label for="username">{{ fieldname|capfirst }}</label>
+<input type="text" name="username">
+<input type="submit" value="{% trans 'Search' %}">
+</form>
+
+{% if log %}
+<table id="result_list" class="module">
+    <thead>
+        <tr>
+            <th>
+                {% trans 'Time' %}
+            </th>
+            <th>
+                {% trans 'URL' %}
+            </th>
+            <th>
+                {% trans 'Type' %}
+            </th>
+            <th>
+                {% trans 'Result' %}
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for line in log %}
+        <tr class="{% cycle 'row1' 'row2' %}">
+            <td>
+                {{ line.datetime|naturaltime }}
+            </td>
+            <td>
+                {% if line.method == 'GET' %}
+                <a href="{{ line.path }}">{{ line.path }}</a>
+                {% else %}
+                {{ line.path }}
+                {% endif %}
+            </td>
+            <td>
+                {% if line.method == 'GET' %}
+                {% trans 'Read' %}
+                {% elif line.method == 'POST' %}
+                {% trans 'Write' %}
+                {% else %}
+                {% trans 'Other' %}
+                {% endif %}
+                ({{ line.method }})
+            </td>
+            <td style="background-color: #{% if line.code < 400 %}DDFFDD{% else %}FFEFEF{% endif %};">
+                {% if line.code < 200 %}
+                {% trans 'Informational' %}
+                {% elif line.code < 300 %}
+                {% trans 'Success' %}
+                {% elif line.code < 400 %}
+                {% trans 'Redirection' %}
+                {% elif line.code < 500 %}
+                {% trans 'Client error' %}
+                {% elif line.code < 600 %}
+                {% trans 'Server error' %}
+                {% else %}
+                {% trans 'Non-standard' %}
+                {% endif %}
+                ({{ line.code }})
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+{% endblock %}
