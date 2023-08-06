@@ -1,0 +1,24 @@
+{{ utils.start_conditional('publisher', 'hudson.plugins.violations.ViolationsPublisher', in_conditional) }}
+  <config>
+    <suppressions class="sorted-set"/>
+    <typeConfigs>
+    {% for entry in publisher.entries %}
+    <entry>
+      <string>{{ entry.type }}</string>
+      <hudson.plugins.violations.TypeConfig>
+        <type>{{ entry.type }}</type>
+        <min>{{ entry.min or 10}}</min>
+        <max>{{ entry.max or 999}}</max>
+        <unstable>{{ entry.unstable or 999}}</unstable>
+        <usePattern>{{ entry.use_pattern or 'false'}}</usePattern>
+        <pattern>{{ entry.pattern }}</pattern>
+      </hudson.plugins.violations.TypeConfig>
+    </entry>
+    {% endfor %}
+    </typeConfigs>
+    <limit>{{ publisher.per_file_limit or 100}}</limit>
+    <sourcePathPattern></sourcePathPattern>
+    <fauxProjectPath></fauxProjectPath>
+    <encoding>default</encoding>
+  </config>
+{{ utils.end_conditional('publisher', 'hudson.plugins.violations.ViolationsPublisher', in_conditional) }}
