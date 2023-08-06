@@ -1,0 +1,53 @@
+services:
+  sign_up:
+    class: apy_users.model.SignUp
+    arguments:
+      - '@account_repository'
+      - '@consumer_manager'
+      - '@email_confirmation_sender'
+
+  consumer_manager:
+    class: apy_users.model.ConsumerManager
+    arguments:
+      - '@account_repository'
+      - '@authenticator'
+
+  account_repository:
+    class: apy_users.adapters.MongodbAccountRepository
+    arguments:
+      - '@mongodb_client_connector'
+      - '{{mongodb_database}}'
+
+  authenticator:
+    class: apy_users.model.Authenticator
+    arguments:
+      - '@account_repository'
+
+  account_moderator:
+    class: apy_users.model.AccountModerator
+    arguments:
+      - '@account_repository'
+
+  mongodb_client_connector:
+    class: pymongo.MongoClient
+
+  mail_transfer:
+    class: apy_users.model.MailTransfer
+    arguments:
+      - '@smtp'
+
+  email_confirmation_sender:
+    class: apy_users.model.ExampleEmailConfirmationSender
+    arguments:
+      - '@mail_transfer'
+      - '{{example_email_confirmation_sender.from}}'
+      - '{{example_email_confirmation_sender.base_url}}'
+      - '{{example_email_confirmation_sender.subject}}'
+
+  smtp:
+    class: smtplib.SMTP
+    arguments:
+      - '{{smtp_host}}'
+      - '{{smtp_port}}'
+
+
