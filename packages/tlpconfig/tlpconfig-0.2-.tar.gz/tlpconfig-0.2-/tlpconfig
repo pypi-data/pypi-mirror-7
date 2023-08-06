@@ -1,0 +1,24 @@
+#!/usr/bin/env python
+
+try:
+    from tlpconfig.tlp.application import App
+    from tlpconfig.tlp import DATA_PATH, VERSION
+except ImportError:
+    from tlp.application import App
+    from tlp import DATA_PATH, VERSION
+
+from sys import exit, argv
+from docopt import docopt
+
+
+if __name__ == '__main__':
+    arguments = {}
+
+    try:
+        with open(DATA_PATH + 'help') as help_file:
+            arguments = docopt(help_file.read(), version=VERSION)
+    except Exception as error:
+        print(error.message)
+
+    config = arguments.get('<configuration-file>') or '/etc/default/tlp'
+    exit(App().start(config))
