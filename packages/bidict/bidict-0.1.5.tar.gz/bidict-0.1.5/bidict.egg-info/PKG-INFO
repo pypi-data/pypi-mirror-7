@@ -1,0 +1,184 @@
+Metadata-Version: 1.1
+Name: bidict
+Version: 0.1.5
+Summary: 2-way dict with convenient slice syntax: d[65] = 'A' -> d[:'A'] == 65
+Home-page: https://bitbucket.org/jab/bidict
+Author: Josh Bronson
+Author-email: jabronson@gmail.com
+License: MIT
+Description: 
+        Overview
+        --------
+        
+        ``bidict`` provides a bidirectional mapping data structure and related
+        functionality to naturally work with one-to-one relations in Python.
+        
+        Unlike alternative implementations, ``bidict`` builds on top of the dict
+        API and supports the familiar ``__getitem__`` syntax. It also supports a
+        convenient slice syntax to express an inverse mapping::
+        
+            >>> element_by_symbol = bidict({'H': 'hydrogen'})
+            >>> element_by_symbol['H']  # forward mapping works just like with dict
+            'hydrogen'
+            >>> element_by_symbol[:'hydrogen']  # use slice for the inverse mapping
+            'H'
+        
+        Syntax hacks ftw.
+        
+        Motivation & More Examples
+        --------------------------
+        
+        Python's built-in dict lets us associate unique keys with arbitrary values.
+        Because keys must be hashable, values can be looked up by key in constant time.
+        Different keys can map to the same value, but a single key cannot map to two
+        different values. For instance, {-1: 1, 0: 0, 1: 1} is a dict with
+        three unique keys and two unique values, because the keys -1 and 1 both map to
+        1. If you try to write its inverse {1: -1, 0: 0, 1: 1}, the dict that
+        comes out has only two mappings, one for key 1 and one for key 0; since key 1
+        is not allowed to map to both -1 and 1, one of these mappings is discarded.
+        
+        Sometimes the relation we're modeling will only ever have a single key mapping
+        to a single value, as in the relation of chemical elements and their symbols.
+        This is called a one-to-one (or injective) mapping (see
+        https://en.wikipedia.org/wiki/Injective_mapping).
+        
+        In this case we can be sure that the inverse mapping has the same number of
+        items as the forward mapping, and moreover that if key k maps to value v in the
+        forward mapping, value v maps to key k in the inverse. It would be useful then
+        to be able to look up keys by value in constant time in addition to being able
+        to look up values by key. With the additional constraint that values must be
+        hashable as well as keys, we can get constant-time forward and inverse lookups
+        via convenient syntax with ``bidict``.
+        
+        Expanding on the previous example, anywhere the ``__getitem__`` syntax can be
+        used to reference a forward mapping, slice syntax can be used too::
+        
+            >>> element_by_symbol['H'] = 'Hydrogen'
+            >>> element_by_symbol['H':]
+            'Hydrogen'
+        
+        Including setting and deleting items in either direction::
+        
+            >>> element_by_symbol['He':] = 'helium'
+            >>> element_by_symbol[:'lithium'] = 'Li'
+            >>> del element_by_symbol['H':]
+            >>> del element_by_symbol[:'lithium']
+            >>> element_by_symbol
+            bidict({'He': 'helium'})
+        
+        The rest of the ``MutableMapping`` interface is supported too::
+        
+            >>> 'C' in element_by_symbol
+            False
+            >>> element_by_symbol.get('C', 'carbon')
+            'carbon'
+            >>> element_by_symbol.pop('He')
+            'helium'
+            >>> element_by_symbol
+            bidict({})
+            >>> element_by_symbol.update(Hg='mercury')
+            >>> element_by_symbol
+            bidict({'Hg': 'mercury'})
+        
+        You can also use the unary inverse operator ~ on a ``bidict`` to get the
+        inverse mapping in constant time::
+        
+            >>> ~element_by_symbol
+            bidict({'mercury': 'Hg'})
+        
+        Inverse can be composed with other ``MutableMapping`` APIs at no extra cost::
+        
+            >>> 'mercury' in ~element_by_symbol  # no more expensive than ``in element_by_symbol``
+            True
+            >>> (~element_by_symbol).pop('mercury')  # no more expensive than ``element_by_symbol.pop``
+            'Hg'
+        
+        See the ``bidict`` class for more examples.
+        
+        The ``inverted`` iterator is also provided in the spirit of the built-in
+        function ``reversed``. Pass in a mapping to get the inverse mapping, an
+        iterable of pairs to get the pairs' inverses, or any object implementing an
+        ``__inverted__`` method. See the ``inverted`` class for examples.
+        
+        Note: It is intentional that the term "inverse" is used rather than "reverse".
+        Consider a collection of (k, v) pairs. Taking the reverse of the collection
+        can only be done if it is ordered (i.e. a sequence), and reverses the order of
+        the pairs in the collection, but each original (k, v) pair remains in the
+        resulting collection. By contrast, taking the inverse of such a collection does
+        not require an original ordering or say anything about the resulting ordering,
+        but rather just replaces every (k, v) pair with the inverse pair (v, k).
+        
+        The ``namedbidict`` class factory can be used to create a bidirectional mapping
+        with customized names for the forward and the inverse mappings accessible via
+        attributes. See the ``namedbidict`` function for examples.
+        
+        The built-in ``htmlentitydefs`` module provides an example of where ``bidict``
+        could be used in the Python standard library instead of maintaining the two
+        ``name2codepoint`` and ``codepoint2name`` dictionaries separately.
+        
+        
+        Caveats
+        -------
+        
+        Because ``bidict`` is a bidirectional dict, values as well as keys must be
+        hashable. Attempting to insert an unhashable value will result in an error::
+        
+            >>> anagrams_by_alphagram = bidict({'opt': ['opt', 'pot', 'top']})
+            ... # doctest: +ELLIPSIS
+            Traceback (most recent call last):
+            ...
+            TypeError:...unhashable...
+            >>> bidict({'opt': ('opt', 'pot', 'top')})
+            bidict({'opt': ('opt', 'pot', 'top')})
+        
+        When instantiating or updating a ``bidict``, remember that mappings for
+        like values with differing keys will be silently dropped (just as the dict
+        literal {1: 'one', 1: 'uno'} silently drops a mapping), to maintain
+        bidirectionality::
+        
+            >>> nils = bidict({'zero': 0, 'zilch': 0, 'zip': 0})
+            >>> len(nils)
+            1
+            >>> nils.update(nix=0, nada=0)
+            >>> len(nils)
+            1
+        
+        When mapping the key of one existing mapping to the value of another (or
+        vice versa), the two mappings silently collapse into one::
+        
+            >>> b = bidict({1: 'one', 2: 'two'})
+            >>> b[1] = 'two'
+            >>> b
+            bidict({1: 'two'})
+            >>> b = bidict({1: 'one', 2: 'two'})
+            >>> b[:'two'] = 1
+            >>> b
+            bidict({1: 'two'})
+        
+        Links
+        -----
+        
+        * Documentation: https://bidict.readthedocs.org
+        
+        * Development: https://bitbucket.org/jab/bidict
+        
+        Credits
+        -------
+        
+        Thanks to Terry Reedy for the idea for the slice syntax.
+        Thanks to Raymond Hettinger for the idea for namedbidict and pointing out
+        various caveats.
+        Thanks to Francis Carr for the idea of storing the inverse bidict.
+        
+        See the bidict module for further documentation.
+        ------------------------------------------------
+        
+Keywords: bidirectional,two-way,inverse,reverse,dict,dictionary,mapping
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Natural Language :: English
