@@ -1,0 +1,31 @@
+#!/Users/wu/codigo23/stamps/env/bin/python
+
+from stamper.cli import build_args_parser
+from stamper import Stamper
+
+
+if __name__ == '__main__':
+
+    parser = build_args_parser()
+    args = parser.parse_args()
+
+    s = Stamper()
+    s.load_stamps()
+
+    # Set proper arguments if they have passed a date-based filter without
+    # a customer
+    if args.customer not in s.customers and not args.filter:
+        args.filter = args.customer
+        args.customer = None
+
+    # Call the proper methods, based on the given parameters
+    if args.timeline:
+        s.timeline(args.customer, args.filter)
+    elif args.delete:
+        s.remove_stamps(args.delete)
+    elif args.graph:
+        s.graph_stamps(args.customer, args.filter)
+    elif args.import_file:
+        s.import_stamps(args.import_file)
+    else:
+        s.show_stamps(args.customer, args.filter, args.verbose, args.sum)
