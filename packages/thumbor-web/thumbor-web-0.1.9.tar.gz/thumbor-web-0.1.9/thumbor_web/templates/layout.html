@@ -1,0 +1,144 @@
+<!doctype html>
+<html class="no-js">
+    <head>
+        <meta charset="utf-8">
+        <title></title>
+        <meta name="description" content="">
+
+        <link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,400,700|Raleway:900|Montserrat:400,700' rel='stylesheet' type='text/css'>
+
+        {% assets "css_all" %}
+            <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}">
+        {% endassets %}
+
+        {% block css %}{% endblock %}
+
+    </head>
+    <body>
+        {% block header %}
+        <header>
+            <nav>
+                <div class="container">
+                    <ul>
+                        <li class="ib ms logo"><a href="/"></a></li>
+                        <li class="ib ms"><a href="http://docs.thumbor.org/getting-started/">GETTING STARTED</a></li>
+                        <li class="ib ms"><a href="http://docs.thumbor.org/">DOCUMENTATION</a></li>
+                        <li class="ib ms"><a href="https://github.com/thumbor/thumbor">REPOSITORY</a></li>
+                        <li class="ib ms"><a href="https://github.com/thumbor/thumbor/issues">REPORT AN ISSUE</a></li>
+                    </ul>
+                </div>
+            </nav>
+            <div class="container">
+                <div class="main">
+                    <div class="logo"></div>
+                    <div class="logo-mobile"></div>
+                    <div class="banner">open-sourcesmart on-demand image cropping, resizing and filters</div>
+                </div>
+                <a href="javascript:" class="learn-more ms">LEARN MORE</a>
+            </div>
+        </header>
+        {% endblock %}
+
+        <div class="main-window">
+            {% block content %}{% endblock %}
+        </div>
+
+        <footer>
+            <div class="container">
+                <div class="report">Want to report something?
+                    <a href="https://github.com/thumbor/thumbor/issues">Create an issue</a>
+                </div>
+
+                <a class="right logo" href="/">thumbor</a>
+            </div>
+        </footer>
+
+        {% assets "js_base" %}
+            <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+        {% endassets %}
+
+        {% assets "js_app" %}
+            <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+        {% endassets %}
+
+        {% block js_bottom %}
+        {% endblock %}
+
+        {% block header_js %}
+        <script>
+            var header = $('header');
+            var ctrl = new HeaderCtrl(header);
+        </script>
+        {% endblock %}
+
+        {% block breakpoints_js %}
+        <script>
+            $(function() {
+                var breakpoints = new BreakpointsCtrl(header);
+                var pictures = $('.why-thumbor .stripe .picture');
+                var sizes = [1, 601, 801, 1281, 1441, 1681, 1921];
+                var sampleImages = {
+                    1: [],
+                    601: [],
+                    801: [],
+                    1281: [],
+                    1441: [],
+                    1681: [],
+                    1921: []
+                };
+
+                var stripeImages = {
+                    1: [],
+                    601: [],
+                    801: [],
+                    1281: [],
+                    1441: [],
+                    1681: [],
+                    1921: []
+                };
+
+                breakpoints.setThumborServer('{{ config.THUMBOR_SERVER_URL }}');
+                {% for i in range(1, 9) %}
+                    sampleImages[1].push('{{ thumbor_url('sample-image%d.jpg' % i, width=600, height=960) }}');
+                    sampleImages[601].push('{{ thumbor_url('sample-image%d.jpg' % i, width=800, height=1280) }}');
+                    sampleImages[801].push('{{ thumbor_url('sample-image%d.jpg' % i, width=1280, height=1024) }}');
+                    sampleImages[1281].push('{{ thumbor_url('sample-image%d.jpg' % i, width=1440, height=1024) }}');
+                    sampleImages[1441].push('{{ thumbor_url('sample-image%d.jpg' % i, width=1680, height=1200) }}');
+                    sampleImages[1681].push('{{ thumbor_url('sample-image%d.jpg' % i, width=1920, height=1200) }}');
+                    sampleImages[1921].push('{{ thumbor_url('sample-image%d.jpg' % i, width=2560, height=1440) }}');
+                {% endfor %}
+
+                {% for i in range(1, 7) %}
+                    stripeImages[1].push('{{ thumbor_url('why-thumbor-%d.jpg' % i, width=600, height=350, smart=True) }}');
+                    stripeImages[601].push('{{ thumbor_url('why-thumbor-%d.jpg' % i, width=400, height=350, smart=True) }}');
+                    stripeImages[801].push('{{ thumbor_url('why-thumbor-%d.jpg' % i, width=640, height=350, smart=True) }}');
+                    stripeImages[1281].push('{{ thumbor_url('why-thumbor-%d.jpg' % i, width=720, height=350, smart=True) }}');
+                    stripeImages[1441].push('{{ thumbor_url('why-thumbor-%d.jpg' % i, width=840, height=350, smart=True) }}');
+                    stripeImages[1681].push('{{ thumbor_url('why-thumbor-%d.jpg' % i, width=960, height=350, smart=True) }}');
+                    stripeImages[1921].push('{{ thumbor_url('why-thumbor-%d.jpg' % i, width=1280, height=350, smart=True) }}');
+                {% endfor %}
+
+                breakpoints.addBreakpoint(1, header, sampleImages[1]);
+                breakpoints.addBreakpoint(601, header, sampleImages[601]);
+                breakpoints.addBreakpoint(801, header, sampleImages[801]);
+                breakpoints.addBreakpoint(1281, header, sampleImages[1281]);
+                breakpoints.addBreakpoint(1441, header, sampleImages[1441]);
+                breakpoints.addBreakpoint(1681, header, sampleImages[1681]);
+                breakpoints.addBreakpoint(1921, header, sampleImages[1921]);
+
+                pictures.each(function(pictureIndex){
+                    for (var i = 0; i < sizes.length; i++) {
+                        var size = sizes[i];
+                        var image = stripeImages[size][pictureIndex];
+                        var element = pictures.eq(pictureIndex);
+                        console.log(size, image, element);
+
+                        breakpoints.addBreakpoint(size, element, image);
+                    };
+                })
+            });
+        </script>
+
+        {% endblock %}
+    </body>
+</html>
