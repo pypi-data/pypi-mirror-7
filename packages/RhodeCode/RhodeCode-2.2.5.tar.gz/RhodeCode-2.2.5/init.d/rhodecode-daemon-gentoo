@@ -1,0 +1,70 @@
+#!/sbin/runscript
+########################################
+#### THIS IS AN GENTOO INIT.D SCRIPT####
+########################################
+
+## fix for locale not loading when starting service
+## uncomment if you have issues with accent characters after RhodeCode starts
+## on boot
+#if [ -r /etc/default/locale ]; then
+#        . /etc/default/locale
+#        export LANG
+#fi
+
+APP_NAME="rhodecode"
+APP_HOMEDIR="marcink/python_workspace"
+APP_PATH="/home/$APP_HOMEDIR/$APP_NAME"
+
+CONF_NAME="production.ini"
+
+PID_PATH="$APP_PATH/$APP_NAME.pid"
+LOG_PATH="$APP_PATH/$APP_NAME.log"
+
+PYTHON_PATH="/home/$APP_HOMEDIR/v-env"
+
+RUN_AS_USER="rhodecode"
+RUN_AS_GROUP="rhodecode"
+
+DAEMON="$PYTHON_PATH/bin/paster"
+
+DAEMON_OPTS="serve --daemon \
+--user=$RUN_AS_USER \
+--group=$RUN_AS_GROUP \
+--pid-file=$PID_PATH \
+--log-file=$LOG_PATH  $APP_PATH/$CONF_NAME"
+
+#extra options
+opts="${opts} restartdelay"
+
+depend() {
+    need nginx
+}
+
+start() {
+    ebegin "Starting $APP_NAME"
+    start-stop-daemon -d $APP_PATH -e PYTHON_EGG_CACHE="/tmp" \
+        --start --quiet \
+        --pidfile $PID_PATH \
+        --user $RUN_AS \
+        --exec $DAEMON -- $DAEMON_OPTS
+    eend $?
+}
+
+stop() {
+    ebegin "Stopping $APP_NAME"
+    start-stop-daemon -d $APP_PATH \
+        --stop --quiet \
+        --pidfile $PID_PATH || echo "$APP_NAME - Not running!"
+    if [ -f $PID_PATH ]; then
+        rm $PID_PATH
+    fi
+    eend $?
+}
+
+restartdelay() {
+    #stop()
+    echo "sleep3"
+    sleep 3
+    
+    #start()
+}
