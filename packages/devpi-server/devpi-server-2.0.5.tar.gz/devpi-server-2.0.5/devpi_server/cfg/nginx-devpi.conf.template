@@ -1,0 +1,37 @@
+server {
+    server_name %(outside_host)s;   
+    listen %(outside_port)s;
+    gzip             on;
+    gzip_min_length  2000;
+    gzip_proxied     any;
+    gzip_types       text/html application/json; 
+
+    proxy_read_timeout 60s;
+    client_max_body_size 30M;
+
+    # set to where your devpi-server state is on the filesystem
+    root %(serverdir)s;  
+
+    # try serving static files directly
+    location ~ /\+f/ {
+        error_page 418 = @proxy_to_app;
+        if ($request_method != GET) {
+            return 418; 
+        }
+        try_files /+files$uri @proxy_to_app;
+    }
+    # try serving docs directly
+    location ~ /\+doc/ {
+        try_files $uri @proxy_to_app;
+    }
+    location / {
+        # XXX how to tell nginx to just refer to @proxy_to_app here?
+        try_files /.lqkwje @proxy_to_app;
+    }   
+    location @proxy_to_app {
+        proxy_pass http://localhost:%(port)s;
+        #dynamic: proxy_set_header X-outside-url $scheme://$host:$server_port;
+        proxy_set_header  X-outside-url %(outside_url)s;
+        proxy_set_header  X-Real-IP $remote_addr;
+    }   
+} 
