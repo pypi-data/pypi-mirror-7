@@ -1,0 +1,121 @@
+Metadata-Version: 1.0
+Name: global-lru-cache
+Version: 1.0
+Summary: Global LRU cache decorator
+Home-page: https://github.com/guykisel/global_lru_cache
+Author: Guy Kisel
+Author-email: guy.kisel@gmail.com
+License: ####################################################################################################
+#
+# The MIT License (MIT)
+#
+# Copyright (c) 2014 Guy Kisel
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+#
+####################################################################################################
+#
+# This project incorporates work covered by the following copyrights and
+# permission notices:
+#
+####################################################################################################
+#
+# From http://micheles.googlecode.com/hg/decorator/documentation.html
+#
+# Copyright (c) 2005-2012, Michele Simionato All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted
+# provided that the following conditions are met:
+#
+# Redistributions of source code must retain the above copyright notice, this list of
+# conditions and the following disclaimer. Redistributions in bytecode form must reproduce
+# the above copyright notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+# AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDERS
+# OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+# ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+# OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
+# OF SUCH DAMAGE.
+#
+####################################################################################################
+#
+# From http://code.activestate.com/recipes/577504/
+#
+# The MIT License (MIT)
+#
+# Copyright (c) 2010 Raymond Hettinger
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+#
+####################################################################################################
+
+Description: global_lru_cache
+        ================
+        
+        Python global LRU cache memoization decorator.
+        
+        
+        What is a global LRU cache?
+        ================
+        There are a lot of great Python LRU caches available. Python 3 has [functools.lru_cache](https://docs.python.org/3/library/functools.html#functools.lru_cache) built in, and it's also been [backported to Python 2](http://code.activestate.com/recipes/578078-py26-and-py30-backport-of-python-33s-lru-cache/). There's also [pylru](https://github.com/jlhutch/pylru), [cachetools](https://github.com/tkem/cachetools), [lru-dict](https://github.com/amitdev/lru-dict), [repoze.lru](https://github.com/repoze/repoze.lru), and more out there. 
+        
+        What all of these caches have in common is that when used as a function decorator, they maintain a separate cache for each decorated function, and you can usually only specify a maximum number of cache entries, without regard to actual size in memory. This is probably more than enough for the vast majority of use cases, but in some circumstances, it's more convenient to have a globally shared cache that automatically manages its size relative to available system memory. This can be useful, for example, when caching very large queries from very slow databases. If your cache ends up using significant percentages of system memory, you want to make sure you don't use too much memory, especially if you are sharing the system with other processes.
+        
+        I was unable to find an existing implementation of such a cache, so I've taken some basic open source code I found online and modified it to suit my needs. The result is a library with a simple decorator that takes no arguments and manages all of your cached data as a single cache. I've called it an LRU cache, but when invalidating cache entries it actually uses a scoring function that takes into account time last accessed, size in memory of the cache entry, and duration of the cached function call. 
+        
+        
+        Usage
+        ================
+        ```python
+        from memoize import memoized
+        
+        @memoized
+        def slow_function(arg1, arg2):
+          time.sleep(30)
+          return arg1 * arg2
+        ```
+        
+        
+        
+        
+        
+        
+Keywords: lru cache memoize decorator
+Platform: UNKNOWN
