@@ -1,0 +1,85 @@
+#!/usr/bin/env python2
+# encoding: utf-8
+
+"""
+    motdify is a script that provides some environment variables with stats about the system
+    to an external program. Its aim is to make it easier to access system information for
+    MOTD scripts that normally would only be accessible via laborious parsing steps.
+
+    Visit http://lukas.weissenboeck.at/motdify for more information.
+
+    Licenced under the terms of MIT Licence. See the LICENCE file for more information.
+"""
+
+import subprocess, inspect, glob, optparse, os, sys
+import motdenv
+
+
+def getClassInstanceByName(module, classname):
+    """ Returns an instance of module.classname """
+
+    modules = __import__(module, globals(), locals(), classname)
+    c = getattr(modules, classname)
+
+    return c()
+
+
+# Let's have some options!
+parser = optparse.OptionParser(usage='Usage: %prog [options] template')
+parser.add_option('-v', '--variables', help='Display all variables available in template and exit', default=False, action='store_true', dest='variables')
+
+(options, args) = parser.parse_args()
+
+
+# envvars holds a dictionary of the current environment variables.
+# We will expand it with our variables and pass it to the motd template.
+envvars = os.environ
+
+
+# We need to get a list of all classes in the ./motdenv directory.
+motdenv_files = glob.glob(os.path.dirname(os.path.realpath(inspect.getfile(motdenv))) + "/*.py")
+motdenv = [os.path.basename(f)[:-3] for f in motdenv_files if os.path.basename(f) != "__init__.py"]
+
+
+# debug_vars holds a list of all variables assigned to envvars
+debug_vars = {}
+
+
+for module in motdenv:
+
+    classname = module
+    
+    env = getClassInstanceByName('motdenv.' + module, classname)
+    env_data = env.getVariableTuple()
+
+    # env_data now contains a list of our variable tuples
+    # var[0] holds the variable name, while var[1] holds the value of the variable
+    for var in env_data:
+
+        envvars[var[0]] = str(var[1])
+        debug_vars[var[0]] = str(var[1])
+
+
+# Display the variables if needed
+if options.variables:
+
+    for e in sorted(debug_vars):
+        print e, debug_vars[e]
+
+    sys.exit(0)
+
+
+# Was a template provided?
+if len(args) == 0:
+    parser.error("You must provide a template file!")
+
+
+# So we have a template file. We need to check that the executable flag was set.
+if not os.access(args[0], os.X_OK):
+    print "%s must be executable or the file couldn't be found!" % (args[0])
+    sys.exit(1)
+
+
+# All is fine!
+# subprocess.Popen(args[0], env=envvars)
+os.execve(args[0], [], envvars)
