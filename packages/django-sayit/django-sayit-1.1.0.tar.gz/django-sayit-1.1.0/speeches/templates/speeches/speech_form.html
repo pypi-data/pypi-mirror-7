@@ -1,0 +1,249 @@
+{% extends 'speeches/base.html' %}
+{% load i18n %}
+{% load staticfiles %}
+{% load url from future %}
+{% load django_select2_tags %}
+
+{% block extra_css %}
+{% import_django_select2_css 0 %}
+{{ block.super }}
+{# <link rel="stylesheet" href="{% static "css/bootstrap-datepicker.css" %}" /> #}
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+{% import_django_select2_js 0 %}
+<script type="text/javascript" src="{% static "speeches/js/jQuery-File-Upload/js/vendor/jquery.ui.widget.js" %}" charset="utf-8"></script>
+<script type="text/javascript" src="{% static "speeches/js/jQuery-File-Upload/js/jquery.iframe-transport.js" %}" charset="utf-8"></script>
+<script type="text/javascript" src="{% static "speeches/js/jQuery-File-Upload/js/jquery.fileupload.js" %}" charset="utf-8"></script>
+{% endblock %}
+
+{% block title %}
+  {% if object %}
+    {% trans "Edit speech" %}
+  {% else %}
+    {% trans "Add a speech" %}
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+
+{% if added %}
+<div class="alert alert-success">
+    Your speech has been <a href="{% url "speeches:speech-view" added %}">created</a>
+    in the section <a href="{% url "speeches:section-view" section.get_path %}#s{{ added }}">{{ section.title }}</a>!
+</div>
+{% endif %}
+
+<form id="speech-form" class="form-horizontal{% if not object and not form.non_field_errors %} {% endif %}" method="post" enctype="multipart/form-data">
+
+    <input type="hidden" name="public" value="on">
+
+    <div class="page-header">
+      {% if object %}
+        <h1>{% trans "Edit speech" %}</h1>
+      {% else %}
+        <h1 class="has-tip">{% trans "Add a speech" %}</h1>
+        <p class="tip">{% trans "You can cut and paste quotes from news sites, social media or blogs,<br>or transcribe any audio or video records you may have access to" %}</p>
+      {% endif %}
+    </div>
+
+    {% csrf_token %}
+
+  {% if form.non_field_errors %}
+    <div class="error">
+        {{ form.non_field_errors }}
+    </div>
+  {% endif %}
+
+  {% for hidden in form.hidden_fields %}
+      {{ hidden }}
+  {% endfor %}
+
+    <div class="row">
+        <div class="medium-8 column">
+
+          {% with form.text as field %}
+            <div class="{% if field.errors %} error{% endif %}" id="{{ field.auto_id}}_controls">
+              {{ field.label_tag }}
+              {{ field }}
+              {% if field.errors %}
+                <small class="error">{{ field.errors }}</small>
+              {% endif %}
+            </div>
+          {% endwith %}
+
+        </div>
+        <div class="medium-4 column">
+
+          {% with form.speaker as field %}
+            <div class="{% if field.errors %} error{% endif %}" id="{{ field.auto_id}}_controls">
+              {{ field.label_tag }}
+              <!-- Coming soon!!
+              <ul class="suggested-speakers">
+                <li>Luke Skywalker</li>
+                <li>Obi-Wan Kenobi</li>
+                <li>Stormtrooper</li>
+              </ul>
+              -->
+              {{ field }}
+              {% if field.errors %}
+                <small class="error">{{ field.errors }}</small>
+              {% endif %}
+            </div>
+          {% endwith %}
+
+          {% with form.section as field %}
+            <div class="{% if field.errors %} error{% endif %}" id="{{ field.auto_id}}_controls">
+              {{ field.label_tag }}
+              {{ field }}
+              {% if field.errors %}
+                <small class="error">{{ field.errors }}</small>
+              {% endif %}
+            </div>
+          {% endwith %}
+
+          {% with form.source_url as field %}
+            <div class="{% if field.errors %} error{% endif %}" id="{{ field.auto_id}}_controls">
+              {{ field.label_tag }}
+              {{ field }}
+              {% if field.errors %}
+                <small class="error">{{ field.errors }}</small>
+              {% endif %}
+            </div>
+          {% endwith %}
+
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="medium-4 column">
+
+            <div class="unimportant-form-section-header">{% trans "Date &amp; Time" %}</div>
+            <div class="unimportant-form-section">
+                  <div class="row">
+                      <div class="small-5 column">
+                        {% with form.start_time as field %}
+                          <div class="{% if field.errors %} error{% endif %}" id="{{ field.auto_id}}_controls">
+                            {{ field.label_tag }}
+                            {{ field }}
+                            {% if field.errors %}
+                              <small class="error">{{ field.errors }}</small>
+                            {% endif %}
+                          </div>
+                        {% endwith %}
+                      </div>
+                      <div class="small-7 column">
+                        {% with form.start_date as field %}
+                          <div class="{% if field.errors %} error{% endif %}" id="{{ field.auto_id}}_controls">
+                            {{ field.label_tag }}
+                            {{ field }}
+                            {% if field.errors %}
+                              <small class="error">{{ field.errors }}</small>
+                            {% endif %}
+                          </div>
+                        {% endwith %}
+                      </div>
+                  </div>
+
+                  <div class="row">
+                      <div class="small-5 column">
+                        {% with form.end_time as field %}
+                          <div class="{% if field.errors %} error{% endif %}" id="{{ field.auto_id}}_controls">
+                            {{ field.label_tag }}
+                            {{ field }}
+                            {% if field.errors %}
+                              <small class="error">{{ field.errors }}</small>
+                            {% endif %}
+                          </div>
+                        {% endwith %}
+                      </div>
+                      <div class="small-7 column">
+                        {% with form.end_date as field %}
+                          <div class="{% if field.errors %} error{% endif %}" id="{{ field.auto_id}}_controls">
+                            {{ field.label_tag }}
+                            {{ field }}
+                            {% if field.errors %}
+                              <small class="error">{{ field.errors }}</small>
+                            {% endif %}
+                          </div>
+                        {% endwith %}
+                      </div>
+                  </div>
+            </div>
+
+        </div>
+        <div class="medium-4 column">
+
+            <div class="unimportant-form-section-header">{% trans "Event &amp; Location" %}</div>
+            <div class="unimportant-form-section">
+              {% with form.location as field %}
+                <div class="{% if field.errors %} error{% endif %}" id="{{ field.auto_id}}_controls">
+                  {{ field.label_tag }}
+                  {{ field }}
+                  {% if field.errors %}
+                    <small class="error">{{ field.errors }}</small>
+                  {% endif %}
+                </div>
+              {% endwith %}
+              {% with form.event as field %}
+                <div class="{% if field.errors %} error{% endif %}" id="{{ field.auto_id}}_controls">
+                  {{ field.label_tag }}
+                  {{ field }}
+                  {% if field.errors %}
+                    <small class="error">{{ field.errors }}</small>
+                  {% endif %}
+                </div>
+              {% endwith %}
+            </div>
+
+        </div>
+        <div class="medium-4 column">
+
+            <div class="unimportant-form-section-header">{% trans "Title &amp; Tags" %}</div>
+            <div class="unimportant-form-section">
+              {% with form.title as field %}
+                <div class="{% if field.errors %} error{% endif %}" id="{{ field.auto_id}}_controls">
+                  {{ field.label_tag }}
+                  {{ field }}
+                  {% if field.errors %}
+                    <small class="error">{{ field.errors }}</small>
+                  {% endif %}
+                </div>
+              {% endwith %}
+              {% with form.tags as field %}
+                <div class="{% if field.errors %} error{% endif %}" id="{{ field.auto_id}}_controls">
+                  {{ field.label_tag }}
+                  {{ field }}
+                  {% if field.errors %}
+                    <small class="error">{{ field.errors }}</small>
+                  {% endif %}
+                </div>
+              {% endwith %}
+            </div>
+
+        </div>
+    </div>
+
+    <p class="form-actions">
+      {% if object %}
+        <input type="submit" id="speech_submit" class="button right" value="{% trans 'Save changes' %}">
+      {% else %}
+        <input type="submit" id="speech_submit" class="button right" value="{% trans 'Save speech' %}">
+      {% endif %}
+    </p>
+
+    <script type="text/javascript">
+    // TODO Temporary javascript
+    // an idea of how the sections could be hidden/shown
+    jQuery(function(){
+      var $ = jQuery;
+      $('.unimportant-form-section-header').addClass('collapsed').on('click', function(){
+        $(this).toggleClass('collapsed').next().toggle();
+      }).next().hide();
+    })
+    </script>
+
+</form>
+
+{% endblock %}

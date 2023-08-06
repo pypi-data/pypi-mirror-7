@@ -1,0 +1,70 @@
+{% extends 'speeches/base.html' %}
+{% load url from future %}
+{% load i18n %}
+{% load humanize %}
+{% load speech_utils %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+
+  {% if paginator.count %}
+
+  <div class="page-content__row">
+
+    <div class="homepage-search">
+        <h2>{% block instance_search_title %}{% trans 'Search speeches and statements' %}{% endblock %}</h2>
+        <form class="site-search site-search--homepage" action="{% url "speeches:haystack_search" %}" method="get" >
+            <div class="search-wrapper">
+                <input type="search" class="site-search__input" placeholder="{% trans 'Search' %}" name="q"/>
+                <input type="submit" class="icon-search icon-search" value="{% trans 'Search' %}"/>
+            </div>
+        </form>
+    </div>
+
+
+        </div>
+    </div>
+</div> <!-- closing off the opening tags in base so we can go full width here -->
+<div class="homepage-stats">
+  <div class="full-page__row">
+      <div class="full-page__unit">
+        {% url "speeches:speaker-list" as url_speaker_list %}
+        {% url "speeches:section-list" as url_section_list %}
+        {% if LANGUAGE_CODE == 'en' %}
+          <a href="{{ url_section_list }}"><strong>{{ count_speeches|intcomma }}</strong></a>
+          speech{{ count_speeches|pluralize:"es" }}{% if count_speakers %}, by
+          <a href="{{ url_speaker_list }}"><strong>{{ count_speakers|intcomma }}</strong></a>
+          speaker{{ count_speakers|pluralize }}{% endif %}{% if count_sections %}, in
+          <a href="{{ url_section_list }}"><strong>{{ count_sections|intcomma }}</strong></a>
+          section{{ count_sections|pluralize }}{% endif %}
+        {% else %}
+          {# Hideously long lines, until blocktrans adds trimmed option in Django 1.7... #}
+          {% blocktrans with n=count_speeches|intcomma count c=count_speeches %}<a href="{{ url_section_list }}"><strong>1</strong></a> speech{% plural %}<a href="{{ url_section_list }}"><strong>{{ n }}</strong></a> speeches{% endblocktrans %}{% if count_speakers %};
+          {% blocktrans with n=count_speakers|intcomma count c=count_speakers %}<a href="{{ url_speaker_list }}"><strong>1</strong></a> speaker{% plural %}<a href="{{ url_speaker_list }}"><strong>{{ n }}</strong></a> speakers{% endblocktrans %}{% endif %}{% if count_sections %};
+          {% blocktrans with n=count_sections|intcomma count c=count_sections %}<a href="{{ url_section_list }}"><strong>1</strong></a> section{% plural %}<a href="{{ url_section_list }}"><strong>{{ n }}</strong></a> sections{% endblocktrans %}{% endif %}
+        {% endif %}
+
+    {% block instance_blocks %}
+    {% endblock %}
+
+  </div>
+
+  {% else %}
+
+    <div class="nothing-here-yet-message">
+      {% if request.is_user_instance %}
+        <h1>{% trans 'Brilliant!' %}</h1>
+        <p class="lead">{% trans 'Now you&rsquo;ve got your own public database for speeches and statements.' %}</p>
+        <p class="lead">{% trans 'However, it&rsquo;s totally empty. Let&rsquo;s get started by adding something.' %}</p>
+        <p><a href="{% url "speeches:speech-add" %}" class="button">{% trans 'Add your first statement' %}</a></p>
+      {% else %}
+        <h1>{% trans 'This is a brand new SayIt site.' %}</h1>
+        <p class="lead">{% trans 'Its creator hasn&rsquo;t yet added any speeches or statements for you to see.' %}</p>
+        <p><a href="http://sayit.mysociety.org" class="button">{% trans 'Learn more about SayIt' %}</a></p>
+      {% endif %}
+    </div>
+
+  {% endif %}
+
+{% endblock %}

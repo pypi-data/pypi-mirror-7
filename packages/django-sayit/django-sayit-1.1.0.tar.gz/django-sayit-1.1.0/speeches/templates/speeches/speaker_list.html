@@ -1,0 +1,49 @@
+{% extends 'speeches/base.html' %}
+{% load url from future %}
+{% load i18n %}
+{% load staticfiles %}
+
+{% block title %}{% trans "All Speakers" %}{% endblock %}
+
+{% block content %}
+
+  {% if speaker_list %}
+
+    <div class="page-header">
+        <a href="{% url "speeches:speaker-add" %}" class="button small right">Add a new speaker</a>
+        <h1>{% trans "All Speakers" %}</h1>
+    </div>
+
+    <ul class="speaker-list">
+      {% for speaker in speaker_list %}
+        <li>
+            <a href="{{ speaker.get_absolute_url }}">
+                <div class="speaker-card">
+
+                    <img src="{% if speaker.image %}
+                        {{ speaker.image }} {% else %} {% static "speeches/i/a.png" %} {% endif %}" style="border-color: #{{ speaker.colour }}; background-color: #{{ speaker.colour }};" alt="" class="speaker-card__portrait speaker-portrait round-image speaker-portrait--small">
+                    <span class="speaker-card__name">{{ speaker }}</span>
+
+                </div>
+            </a>
+        </li>
+      {% endfor %}
+    </ul>
+
+  {% else %}
+
+    <div class="nothing-here-yet-message">
+      {% if request.is_user_instance %}
+        <h1>{% trans 'You haven&rsquo;t added any speeches or statements yet' %}</h1>
+        <p class="lead">{% trans 'Once you have, this page will contain a list of all the different people who made each statement in this SayIt site.' %}</p>
+        <p><a href="{% url "speeches:speech-add" %}" class="button">{% trans 'Add your first statement' %}</a></p>
+      {% else %}
+        <h1>{% trans 'This is a brand new SayIt site.' %}</h1>
+        <p class="lead">{% trans 'Its creator hasn&rsquo;t yet added any speeches or statements for you to see.' %}</p>
+        <p><a href="http://sayit.mysociety.org" class="button">{% trans 'Learn more about SayIt' %}</a></p>
+      {% endif %}
+    </div>
+
+  {% endif %}
+
+{% endblock %}
