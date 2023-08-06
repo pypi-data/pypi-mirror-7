@@ -1,0 +1,476 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Concepts &mdash; experimentator 0.2.1 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="experimentator 0.2.1 documentation" href="index.html"/>
+        <link rel="next" title="Creating an experiment" href="creation.html"/>
+        <link rel="prev" title="experimentator: Python experiment builder" href="index.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="index.html" class="fa fa-home"> experimentator</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="">Concepts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#experiment-structure">Experiment structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#design">Design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#why-use-levels">Why use levels?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#heterogeneous-experiment-structures">Heterogeneous experiment structures</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="creation.html">Creating an experiment</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="creation.html#constructor-methods">Constructor methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="creation.html#constructing-heterogeneous-experiments">Constructing heterogeneous experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="creation.html#design-matrices">Design matrices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="creation.html#callbacks">Callbacks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Command-line interface</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cli.html#commands">Commands</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api_reference.html#experiment">Experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_reference.html#helper-functions">Helper functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_reference.html#experimentsection">ExperimentSection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_reference.html#design">Design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_reference.html#designtree">DesignTree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_reference.html#module-experimentator.order">experimentator.order</a></li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">experimentator</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Concepts</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="_sources/concepts.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            
+  <div class="section" id="concepts">
+<span id="id1"></span><h1>Concepts<a class="headerlink" href="#concepts" title="Permalink to this headline">¶</a></h1>
+<div class="note admonition">
+<p class="first admonition-title">About this documentation</p>
+<p class="last">This documentation aims to be comprehensive, but be aware that there is also rich information available in docstrings.
+These can be accessed at the interactive prompt with the <tt class="docutils literal"><span class="pre">help</span></tt> function;
+they are also reproduced in <a class="reference internal" href="api_reference.html#api-reference"><em>API reference</em></a>.</p>
+</div>
+<div class="section" id="experiment-structure">
+<span id="structure"></span><h2>Experiment structure<a class="headerlink" href="#experiment-structure" title="Permalink to this headline">¶</a></h2>
+<p>In experimentator, experiments (represented by an <a class="reference internal" href="api_reference.html#experimentator.Experiment" title="experimentator.Experiment"><tt class="xref py py-class docutils literal"><span class="pre">Experiment</span></tt></a> instance) are organized as hierarchical tree structures.
+Each section of the experiment (represented by an <a class="reference internal" href="api_reference.html#experimentator.section.ExperimentSection" title="experimentator.section.ExperimentSection"><tt class="xref py py-class docutils literal"><span class="pre">ExperimentSection</span></tt></a> instance)
+is a node in this tree, and its children are the sections it contains.
+Levels on the tree are named;
+common level names in behavioral research are <tt class="docutils literal"><span class="pre">'participant'</span></tt>, <tt class="docutils literal"><span class="pre">'session'</span></tt>, <tt class="docutils literal"><span class="pre">'block'</span></tt>, and <tt class="docutils literal"><span class="pre">'trial'</span></tt>.
+For example, an experiment with two participants with two blocks of three trials each would have a tree that looks like this:</p>
+<div class="highlight-python"><div class="highlight"><pre>&#39;_base&#39;                       ______________1______________
+                             /                             \
+&#39;participant&#39;         ______1______                   ______2______
+                     /             \                 /             \
+&#39;block&#39;          ___1___         ___2___         ___1___         ___2___
+                /   |   \       /   |   \       /   |   \       /   |   \
+&#39;trial&#39;        1    2    3     1    2    3     1    2    3     1    2    3
+</pre></div>
+</div>
+<p>The top level is always called <tt class="docutils literal"><span class="pre">'_base'</span></tt>;
+the leading underscore indicates that you should not have to refer to this level directly.
+All other level names are arbitrary and are specified when the experiment is created.</p>
+<p>An important principle of experimentator is that each section only handles its children,
+the sections immediately below it.
+In a structure with levels <tt class="docutils literal"><span class="pre">'participant'</span></tt>, <tt class="docutils literal"><span class="pre">'block'</span></tt>, and <tt class="docutils literal"><span class="pre">'trial'</span></tt>,
+every block section knows how to create and order trials (e.g., by crossing <a class="reference internal" href="#ivs"><em>independent variables</em></a>),
+but knows nothing of participants.
+Likewise, every participant section organizes the blocks under it,
+but lets each block figure out its constitutent trials.
+The only exception to this rule is in the case of <a class="reference internal" href="#non-atomic-orderings"><em>non-atomic orderings</em></a>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">For simplicity, this documentation uses the term <em>trial</em> to mean the lowest level of an experiment,
+even though experimentator will let you use whatever string you want to name this level.</p>
+</div>
+<div class="section" id="navigating-structure">
+<h3>Navigating structure<a class="headerlink" href="#navigating-structure" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Be aware that experimentator uses 1-based indexing when numbering sections and indexing
+<a class="reference internal" href="api_reference.html#experimentator.section.ExperimentSection" title="experimentator.section.ExperimentSection"><tt class="xref py py-class docutils literal"><span class="pre">ExperimentSection</span></tt></a> instances, as in the diagram above.</p>
+</div>
+<p>An experimental hierarchy can be explored in a number of ways.
+Given an <a class="reference internal" href="api_reference.html#experimentator.Experiment" title="experimentator.Experiment"><tt class="xref py py-class docutils literal"><span class="pre">Experiment</span></tt></a> object, any section can be found by direct indexing:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Assuming the same structure as the diagram above.</span>
+<span class="n">experiment</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>        <span class="c"># first participant</span>
+<span class="n">experiment</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>     <span class="c"># second block of first participant</span>
+<span class="n">experiment</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">2</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>  <span class="c"># second trial of second block of first participant</span>
+</pre></div>
+</div>
+<p>Alternatively, the <a class="reference internal" href="api_reference.html#experimentator.section.ExperimentSection.subsection" title="experimentator.section.ExperimentSection.subsection"><tt class="xref py py-meth docutils literal"><span class="pre">subsection</span></tt></a> method can be used.
+The following finds the same sections as the previous example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">experiment</span><span class="o">.</span><span class="n">subsection</span><span class="p">(</span><span class="n">participant</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">experiment</span><span class="o">.</span><span class="n">subsection</span><span class="p">(</span><span class="n">participant</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">experiment</span><span class="o">.</span><span class="n">subsection</span><span class="p">(</span><span class="n">participant</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">trial</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The generator method <a class="reference internal" href="api_reference.html#experimentator.section.ExperimentSection.all_subsections" title="experimentator.section.ExperimentSection.all_subsections"><tt class="xref py py-meth docutils literal"><span class="pre">all_subsections</span></tt></a>
+yields all subsections matching the given criteria.
+For example, with the same experiment structure,</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nb">list</span><span class="p">(</span><span class="n">experiment</span><span class="o">.</span><span class="n">all_subsections</span><span class="p">(</span><span class="n">block</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">trial</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>will return the same list as</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="n">experiment</span><span class="o">.</span><span class="n">subsection</span><span class="p">(</span><span class="n">participant</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">trial</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+ <span class="n">experiment</span><span class="o">.</span><span class="n">subsection</span><span class="p">(</span><span class="n">participant</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">trial</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
+</pre></div>
+</div>
+<p>There are other methods to help find specific sections, for example
+<a class="reference internal" href="api_reference.html#experimentator.section.ExperimentSection.find_first_not_run" title="experimentator.section.ExperimentSection.find_first_not_run"><tt class="xref py py-meth docutils literal"><span class="pre">find_first_not_run</span></tt></a>,
+<a class="reference internal" href="api_reference.html#experimentator.section.ExperimentSection.find_first_partially_run" title="experimentator.section.ExperimentSection.find_first_partially_run"><tt class="xref py py-meth docutils literal"><span class="pre">find_first_partially_run</span></tt></a>,
+and the more general
+<a class="reference internal" href="api_reference.html#experimentator.section.ExperimentSection.depth_first_search" title="experimentator.section.ExperimentSection.depth_first_search"><tt class="xref py py-meth docutils literal"><span class="pre">depth_first_search</span></tt></a> and
+<a class="reference internal" href="api_reference.html#experimentator.section.ExperimentSection.breadth_first_search" title="experimentator.section.ExperimentSection.breadth_first_search"><tt class="xref py py-meth docutils literal"><span class="pre">breadth_first_search</span></tt></a>.
+These last two methods allow you to define the search criteria with a custom <tt class="docutils literal"><span class="pre">key</span></tt> function
+that returns <tt class="docutils literal"><span class="pre">True</span></tt> for the desired section.</p>
+</div>
+</div>
+<div class="section" id="design">
+<span id="designs"></span><h2>Design<a class="headerlink" href="#design" title="Permalink to this headline">¶</a></h2>
+<p>In experimentator, every section has a <em>design</em>, represented by a <a class="reference internal" href="api_reference.html#experimentator.Design" title="experimentator.Design"><tt class="xref py py-class docutils literal"><span class="pre">Design</span></tt></a> object
+(usually, these will be created for you).
+Most of the time, all sections at the same level have the same design
+(but see <a class="reference internal" href="#heterogeneity"><em>Heterogeneous experiment structures</em></a>).
+The design is a high-level description of one level of an experiment.
+It includes everything experimentator needs to know to create the children of a section.
+This consists of two things:
+<a class="reference internal" href="#ivs"><em>independent variables</em></a> and an <a class="reference internal" href="#orderings"><em>ordering method</em></a>.</p>
+<p>An experiment requires multiple <a class="reference internal" href="api_reference.html#experimentator.Design" title="experimentator.Design"><tt class="xref py py-class docutils literal"><span class="pre">Design</span></tt></a> instances in a certain relationship to each other.
+Such a collection is modeled with <a class="reference internal" href="api_reference.html#experimentator.DesignTree" title="experimentator.DesignTree"><tt class="xref py py-class docutils literal"><span class="pre">DesignTree</span></tt></a> objects.
+Again, you usually will not manually create these.</p>
+<div class="section" id="independent-variables">
+<span id="ivs"></span><h3>Independent variables<a class="headerlink" href="#independent-variables" title="Permalink to this headline">¶</a></h3>
+<p>A central concept in experimentator (and in experimental design more generally)
+is that of <em>independent variables</em>, or IVs.
+An IV is a variable that you are explicitly varying in order to test its effects.
+The easiest way to represent IVs in experimentator is using a dictionary.
+Each key is a string, the name of an IV.
+Each value is either a list, representing the possible values the IV can take,
+or <tt class="docutils literal"><span class="pre">None</span></tt> if the IV takes continuous values (continuous values are only possible with a <a class="reference internal" href="creation.html#design-matrices"><em>design matrix</em></a>).
+For example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">independent_variables</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s">&#39;congruent&#39;</span><span class="p">:</span> <span class="p">[</span><span class="bp">True</span><span class="p">,</span> <span class="bp">False</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="s">&#39;distractor&#39;</span><span class="p">:</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="s">&#39;left&#39;</span><span class="p">,</span> <span class="s">&#39;right&#39;</span><span class="p">],</span>
+<span class="gp">... </span><span class="p">}</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>In Python, dictionaries have no order.
+In most cases, the order of IVs is not important and so representing IVs as dictionaries will work fine.
+However, there are times when the order you specify the IVs is important.
+This is the case, for example, when using a <a class="reference internal" href="creation.html#design-matrices"><em>design matrix</em></a>, because each column of the design matrix refers to one IV.
+You will need to rely on the order of IVs in order to know which column controls which IV.
+In these cases you should use one of two alternative ways of representing IVs:
+using a <a class="reference external" href="http://docs.python.org/3/library/collections.html#collections.OrderedDict" title="(in Python v3.4)"><tt class="xref py py-class docutils literal"><span class="pre">collections.OrderedDict</span></tt></a>, or a list of 2-tuples.
+Here is an example of the latter method (equivalent to the previous example):</p>
+<div class="last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">independent_variables</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span>    <span class="p">(</span><span class="s">&#39;congruent&#39;</span><span class="p">,</span> <span class="p">[</span><span class="bp">True</span><span class="p">,</span> <span class="bp">False</span><span class="p">]),</span>
+<span class="gp">... </span>    <span class="p">(</span><span class="s">&#39;distractor&#39;</span><span class="p">,</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="s">&#39;left&#39;</span><span class="p">,</span> <span class="s">&#39;right&#39;</span><span class="p">]),</span>
+<span class="gp">... </span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<p>When you specify your IVs, you will specify them separately for every level of the experiment.
+That is, every IV is associated with a level of the experimental hierarchy.
+This determines how often the IV value changes.
+For example, a within-subjects experiment will probably have IVs at the <tt class="docutils literal"><span class="pre">'trial'</span></tt> level,
+a between-subjects experiment will have IVs at the <tt class="docutils literal"><span class="pre">'participant'</span></tt> level,
+and a mixed-design experiment will have both.
+An IV at the <tt class="docutils literal"><span class="pre">'participant'</span></tt> level will always take the same value within each participant.
+Similarly, a blocked experiment may have IVs at the <tt class="docutils literal"><span class="pre">'block'</span></tt> level;
+these IVs will only take on a new value when a new block is reached.</p>
+<p>IV values are ultimately passed to your <a class="reference internal" href="creation.html#callbacks"><em>run callback</em></a> as a <em>condition</em>.
+A condition is a combination of specific IV values.
+Although you don&#8217;t need to create conditions yourself, you can think of them as dictionaries mapping IV names to values.
+For example, the six conditions generated by a full factorial cross of the IVs above are:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[{</span><span class="s">&#39;congruent&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span> <span class="s">&#39;distractor&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">},</span>
+ <span class="p">{</span><span class="s">&#39;congruent&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span> <span class="s">&#39;distractor&#39;</span><span class="p">:</span> <span class="s">&#39;left&#39;</span><span class="p">},</span>
+ <span class="p">{</span><span class="s">&#39;congruent&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span> <span class="s">&#39;distractor&#39;</span><span class="p">:</span> <span class="s">&#39;right&#39;</span><span class="p">},</span>
+ <span class="p">{</span><span class="s">&#39;congruent&#39;</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span> <span class="s">&#39;distractor&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">},</span>
+ <span class="p">{</span><span class="s">&#39;congruent&#39;</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span> <span class="s">&#39;distractor&#39;</span><span class="p">:</span> <span class="s">&#39;left&#39;</span><span class="p">},</span>
+ <span class="p">{</span><span class="s">&#39;congruent&#39;</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span> <span class="s">&#39;distractor&#39;</span><span class="p">:</span> <span class="s">&#39;right&#39;</span><span class="p">}]</span>
+</pre></div>
+</div>
+<p>Just like IVs, different conditions apply at different levels of the experimental hierarchy.
+These conditions propagate down the tree.
+For example, imagine a trial has one of the conditions in the list above,
+<tt class="docutils literal"><span class="pre">{'congruent':</span> <span class="pre">True,</span> <span class="pre">'distractor':</span> <span class="pre">None}</span></tt>.
+The block that the trial is part of may have an additional condition, like <tt class="docutils literal"><span class="pre">{'practice':</span> <span class="pre">False}</span></tt>.
+When the trial is run, these conditions are effectively merged.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>This merging is implemented with the standard-library object <a class="reference external" href="http://docs.python.org/3/library/collections.html#collections.ChainMap" title="(in Python v3.4)"><tt class="xref py py-class docutils literal"><span class="pre">collections.ChainMap</span></tt></a>.
+A <a class="reference external" href="http://docs.python.org/3/library/collections.html#collections.ChainMap" title="(in Python v3.4)"><tt class="xref py py-class docutils literal"><span class="pre">ChainMap</span></tt></a> can be accessed just like a dictionary;
+this is the sense in which it is correct to say that the conditions are merged.
+To continue the example, one can access the IV values without worrying about what level each IV came from:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">condition</span><span class="p">[</span><span class="s">&#39;congruent&#39;</span><span class="p">]</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">condition</span><span class="p">[</span><span class="s">&#39;practice&#39;</span><span class="p">]</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>However, it is possible to differentiate the conditions if needed,
+using the <a class="reference external" href="http://docs.python.org/3/library/collections.html#collections.ChainMap.maps" title="(in Python v3.4)"><tt class="xref py py-attr docutils literal"><span class="pre">maps</span></tt></a> attribute.
+See the <a class="reference external" href="http://docs.python.org/3/library/collections.html#collections.ChainMap" title="(in Python v3.4)"><tt class="xref py py-class docutils literal"><span class="pre">ChainMap</span></tt></a> docs for details.
+You might see something like this:</p>
+<div class="last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">condition</span><span class="o">.</span><span class="n">maps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">{&#39;trial&#39;: 1,</span>
+<span class="go"> &#39;congruent&#39;: True,</span>
+<span class="go"> &#39;distractor&#39;: None}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">condition</span><span class="o">.</span><span class="n">maps</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="go">{&#39;block&#39;: 2,</span>
+<span class="go"> &#39;practice&#39;: False}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">condition</span><span class="o">.</span><span class="n">maps</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+<span class="go">{&#39;participant&#39;: 1}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="orderings">
+<span id="id2"></span><h3>Orderings<a class="headerlink" href="#orderings" title="Permalink to this headline">¶</a></h3>
+<p>The second element of a <a class="reference internal" href="#designs"><em>design</em></a> is an <em>ordering method</em>.
+The ordering method determines how children of a section wll be ordered (and possibly repeated).
+For example, an experiment may shuffle trials within each block,
+counter-balance blocks within each session,
+and put all sessions within each participant in the same order.</p>
+<p>Each ordering method is a class in the <a class="reference internal" href="api_reference.html#module-experimentator.order" title="experimentator.order"><tt class="xref py py-mod docutils literal"><span class="pre">experimentator.order</span></tt></a> module.
+Currently, experimentator includes
+<a class="reference internal" href="api_reference.html#experimentator.order.Ordering" title="experimentator.order.Ordering"><tt class="xref py py-class docutils literal"><span class="pre">Ordering</span></tt></a> (the base class, resulting in a deterministic order),
+<a class="reference internal" href="api_reference.html#experimentator.order.Shuffle" title="experimentator.order.Shuffle"><tt class="xref py py-class docutils literal"><span class="pre">Shuffle</span></tt></a>,
+<a class="reference internal" href="api_reference.html#experimentator.order.CompleteCounterbalance" title="experimentator.order.CompleteCounterbalance"><tt class="xref py py-class docutils literal"><span class="pre">CompleteCounterbalance</span></tt></a>,
+<a class="reference internal" href="api_reference.html#experimentator.order.Sorted" title="experimentator.order.Sorted"><tt class="xref py py-class docutils literal"><span class="pre">Sorted</span></tt></a>, and
+<a class="reference internal" href="api_reference.html#experimentator.order.LatinSquare" title="experimentator.order.LatinSquare"><tt class="xref py py-class docutils literal"><span class="pre">LatinSquare</span></tt></a>.
+<a class="reference internal" href="api_reference.html#experimentator.order.Shuffle" title="experimentator.order.Shuffle"><tt class="xref py py-class docutils literal"><span class="pre">Shuffle</span></tt></a> is usually the default, except if you&#8217;re using a <a class="reference internal" href="creation.html#design-matrices"><em>design matrix</em></a>,
+in which case experimentator assumes you want a deterministic order and makes <a class="reference internal" href="api_reference.html#experimentator.order.Ordering" title="experimentator.order.Ordering"><tt class="xref py py-class docutils literal"><span class="pre">Ordering</span></tt></a> the default.</p>
+<p>Each ordering method class has different parameters, so see the specific API reference for details.
+Commonly, the first argument is <tt class="docutils literal"><span class="pre">number</span></tt>, which specifies the number of times each condition will be repeated.
+For example, with the ordering method <tt class="docutils literal"><span class="pre">Shuffle(3)</span></tt>,
+each unique condition will be repeated three times, and then the order will be randomized.</p>
+<div class="section" id="non-atomic-orderings">
+<span id="id3"></span><h4>Non-atomic orderings<a class="headerlink" href="#non-atomic-orderings" title="Permalink to this headline">¶</a></h4>
+<p>The included ordering classes can be divided into two categories: atomic and non-atomic.
+If every ordering of sections is independent of all other orderings, then the ordering method is atomic.
+For example, if trials within a block are shuffled, then the ordering of trials within each block will be independent.
+Each block can shuffle its trials without needing to know the order of trials within the other blocks.</p>
+<p>However, this is not the case for non-atomic orderings.
+The ordering of sections using non-atomic orderings are dependent on each other.
+For example, if blocks within a session are counterbalanced using <a class="reference internal" href="api_reference.html#experimentator.order.CompleteCounterbalance" title="experimentator.order.CompleteCounterbalance"><tt class="xref py py-class docutils literal"><span class="pre">CompleteCounterbalance</span></tt></a>,
+then each session cannot, on its own, determine the order of blocks within it.</p>
+<p>Non-atomic orderings are implemented by automatically creating a new independent variable.
+For example, if the <tt class="docutils literal"><span class="pre">'block'</span></tt> level has three conditions (e.g., one IV with three possible values)
+and a <a class="reference internal" href="api_reference.html#experimentator.order.CompleteCounterbalance" title="experimentator.order.CompleteCounterbalance"><tt class="xref py py-class docutils literal"><span class="pre">CompleteCounterbalance</span></tt></a> ordering (with <tt class="docutils literal"><span class="pre">number=1</span></tt>),
+then there are six possible orderings of blocks.
+A new IV called <tt class="docutils literal"><span class="pre">'counterbalance_order'</span></tt> will be automatically created one level up (e.g., at the <tt class="docutils literal"><span class="pre">'session'</span></tt> level),
+with six possible values (the integers 0-5).</p>
+<p>Don&#8217;t forget to take this automatically-created IV into account when designing your experiment.
+In the above example, if there are no other IVs at the <tt class="docutils literal"><span class="pre">'session'</span></tt> level, and <tt class="docutils literal"><span class="pre">number=1</span></tt> for the <tt class="docutils literal"><span class="pre">'session'</span></tt> ordering,
+there will still be six sessions per participant due to the six conditions defined by the <tt class="docutils literal"><span class="pre">'counterbalance_order'</span></tt> IV.</p>
+<p>Only <a class="reference internal" href="api_reference.html#experimentator.order.Ordering" title="experimentator.order.Ordering"><tt class="xref py py-class docutils literal"><span class="pre">Ordering</span></tt></a> and <a class="reference internal" href="api_reference.html#experimentator.order.Shuffle" title="experimentator.order.Shuffle"><tt class="xref py py-class docutils literal"><span class="pre">Shuffle</span></tt></a> are atomic; the other ordering methods provided in experimentator are non-atomic
+(the <a class="reference internal" href="api_reference.html#experimentator.order.Sorted" title="experimentator.order.Sorted"><tt class="xref py py-class docutils literal"><span class="pre">Sorted</span></tt></a> ordering method straddles the line; it may or may not be atomic, depending on the parameter <tt class="docutils literal"><span class="pre">order</span></tt>.
+If <tt class="docutils literal"><span class="pre">order='ascending'</span></tt> or <tt class="docutils literal"><span class="pre">order='descending'</span></tt>,
+then the ordering method is atomic as it is sorted the same way at every section.
+However, if <tt class="docutils literal"><span class="pre">order='both'</span></tt>, then it is non-atomic and a new IV <tt class="docutils literal"><span class="pre">{'order':</span> <span class="pre">['ascending',</span> <span class="pre">'descending']}</span></tt>
+will be created).</p>
+</div>
+</div>
+</div>
+<div class="section" id="why-use-levels">
+<span id="why-levels"></span><h2>Why use levels?<a class="headerlink" href="#why-use-levels" title="Permalink to this headline">¶</a></h2>
+<p>You may be wondering how many levels to use, or why to use them at all
+(after all, <a class="reference external" href="http://legacy.python.org/dev/peps/pep-0020/">flat is better than nested</a>).
+That decision must be made on a case-by-case basis.
+For example, imagine your experiment has sessions of 20 trials, divided into two blocks.
+As long as the order of conditions within each session is correctly specified
+(for example, by using a <a class="reference internal" href="creation.html#design-matrices"><em>design matrix</em></a>),
+using an explicit <tt class="docutils literal"><span class="pre">'block'</span></tt> level may not be necessary.
+Alternatively, you could define a <tt class="docutils literal"><span class="pre">'block'</span></tt> level but not a <tt class="docutils literal"><span class="pre">'trial'</span></tt> level
+and stick a trial loop inside the block.
+However, using levels makes it possible to...</p>
+<ul>
+<li><p class="first">associate an IV with a level, facilitating the creation and ordering of conditions.</p>
+</li>
+<li><p class="first">run code before and/or after every section at a particular level, using <a class="reference internal" href="creation.html#contexts"><em>section context managers</em></a>.
+For example, offer participants a break between blocks.</p>
+</li>
+<li><p class="first">run experiment sections by level (using the <a class="reference internal" href="cli.html#cli"><em>command-line interface</em></a>).
+For example, using blocks you could do</p>
+<div class="highlight-python"><div class="highlight"><pre>exp run my_exp.dat participant 1 block 2
+</pre></div>
+</div>
+<p>rather than the more awkward</p>
+<div class="highlight-python"><div class="highlight"><pre>exp run my_exp.dat participant 1 --from 11
+</pre></div>
+</div>
+</li>
+<li><p class="first">index the data by level, after running the experiment, using <a class="reference external" href="http://pandas.pydata.org/pandas-docs/stable/indexing.html#indexing-hierarchical" title="(in pandas v0.14.0)"><em class="xref std std-ref">hierarchical indexing</em></a>.
+For example, to get the third trial of the first participant&#8217;s second block you could do</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">experiment</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">:]</span>
+</pre></div>
+</div>
+<p>or to get the first trial of the second block of every participant,</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">data</span><span class="o">.</span><span class="n">xs</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">level</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;block&#39;</span><span class="p">,</span> <span class="s">&#39;trial&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="heterogeneous-experiment-structures">
+<span id="heterogeneity"></span><h2>Heterogeneous experiment structures<a class="headerlink" href="#heterogeneous-experiment-structures" title="Permalink to this headline">¶</a></h2>
+<p>A final concept to explain is the difference between homogeneous and heterogeneous experiment structures.
+In a homogeneous experiment, every section at the same level has the same <a class="reference internal" href="#designs"><em>design</em></a>.
+For example, if the first block contains ten trials and the second block contains twenty,
+the experiment structure is heterogeneous.
+If the order of blocks within the first session is random
+but the order of blocks within the second session is counterbalanced,
+the experiment structure is heterogeneous.
+Even different possible IV values across sections is enough to break homogeneity.</p>
+<p>Heterogeneous experiments are a little trickier to set up, but they are fully supported by experimentator.
+See <a class="reference internal" href="creation.html#constructing-heterogeneity"><em>Constructing heterogeneous experiments</em></a>.</p>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="creation.html" class="btn btn-neutral float-right" title="Creating an experiment"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="experimentator: Python experiment builder"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2014, Henry S. Harrison.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.2.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

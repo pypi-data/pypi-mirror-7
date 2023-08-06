@@ -1,0 +1,864 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>experimentator.order &mdash; experimentator 0.2.1 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="experimentator 0.2.1 documentation" href="../../index.html"/>
+        <link rel="up" title="experimentator" href="../experimentator.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="../../index.html" class="fa fa-home"> experimentator</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../concepts.html">Concepts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../concepts.html#experiment-structure">Experiment structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../concepts.html#design">Design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../concepts.html#why-use-levels">Why use levels?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../concepts.html#heterogeneous-experiment-structures">Heterogeneous experiment structures</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../creation.html">Creating an experiment</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../creation.html#constructor-methods">Constructor methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../creation.html#constructing-heterogeneous-experiments">Constructing heterogeneous experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../creation.html#design-matrices">Design matrices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../creation.html#callbacks">Callbacks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html">Command-line interface</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../cli.html#commands">Commands</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference.html">API reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api_reference.html#experiment">Experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api_reference.html#helper-functions">Helper functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api_reference.html#experimentsection">ExperimentSection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api_reference.html#design">Design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api_reference.html#designtree">DesignTree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api_reference.html#module-experimentator.order">experimentator.order</a></li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">experimentator</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+          <li><a href="../experimentator.html">experimentator</a> &raquo;</li>
+      
+    <li>experimentator.order</li>
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            
+  <h1>Source code for experimentator.order</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module contains the class |Ordering| and its descendants.</span>
+<span class="sd">These classes handle how unique conditions at a particular experimental level are ordered and duplicated.</span>
+<span class="sd">|Ordering| instances should be passed directly to the |Design| constructor;</span>
+<span class="sd">there is no reason to otherwise interact with them in normal use.</span>
+
+<span class="sd">Of special note are non-atomic orderings:</span>
+<span class="sd">the class |NonAtomicOrdering| and its descendants.</span>
+<span class="sd">&#39;&#39;Non-atomic&#39;&#39; here means that the orderings between sections are not independent.</span>
+<span class="sd">A |Shuffle| ordering is atomic;</span>
+<span class="sd">the order in one section is independent of the order in another.</span>
+<span class="sd">However, if one wants to ensure, for example, that possible block orders are evenly distributed among participants</span>
+<span class="sd">(a |counterbalanced design|),</span>
+<span class="sd">the block orders within each participants are not independent.</span>
+<span class="sd">Each participant can decide its order of blocks only in the context of the other participants&#39; block orders.</span>
+<span class="sd">This means that the *parent* section must handle orderings</span>
+<span class="sd">(in the example of counterbalanced blocks,</span>
+<span class="sd">the |Experiment.base_section|--the experiment itself, essentially--must tell each participant what block order to use).</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">deque</span><span class="p">,</span> <span class="n">namedtuple</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">factorial</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+
+<span class="n">IndependentVariable</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s">&#39;IndependentVariable&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s">&#39;name&#39;</span><span class="p">,</span> <span class="s">&#39;values&#39;</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="Ordering"><a class="viewcode-back" href="../../api_reference.html#experimentator.order.Ordering">[docs]</a><span class="k">class</span> <span class="nc">Ordering</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The base ordering class.</span>
+<span class="sd">    It will keep conditions in the order they are defined by the |Design| instance</span>
+<span class="sd">    (either the order of rows in the design matrix,</span>
+<span class="sd">    or a full factorial cross--the output of calling |itertools.product| on the IV levels).</span>
+<span class="sd">    Remember not to rely on the order of dictionary items.</span>
+<span class="sd">    Therefore, if a specific order is desired,</span>
+<span class="sd">    it is recommended to use a design matrix or an |OrderedDict| to define the IVs.</span>
+<span class="sd">    See the |IV docs| for more information.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    number : int, optional</span>
+<span class="sd">        The number of times each unique condition should appear.</span>
+<span class="sd">        The default is 1.</span>
+<span class="sd">        If ``number &gt; 1``, the entire order will be cycled</span>
+<span class="sd">        (as opposed to repeating each condition within the order).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number</span> <span class="o">=</span> <span class="n">number</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">all_conditions</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;{}(number={})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Ordering.first_pass"><a class="viewcode-back" href="../../api_reference.html#experimentator.order.Ordering.first_pass">[docs]</a>    <span class="k">def</span> <span class="nf">first_pass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conditions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handle operations that should only be performed once,</span>
+<span class="sd">        initializing the object before ordering conditions.</span>
+<span class="sd">        For |Ordering|, the only operation is duplication of the list of conditions (if |Ordering.number| &gt; 1).</span>
+<span class="sd">        This methods should not be called manually.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        conditions : sequence of dict</span>
+<span class="sd">            A list of conditions, where each condition is a dictionary mapping IV names to IV values.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        iv_name : str or tuple</span>
+<span class="sd">            The name of the IV, for non-atomic orderings.</span>
+<span class="sd">            Otherwise, an empty tuple.</span>
+<span class="sd">        iv_values : tuple</span>
+<span class="sd">            The possible values of the IV.</span>
+<span class="sd">            Empty for atomic orderings.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">all_conditions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">number</span> <span class="o">*</span> <span class="nb">list</span><span class="p">(</span><span class="n">conditions</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">IndependentVariable</span><span class="p">((),</span> <span class="p">())</span>
+</div>
+<div class="viewcode-block" id="Ordering.get_order"><a class="viewcode-back" href="../../api_reference.html#experimentator.order.Ordering.get_order">[docs]</a>    <span class="k">def</span> <span class="nf">get_order</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get an order of conditions.</span>
+<span class="sd">        For |Ordering|, always returns the same order.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : dict, optional</span>
+<span class="sd">            A dictionary describing the data of the parent section.</span>
+<span class="sd">            Unused for atomic orderings.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list of dict</span>
+<span class="sd">            A list of conditions,</span>
+<span class="sd">            where each condition is a dictionary mapping IV names to IV values.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_conditions</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Ordering.possible_orders"><a class="viewcode-back" href="../../api_reference.html#experimentator.order.Ordering.possible_orders">[docs]</a>    <span class="k">def</span> <span class="nf">possible_orders</span><span class="p">(</span><span class="n">conditions</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Yield all possible orders of the conditions.</span>
+<span class="sd">        Each order is a list of dictionaries, with each dictionary representing a condition.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        conditions : sequence of dict</span>
+<span class="sd">            A list of conditions,</span>
+<span class="sd">            where each condition is a dictionary mapping IV names to IV values.</span>
+<span class="sd">        unique : bool, optional</span>
+<span class="sd">            If true (the default), will only return unique orders.</span>
+<span class="sd">            If false, some identical orders will be generated if `conditions` contains identical elements.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">unique</span><span class="p">:</span>
+            <span class="n">unique_orders</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">permutations</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">items</span><span class="p">())</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">conditions</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">order</span> <span class="ow">in</span> <span class="n">unique_orders</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">order</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">yield from</span> <span class="n">itertools</span><span class="o">.</span><span class="n">permutations</span><span class="p">(</span><span class="n">conditions</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">__dict__</span>
+
+</div>
+<div class="viewcode-block" id="Shuffle"><a class="viewcode-back" href="../../api_reference.html#experimentator.order.Shuffle">[docs]</a><span class="k">class</span> <span class="nc">Shuffle</span><span class="p">(</span><span class="n">Ordering</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This ordering randomly shuffles the conditions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    number : int, optional</span>
+<span class="sd">        Number of times each condition should appear (default=1).</span>
+<span class="sd">        Conditions are duplicated *before* shuffling.</span>
+<span class="sd">    avoid_repeats : bool, optional</span>
+<span class="sd">        If True (default is False), no identical conditions will appear back-to-back.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">avoid_repeats</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">number</span><span class="o">=</span><span class="n">number</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">avoid_repeats</span> <span class="o">=</span> <span class="n">avoid_repeats</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;{}(number={}, avoid_repeats={})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">avoid_repeats</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Shuffle.get_order"><a class="viewcode-back" href="../../api_reference.html#experimentator.order.Shuffle.get_order">[docs]</a>    <span class="k">def</span> <span class="nf">get_order</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get an order of conditions.</span>
+<span class="sd">        For |Shuffle|, returns the conditions in a random order.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : dict, optional</span>
+<span class="sd">            A dictionary describing the data of the parent section.</span>
+<span class="sd">            Unused for atomic orderings.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list of dict</span>
+<span class="sd">            A list of conditions,</span>
+<span class="sd">            where each condition is a dictionary mapping IV names to IV values.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">conditions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_conditions</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">conditions</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">avoid_repeats</span><span class="p">:</span>
+            <span class="k">while</span> <span class="n">_has_repeats</span><span class="p">(</span><span class="n">conditions</span><span class="p">):</span>
+                <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">conditions</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">conditions</span>
+
+</div></div>
+<div class="viewcode-block" id="NonAtomicOrdering"><a class="viewcode-back" href="../../api_reference.html#experimentator.order.NonAtomicOrdering">[docs]</a><span class="k">class</span> <span class="nc">NonAtomicOrdering</span><span class="p">(</span><span class="n">Ordering</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This is a base class for non-atomic orderings, and is not meant to be directly instantiated.</span>
+<span class="sd">    Non-atomic orderings work by creating a new independent variable one level up.</span>
+<span class="sd">    The IV name will start with an underscore, a convention to avoid name clashes.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">iv_name</span> <span class="o">=</span> <span class="s">&#39;order&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">number</span><span class="o">=</span><span class="n">number</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">order_ivs</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="NonAtomicOrdering.iv"><a class="viewcode-back" href="../../api_reference.html#experimentator.order.NonAtomicOrdering.iv">[docs]</a>    <span class="k">def</span> <span class="nf">iv</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The IV associated with the non-atomic ordering.</span>
+<span class="sd">        It will be added to the design one level up in the experiment hierarchy.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        iv_name : str or tuple</span>
+<span class="sd">            The name of the IV, for non-atomic orderings.</span>
+<span class="sd">            Otherwise, an empty tuple.</span>
+<span class="sd">        iv_values : seq</span>
+<span class="sd">            The possible values of the IV.</span>
+<span class="sd">            Empty for atomic orderings.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">IndependentVariable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iv_name</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">order_ivs</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+</div>
+<div class="viewcode-block" id="NonAtomicOrdering.get_order"><a class="viewcode-back" href="../../api_reference.html#experimentator.order.NonAtomicOrdering.get_order">[docs]</a>    <span class="k">def</span> <span class="nf">get_order</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get an order of conditions.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : dict, optional</span>
+<span class="sd">            A dictionary describing the data of the parent section.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list of dict</span>
+<span class="sd">            A list of conditions,</span>
+<span class="sd">            where each condition is a dictionary mapping IV names to IV values.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">order_ivs</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">iv_name</span><span class="p">]]</span>
+
+</div></div>
+<div class="viewcode-block" id="CompleteCounterbalance"><a class="viewcode-back" href="../../api_reference.html#experimentator.order.CompleteCounterbalance">[docs]</a><span class="k">class</span> <span class="nc">CompleteCounterbalance</span><span class="p">(</span><span class="n">NonAtomicOrdering</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    In a complete counterbalance design, every unique ordering of the conditions appears the same numbers of times.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    number : int, optional</span>
+<span class="sd">        The number of times each condition should be duplicated.</span>
+<span class="sd">        Note that conditions are duplicated *before* determining the possible orderings.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The number of possible orderings can get very large very quickly.</span>
+<span class="sd">    Therefore, a complete counterbalance is not recommended for more than 3 conditions.</span>
+<span class="sd">    The number of unique orderings can be determined by</span>
+<span class="sd">    ``factorial(number * k) // number**k``,</span>
+<span class="sd">    where `k` is the number of conditions (assuming all conditions are unique).</span>
+<span class="sd">    For example, with 5 conditions there are 120 possible orders;</span>
+<span class="sd">    with 3 conditions and ``number==2``, there are 90 unique orders.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">iv_name</span> <span class="o">=</span> <span class="s">&#39;counterbalance_order&#39;</span>
+
+<div class="viewcode-block" id="CompleteCounterbalance.first_pass"><a class="viewcode-back" href="../../api_reference.html#experimentator.order.CompleteCounterbalance.first_pass">[docs]</a>    <span class="k">def</span> <span class="nf">first_pass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conditions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handle operations that should only be performed once,</span>
+<span class="sd">        initializing the object before ordering conditions.</span>
+<span class="sd">        For |CompleteCounterbalance|, all possible orders are determined.</span>
+<span class="sd">        This method should not be called manually.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        conditions : sequence of dict</span>
+<span class="sd">            A list of conditions,</span>
+<span class="sd">            where each condition is a dictionary mapping IV names to IV values.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        iv_name : str or tuple</span>
+<span class="sd">            The name of the IV to be created one level up, ``&#39;counterbalance_order&#39;``.</span>
+<span class="sd">        iv_values : tuple</span>
+<span class="sd">            Values of the IV to be created one level up,</span>
+<span class="sd">            integers each associated with an order of the conditions.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">conditions</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">conditions</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">all_conditions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">number</span> <span class="o">*</span> <span class="n">conditions</span>
+
+        <span class="c"># Warn because this might hang if this method is accidentally used with too many possible orders.</span>
+        <span class="n">non_distinct_orders</span> <span class="o">=</span> <span class="n">factorial</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_conditions</span><span class="p">))</span>
+        <span class="n">equivalent_orders</span> <span class="o">=</span> <span class="n">factorial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">number</span><span class="p">)</span><span class="o">**</span><span class="nb">len</span><span class="p">(</span><span class="n">conditions</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&quot;Creating IV &#39;{}&#39; with {} levels.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">iv_name</span><span class="p">,</span> <span class="n">non_distinct_orders</span><span class="o">//</span><span class="n">equivalent_orders</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">order_ivs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">possible_orders</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_conditions</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">iv</span>
+
+</div></div>
+<div class="viewcode-block" id="Sorted"><a class="viewcode-back" href="../../api_reference.html#experimentator.order.Sorted">[docs]</a><span class="k">class</span> <span class="nc">Sorted</span><span class="p">(</span><span class="n">NonAtomicOrdering</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sorts the conditions based on the value of the IV defined at its level.</span>
+<span class="sd">    This ordering can be non-atomic (if `order` ``== &#39;both&#39;``),</span>
+<span class="sd">    creating an IV with levels of ``&#39;ascending&#39;`` and ``&#39;descending&#39;``.</span>
+<span class="sd">    If `order` is ``&#39;ascending&#39;`` or ``&#39;descending&#39;``, the ordering will be atomic</span>
+<span class="sd">    (each section will be ordered the same way).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    order : {&#39;both&#39;, &#39;ascending&#39;, &#39;descending&#39;}, optional</span>
+<span class="sd">        The order to sort the sections.</span>
+<span class="sd">        If ``&#39;both&#39;`` (the default),</span>
+<span class="sd">        half the sections will be created in ascending order, and half in descending order,</span>
+<span class="sd">        depending on the value of the new IV ``&#39;sorted_order&#39;``.</span>
+<span class="sd">    number : int, optional</span>
+<span class="sd">        The number of times each condition should appear.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    To avoid ambiguity, |Sorted| can only be used at levels containing only one IV.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">iv_name</span> <span class="o">=</span> <span class="s">&#39;sorted_order&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s">&#39;both&#39;</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">number</span><span class="o">=</span><span class="n">number</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">order</span> <span class="o">=</span> <span class="n">order</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;{}(number={}, order=&#39;{}&#39;)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Sorted.first_pass"><a class="viewcode-back" href="../../api_reference.html#experimentator.order.Sorted.first_pass">[docs]</a>    <span class="k">def</span> <span class="nf">first_pass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conditions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handle operations that should only be performed once,</span>
+<span class="sd">        initializing the object before ordering conditions.</span>
+<span class="sd">        For |Sorted|, the conditions are sorted on IV values.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        conditions : sequence of dict</span>
+<span class="sd">            A list of conditions,</span>
+<span class="sd">            where each condition is a dictionary mapping IV names to IV values.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        iv_name : str or tuple</span>
+<span class="sd">            If `order` is ``&#39;both&#39;``, the name of the IV to be created one level up, ``&#39;sorted_order&#39;``.</span>
+<span class="sd">            Otherwise, an empty tuple (denoting that no IV will be created).</span>
+<span class="sd">        iv_values : tuple</span>
+<span class="sd">            If `order` is ``&#39;both&#39;``, values of the IV to be created one level up,</span>
+<span class="sd">            integers each associated with an order of the conditions.</span>
+<span class="sd">            Otherwise, empty tuple.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">conditions</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Ordering method &#39;Sorted&#39; only works with one IV&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">all_conditions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">number</span> <span class="o">*</span> <span class="nb">list</span><span class="p">(</span><span class="n">conditions</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">order_ivs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;ascending&#39;</span><span class="p">:</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_conditions</span><span class="p">,</span>
+                                              <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">condition</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">condition</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">]),</span>
+                          <span class="s">&#39;descending&#39;</span><span class="p">:</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_conditions</span><span class="p">,</span>
+                                               <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">condition</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">condition</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">],</span>
+                                               <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)}</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span> <span class="o">==</span> <span class="s">&#39;both&#39;</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&quot;Creating IV &#39;{}&#39; with levels &#39;ascending&#39; and &#39;descending&#39;.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iv_name</span><span class="p">))</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">iv</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">IndependentVariable</span><span class="p">((),</span> <span class="p">())</span>
+</div>
+<div class="viewcode-block" id="Sorted.get_order"><a class="viewcode-back" href="../../api_reference.html#experimentator.order.Sorted.get_order">[docs]</a>    <span class="k">def</span> <span class="nf">get_order</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get an order of conditions.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : dict, optional</span>
+<span class="sd">            A dictionary describing the data of the parent section.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list of dict</span>
+<span class="sd">            A list of conditions,</span>
+<span class="sd">            where each condition is a dictionary mapping IV names to IV values.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span> <span class="o">==</span> <span class="s">&#39;both&#39;</span><span class="p">:</span>
+            <span class="n">order</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">iv_name</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">order</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">order_ivs</span><span class="p">[</span><span class="n">order</span><span class="p">]</span>
+
+</div></div>
+<div class="viewcode-block" id="LatinSquare"><a class="viewcode-back" href="../../api_reference.html#experimentator.order.LatinSquare">[docs]</a><span class="k">class</span> <span class="nc">LatinSquare</span><span class="p">(</span><span class="n">NonAtomicOrdering</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Orders the conditions by constructing an NxN Latin square,</span>
+<span class="sd">    where N is the number of unique conditions.</span>
+<span class="sd">    A Latin square is a matrix with each element appearing exactly once in each row and column.</span>
+<span class="sd">    Each row represents a different potential ordering of the conditions.</span>
+<span class="sd">    This allows for balanced counterbalancing,</span>
+<span class="sd">    in designs too large to accommodate a complete counterbalance.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    number : int, optional</span>
+<span class="sd">        The number of times the Latin square should be repeated (default=1).</span>
+<span class="sd">        Duplication occurs *after* constructing the square.</span>
+<span class="sd">    balanced : bool, optional</span>
+<span class="sd">        If True (the default), first-order order effects will be balanced</span>
+<span class="sd">        Each condition will appear the same number of times</span>
+<span class="sd">        immediately before and immediately after every other condition.</span>
+<span class="sd">        Balanced latin squares can only be constructed with an even number of conditions.</span>
+<span class="sd">    uniform : bool, optional</span>
+<span class="sd">        If True (default is False), the Latin square will be randomly sampled</span>
+<span class="sd">        from a uniform distribution of Latin squares of size NxN.</span>
+<span class="sd">        Otherwise, the sampling will be biased.</span>
+<span class="sd">        The construction of balanced, uniform Latin squares is not implemented.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The algorithm for computing unbalanced Latin squares is not very efficient.</span>
+<span class="sd">    It is not recommended to construct unbalanced, uniform Latin squares of order above 5;</span>
+<span class="sd">    for non-uniform, unbalanced Latin squares it is safe to go up to an order of 10.</span>
+<span class="sd">    Higher than that, computation times increase rapidly.</span>
+
+<span class="sd">    The algorithm for computing balanced Latin squares is fast only because it is not robust;</span>
+<span class="sd">    it is very biased and only samples from the same limited set of balanced Latin squares.</span>
+<span class="sd">    However, this is usually not an issue.</span>
+<span class="sd">    For more implementation details, see |latin_square| and |balanced_latin_square|.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">iv_name</span> <span class="o">=</span> <span class="s">&#39;latin_square_row&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">balanced</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">uniform</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">balanced</span> <span class="ow">and</span> <span class="n">uniform</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Cannot create a balanced, uniform Latin square&#39;</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">number</span><span class="o">=</span><span class="n">number</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">balanced</span> <span class="o">=</span> <span class="n">balanced</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uniform</span> <span class="o">=</span> <span class="n">uniform</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;{}(number={}, balanced={}, uniform={})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">balanced</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">uniform</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LatinSquare.first_pass"><a class="viewcode-back" href="../../api_reference.html#experimentator.order.LatinSquare.first_pass">[docs]</a>    <span class="k">def</span> <span class="nf">first_pass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conditions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handle operations that should only be performed once,</span>
+<span class="sd">        initializing the object before ordering conditions.</span>
+<span class="sd">        For |LatinSquare|, the square is constructed.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        conditions : sequence of dict</span>
+<span class="sd">            A list of conditions,</span>
+<span class="sd">            where each condition is a dictionary mapping IV names to IV values.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        iv_name : str or tuple</span>
+<span class="sd">            The name of the IV to be created one level up, ``&#39;latin_square_row&#39;``.</span>
+<span class="sd">        iv_values : tuple</span>
+<span class="sd">            Values of the IV to be created one level up,</span>
+<span class="sd">            integers each corresponding to one row of the Latin square.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">all_conditions</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">conditions</span><span class="p">)</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_conditions</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">balanced</span><span class="p">:</span>
+            <span class="n">square</span> <span class="o">=</span> <span class="n">balanced_latin_square</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">uniform</span><span class="p">:</span>
+                <span class="n">uniform_string</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">uniform_string</span> <span class="o">=</span> <span class="s">&#39;non-&#39;</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&#39;Constructing Latin square of order {} from a {}uniform distribution...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">order</span><span class="p">,</span> <span class="n">uniform_string</span><span class="p">))</span>
+
+            <span class="n">square</span> <span class="o">=</span> <span class="n">latin_square</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="n">uniform</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">uniform</span><span class="p">,</span> <span class="n">reduced</span><span class="o">=</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">uniform</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">uniform</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&#39;Latin square construction complete.&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">order_ivs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">number</span> <span class="o">*</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">all_conditions</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">row</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">square</span><span class="p">))</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&quot;Creating IV &#39;{}&#39; with {} levels.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iv_name</span><span class="p">,</span> <span class="n">order</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">iv</span>
+
+</div></div>
+<span class="k">def</span> <span class="nf">_has_repeats</span><span class="p">(</span><span class="n">seq</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">first</span> <span class="o">==</span> <span class="n">second</span> <span class="k">for</span> <span class="n">first</span><span class="p">,</span> <span class="n">second</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">seq</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">seq</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
+
+
+<span class="k">def</span> <span class="nf">latin_square</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="n">reduced</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">uniform</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Constructs a Latin square of size `order` x `order`.</span>
+<span class="sd">    Each row and column will contain every element of ``range(order)`` exactly once.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    order : int</span>
+<span class="sd">        Size of Latin square to construct.</span>
+<span class="sd">    reduced : bool, optional</span>
+<span class="sd">        If True (default is False),</span>
+<span class="sd">        the first row and first column of the square will be the ``list(range(order))``,</span>
+<span class="sd">        unless `shuffle` is also True.</span>
+<span class="sd">    uniform : bool, optional</span>
+<span class="sd">        If True (the default), the Latin square will be sampled from a uniform distribution of Latin squares.</span>
+<span class="sd">        Set to False to relax this constraint and allow for a faster run time.</span>
+<span class="sd">    shuffle : bool, optional</span>
+<span class="sd">        If True (default is False),</span>
+<span class="sd">        after construction of the Latin square its rows will be shuffled randomly,</span>
+<span class="sd">        then its columns, and then the elements will be randomly permuted.</span>
+<span class="sd">        Shuffling is irrelevant when `uniform` is True.</span>
+<span class="sd">        Otherwise, it adds some randomness, though the resulting Latin square will still be biased.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    array-like</span>
+<span class="sd">        A Latin square of size `order` x `order`.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    balanced_latin_square</span>
+<span class="sd">    LatinSquare</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This function uses a naive algorithm to construct latin squares,</span>
+<span class="sd">    randomly generating elements and starting over whenever a collision is encountered.</span>
+<span class="sd">    It will take a long time to construct Latin squares of order 5,</span>
+<span class="sd">    when sampling from a uniform distribution.</span>
+<span class="sd">    However, if a uniform distribution is not required,</span>
+<span class="sd">    it is recommended to also set `reduced` and `shuffle` to True for fastest run times.</span>
+<span class="sd">    In this case, latin squares up to an order of about 10 can be constructed in a reasonable amount of time.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; latin_square(5)</span>
+<span class="sd">    [[4, 2, 0, 1, 3],</span>
+<span class="sd">     [0, 3, 1, 4, 2],</span>
+<span class="sd">     [3, 1, 2, 0, 4],</span>
+<span class="sd">     [2, 0, 4, 3, 1],</span>
+<span class="sd">     [1, 4, 3, 2, 0]]  #random</span>
+
+<span class="sd">     &gt;&gt;&gt; latin_square(5, reduced=True, uniform=False)</span>
+<span class="sd">     [[0, 1, 2, 3, 4],</span>
+<span class="sd">      [1, 2, 4, 0, 3],</span>
+<span class="sd">      [2, 0, 3, 4, 1],</span>
+<span class="sd">      [3, 4, 1, 2, 0],</span>
+<span class="sd">      [4, 3, 0, 1, 2]]  #random</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">numbers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="p">))</span>
+    <span class="n">square</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">reduced</span><span class="p">:</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">_is_latin_rect</span><span class="p">(</span><span class="n">square</span><span class="p">):</span>
+            <span class="n">square</span> <span class="o">=</span> <span class="p">[</span><span class="n">numbers</span><span class="p">]</span>   <span class="c"># To get a uniform sampling of latin squares, we must start over every time.</span>
+            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">order</span><span class="p">):</span>
+                <span class="n">square</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_new_row</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="n">reduced_row</span><span class="o">=</span><span class="n">row</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">uniform</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">_is_latin_rect</span><span class="p">(</span><span class="n">square</span><span class="p">):</span>
+                    <span class="k">break</span>
+                <span class="k">elif</span> <span class="ow">not</span> <span class="n">uniform</span><span class="p">:</span>
+                    <span class="k">while</span> <span class="ow">not</span> <span class="n">_is_latin_rect</span><span class="p">(</span><span class="n">square</span><span class="p">):</span>
+                        <span class="n">square</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">_new_row</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="n">reduced_row</span><span class="o">=</span><span class="n">row</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>  <span class="c"># Not reduced.</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">_is_latin_rect</span><span class="p">(</span><span class="n">square</span><span class="p">):</span>
+            <span class="n">square</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="p">):</span>
+                <span class="n">square</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_new_row</span><span class="p">(</span><span class="n">order</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">uniform</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">_is_latin_rect</span><span class="p">(</span><span class="n">square</span><span class="p">):</span>
+                    <span class="k">break</span>
+                <span class="k">elif</span> <span class="ow">not</span> <span class="n">uniform</span><span class="p">:</span>
+                    <span class="k">while</span> <span class="ow">not</span> <span class="n">_is_latin_rect</span><span class="p">(</span><span class="n">square</span><span class="p">):</span>
+                        <span class="n">square</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">_new_row</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">shuffle</span><span class="p">:</span>
+        <span class="n">_shuffle_latin_square</span><span class="p">(</span><span class="n">square</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">square</span>
+
+
+<span class="k">def</span> <span class="nf">balanced_latin_square</span><span class="p">(</span><span class="n">order</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Constructs a row-balanced latin square of order `order`.</span>
+<span class="sd">    In a row-balanced Latin square, immediate order effects are accounted for.</span>
+<span class="sd">    Every two-element, back-to-back sequence occurs the same number of times.</span>
+<span class="sd">    This is in addition to the standard Latin square constraint</span>
+<span class="sd">    with every row and column containing each element exactly once.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    order : int</span>
+<span class="sd">        Order of the Latin square to construct.</span>
+<span class="sd">        Must be even.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    array-like</span>
+<span class="sd">        A balanced Latin square of size `order` x `order`.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    latin_square</span>
+<span class="sd">    LatinSquare</span>
+
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The algorithm constructs a stereotypical balanced Latin square,</span>
+<span class="sd">    then shuffles the rows and elements (but not the columns).</span>
+<span class="sd">    This algorithm is much faster than the algorithm used by |latin_square|.</span>
+<span class="sd">    However, it does not sample from a uniform distribution of balanced Latin squares (i.e. it is biased)</span>
+<span class="sd">    and it cannot create Latin squares that are both reduced and balanced.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; balanced_latin_square(6)</span>
+<span class="sd">    [[0, 2, 1, 5, 4, 3],</span>
+<span class="sd">     [5, 3, 2, 4, 0, 1],</span>
+<span class="sd">     [1, 0, 4, 2, 3, 5],</span>
+<span class="sd">     [2, 5, 0, 3, 1, 4],</span>
+<span class="sd">     [4, 1, 3, 0, 5, 2],</span>
+<span class="sd">     [3, 4, 5, 1, 2, 0]]  # random</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">order</span> <span class="o">%</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Cannot compute a balanced Latin square with an odd order&#39;</span><span class="p">)</span>
+
+    <span class="n">original_numbers</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
+    <span class="n">column_starts</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">first</span><span class="p">,</span> <span class="n">last</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">original_numbers</span><span class="p">[</span><span class="mi">2</span><span class="p">:],</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">original_numbers</span><span class="p">[</span><span class="mi">2</span><span class="p">:])):</span>
+        <span class="n">column_starts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">last</span><span class="p">)</span>
+        <span class="n">column_starts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">first</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">column_starts</span><span class="p">)</span> <span class="o">==</span> <span class="n">order</span><span class="p">:</span>
+            <span class="k">break</span>
+
+    <span class="n">square</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">start</span> <span class="ow">in</span> <span class="n">column_starts</span><span class="p">:</span>
+        <span class="n">column</span> <span class="o">=</span> <span class="n">deque</span><span class="p">(</span><span class="n">original_numbers</span><span class="p">)</span>
+        <span class="n">column</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="o">-</span><span class="n">start</span><span class="p">)</span>
+        <span class="n">square</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">column</span><span class="p">))</span>
+    <span class="n">square</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">square</span><span class="p">))</span>
+    <span class="n">square</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">square</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">_shuffle_latin_square</span><span class="p">(</span><span class="n">square</span><span class="p">,</span> <span class="n">shuffle_columns</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_shuffle_latin_square</span><span class="p">(</span><span class="n">square</span><span class="p">,</span> <span class="n">shuffle_columns</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">shuffle_rows</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">shuffle_items</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="n">order</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">square</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">shuffle_rows</span><span class="p">:</span>
+        <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">square</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">shuffle_columns</span><span class="p">:</span>
+        <span class="n">square</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">square</span><span class="p">))</span>
+        <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">square</span><span class="p">)</span>
+        <span class="n">square</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">square</span><span class="p">))</span>
+        <span class="n">square</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">square</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">shuffle_items</span><span class="p">:</span>
+        <span class="n">new_factors</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="p">))</span>
+        <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">new_factors</span><span class="p">)</span>
+        <span class="n">new_square</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">square</span><span class="p">:</span>
+            <span class="n">new_row</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">original_factor</span><span class="p">,</span> <span class="n">new_factor</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="p">),</span> <span class="n">new_factors</span><span class="p">):</span>
+                <span class="n">new_row</span><span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">original_factor</span><span class="p">)]</span> <span class="o">=</span> <span class="n">new_factor</span>
+            <span class="n">new_square</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_row</span><span class="p">)</span>
+        <span class="n">square</span> <span class="o">=</span> <span class="n">new_square</span>
+
+    <span class="k">assert</span><span class="p">(</span><span class="n">_is_latin_rect</span><span class="p">(</span><span class="n">square</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">square</span>
+
+
+<span class="k">def</span> <span class="nf">_is_latin_rect</span><span class="p">(</span><span class="n">matrix</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">matrix</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">return</span> <span class="p">(</span><span class="nb">all</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">row</span><span class="p">))</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">matrix</span><span class="p">)</span> <span class="ow">and</span>
+            <span class="nb">all</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">column</span><span class="p">))</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">column</span><span class="p">)</span> <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">matrix</span><span class="p">)))</span>
+
+
+<span class="k">def</span> <span class="nf">_new_row</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="n">reduced_row</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="n">numbers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">reduced_row</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">new_row</span> <span class="o">=</span> <span class="p">[</span><span class="n">reduced_row</span><span class="p">]</span>
+        <span class="n">remaining_numbers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">numbers</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">new_row</span><span class="p">))</span>
+        <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">remaining_numbers</span><span class="p">)</span>
+        <span class="n">new_row</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">remaining_numbers</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">new_row</span> <span class="o">=</span> <span class="n">numbers</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">new_row</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">new_row</span>
+</pre></div>
+
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2014, Henry S. Harrison.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.2.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
