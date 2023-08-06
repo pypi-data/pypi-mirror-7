@@ -1,0 +1,70 @@
+============
+Introduction
+============
+
+
+.. image:: https://badge.fury.io/py/prov.svg
+  :target: http://badge.fury.io/py/prov
+  :alt: Latest Release
+.. image:: https://travis-ci.org/trungdong/prov.svg
+  :target: https://travis-ci.org/trungdong/prov
+  :alt: Build Status
+.. image:: https://coveralls.io/repos/trungdong/prov/badge.png?branch=master
+  :target: https://coveralls.io/r/trungdong/prov?branch=master
+  :alt: Coverage Status
+.. image:: https://pypip.in/wheel/prov/badge.svg
+  :target: https://pypi.python.org/pypi/prov/
+  :alt: Wheel Status
+.. image:: https://pypip.in/download/prov/badge.svg
+  :target: https://pypi.python.org/pypi/prov/
+  :alt: Downloads
+
+
+A library for W3C Provenance Data Model supporting PROV-JSON import/export
+
+* Free software: MIT license
+* Documentation: http://prov.readthedocs.org.
+
+Features
+--------
+
+This package provides an implementation of the `W3C PROV Data Model <http://www.w3.org/TR/prov-dm/>`_ in Python.
+It provides in-memory classes for PROV assertions and can be serialized into `PROV-JSON representation <http://www.w3.org/Submission/prov-json/>`_.
+In addition, the included `prov.dot` module exports PROV documents into various graphical formats (e.g. PDF, PNG, SVG).
+
+
+Uses
+^^^^
+This package is used extensively by `ProvStore <https://provenance.ecs.soton.ac.uk/store/>`_,
+a respository for provenance documents.
+
+
+
+
+
+History
+-------
+
+1.0.1 (2014-08-18)
+^^^^^^^^^^^^^^^^^^
+* Added: Default namespace inheritance for bundles
+* Fixed: :py:meth:`prov.model.NamespaceManager.valid_qualified_name` did not support :py:class:`~prov.model.XSDQName`
+* Added: Convenience :py:func:`prov.read` method with a lazy format detection
+* Added: Convenience :py:meth:`~prov.model.ProvBundle.plot` method on the :py:class:`~prov.model.ProvBundle` class (requiring matplotlib).
+* Changed: The previous :py:meth:`!add_record` method renamed to :py:meth:`~prov.model.ProvBundle.new_record`
+* Added: :py:meth:`~prov.model.ProvBundle.add_record` function which takes one argument, a :py:class:`~prov.model.ProvRecord`, has been added
+* Fixed: Document flattening (see :py:meth:`~prov.model.ProvDocument.flattened`)
+* Added: :py:meth:`~prov.model.ProvRecord.__hash__` function added to :py:class:`~prov.model.ProvRecord` (**at risk**: to be removed as :py:class:`~prov.model.ProvRecord` is expected to be mutable)
+* Added: :py:attr:`~prov.model.ProvRecord.extra_attributes` added to mirror existing :py:attr:`~prov.model.ProvRecord.formal_attributes`
+
+1.0.0 (2014-07-15)
+^^^^^^^^^^^^^^^^^^
+
+* The underlying data model has been rewritten and is **incompatible** with pre-1.0 versions.
+* References to PROV elements (i.e. entities, activities, agents) in relation records are now QualifiedName instances.
+* A document or bundle can have multiple records with the same identifier.
+* PROV-JSON serializer and deserializer are now separated from the data model. 
+* Many tests added, including round-trip PROV-JSON encoding/decoding.
+* For changes pre-1.0, see CHANGES.txt.
+
+
