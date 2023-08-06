@@ -1,0 +1,34 @@
+language: python
+python:
+  - 2.7
+
+env:
+  global:
+  - secure: COVERALLS TOKEN
+
+install:
+ - $(which echo) -e "[buildout]\nextends = buildout.d/travis.cfg" > buildout.cfg
+ - make .installed.cfg
+
+script:
+ - make coverage
+
+after_success:
+ - pip install python-coveralls==2.4.0
+ - coveralls
+
+notifications:
+  irc:
+    channels:
+      - "{{{ author.irc }}}"
+    template:
+      - "%{repository}/#%{build_number}/%{branch} (%{author}): %{message} %{build_url}"
+
+deploy:
+    provider: heroku
+    strategy: git
+    api_key:
+    - secure: HEROKU_API_KEY
+    app:
+        master: {{{ package.name }}}
+        staging: {{{ package.name }}}-staging
