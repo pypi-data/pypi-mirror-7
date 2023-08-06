@@ -1,0 +1,92 @@
+#!/usr/bin/env python
+from __future__ import (unicode_literals, absolute_import,
+                        print_function, division)
+import argparse
+import sys
+import json
+import re
+import base64
+import calendar
+import csv
+import datetime
+import hashlib
+import glob
+import itertools
+import json
+import math
+import os
+import random
+import re
+import shutil
+import tempfile
+from collections import Counter
+from collections import OrderedDict
+from itertools import groupby
+from uuid import uuid4
+
+import rlcompleter
+
+
+def complete_all(prefix, c_arg):
+    if c_arg:
+        exec(c_arg.strip('"\''))
+    context = locals()
+    context.update(globals())
+    completer = rlcompleter.Completer(context)
+    idx = 0
+    options_set = set()
+    while completer.complete(prefix, idx):
+        options_set.add(completer.complete(prefix, idx))
+        idx += 1
+
+    return list(options_set)
+
+def parse_string(input):
+    options = []
+    current_full = input[-1].lstrip('"\'')
+    current_prefix = current_full.split(' ')[-1]
+    prior = input[:-1]
+    if input[-1].startswith('--'):
+        options = ['--si', '--so', '--ji', '--jo', '--i']
+    elif input[-1].startswith('-'):
+        options = ['-h', '-x', '-fx', '-l', '-c', '-C']
+    elif len(prior) > 0 and prior[-1] == '-c':
+        import IPython.core.completerlib as completerlib
+        options = completerlib.module_completion(current_full) or []
+    else:
+        if current_full == '':
+            options = ['sys', 'json', 're', 'base64', 'calendar', 'csv', 'datetime', 'hashlib', 'itertools', 'json', 'math', 'os', 'random', 're', 'shutil'] 
+            if '-x' in input[:-1] or '-fx' in input[:-1]:
+                options += 'x'
+            if '-l' in input[:-1]:
+                options += 'l'
+        else:
+            c_arg = None
+            if '-x' in prior or '-fx' in prior:
+                global x
+                x = str()
+            if '-l' in prior:
+                global l
+                l = list()
+            if '-c' in prior:
+                c_index = prior.index('-c')
+                if (c_index + 1) < len(prior):
+                    c_arg = prior[c_index + 1]
+            options = complete_all(current_prefix, c_arg)
+            if current_prefix.endswith('.'):
+                options = [x for x in options if '._' not in x]
+    return options
+
+
+def main():
+    input = sys.argv[1:]
+    if len(input) == 0:
+        return
+    options = parse_string(input)
+
+    if len(options) <= 1:
+        options = options + [x + "'" for x in options]
+    print(' '.join(options))
+
+if __name__ == '__main__':
+    main()
