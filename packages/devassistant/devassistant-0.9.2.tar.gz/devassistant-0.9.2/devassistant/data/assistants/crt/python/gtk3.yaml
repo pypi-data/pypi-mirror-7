@@ -1,0 +1,53 @@
+fullname: Python GTK+ 3
+description: 'Python GTK+ 3 assistant will help you create a basic GTK+ 3 application with basic functionality of widgets.'
+
+dependencies:
+- use: super.dependencies
+- rpm: ['glade', 'gtk3', 'pygobject2', 'pygobject3']
+
+dependencies_eclipse:
+- use: eclipse.dependencies_python
+
+dependencies_vim:
+- use: vim.dependencies
+
+args:
+  name:
+    use: common_args
+
+  eclipse:
+    use: eclipse
+
+  github:
+    use: common_args
+
+  vim:
+    use: vim
+
+files:
+  gitignore: &gitignore
+    source: ../.gitignore
+  pygtksources: &pygtksources
+    source: .
+
+run:
+- setup_project_dir:
+    from: $name
+    on_existing: fail
+    create_topdir: normalized
+    topdir_normalized_var: basename
+- log_i: 'Creating GTK+ 3 project $basename in $contdir ...'
+- cl_i: cp -r *pygtksources "$basename"
+- cl: cd "$basename"
+- cl: chmod +x template-gui.py
+- dda_c: .
+- if defined $vim:
+  - use: vim.run
+- if $eclipse:
+  - use: eclipse.run_python
+- cl: cp *gitignore .
+- use: git_init_add_commit.run
+- if defined $github:
+  - github: create_and_push
+- log_i: 'GTK+ 3 project $basename in $contdir has been created.'
+- log_i: 'To run the application use: ./template-gui.py'

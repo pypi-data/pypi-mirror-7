@@ -1,0 +1,23 @@
+run:
+# Prompt for git username and e-mail if not set
+- $username~: $(git config --global user.name)
+- if not $username:
+  - $name~:
+    - ask_input:
+        prompt: "Your name, please"
+        message: "Your git configuration is incomplete!"
+  - cl: git config --global user.name "$name"
+
+- $email~: $(git config --global user.email)
+- if not $email:
+  - $email~:
+    - ask_input:
+        prompt: "Your e-mail address, please"
+        message: "Your git configuration is incomplete!"
+  - if not $(echo "$email" | grep -q '\w\+@\w\+\.\w\+'):
+    - log_e: "Not a valid e-mail address: $email"
+  - cl: git config --global user.email "$email"
+
+- cl: git init
+- cl: git add .
+- cl: git commit -m "Initial commit"
