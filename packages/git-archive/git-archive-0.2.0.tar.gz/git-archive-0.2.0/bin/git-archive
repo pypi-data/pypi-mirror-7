@@ -1,0 +1,59 @@
+#! /usr/bin/env python
+
+"""git-archive
+
+Usage:
+  git-archive tree <commit_sha> [--raw] [--git-dir <path>]
+  git-archive cat <commit_sha> <filepath> [--git-dir <path>]
+  git-archive version
+"""
+
+from __future__ import print_function
+import json
+import os.path
+import sys
+
+from git_archive import tree,cat
+
+
+version = "0.2.0"
+
+def goodbye(exitstatus=0):
+    print(__doc__)
+    sys.exit(exitstatus)
+
+if len(sys.argv) == 1:
+    goodbye()
+
+elif sys.argv[1] == "tree":
+    if len(sys.argv) < 3:
+        print("[ERROR] tree requires a 'sha' argument",file=sys.stderr)
+        goodbye(1)
+    sha = sys.argv[2]
+    args = sys.argv[3:]
+    try:
+        dir_index = args.index("--git-dir")
+        git_dir = args[dir_index + 1]
+    except:
+        git_dir = ".git"
+    if os.path.basename(git_dir) != ".git":
+        git_dir = os.path.join(git_dir,".git")
+    print(json.dumps(tree(git_dir,sha),indent=2))
+elif sys.argv[1] == "cat":
+    if len(sys.argv) < 4:
+        print("[ERROR] cat requires two additional raguments",file=sys.stderr)
+        goodbye(1)
+    sha = sys.argv[2]
+    filepath = sys.argv[3] 
+    args = sys.argv[4:]
+    try:
+        dir_index = args.index("--git-dir")
+        git_dir = args[dir_index + 1]
+    except:
+        git_dir = ".git"
+    if os.path.basename(git_dir) != ".git":
+        git_dir = os.path.join(git_dir,".git")
+    print(cat(git_dir,sha,filepath))
+elif sys.argv[1] == "version":
+    print(version)
+    sys.exit()
