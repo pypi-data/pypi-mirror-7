@@ -1,0 +1,24 @@
+============================
+geoffrey-filecontent
+============================
+
+.. image:: https://badge.fury.io/py/geoffrey-filecontent.png
+    :target: http://badge.fury.io/py/geoffrey-filecontent
+
+.. image:: https://travis-ci.org/GeoffreyCI/geoffrey-filecontent.png?branch=master
+        :target: https://travis-ci.org/GeoffreyCI/geoffrey-filecontent
+
+.. image:: https://pypip.in/d/geoffrey-filecontent/badge.png
+        :target: https://pypi.python.org/pypi/geoffrey-filecontent
+
+
+Centralize multiple data source plugins.
+
+* Free software: GPLv3
+* Documentation: http://geoffrey-filecontent.readthedocs.org.
+
+Features
+--------
+
+* TODO
+
