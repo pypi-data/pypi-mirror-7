@@ -1,0 +1,18 @@
+{% load i18n satchmo_category satchmo_google satchmo_util satchmo_currency satchmo_discounts app_plugins normalize_decimal %}
+{% comment %}
+
+	You can use these possible variables:
+		- instance.product: standard Satchmo product instance
+		- instance.get_absolute_url: absolute URL of the product
+		- instance.title: some aditional varchar defined in admin (e.g. if you want use string "View this super product" and not the original product name)
+		- instance.style: for some CSS cusomization
+
+{% endcomment %}
+{% with product=instance.product title=instance.title style=instance.style %}
+<h3{% if style %} class="{{ style }}"{% endif %}>{% if title %}{{ title }}{% else %}{{ product.translated_name|capfirst }}{% endif %}</h3>
+<p>
+	{{ product.translated_short_description|safe }}
+	Price: <span class="price">{{ product|discount_price:''|floatformat:0 }} {{ currency_symbol }}</span>
+	<a href="{{ instance.get_absolute_url }}" title="More">More</a>
+</p>
+{% endwith %}
