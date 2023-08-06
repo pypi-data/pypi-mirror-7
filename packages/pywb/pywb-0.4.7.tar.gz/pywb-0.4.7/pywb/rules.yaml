@@ -1,0 +1,89 @@
+
+rules:
+
+    # twitter rules
+    #=================================================================
+    - url_prefix: 'com,twitter)/i/profiles/show/'
+
+      fuzzy_lookup: '/profiles/show/.*with_replies\?.*(max_id=[^&]+)'
+
+
+    # facebook rules
+    #=================================================================
+#   - url_prefix: 'com,facebook)/ajax/pagelet/generic.php/profiletimelinesectionpagelet'
+    - url_prefix: 'com,facebook)/ajax/pagelet/generic.php/'
+        
+      fuzzy_lookup: 'com,facebook\)/.*[?&]data=(.*?(?:[&]|query_type[^,]+))'
+              
+    - url_prefix: 'com,facebook)/ajax/ufi/'
+                  
+      fuzzy_lookup: '(ft_ent_identifier=[^&]+).*(lsd=[^&]+)'
+
+# not actually needed, fuzzy match is used instead here
+#      canonicalize:
+#        match: 'com,facebook\)/.*[?&]data=([^&]+).*'
+#        replace: 'com,facebook)/ajax/pagelet/generic.php/profiletimelinesectionpagelet?data=\1'
+
+
+    - url_prefix: 'com,facebook)/'
+      rewrite:
+        js_regexs:
+            - match: 'Bootloader\.configurePage.*?;'
+              replace: '/* {0} */'
+
+
+    # flickr rules
+    #=================================================================
+    - url_prefix: ['com,yimg,l)/g/combo', 'com,yimg,s)/pw/combo', 'com,yahooapis,yui)/combo']
+      fuzzy_lookup: '([^/]+(?:\.css|\.js))'
+
+
+    - url_prefix: 'com,staticflickr,'
+
+      fuzzy_lookup:
+        match: '([0-9]+_[a-z0-9]+).*?.jpg'
+        replace: '/'
+
+
+    # google plus rules
+    #=================================================================
+
+    - url_prefix: 'com,google,plus)/_/stream/getactivities'
+    
+      fuzzy_lookup: '(egk[^"]+).*(f.sid=[^&]+)'
+ 
+    - url_prefix: 'com,google,plus)/_/stream/squarestream'
+    
+      fuzzy_lookup: '(cai[^"]+).*(f.sid=[^&]+)'
+ 
+    - url_prefix: 'com,google,plus)/_/communities/rt/landing'
+    
+      fuzzy_lookup: 'com,google,plus\)/_/.*?.*\,(\d{13}\])&.*(f.sid=[^&]+).*'
+    
+
+    - url_prefix: 'com,google,plus)/_/'
+     
+      fuzzy_lookup: 'com,google,plus\)/_/.*?.*(f.sid=[^&]+)'
+ 
+
+    # testing rules -- not for valid domain
+    #=================================================================
+    # this rule block is a non-existent prefix merely for testing
+    - url_prefix: 'example,example,test)/'
+
+      canonicalize:
+        match: '(example,example,test\)/.*?)[?].*?(id=value).*'
+        replace: '\1?\2'
+
+      rewrite:
+        js_rewrite_location: False
+
+
+    # all domain rules -- fallback to this dataset
+    #=================================================================
+    # Applies to all urls -- should be last
+    - url_prefix: ''
+      fuzzy_lookup:
+        match: '(.*)[&?](?:_|uncache)=[\d]+[&]?'
+        filter: '=urlkey:{0}'
+        replace: '?'
