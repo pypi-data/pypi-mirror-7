@@ -1,0 +1,85 @@
+{% extends 'layout.html' %}
+
+{% if limit is defined %}
+{% set description = '(limit: {})'.format(limit) %}
+{% elif recent is defined %}
+{% set description = '(recent: {})'.format(recent) %}
+{% elif around is defined %}
+{% set description = '(around: {}±{})'.format(around, offset) %}
+{% endif %}
+
+{% block title %} Bell :: {{name}} :: {{description}} {% endblock %}
+
+{% block extra_header %}
+<link rel="stylesheet" href="{{url_for('static', filename='css/series.css')}}" type="text/css" />
+<script type="text/javascript" src="{{url_for('static', filename='js/dygraph-combined.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static', filename='js/series.js')}}"></script>
+{% endblock %}
+
+{% block container %}
+<div class="panel panel-default" id="statics">
+  <div class="panel-heading">
+    <h3 class="panel-title"> <span class="status" id="status" style="background: #fff"></span>
+      {{name}} :: {{description}} </h3>
+  </div>
+  <div class="panel-body">
+    <table class="table" class="statics-table">
+      <tr>
+        <td>
+          <label class="label">MERTICS COUNT:</label>
+          <span class="data" id="metrics-count"></span>
+        </td>
+        <td>
+          <label class="label">ANOMALIES COUNT:</label>
+          <span class="data" id="anomalies-count"></span>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <label class="label">RATE:</label>
+          <span class="data" id="rate"></span>
+        </td>
+        <td>
+          <label class="label">TIME RANGE:</label>
+          <span class="data" id="time-range"></span>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <label class="label">CURRENT DATAPOINT:</label>
+          <span class="data" id="current-datapoint">None</span>
+        </td>
+      </tr>
+    </table>
+    <div id="graph-box" style="width: 97%; height:400px; position: relative;">
+      <div class="spinner-box">
+        <img class="spinner" src="{{url_for('static', filename='images/spinner.gif')}}" />
+      </div>
+      <div id="graph" style="width: 100%; height: 400px;"></div>
+      <div id="xline" class="line xline" ></div>
+      <div id="yline" class="line yline" ></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block before_end %}
+<script type="text/javascript" charset="utf-8">
+  $(function(){
+    var timestamp = null;
+    {% if limit is defined %}
+    var apiUri = "{{url_for('api_series_limit', name=name, limit=limit)}}";
+    {% elif recent is defined %}
+    var apiUri = "{{url_for('api_series_recent', name=name, recent=recent)}}";
+    {% elif around is defined %}
+    var apiUri = "{{url_for('api_series_around_offset', name=name, timestamp=timestamp, offset=offset)}}";
+    timestamp = {{timestamp}};
+    {% endif %}
+
+    window.onload = function() {
+      initElements();
+      fire(document.getElementById('graph'), apiUri, timestamp);
+    };
+  });
+</script>
+{% endblock %}

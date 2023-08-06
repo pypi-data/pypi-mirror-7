@@ -1,0 +1,55 @@
+{%extends 'layout.html'%}
+{%block extra_header%}
+<link rel="stylesheet" href="{{url_for('static', filename='css/index.css')}}" type="text/css" />
+<script type="text/javascript" src="{{url_for('static', filename='js/bootstrap-typeahead.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static', filename='js/index.js')}}"></script>
+{%endblock%}
+
+{%block container%}
+<script>
+  // submit form
+function submitform() {form = $('#search-form').get(0); window.location.href = "{{url_for('index')}}" + form.typeaheadInput.value;}
+</script>
+<!-- Search Form -->
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">Search</h3>
+  </div>
+  <div class="panel-body">
+    <form action="" id="search-form" method="get" accept-charset="utf-8" onsubmit="submitform();return false;">
+      <div class="input-group input-group-lg input">
+        <input name='typeaheadInput' type="text" id="typeahead" class="form-control" placeholder="Series Name" data-provide="typeahead" autocomplete="off" autofocus="autofocus">
+        <span class="input-group-btn">
+          <button class="btn btn-default" type="submit" >Go !</button>
+        </span>
+      </div>
+    </form>
+  </div>
+</div>
+<!-- End Search Form -->
+<!-- Status Table -->
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">Status</h3>
+  </div>
+  <div class="panel-body">
+    <div class="table-responsive">
+      <table class="table table-bordered" id="status-table">
+        <div class="spinner-box">
+          <img class="spinner" src="{{url_for('static', filename='images/spinner.gif')}}" />
+        </div>
+      </table>
+    </div>
+  </div>
+</div>
+<!-- End Status Table-->
+{%endblock%}
+
+{%block before_end %}
+<script>
+  $(function(){
+    var uri = '{{url_for("api_index")}}';
+    fire(uri, $('#status-table'), $('#typeahead'));
+  });
+</script>
+{%endblock%}

@@ -1,0 +1,60 @@
+# =============================== Job Queue ===================================
+[beanstalkd]
+host = "0.0.0.0"
+port = 11300
+tube = "bell"
+
+# ================================ Storage ====================================
+[ssdb]
+host = "0.0.0.0"
+port = 8888
+
+[ssdb.allSeries]
+hashmap = "bell.allseries"  # the hashmap to store all series names and status
+
+[ssdb.series.zsets]  # zsets to store datapoints
+maxSize = 60480  # 7 * 6 * 60 * 24 = 7 days
+namePrefix = "bell."
+
+# ================================ Listener ===================================
+[listener]
+host = "0.0.0.0"
+port = 2024
+
+[listener.patterns]
+# must pass at least one of the matches patterns and dont match any ignores
+matches = ["*"]
+ignores = ["statsd.*"]
+
+[listener.log]
+enable = true
+level = 4  # 5 ~ 1 (debug ~ critical)
+path = "bell.listener.log"
+maxBytes = 10485760  # 10M
+backupCount = 5  # max count of log files to backup
+
+# ================================ Analyzer ===================================
+[analyzer]
+strict = true  #  if strict mode
+periodicity = 86400  # for all series, 86400 = 24 * 60 * 60 = 1 day
+filterOffset = 0.01  # filter all points within `periodicity * offset`
+minSeriesSize = 160  # analyze only if series's size is big than this value
+
+[analyzer.log]
+enable = true
+level = 4  # 5 ~ 1 (debug ~ critical)
+path = "bell.analyzer.log"
+maxBytes = 1048760  # 10M
+backupCount = 5  # max count of log files to backup
+
+# ================================ WebApp =====================================
+[webapp]
+host = "0.0.0.0"
+port = 8989
+debug = true
+rootPath = ""   # set this if your webapp serves in a sub-directory.
+
+# ================================ Hooks =======================================
+[hooks]
+enable = false
+script = ""   # python script path, example: "hooks.py"
