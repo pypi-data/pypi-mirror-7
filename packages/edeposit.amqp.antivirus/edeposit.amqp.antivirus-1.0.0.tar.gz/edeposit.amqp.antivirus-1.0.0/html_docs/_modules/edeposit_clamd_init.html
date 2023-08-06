@@ -1,0 +1,453 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>edeposit_clamd_init &mdash; edeposit.amqp.antivirus 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="edeposit.amqp.antivirus 1.0.0 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">edeposit.amqp.antivirus 1.0.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for edeposit_clamd_init</h1><div class="highlight"><pre>
+<span class="c">#! /usr/bin/env python</span>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="c">#</span>
+<span class="c"># Interpreter version: python 2.7</span>
+<span class="c">#</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Initialization script used to set necessary settings in ClamAV configuration</span>
+<span class="sd">file and correct permissions.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c"># Imports =====================================================================</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sh</span>
+<span class="kn">import</span> <span class="nn">pwd</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">edeposit.amqp.antivirus</span> <span class="kn">as</span> <span class="nn">antivirus</span>
+    <span class="kn">from</span> <span class="nn">edeposit.amqp.antivirus</span> <span class="kn">import</span> <span class="n">settings</span>
+    <span class="kn">from</span> <span class="nn">edeposit.amqp.antivirus</span> <span class="kn">import</span> <span class="n">conf_writer</span>
+    <span class="kn">from</span> <span class="nn">edeposit.amqp.antivirus.wrappers.freshclam</span> <span class="kn">import</span> <span class="n">require_root</span>
+<span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s">&#39;../src/edeposit/amqp&#39;</span><span class="p">))</span>
+    <span class="kn">import</span> <span class="nn">antivirus</span>
+    <span class="kn">from</span> <span class="nn">antivirus</span> <span class="kn">import</span> <span class="n">settings</span>
+    <span class="kn">from</span> <span class="nn">antivirus</span> <span class="kn">import</span> <span class="n">conf_writer</span>
+    <span class="kn">from</span> <span class="nn">antivirus.wrappers.freshclam</span> <span class="kn">import</span> <span class="n">require_root</span>
+
+
+<span class="c"># Variables ===================================================================</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">()</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+
+<span class="c">#: All required settings is there, rest is not important.</span>
+<span class="n">REQUIRED_SETTINGS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&quot;User&quot;</span><span class="p">:</span> <span class="s">&quot;$username&quot;</span><span class="p">,</span>
+    <span class="s">&quot;LocalSocketGroup&quot;</span><span class="p">:</span> <span class="s">&quot;$groupname&quot;</span><span class="p">,</span>
+    <span class="s">&quot;LocalSocket&quot;</span><span class="p">:</span> <span class="n">settings</span><span class="o">.</span><span class="n">LOCALSOCKET</span><span class="p">,</span>
+    <span class="s">&quot;LogFile&quot;</span><span class="p">:</span> <span class="n">settings</span><span class="o">.</span><span class="n">LOGFILE</span><span class="p">,</span>
+    <span class="s">&quot;PidFile&quot;</span><span class="p">:</span> <span class="n">settings</span><span class="o">.</span><span class="n">PIDFILE</span><span class="p">,</span>
+    <span class="s">&quot;MaxThreads&quot;</span><span class="p">:</span> <span class="s">&quot;2&quot;</span><span class="p">,</span>
+    <span class="s">&quot;MaxConnectionQueueLength&quot;</span><span class="p">:</span> <span class="s">&quot;3&quot;</span><span class="p">,</span>
+    <span class="s">&quot;LogSyslog&quot;</span><span class="p">:</span> <span class="s">&quot;false&quot;</span><span class="p">,</span>
+    <span class="s">&quot;LogRotate&quot;</span><span class="p">:</span> <span class="s">&quot;true&quot;</span><span class="p">,</span>
+    <span class="s">&quot;ScanELF&quot;</span><span class="p">:</span> <span class="s">&quot;true&quot;</span><span class="p">,</span>
+    <span class="s">&quot;ScanPE&quot;</span><span class="p">:</span> <span class="s">&quot;true&quot;</span><span class="p">,</span>
+    <span class="s">&quot;ScanArchive&quot;</span><span class="p">:</span> <span class="s">&quot;true&quot;</span><span class="p">,</span>
+    <span class="s">&quot;AllowSupplementaryGroups&quot;</span><span class="p">:</span> <span class="s">&quot;true&quot;</span><span class="p">,</span>
+    <span class="s">&quot;LocalSocketMode&quot;</span><span class="p">:</span> <span class="s">&quot;666&quot;</span><span class="p">,</span>
+    <span class="s">&quot;FixStaleSocket&quot;</span><span class="p">:</span> <span class="s">&quot;true&quot;</span><span class="p">,</span>
+    <span class="s">&quot;LogTime&quot;</span><span class="p">:</span> <span class="s">&quot;true&quot;</span><span class="p">,</span>
+    <span class="s">&quot;ReadTimeout&quot;</span><span class="p">:</span> <span class="s">&quot;180&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="n">CLEAN_CONFIG</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
+<span class="s">eJzNXOtz20aS/3z+K+as27KUo6iHH8m57j7QkpyoogdPlOzNXt2lhsCQnAgEGAxAifnrr3</span>
+<span class="s">/dMwOApGI72WTXW+tYwKCnp9+v0c7Os50ddVLkEztVE5sZNSlKVc2MOsn0XA0+qFSbeZFj</span>
+<span class="s">1TAz2hlVGp3yioRWpP2Evt19vafmOq91psaGABhlUlvZfErrrGO4fYLw7NmOusuTYj43eS</span>
+<span class="s">WvikVli1xVhTK5HtP2WTGd0oe0XF0U0/fAaF67iuCqh9JWvCagWDtTqrLOc+wkeOK7gZrU</span>
+<span class="s">WaYWupop2qI0P9e2NClenZqJrrPqrUqtA6j0WdjkoJovDuREhAIwfbdSqSznzeipEIhAZk</span>
+<span class="s">Vyb1LGA0hh+32/KLlXi7KoTFI5pafa5q4iWAFJ3oAOlFV2QaAqOzdO7dqJetCgSIGFSucF</span>
+<span class="s">wSplcU8tmOwEJCkWKyE8s6suNdMOSPVUMtP51PDrcKSlLi0O2SOIKSATDLwXSqkHS/TZ3x</span>
+<span class="s">dg+3w04cYeKHXb4o4nlmtogHN6LkWS5sWzHb/1Xc6EWBkHQl7qRzuv58rZX2iLSYeagPBB</span>
+<span class="s">ZzW/OGx24jV2biss+KGoSbxW4Ld6cflCEdlfzF8w+edmqserClQ8ulT/pY7m+Ovw1Tevv3</span>
+<span class="s">6j+MUeAcD5X3wvH97Lh/c2K8KH3+Obe/7w+JX/qq9uC+UWJrETITqwJ1A2lwXqJ0hlWuQv</span>
+<span class="s">KsZrXqR2Yk3p+up8ElhAJx/h0ERKEW9iJ6SLBKKohHu7nmM3eBA5QMwhCdbZg145iL7/uk</span>
+<span class="s">Pvo8tI77DP8eUz0RuWLOGw0cmMyOScnpp1ftHKWyz0jBpkrmDOJCRyIlh0nDtnSJ9w8NSM</span>
+<span class="s">a9ZONa7p7KV2lU10lq3oZVJCSplxBAlAQLBtAnLCwP2WBFy5lavMnDWfpH43obcPRXlP6j</span>
+<span class="s">A1rAh8Dn/UvS1nGK0cNvQgRy2mVasFS5aTFZ4MjrR1EYzZhDYgxXtB9ssve0FAICITndjM</span>
+<span class="s">ViuVa/qws+/F9bc/XlyfDC7esAEJC/H4cnB+ATTOxJ4tTTkuXMeurRPkg1/i8T+LhjBKSZ</span>
+<span class="s">9Yw6Lg5UA9zEz+tJBt28TLl98DIqJT2Ogi1+AtnXcuAqnHRS0Wj56SGYOdYwvjahIk7ZSt</span>
+<span class="s">HEFgZYZezbSb9dZ4ha+Xtqwdk47QOXusTJ6a9NTAMtI257RjQKZtakiaigenVqTxxBSnl7</span>
+<span class="s">QJDGpCnFM2Jb/BWhbNiCXRgWUlMN6s7c7J6NJLuKm97TZ/aFOx+WQhD8gust3XS2/+FzYF</span>
+<span class="s">VtcLTxz2I4QM9puS0aBHJK6LotQleQjyLElVlKvOTl6ixXzYRO3WrmY9gZeBFeKd6d9A8D</span>
+<span class="s">YAOw2w4mvgMWxtn2pygBDb7dvOdJkmBZFZ7aZmQQQnsuYKLog2F+4KmWEUTz2stV0zO/bk</span>
+<span class="s">YCLkhHRWeIdfTOgwls7v7DTXVV2SJi3qMTFhRnuOVzFuoLCBePYTwd0QxWsPI2zPO9ALlo</span>
+<span class="s">Pom6INIFaSK6Etyb6SDOam4sf4CXQck6fsK+xBHgQCY5K6hCbCGtE51QNUXCKONHhoD63f</span>
+<span class="s">pq72Lxw8eyVOruMryRyLsCkJMjakigTPxyme7UISzVHKHpkJAj8S6Fvlbl+2ZgtmKvGA07</span>
+<span class="s">KoSV4ecvIrM7sANznuye2jx/QJVLBqUdo5RNQDmWyGTLzvHsxDxO1bXsy6y9910FmYcm6d</span>
+<span class="s">gwBtQSUIaXN8ofJWBP0npPjEzyxVOoGGW3rZxecSjH7z5hB43BAryB5Amk3YU08qOlCdi8</span>
+<span class="s">dys7pKiVydTWFldt7bxxG+8xwIludkqEj3KthCEma3Ia20wH/x8uXRYfiktboVJJKojS2k</span>
+<span class="s">rFDnV4PT05sfB1c/9KAIYzo0hJzWWMcU8TYe5JoUMHkcKxdYvCQrR6cjr5yaaWnYffmI0i</span>
+<span class="s">IOV5OymIs61pXDYqZgv2NGoT8dSQwhJ0JADjop5oSRDXFnlO0mOD0fIpYZLt+AS3nxQA5g</span>
+<span class="s">AWJt8S9ElAHRRB0df90/pP8dtcO+zORT7xN+ro1EejBOLIFFnsvBHEd4JHMPhE5ng+PDw2</span>
+<span class="s">c7BOwkrv1vgLkQsC+ZKyccV9cIQN7fDvcze2+YaEVSZBxWm8TYpRhQIWBJwlQhh7HkU5iV</span>
+<span class="s">50IRXUJLgnro5f7cZpXECGT6dZ4YMYhjMkWGSBYBAQMxF/CPHJiX5oEsL1mlksIA8Wo4ZW</span>
+<span class="s">4Mi0lV5yID3ioTTBKFvhwIEYEP9v2xxesHPyAemGNkdv2PCUEV3sCQLjmodrOiJu0i106+</span>
+<span class="s">m7Yv1eXt4IXznyHI0fRS+KSrikJFTs02Qrfj1xRsjiqyqnPihCf90aGEmwyL1ahEDtINUi</span>
+<span class="s">mijl/afIhVLw8PwdI2h1990wIvi46xqCVGeT0fB8cP3+6iGdMSrjgKNVi41xBg4bn13xwz</span>
+<span class="s">zI9akjYQoBEJ7aUh2BY2+gCIgEgMDeesHFvvkqspyMN2Q4wjgr9zQzvd+s9eyiHauhmUUm</span>
+<span class="s">yqACM3F+D5nR5mllgmUiVc9KoLqKS8Edm0MA5JSDAdOkc4TucjbwbHhxhNQAZJWotCXz/b</span>
+<span class="s">OZF1bcRfP432jHQ0K8RgPRAlGX3SEhuPYMXZODjdcT1BiI0yAGXl2Pl7YxZCSRHSjHWeDm</span>
+<span class="s">CWOJCcGeksx3UdVCE3I4L6rp4ERI+fEhM2NimFq2aOHJtcRJ1KSQKqNTb4t48sxVW3xMSL</span>
+<span class="s">GHLH80qKCD6IEM2dITBtHYFEEPkECeKDJQPRgkSkWBTi2XD2j4Obq/Orb9+yLRC+gnkhf/</span>
+<span class="s">ICVhRkhhMJTJaFTaOo48A4G8cnqXFJaRcUu7meT+0bZwJOWGGc2IBZkaVvhVAet6/onzcI</span>
+<span class="s">mODR1b+rXfqZTSulR82qPXrz5j/VzcX55fntj1fX788vznxAC9MB4kDJ97qcOvJGW+B5Hr</span>
+<span class="s">XVTpMVfFA/FePfomZk9HfO08wEGZD44JSTcZeE1JXTkxApQ3DZDAKB0kzNY5BvWQHv4L1m</span>
+<span class="s">7cx6jaYT3GMZmXVkNZApwzHk/x1Alg7WH1ImcNAWT4rL6XkbKfgbgMxpU92N545eMw1jhN</span>
+<span class="s">4wS8zYe+Z2kwxQ3jHPbH6/GcfIygho5NeFOMgDIrLUmS5Fuj4BCwnUOpjR06RH6sH5Ib/m</span>
+<span class="s">9MhtRmknJanK+2ZFADw0JRJUEpqYASUzk9x3ILw5PFS7R4dkifI9WIlscoI1eM5p9SNRr0</span>
+<span class="s">I6Gawiu1NJU2GdijqnKOo8915X1riqhMD8ZcliSmDGSCgWmU6QhW/NdbvU+oBXZ2zYDmpH</span>
+<span class="s">+RVi2wMKFA9gHX90dMij45evXr/5+pv/UM8/nN/cjdTg4uzm9i1t+pzDXpQEXawKcgS/Gw</span>
+<span class="s">qJPuOoNOIyGLGyKCpfIO2UV5E27XVicdaWtCwWyBSWRPQpEfsO0JeQR2x9Ln4EgQaCv8wg</span>
+<span class="s">OmhyCgnaP4HMRsFmZwD5GbXhcdbhfBo4qgilkHeBRZSSSigGylNs4NgMkhWc0xpCJpo6Lj</span>
+<span class="s">TY6jq/vr4MoiNGYSK5JMdwyT2wzzej2PcFKQC/WivFcN2rKR7ZFkobQE55bdyco/5SEpem</span>
+<span class="s">aiA6ssvhB69f1CV5CeM2iXVhyNXEEgHrRksrEHmh+uizu8HFxeXg9uS70cngKogw1yOdpG</span>
+<span class="s">d50fPulY1uaZCic310tfVbLvfk5OJsuqmszEb66xJWlVVf+Cc1HjUUr7dSdzmSDBKIAXHc</span>
+<span class="s">JlyH2LQq8tXwbhBpL3aU9DWWUfCWvjdTFD4+33j3OYc1alZVC/f24GBKaluP+3TGg2VZ6Z</span>
+<span class="s">QMhs/E9yf654NxVowP5uTMTXmAn+n/+4ta9+dS8Peelr6mDSopQYH+LeTserUQ+QISgeY9</span>
+<span class="s">F/2bM9NJNI5B75GQBx9Cb65MdVsUWefZ8CM/CvUZCW1+H6VCXvj78D7PI46jxar7M7u4sv</span>
+<span class="s">PsZnArVkby3YQLyLtm2vfUfSSPnT2Qg+xRerPIClux8k1LvaDoWLRImhtsGt1ez6eCgw+S</span>
+<span class="s">CzI9NArpwL6azV07ySbzhR4K9Ntn150kmjsueVUWmUTqEQht3XyxRS3isljt3FbpTDSj6G</span>
+<span class="s">0YCVZuHLRkrhccDzCqaT1fhCywMpKqp9bdt/LVqi5zqcZE2D01Rw+OMxtUWAgdJPf+WyYY</span>
+<span class="s">GLfUNoN9I1gxs9xmbjzCnfoy2crE3BangPfJMq4v+8hBtIRgE8MFxGC5DKJ901fvVqjkCk</span>
+<span class="s">F7rTdisFyFc5H4Xp6+hiRoBsdAYMLErFYzisZJaAgQjO8k09OpYVMmbpp9Iy2Zke3kPNhJ</span>
+<span class="s">MOH66pQRlSTBeNje78+kFJ2bqWYlWkhIwvUAO1+QFoAJFD1NJZzbYuGECicMVWjGzVcJTK</span>
+<span class="s">SxiQP4RunwDJ4UNVxYHeTEvKS1ep9ymxcIDEg7OiCUVPNZw6VlBSV+ecycf/Nqf0wnR0FC</span>
+<span class="s">CnkT9dHmKdhV0KE0R+ghQtvC1EbFoEpNYEZJHYUOOtfZylkGu4aVBIWCcuYKNMF8Z1bycG</span>
+<span class="s">RYC9TVuE6NtGnB0WgLDJH5HoWU0Iq4G/61p96Pvu09kx7f0FSU7vW7qjGZdHWDCy6lJaki</span>
+<span class="s">yyCIeeHC32PIjY/He9znQpTHqUnTL/Fp43omzfoPQ0e880pxYohvxAB6IltBkfEAOURNqO</span>
+<span class="s">SVRcm+Kan3WzXFHoqKLJze68RV6Pda1Pb5sYceGs7tOBn6RVIPy0IUYqIvCzSvE8IMvkJX</span>
+<span class="s">Ug3k9BFAJDMOKYlF2lTeiwJpUSFvfaByLSgBGcGMgwaGHZGi5QEVBIZMXWh7YRxrqlSpsG</span>
+<span class="s">wLjr0GwQ5KD6TGhquXqUcrrmPAHuiXgIxnvO1k1BRDVZJZi+cnzwsBcyxhHV6SbskW6w6i</span>
+<span class="s">bQYID8lPYrwTxRyifEGJFXZ7L6oMey32QJdp0G+ozd3VV39tqYhb7913LbF3aCJL4DAXFS</span>
+<span class="s">bq7OK9b/euO5Yv1Z6O7sCzfLn2ABlPlI+SYbW8piQCUjMgvwnvIvHmuCT+tk0hhRJoD0E5</span>
+<span class="s">RPIJ7h7TFqzGQebg9jv+rt+Q/4nQVNadtcAzjt6InxZJjWQmWO82C8Rrug7Bry/OjkMAE6</span>
+<span class="s">zZpU0o/y0mleImmWHd8GAZ7/7c2X8eNvERnuJTaFQ355Rs+cO7AZEf5+z5EueDIWtG6s9+</span>
+<span class="s">v5KGM6WOrRbjg0e50dDn35m6tJg+cH3s0D8Rq+ouGfTzza4jLXqHmRRZEBuOv8IkoAvDff</span>
+<span class="s">pHawYcHxcmOeH6Aidz+n5b6PXUQUYf/1kPAszaunRJcWknFPJpOOXvpgRAsz/HEkGj/MPO</span>
+<span class="s">s9Al94EoOrKUMHDB09cADppmyZYyFg7Fh2jXxW7enxy9fHXUlBEcZcMUNJKzwOzcShkcyo</span>
+<span class="s">V5J8YwNIoosrJEWpm1kVZnvVD/tjk5EPJYQp0bAJ05gVh7bosL+lEU9+XSHfKDC9wQPy1G</span>
+<span class="s">0hNCtvEvSlEqupT6k7IS7FJ6SPj57taGzrGMCh6X4cyfMhc+stxi3injczPp9qCOQhZxvJ</span>
+<span class="s">I+HeK1aCw2mTH0H44ag9Jmy93Nha/9IX5hFrBf3dxPmoKzxvI8vRUBZrhxrkrmuHgobjS6</span>
+<span class="s">UHPrOC6RYhKWUoa7JCb4OIyekMeXxkBn8CN6d6Ce8SBmoSYUTht0GSwyE+C1zoqAmCDChp</span>
+<span class="s">DQuPRYeGvYwTIh5sLYdnHr4PX3x+kEm3arSCzIkn5C+11oFtP+pX6QfNbOWbZ+lT+8Y4B1</span>
+<span class="s">3gIVD48CePzYh43o0WpuJZvEpIZyPdYjJMtxno97cc2H3B3YDS590ZKIPS/KyKB0bApJtH</span>
+<span class="s">nAC6FXIc+VIgCdbW5SqxFt9tVN04Tq8WyUUyfDO5+v7IfWJ6MXJi16HfhtB9tFufGyUmOl</span>
+<span class="s">NQVqS7rymQdaeUizeXVfwn/KsimZX5qQ1Diex2mTgw1W2JUgtZCRwg0Cc24k+ToPtmo/2U</span>
+<span class="s">CLBanpIMaJEj/PACnJfYsuT4m8z7/qt4KFr54LCkQ5xBsWrUmy4YQkd4CfY+vnYe+Q5pCI</span>
+<span class="s">5PudI+1HQkpJYTcaoH1oRLoXGwoYAnCU6oT8jXnqRJjLegEQLRb30IKhAD9DWb3wbkwGdL</span>
+<span class="s">2l3KJI8XhscKOkdsNTlIIuSOTUULqsPHp6ejHc67pY4EhPMblTc2Eo7nRVcIe+TnDKFPB+</span>
+<span class="s">tbrlwswQqZWh5K9py56UmA1XJ8hj5GnL/mr2zyBWoaYmN1ye016Cui3ANjqXNhewgHpCwL</span>
+<span class="s">b1r5/EaFRwkXAUZseu2lj5+omfCPtSrEajqxY6T7q9Ltm9DTDQLvZFnEvDYY2unM/9KgmE</span>
+<span class="s">Hx8f91er/V/oz2YUEhGh7ySNvMLf2Se98O9BZ7VaRyYvtuJCj+xiYdKOnH53e3kR6l++tI</span>
+<span class="s">RHBAOIk65LTovmoknKlaBNLLwckTdHL5wEGSk4hh3WZs+YJn9u0gSFZPTbRxyIzQyxrY94</span>
+<span class="s">YBfYOPho3VtWyftCYcyP4v5xEXydo8L2G0J4f6hm4p8SbDJC4BAkIx7GRfO7exZe9/9mFz</span>
+<span class="s">3V/HgzuNnSMxQQHCbEpey7PVl5CqnJvtdmqsIEXSfKDYWpU5ND/2EJKJTF/IaEvZAXCSqC</span>
+<span class="s">nxsX87HrP2lZ4iTVnHWeAHIJHl3HpscPDeKZfJsv6ipeghi0Ge7vf4hXhSmCJyyl+79E4c</span>
+<span class="s">k8VqVOfFEvgqacgGcwLTDnwZRPXq+g91dEmTCaGa/syIAYoRqqXrbisZSZnc44ZyB5xNAj</span>
+<span class="s">Dy4tDXcbEIaJ6WZXx0Rem8U6vOSJBs760FU+ei0zZNJo4Oo5V+fzNhYP3MJtSNhXg8mEL9</span>
+<span class="s">jIlHogIybTTTZBeIXBX1ygcN2qK7xtzjOTmFqKTY82CNeKayhEadVgmBroUwl37q1ERJFL</span>
+<span class="s">e591l+XPozbP7BGxeVIDxH4ptL6SPlOjlK0BlJaMUdTfn/YlvCUN3Yz1tCJNJXhyOwAdhq</span>
+<span class="s">bOg9J0FS6xuKLDvJbquO5UGZeAzCKTQfIw9e/nl8aytc1rqfQKIQPBWmT8HML9mpC+Yao1</span>
+<span class="s">szYy93sVwwXfZeoodbDabdGJgtMDZ5Hhs+D4tiKLzOdfgfpTldTPbolSkop2J+zCNa4mJu</span>
+<span class="s">IOhRg2IlKKosDwrP+UUrNhYqcDj3RvpcHZcjaxh0S4Lf7sw4vOnPlzDM/ClOvm6dmzBxL4</span>
+<span class="s">AOUX02+ef+rs6HmMTfNpyqfxavIPOTZQvwroPH3yFsYdIkhq+CvnD27Jj/kFOBLVtWnyD6</span>
+<span class="s">HCcZsIt3rq/H26TQLI3OU25vsoNLTrnyTAP5kAvA5+Gdg3EvD6ifP/7XwYD08pM/T1F3/Z</span>
+<span class="s">DoOy01zGseK6IAmcBXd0Yc0KQOO54FmAfJbLB80G5M7Jrvy5miGEIQd4S6e7SaZ48qn4r0</span>
+<span class="s">ktY/nKCeG6NauuE8G+N2s1Le6Z8DBHC9JWEvJ8QggAw/i/IEJwW19HP3wVRhl4rcQBkEju</span>
+<span class="s">GP49fCyxwk9GtIYlumInjmbYYHd0/M0XkNcmfMfLO190+jYoGhvvDSnlqy+lov+srZ6fJm</span>
+<span class="s">Asuf9xNAyT1udAj04rs9acE13n+35Ek0vdI8GBk6SdTh0zYNaTKyqFq5prSzLqXvAI4XMe</span>
+<span class="s">D0Xz/jnuiVKYg+JjIfM0vjXL09Gya2ivuw22tEpORUQydKz66qQupSzXE4IhFgiXjyiDpM</span>
+<span class="s">gD07B2wm0NZND1fXFwqn+h/4SFuJdKe6IUalC+1dvuLXEbMx/I9p2B0dYUeduGh8WtsPpz</span>
+<span class="s">oreOnd0CI7jakQk3b2WiD1dPKVVuYmufvXDv+qGby+/1uW8EvMEyghanIMOOYfROxxF0Tg</span>
+<span class="s">Aw5MIZaTNIHmZ5NYKgUAJzhsyI5pFHjGrtXnc4x/Xi7oRxuG+7sw2BgxnlUk+8clWdcjO9</span>
+<span class="s">RRPz2KIJLkST26jH65P0nG34pczv34Ble4KfsTwYF5PZ1orZylM8TqE0I5h356eE5tBfMH</span>
+<span class="s">FxWNwZfhWCQBB5LJ7Uoxm5vT7K8fSEq9otch5JY9Y8cet5/XyEhTqM9ZN3qwrtW+MrKJ/V</span>
+<span class="s">oZN7cP7D5l5ibAyh6i3XZ2Dn2JU3t2hAuvtYx/e7oHjFWRIuSmLJC9oGd06biUtpz3HHFD</span>
+<span class="s">dIfD1psywVDhS7fSRHEdd4Tzgja8uXkoaxH8PGHDdl5M8VSLtP5qL5SLON76m5we3JOMXN</span>
+<span class="s">9/vV6bW6ur5Vd6Mzdfvd+UhdX6nhzfXp3cntOf1z9MPo9uxyFKEr4bA4GtCBmy5hMhPZd5</span>
+<span class="s">h4gTmrbVaF39shDNnnnf81wrvFgBVanUThfRm3ak7tG7bMKCdr+sn/ZMv/9XXFXgst/4cM</span>
+<span class="s">jsHFvjrn6zhOTwwRQOYl+eRbgUuFxBV1mXDVVf6QmyezbYGYXD4Q9MDJAKW3vmFrJ75y0+</span>
+<span class="s">6BvW2ftkeqwSO1DUZktPrJMg3DhxmuM63YL4gaCmwf5ogPGzfXeZkTnkoNSOfP2VNJ8FHR</span>
+<span class="s">COCLZzuiFXW+8Wm+xrRwPbotua0DNRIcGxPtt+sSHa8Gdq7iQbK7ARffvAyQw/2po8MmaB</span>
+<span class="s">jhV05wt0xReEN8DOVgsrbkziruuLcduAsf6Mx36bb9nguAdWfeiARX6+eCGXKc+2yNW2AG</span>
+<span class="s">tq31wsnWRG+rU7e52/DsNHQH/YbfUWRDVs831bm9wKPD6g7GkEww5IfLgs1hO+dr/aKMzp</span>
+<span class="s">66rsKufg9+AgMOKW6ud8Y7k+F3GAG68zMUMqFH63FJRfQc/VG3oPN3mnG41MqbNQx89v8x</span>
+<span class="s">ojrs</span>
+<span class="s">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">zlib</span>
+<span class="kn">import</span> <span class="nn">base64</span>
+<span class="c"># decode compressed clean (with comments and so on) configuration file</span>
+<span class="n">CLEAN_CONFIG</span> <span class="o">=</span> <span class="n">zlib</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span><span class="n">base64</span><span class="o">.</span><span class="n">b64decode</span><span class="p">(</span><span class="n">CLEAN_CONFIG</span><span class="p">))</span>
+
+
+<span class="c"># Functions &amp; objects =========================================================</span>
+<div class="viewcode-block" id="get_username"><a class="viewcode-back" href="../initializer.html#edeposit_clamd_init.get_username">[docs]</a><span class="k">def</span> <span class="nf">get_username</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return username depending on type of system (deb/suse).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="s">&quot;clamav&quot;</span> <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">is_deb_system</span><span class="p">()</span> <span class="k">else</span> <span class="s">&quot;vscan&quot;</span>
+
+</div>
+<div class="viewcode-block" id="update_configuration"><a class="viewcode-back" href="../initializer.html#edeposit_clamd_init.update_configuration">[docs]</a><span class="k">def</span> <span class="nf">update_configuration</span><span class="p">(</span><span class="n">configuration</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Set all configuration specified in :attr:`REQUIRED_SETTINGS`.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        configuration (str): Configuration file content.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: Updated configuration.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">REQUIRED_SETTINGS</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">val</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&quot;$username&quot;</span><span class="p">,</span> <span class="s">&quot;$groupname&quot;</span><span class="p">]:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">get_username</span><span class="p">()</span>
+
+        <span class="n">configuration</span> <span class="o">=</span> <span class="n">conf_writer</span><span class="o">.</span><span class="n">add_or_update</span><span class="p">(</span><span class="n">configuration</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">configuration</span>
+
+</div>
+<div class="viewcode-block" id="create_config"><a class="viewcode-back" href="../initializer.html#edeposit_clamd_init.create_config">[docs]</a><span class="k">def</span> <span class="nf">create_config</span><span class="p">(</span><span class="n">cnf_file</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates configuration file and the directory where it should be stored and</span>
+<span class="sd">    set correct permissions.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        cnf_file (str): Path to the configuration file.</span>
+<span class="sd">        uid (int): User ID - will be used for chown.</span>
+<span class="sd">        overwrite (bool): Overwrite the configuration with :attr:`CLEAN_CONFIG`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">conf</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="c"># needed also on suse, because pyClamd module</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">DEB_CONF_PATH</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">DEB_CONF_PATH</span><span class="p">,</span> <span class="mo">0755</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">chown</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">DEB_CONF_PATH</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">cnf_file</span><span class="p">):</span>       <span class="c"># create new conf file</span>
+        <span class="n">conf</span> <span class="o">=</span> <span class="n">CLEAN_CONFIG</span>
+    <span class="k">elif</span> <span class="n">overwrite</span><span class="p">:</span>                        <span class="c"># ovewrite old conf file</span>
+        <span class="n">backup_name</span> <span class="o">=</span> <span class="n">cnf_file</span> <span class="o">+</span> <span class="s">&quot;_&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">backup_name</span><span class="p">):</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copyfile</span><span class="p">(</span><span class="n">cnf_file</span><span class="p">,</span> <span class="n">backup_name</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">chown</span><span class="p">(</span><span class="n">backup_name</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">conf</span> <span class="o">=</span> <span class="n">CLEAN_CONFIG</span>
+    <span class="k">else</span><span class="p">:</span>                                  <span class="c"># switch variables in existing file</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">cnf_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">conf</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+    <span class="c"># write the conf file</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">cnf_file</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">update_configuration</span><span class="p">(</span><span class="n">conf</span><span class="p">))</span>
+
+    <span class="c"># permission check (uid)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chown</span><span class="p">(</span><span class="n">cnf_file</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="n">cnf_file</span><span class="p">,</span> <span class="mo">0644</span><span class="p">)</span>
+
+    <span class="n">symlink</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">DEB_CONF_PATH</span> <span class="o">+</span> <span class="n">settings</span><span class="o">.</span><span class="n">CONF_FILE</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">settings</span><span class="o">.</span><span class="n">is_deb_system</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">symlink</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">symlink</span><span class="p">(</span><span class="n">cnf_file</span><span class="p">,</span> <span class="n">symlink</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">chown</span><span class="p">(</span><span class="n">symlink</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="n">symlink</span><span class="p">,</span> <span class="mo">0644</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="create_log"><a class="viewcode-back" href="../initializer.html#edeposit_clamd_init.create_log">[docs]</a><span class="k">def</span> <span class="nf">create_log</span><span class="p">(</span><span class="n">log_file</span><span class="p">,</span> <span class="n">uid</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create log file and set necessary permissions.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        log_file (str): Path to the log file.</span>
+<span class="sd">        uid (int): User ID - will be used for chown.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">log_file</span><span class="p">):</span>  <span class="c"># create new log file</span>
+        <span class="n">dir_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">log_file</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">dir_name</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">dir_name</span><span class="p">,</span> <span class="mo">0755</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">chown</span><span class="p">(</span><span class="n">dir_name</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">log_file</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">os</span><span class="o">.</span><span class="n">chown</span><span class="p">(</span><span class="n">log_file</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="n">log_file</span><span class="p">,</span> <span class="mo">0640</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="get_service_name"><a class="viewcode-back" href="../initializer.html#edeposit_clamd_init.get_service_name">[docs]</a><span class="k">def</span> <span class="nf">get_service_name</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return name of the daemon depending on the system type.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="s">&quot;clamav-daemon&quot;</span> <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">is_deb_system</span><span class="p">()</span> <span class="k">else</span> <span class="s">&quot;clamd&quot;</span>
+
+</div>
+<span class="nd">@require_root</span>
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../initializer.html#edeposit_clamd_init.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">conf_file</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create configuration and log file. Restart the daemon when configuration</span>
+<span class="sd">    is done.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        conf_file (str): Path to the configuration file.</span>
+<span class="sd">        overwrite (bool): Overwrite the configuration file with `clean` config?</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">uid</span> <span class="o">=</span> <span class="n">pwd</span><span class="o">.</span><span class="n">getpwnam</span><span class="p">(</span><span class="n">get_username</span><span class="p">())</span><span class="o">.</span><span class="n">pw_uid</span>
+
+    <span class="c"># stop the daemon</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Stopping the daemon.&quot;</span><span class="p">)</span>
+    <span class="n">sh</span><span class="o">.</span><span class="n">service</span><span class="p">(</span><span class="n">get_service_name</span><span class="p">(),</span> <span class="s">&quot;stop&quot;</span><span class="p">)</span>
+
+    <span class="c"># create files</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Creating config file.&quot;</span><span class="p">)</span>
+    <span class="n">create_config</span><span class="p">(</span>
+        <span class="n">cnf_file</span><span class="o">=</span><span class="n">conf_file</span><span class="p">,</span>
+        <span class="n">uid</span><span class="o">=</span><span class="n">uid</span><span class="p">,</span>
+        <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite</span>
+    <span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Creating log file.&quot;</span><span class="p">)</span>
+    <span class="n">create_log</span><span class="p">(</span>
+        <span class="n">log_file</span><span class="o">=</span><span class="n">REQUIRED_SETTINGS</span><span class="p">[</span><span class="s">&quot;LogFile&quot;</span><span class="p">],</span>
+        <span class="n">uid</span><span class="o">=</span><span class="n">uid</span>
+    <span class="p">)</span>
+
+    <span class="c"># start the daemon</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Starting the daemon..&quot;</span><span class="p">)</span>
+    <span class="n">sh</span><span class="o">.</span><span class="n">service</span><span class="p">(</span><span class="n">get_service_name</span><span class="p">(),</span> <span class="s">&quot;start&quot;</span><span class="p">)</span>
+
+
+<span class="c"># Main program ================================================================</span></div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="s">&quot;edeposit.amqp.antivirus ClamAV initializer.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s">&quot;-v&quot;</span><span class="p">,</span>
+        <span class="s">&quot;--verbose&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&quot;Print logging messages.&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s">&quot;-o&quot;</span><span class="p">,</span>
+        <span class="s">&quot;--overwrite&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&quot;&quot;&quot;Overwrite default configuration file. Don&#39;t worry, your original</span>
+<span class="s">                file will be stored in backup_.&quot;&quot;&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s">&quot;-c&quot;</span><span class="p">,</span>
+        <span class="s">&quot;--config&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">CONF_PATH</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&quot;Path to the configuration file. Default </span><span class="si">%s</span><span class="s">.&quot;</span> <span class="o">%</span> <span class="n">settings</span><span class="o">.</span><span class="n">CONF_PATH</span>
+    <span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Logger set to INFO level.&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">main</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">overwrite</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">AssertionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">message</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">edeposit.amqp.antivirus 1.0.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014 E-deposit team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

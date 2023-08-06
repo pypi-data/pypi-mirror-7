@@ -1,0 +1,145 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>antivirus.wrappers.clamd &mdash; edeposit.amqp.antivirus 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="edeposit.amqp.antivirus 1.0.0 documentation" href="../../../index.html" />
+    <link rel="up" title="antivirus" href="../../antivirus.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">edeposit.amqp.antivirus 1.0.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../antivirus.html" accesskey="U">antivirus</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for antivirus.wrappers.clamd</h1><div class="highlight"><pre>
+<span class="c">#! /usr/bin/env python</span>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="c">#</span>
+<span class="c"># Interpreter version: python 2.7</span>
+<span class="c">#</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">API for scanning files using ``clamd`` daemon.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c"># Imports =====================================================================</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+
+<span class="kn">import</span> <span class="nn">pyclamd</span>
+
+
+<span class="c"># Functions &amp; objects =========================================================</span>
+<div class="viewcode-block" id="scan_file"><a class="viewcode-back" href="../../../api/antivirus.wrappers.clamd.html#antivirus.wrappers.clamd.scan_file">[docs]</a><span class="k">def</span> <span class="nf">scan_file</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Scan `path` for viruses using ``clamd`` antivirus daemon.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        path (str): Relative or absolute path of file/directory you need to</span>
+<span class="sd">                    scan.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: ``{filename: (&quot;FOUND&quot;, &quot;virus type&quot;)}`` or blank dict.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: When the server is not running.</span>
+<span class="sd">        AssertionError: When the internal file doesn&#39;t exists.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">),</span> <span class="s">&quot;Unreachable file &#39;</span><span class="si">%s</span><span class="s">&#39;.&quot;</span> <span class="o">%</span> <span class="n">path</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">cd</span> <span class="o">=</span> <span class="n">pyclamd</span><span class="o">.</span><span class="n">ClamdUnixSocket</span><span class="p">()</span>
+        <span class="n">cd</span><span class="o">.</span><span class="n">ping</span><span class="p">()</span>
+    <span class="k">except</span> <span class="n">pyclamd</span><span class="o">.</span><span class="n">ConnectionError</span><span class="p">:</span>
+        <span class="n">cd</span> <span class="o">=</span> <span class="n">pyclamd</span><span class="o">.</span><span class="n">ClamdNetworkSocket</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">cd</span><span class="o">.</span><span class="n">ping</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">pyclamd</span><span class="o">.</span><span class="n">ConnectionError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s">&quot;Couldn&#39;t connect to clamd server using unix/network socket.&quot;</span>
+            <span class="p">)</span>
+
+    <span class="n">cd</span> <span class="o">=</span> <span class="n">pyclamd</span><span class="o">.</span><span class="n">ClamdUnixSocket</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="n">cd</span><span class="o">.</span><span class="n">ping</span><span class="p">(),</span> <span class="s">&quot;clamd server is not reachable!&quot;</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">cd</span><span class="o">.</span><span class="n">scan_file</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">result</span> <span class="k">if</span> <span class="n">result</span> <span class="k">else</span> <span class="p">{}</span>  <span class="c"># result is dict or None, we need dict</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">edeposit.amqp.antivirus 1.0.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../antivirus.html" >antivirus</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014 E-deposit team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
