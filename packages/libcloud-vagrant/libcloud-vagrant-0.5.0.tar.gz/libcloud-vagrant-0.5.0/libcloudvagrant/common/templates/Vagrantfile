@@ -1,0 +1,60 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+#
+# Automatically generated. Manual changes will be overwritten.
+
+Vagrant.configure("2") do |config|
+
+  if Vagrant.has_plugin?("vagrant-proxyconf")
+    config.proxy.http =     ENV.fetch("http_proxy",  ENV.fetch("HTTP_PROXY", nil))
+    config.proxy.https =    ENV.fetch("https_proxy", ENV.fetch("HTTPS_PROXY", nil))
+    config.proxy.ftp =      ENV.fetch("ftp_proxy",   ENV.fetch("FTP_PROXY", nil))
+    config.proxy.no_proxy = ENV.fetch("no_proxy",    ENV.fetch("NO_PROXY", nil))
+  end
+
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+  {% for n in nodes %}
+  config.vm.define "{{ n.name }}" do |n|
+    n.vm.hostname = "{{ n.name }}"
+    n.vm.box = "{{ n.image.name }}"
+
+    n.vm.provider :virtualbox do |vb|
+      vb.customize [
+        "modifyvm", :id,
+        "--bioslogofadein", "off",
+        "--bioslogofadeout", "off",
+        "--bioslogodisplaytime", "0",
+        "--biosbootmenu", "disabled",
+        {% if n.size.cpus > 0 %}
+        "--cpus",   "{{ n.size.cpus }}",
+        {% endif %}
+        {% if n.size.ram > 0 %}
+        "--memory", "{{ n.size.ram }}",
+        {% endif %}
+      ]
+      {% if gui_enabled %}
+      vb.gui = true
+      {% endif %}
+    end
+
+    {% for addr in n.public_ips %}
+    n.vm.network "private_network",
+                 :ip => "{{ addr.ip }}",
+                 :netmask => "{{ addr.netmask }}"
+    {% endfor %}
+
+    {% for addr in n.private_ips %}
+    n.vm.network "private_network",
+                 ip: "{{ addr.ip }}",
+                 :netmask => "{{ addr.netmask }}",
+                 virtualbox__intnet: "{{ addr.network }}"
+    {% endfor %}
+
+    if Vagrant.has_plugin?("vagrant-libcloud-helper")
+      n.libcloud_helper.allocate_sata_ports = {{ n.allocate_sata_ports }}
+    end
+
+  end
+  {% endfor %}
+end
