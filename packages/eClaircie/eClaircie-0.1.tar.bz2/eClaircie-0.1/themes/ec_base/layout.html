@@ -1,0 +1,96 @@
+{#
+    eClaircie page template
+
+    Based on Sphinx master template for simple pages,
+    :copyright: Copyright 2007-2014 by the Sphinx team, see AUTHORS.
+    :license: BSD, see LICENSE for details.
+
+ set rellinks = ec_lang_rellinks(pagename) + rellinks
+
+#}
+{%- extends "basic/layout.html" %}
+{% set ispost   = pagename.rsplit("/")[-1].startswith("20") %}
+{% set parents  = ec_reparents(pagename, parents) %}
+{% set rellinks = rellinks[:1] + [("archives", "", "", "archives")] + rellinks[1:] %}
+{%- if not ispost %}
+    {% set css_files = css_files + ["_static/noh1.css"] %}
+{%- endif %}
+{% set script_files = script_files + ["_static/imageviewer.js"] %}
+
+{%- block sidebar1 %}{{ sidebar() }}{% endblock %}
+
+{%- block sidebar2 %}{% endblock %}
+
+{% block document %}
+<script>DOCUMENTATION_OPTIONS["FILE_SUFFIX"] = ".html";</script>
+    <div class="links">
+      <span class="link-lang">
+        {%- for lang, lang_name in ec_lang_for(pagename) %}
+        <a class="link-lang" href="{{ pagename.rsplit("/")[-1] + "_" + lang + '.html' }}" title="{{ lang_name }}"><img src="{{ pathto("_static/lang_" + lang + ".svg", 1) }}"></a>
+        {%-endfor %}
+      </span>
+      <a class="link-rss" href="{{ pathto("news")[:-4] + "rss" }}" title="RSS"><img src="{{ pathto("_static/rss.svg", 1) }}"></a>
+    </div>
+    
+    <div class="related1 related"><div class="related1wrapper">
+      {%- if ispost %}
+        {%- for i in parents[:-1] %}
+          <span style="font-size: smaller;">
+        {%- endfor %}
+      {%- else %}
+        {%- for i in parents %}
+          <span style="font-size: smaller;">
+        {%- endfor %}
+      {%- endif %}
+      <span style="font-size: smaller;">
+      <h3>{{ _('Navigation') }}</h3>
+      <a href="{{ pathto(master_doc) }}">{{ shorttitle|e }}</a> / 
+      {%- for parent in parents %}
+          </span>
+          <a href="{{ parent.link|e }}" {% if loop.last %}{{ accesskey("U") }}{% endif %}>{{ parent.title }}</a> /
+      {%- endfor %}
+      {%- if not ispost %}
+          </span>
+          {{ title }}
+      {%- endif %}
+    </div></div>
+
+{{ super() }}
+{% endblock %}
+
+{% block relbar1 %}
+{% endblock %}
+
+
+{% block relbar2 %}
+    <div class="related2 related">
+      <ul>
+        {%- for rellink in rellinks %}
+        <li class="right" {% if loop.first %}style="margin-right: 10px"{% endif %}>
+          <a href="{{ pathto(rellink[0]) }}" title="{{ rellink[1]|striptags|e }}"
+             {{ accesskey(rellink[2]) }}>{{ rellink[3] }}</a>
+          {%- if not loop.first %}{{ reldelim2 }}{% endif %}</li>
+        {%- endfor %}
+      </ul>
+    </div>
+    
+    <script>create_imageviewer();</script>
+{% endblock %}
+
+{%- block footer %}
+    <div class="footer">
+    {%- if show_copyright %}
+      {%- if hasdoc('copyright') %}
+        {% trans path=pathto('copyright'), copyright=copyright|e %}&copy; <a href="{{ path }}">Copyright</a> {{ copyright }}.{% endtrans %}
+      {%- else %}
+        {% trans copyright=copyright|e %}&copy; Copyright {{ copyright }}.{% endtrans %}
+      {%- endif %}
+    {%- endif %}
+    {%- if last_updated %}
+      {% trans last_updated=last_updated|e %}Last updated on {{ last_updated }}.{% endtrans %}
+    {%- endif %}
+    {%- if theme_show_eclaircie %}
+      {{ theme_show_eclaircie}}
+    {%- endif %}
+    </div>
+{%- endblock %}
