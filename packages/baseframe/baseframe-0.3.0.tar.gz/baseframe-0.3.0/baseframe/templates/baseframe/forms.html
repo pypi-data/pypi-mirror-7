@@ -1,0 +1,185 @@
+{# change rendererrors.mustache also while changing here #}
+{% macro rendererrors(field) -%}
+    {%- if field.errors -%}
+      {%- for error in field.errors %}
+        <p class="help-error">{{ error }}</p>
+      {%- endfor %}
+    {%- endif %}
+{%- endmacro %}
+
+{# change renderfield.mustache also while changing here #}
+{% macro renderfield(field, css_class="", widget_css_class="", sidetext=None, tabindex=None, autofocus=False, nolabel=False, style='horiz', rows=none) -%}
+
+  {%- if field.widget.html_tag in ['ul', 'ol'] %}
+    {%- set listwidget = true %}
+  {%- elif field.widget.input_type == 'checkbox' %}
+    {%- set listwidget = false %}
+  {%- else %}
+    {%- set listwidget = false %}
+  {%- endif -%}
+
+  <div class="form-group control-group {#- BS3: form-group, BS2: control-group -#}
+      {%- if field.errors %} error has-error {%- endif -%}
+      {%- if css_class %} {{ css_class }} {%- endif -%}
+      {%- if listwidget %} listwidget {%- if style == 'horizlist' %} horizlist {%- endif %}{%- endif -%}
+      " id="field-{{ field.id }}">
+    {%- if field.widget.input_type == 'checkbox' %}
+      <div class="{% if style == 'horiz' -%} col-xs-12 col-sm-offset-3 col-sm-9 col-md-offset-2 col-md-10 {%- else %} col-xs-12 {%- endif %} controls">
+        <div class="checkbox">
+          <label>{{ field | render_field_options(class="field-" + field.id + " " + widget_css_class, tabindex=tabindex, rows=rows) }} {{ field.label.text }}</label>
+        </div>
+        {{ rendererrors(field) }}
+        {%- if field.description %}
+          <p class="help-block">{{ field.description }}</p>
+        {%- endif %}
+      </div>
+    {%- else %}
+      {%- if not nolabel %}
+      <label class="{% if style == 'horiz' -%} col-xs-12 col-sm-3 col-md-2 {%- else %} col-xs-12 {%- endif %} control-label" for="{{ field.id }}">{{ field.label.text }}
+        {%- if field.flags.required -%}
+          <span class="help-required" title="Required">*</span>
+        {%- endif -%}
+      </label>
+      {%- endif %}
+      <div class="{% if style == 'horiz' -%} col-xs-12 col-sm-9 col-md-10 {%- else %} col-xs-12 {%- endif %} controls">
+        {%- if field.type in ['TextField', 'DateField', 'EmailField', 'URLField', 'TextAreaField', 'PasswordField'] %}
+          {{ field | render_field_options(class="form-control field-" + field.id + " " + widget_css_class, tabindex=tabindex, autofocus=autofocus, rows=rows)}}
+        {%- elif field.type == 'FormField' %}
+          {%- for subfield in field.form %}
+            {{ renderfield(subfield, css_class, widget_css_class, sidetext, tabindex, autofocus, style) }}
+          {%- endfor %}
+        {%- else %}
+          {{ field | render_field_options(class="field-" + field.id + " " + widget_css_class, tabindex=tabindex, autofocus=autofocus, rows=rows)}}
+        {%- endif %}
+        {%- if sidetext %}
+          <span class="help-inline">{{sidetext}}</span>
+        {%- endif %}
+        {{ rendererrors(field) }}
+        {%- if field.description %}
+          <p class="help-block">{{ field.description }}</p>
+        {%- endif %}
+      </div>
+    {%- endif %}
+  </div>
+{%- endmacro %}
+
+{% macro rendersubmit(buttons=[], css_class="", tabindex='', cancel_url='', style='horiz') -%}
+<div class="form-group form-actions clearfix{% if css_class %} {{ css_class}}{% endif %}">
+  <div {%- if style == 'horiz' %} class="col-sm-offset-3 col-sm-9 col-md-offset-2 col-md-10"{% else %} class="col-xs-12"{% endif %}>
+    {% for name, value, widget_class in buttons -%}
+      <button type="submit"
+        {%- if name %} name="{{ name|e }}"{% else %} {% endif -%}
+        {% if widget_class %} class="btn {{ widget_class|e }}" {% else %} class="btn"{% endif -%}
+        {%- if tabindex %} tabindex="{{ tabindex }}" {% endif -%}
+        >{{ value|e }}</button>
+    {% endfor %}
+    {% if cancel_url %}<a href="{{ cancel_url }}" class="btn btn-default">{% trans %}Cancel{% endtrans %}</a>{% endif %}
+    <span class="loading hidden">&nbsp;</span>
+  </div>
+</div>
+{%- endmacro %}
+
+{% macro renderform_inner(form, formid, style='horiz') -%}
+  {%- if form.errors %}
+    <div class="alert alert-error alert-danger">
+      <a class="close" data-dismiss="alert">×</a>
+      Please correct the indicated errors.
+    </div>
+  {%- endif %}
+  {% if message %}<p>{{ message }}</p>{% endif %}
+  <div style="display:none;"><input type="hidden" name="form.id" value="{{ formid }}" /></div>
+  {{ form.hidden_tag() }}
+  {%- if form.csrf_token.errors %}
+    <div class="alert alert-error alert-danger">{% trans %}
+      This form timed out because it’s been a while since the page loaded.
+      Please submit again to confirm.
+    {% endtrans %}</div>
+  {% endif %}
+  {%- set autofocus = true %}
+  {% for field in form -%}
+    {%- if field.type in ['CSRFTokenField', 'HiddenField'] -%}
+      {# Don't show hidden #}
+    {%- else -%}
+      {{ renderfield(field, autofocus=autofocus, style=style) }}
+      {%- if autofocus %}{% set autofocus = false %}{% endif %}
+    {%- endif %}
+  {% endfor %}
+{%- endmacro %}
+
+{% macro renderform(form, formid, submit, message='', action='', cancel_url='', multipart=False, style='horiz') %}
+<form id="{{ formid }}" method="POST" {%- if action %} action="{{ action }}" {%- endif %}{%- if multipart %} enctype="multipart/form-data" {%- endif %} accept-charset="UTF-8" {%- if style == 'horiz' %} class="form-horizontal"{% endif %}>
+  {{ renderform_inner(form, formid or None, style=style) }}
+  {{ rendersubmit([(None, submit or _("Submit"), 'btn-primary')], cancel_url=cancel_url, style=style) }}
+</form>
+{% endmacro %}
+
+{% macro ajaxform(formid, request, force=false) -%}
+{% if force or request.is_xhr -%}
+<script type="text/javascript">
+  $(function() {
+    $("#{{ formid }}").ajaxForm({
+      target: '#{{ formid }}',
+      replaceTarget: true,
+    });
+    $('#{{ formid }} input[type="submit"]').click(function() {
+      $('#{{ formid }}').find(".loading").removeClass('hidden');
+    });
+    $('#{{ formid }} button[type="submit"]').click(function() {
+      $('#{{ formid }}').find(".loading").removeClass('hidden');
+    });
+  });
+</script>
+{%- endif %}
+{%- endmacro %}
+
+{% macro tinymce3_editor(field) -%}
+  <script type="text/javascript">
+    $(function() {
+      $('textarea#{{ field.id }}').removeClass('richtext').tinymce({
+        // Location of TinyMCE script
+        script_url: {{ url_for("baseframe.static", filename="js/tinymce3/tiny_mce.js")|tojson }},
+
+        {%- for k, v in field.tinymce_options.items() %}
+        {{ k|tojson }}: {{ v|tojson }},
+        {%- endfor %}
+        // Content CSS
+        content_css: {{ (field.content_css or url_for('baseframe.editorcss'))|tojson }},
+        // Focus/blur indicators
+        setup: function(ed) {
+          ed.onInit.add(function(ed) {
+            var container = $('#'+ed.id+'_tbl');
+            tinymce.dom.Event.add(ed.getWin(), "blur", function() {
+              container.removeClass('focus');
+            });
+            tinymce.dom.Event.add(ed.getWin(), "focus", function() {
+              container.addClass('focus');
+            });
+          });
+        } // No comma or semicolon here
+      });
+    });
+  </script>
+{% endmacro %}
+
+{% macro tinymce4_editor(field) -%}
+  <script type="text/javascript">
+    $(function() {
+      $('textarea#{{ field.id }}').removeClass('richtext').tinymce({
+        {%- for k, v in field.tinymce_options.items() %}
+        {{ k|tojson }}: {{ v|tojson }},
+        {%- endfor %}
+        // Content CSS
+        content_css: {{ (field.content_css or url_for('baseframe.editorcss'))|tojson }},
+        // Focus/blur indicators
+        setup: function(ed) {
+          ed.on('focus', function(e) {
+            $(ed.editorContainer).addClass('active');
+          });
+          ed.on('blur', function(e) {
+            $(ed.editorContainer).removeClass('active');
+          });
+        } // End of setup keyval
+      });
+    });
+  </script>
+{% endmacro %}
