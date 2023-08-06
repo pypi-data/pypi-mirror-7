@@ -1,0 +1,47 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import sys
+
+from om.supervisor import Supervisor
+
+if __name__ == '__main__':
+    supervisor = None
+
+    if len(sys.argv) == 2:
+        import tempfile, json
+
+        machines = {}
+        for machine in sys.argv[1].split(','):
+            config = {'ssh': {}}
+
+            if '@' in machine:
+                userpart, machine = machine.split('@')
+                if ':' in userpart:
+                    config['ssh']['username'], config['ssh']['password'] = userpart.split(':')
+                else:
+                    config['username'] = userpart
+
+            if ':' in machine:
+              config['host'], config['ssh']['port'] = machine.split(':')
+              config['ssh']['port'] = int(config['ssh']['port'])
+            else:
+              config['host'] = machine
+
+            machines[config['host']] = config
+
+        config = tempfile.NamedTemporaryFile()
+        config.write(json.dumps({'machines': machines}))
+        config.seek(0)
+        supervisor = Supervisor(config.name)
+    elif len(sys.argv) == 3:
+        if sys.argv[1] == '-c':
+            supervisor = Supervisor(sys.argv[2])
+
+    if supervisor:
+        supervisor.run()
+    else:
+        print 'Usage:'
+        print '\tom <host>'
+        print '\tom -c <config.json>'
+        sys.exit(0)
