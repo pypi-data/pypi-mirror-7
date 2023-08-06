@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% load i18n %}{% load bootstrap %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-12">
+            <h3>{% trans "Domains (yours first, then public)" %}</h3>
+            <table class="table">
+            <thead>
+                <tr>
+                    <th>{% trans "Domain" %}</th>
+                    <th>{% trans "Public?" %}</th>
+                    <th>{% trans "Available?" %}</th>
+                    <th>{% trans "Owner" %}</th>
+                    <th>{% trans "Comment" %}</th>
+                </tr>
+            </thead>
+            {% for domain in your_domains %}
+                <tr>
+                    <td><a href="{% url 'domain_view' domain.pk %}">{{ domain.domain }}</a></td>
+                    <td>{{ domain.public|yesno }}</td>
+                    <td>{{ domain.available|yesno }}</td>
+                    <td>{{ domain.created_by }}</td>
+                    <td>{{ domain.comment }}</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="5">{% trans "No domains from you yet." %}</td></tr>
+            {% endfor %}
+            {% for domain in public_domains %}
+                <tr>
+                    <td>{{ domain.domain }}</td>
+                    <td>{{ domain.public|yesno }}</td>
+                    <td>{{ domain.available|yesno }}</td>
+                    <td>{{ domain.created_by }}</td>
+                    <td>{{ domain.comment }}</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="5">{% trans "No public domains from other users yet." %}</td></tr>
+            {% endfor %}
+            </table>
+        </div>
+    </div>
+    <hr>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="well well-sm">
+                <h3>{% trans "Add a new Domain" %}</h3>
+                <form method="post" action="">
+                    {% csrf_token %}
+                    {{ form|bootstrap }}
+                    <button type="submit" class="btn btn-primary">{% trans "Add" %}</button>
+                </form>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="well well-sm">
+                <h3>{% trans "Help" %}</h3>
+                <p>
+                   {% blocktrans %}Here you can add new domains (zones) which you control (and this is only useful if you
+                   have some own zone which you can update automatically).{% endblocktrans %}
+                </p>
+                <p>
+                   {% blocktrans %}You need to be able to configure the primary master nameserver of the zone so it accepts
+                   dynamic updates (via RFC 2136 "dynamic update" protocol) if the correct update secret is presented.{% endblocktrans %}
+                </p>
+                <p>
+                   {% trans "We'll show you configuration examples after you add a domain." %}
+                </p>
+            </div>
+        </div>
+    </div>
+{% endblock %}
