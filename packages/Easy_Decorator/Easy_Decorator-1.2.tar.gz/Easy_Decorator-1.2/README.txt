@@ -1,0 +1,45 @@
+==============
+Easy_Decorator
+==============
+
+Simply make decorators with a before and after function
+
+Included Files
+==============
+
+* easyDecorator/easyDecorator.py
+  - Make decorators with a before and after function
+
+Installation
+============
+
+Python must be installed in order for Menu to be imported. Install python at https://www.python.org/download/. In the terminal type “cd path/to/this/directory” and then “python setup.py install”. This will add the menu module to your site-packages.
+
+
+How to Use
+==========
+
+Import eastDecorator::
+
+    from easyDecorator import easyDecorator as dec
+
+or::
+
+    import easyDecorator.easyDecorator as dec
+
+Make a decorator with before/after functions::
+
+    newDecorator = dec.decorator(before=beforeFunction,after=afterFunction)
+    
+    @newDecorator
+    def someFunc():
+        pass
+
+Decorate a function that doesn’t accept arguments so that it can::
+
+    @dec.giveArgs
+    def funcWithoutArgs():
+        pass
+	
+
+
