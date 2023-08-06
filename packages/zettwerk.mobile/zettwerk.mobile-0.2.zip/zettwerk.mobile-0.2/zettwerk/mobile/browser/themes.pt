@@ -1,0 +1,55 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:metal="http://xml.zope.org/namespaces/metal"
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+    lang="en"
+    metal:use-macro="context/main_template/macros/master"
+    i18n:domain="zettwerk.mobile">
+
+<metal:block fill-slot="top_slot">
+
+  <tal:defines tal:define="dummy python:request.set('disable_border',1);
+                           disable_column_one python:request.set('disable_plone.leftcolumn',0);
+                           disable_column_two python:request.set('disable_plone.rightcolumn',1);"/>
+</metal:block>
+
+<body>
+  <metal:override fill-slot="portlets_one_slot">
+    <metal:prefs use-macro="context/portlet_prefs/macros/portlet" />
+  </metal:override>
+
+  <div metal:fill-slot="main" id="themeControlPanel">
+
+    <h1 class="documentFirstHeading" i18n:translate="">zettwerk.mobile: jquery.mobile based theme selection</h1>
+    <p class="description" i18n:translate="">Here you can upload jquery.mobile's themeroller based themes. Create a Thema via the <a href="http://themeroller.jquerymobile.com/" target="_blank">Themeroller</a> and download the theme to your local drive. Then upload it via the form below. The name you entered in the themeroller will be taken as theme name for zettwerk.mobile.</p>
+    <form name="upload"
+          method="post"
+          enctype="multipart/form-data"
+          class="enableUnloadProtection">
+
+
+      <label i18n:translate="">Upload new theme</label><br />
+      <input type="file" name="zip" />
+
+      <br /><br />
+      <label i18n:translate="">Choose active theme</label><br />
+      <select name="active_theme" size="1">
+        <option value="default" i18n:translate="">Default</option>
+
+        <tal:block tal:repeat="theme view/available_themes">
+          <option tal:content="theme"
+                  tal:attributes="value theme;
+                                  selected python:['', 'selected'][theme == view.active_theme]"
+                  >Theme</option>
+        </tal:blocK>
+      </select>
+
+      <br /><br />
+      <input type="submit" value="Save settings" i18n:attributes="value" />
+
+    </form>
+
+  </div>
+
+</body>
+</html>
