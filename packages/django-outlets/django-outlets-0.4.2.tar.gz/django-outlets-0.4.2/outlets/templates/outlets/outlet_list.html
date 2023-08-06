@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load i18n static %}
+
+{% block main %}
+    <div class="row">
+        <div class="col-md-3">
+            <ul class="list-unstyled" id="outletCountryList">
+                {% for country in all_countries %}
+                    <li><a href="{% url "outlets_list" slug=country.slug %}">{{ country.name }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="col-md-9">
+            <div class="row">
+                <div class="col-md-12">
+                    <div id="googleMapWrapper">
+                        {# This data-id "outletsGoogleMap" defines the div, that holds the actual map. The other id attribute is just for styling and reference. #}
+                        <div id="outletsGoogleMap" data-id="outletsGoogleMap"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <h2>{{ country.name }}</h2>
+                    <div class="row" id="outletsList">
+                        {% for outlet in object_list %}
+                            {# data-class is required to be outletDetails for the map markers to display. Keep it on the element above the lat/lon inputs to have markers visible on the map. #}
+                            <div class="col-md-3 outletDetails" data-class="outletDetails">
+                                {# data-id is required on the anchor, that centers the map on the related map marker. The data-class=outletMapMarkerCenter is required to identify the anchor, that centers the map. #}
+                                <a href="#" data-class="outletMapMarkerCenter" data-id="{{ outlet.pk }}"><h3>{{ outlet.name }}</h3></a>
+                                {% if outlet.outlet_type %}
+                                    <h4>{{ outlet.outlet_type }}</h4>
+                                {% endif %}
+                                {% if outlet.start_date or outlet.end_date %}
+                                    <p class="text-muted">
+                                        {% if outlet.start_date %}
+                                            <span>{% trans "Sale starts" %}: {{ outlet.start_date }}</span>
+                                        {% endif %}
+                                        {% if outlet.end_date %}
+                                            <span>{% trans "Sale ends" %}: {{ outlet.end_date }}</span>
+                                        {% endif %}
+                                    </p>
+                                {% endif %}
+                                <p>{{ outlet.street}}</p>
+                                <p>{{ outlet.city }} {{ outlet.postal_code }}</p>
+                                {% if outlet.phone %}
+                                    <p>{% trans "Tel" %}.: {{ outlet.phone}}</p>
+                                {% endif %}
+                                <input type="hidden" name="lat" value={{ outlet.lat }}>
+                                <input type="hidden" name="lon" value={{ outlet.lon }}>
+                                <input type="hidden" name="map_marker_url" value="{% url "outlets_mapmarker_info" pk=outlet.pk %}">
+                                <input type="hidden" name="title" value="{{ outlet.name }}">
+                                <input type="hidden" name="outlet" value="{{ outlet.pk }}">
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{# Add this to your overridden template #}
+{% block extra_js %}
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&language=en"></script>
+    <script type="text/javascript" src="{% static "outlets/js/googlemap_outlets.js" %}"></script>
+{% endblock %}
