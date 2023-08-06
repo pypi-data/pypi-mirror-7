@@ -1,0 +1,46 @@
+# Copyright 2014 devbliss GmbH
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# bash completion for git devbliss
+_git_devbliss ()
+{
+    local cur prev subcmds
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    subcmds="feature bug refactor research hotfix finish release status cleanup delete issue review merge-button close-button --version"
+    COMPREPLY=( $(compgen -W "$subcmds" -- $cur) )
+    case "${prev}" in
+        hotfix)
+            COMPREPLY=( $(compgen -W "$(git tag --column)" -- $cur) )
+        ;;
+        release)
+            COMPREPLY=( $(compgen -W "$(git tag --column)" -- $cur) )
+        ;;
+        finish)
+            COMPREPLY=( $(compgen -W "$(git branch -r | tail -n+2 | awk -F 'origin/' '{print $2}')" -- $cur) )
+        ;;
+        *)
+            if [ ${#COMP_WORDS[@]} -gt 3 ]; then
+                COMPREPLY=()
+            fi
+        ;;
+    esac
+    return
+}
+
+complete -F _git_devbliss git-devbliss
+complete -F _git_devbliss "git devbliss"
+complete -F _git_devbliss "git de"
+
