@@ -1,0 +1,34 @@
+{% macro render_relaties_lijst(request, relaties, scheme_id) %}
+	{% if relaties|length > 0 %}
+        <ul class="concept">
+            {%- for c in relaties %}
+                <li>
+                    <a href="{{ request.route_path('concept', scheme_id= scheme_id, c_id = c.concept_id) }}">{{ c.label(request.locale_name).label }}</a>
+                </li>
+            {%- endfor %}
+        </ul>
+	{% endif %}
+{% endmacro %}
+
+{% macro render_labels(labels, type) %}
+    {% set type_labels = [] %}
+    {%- for label in labels %}
+        {% if label.labeltype_id == type %}
+            {% if type_labels.append(label) %}{% endif %}
+        {% endif %}
+    {%- endfor %}
+    {% if type_labels|length > 0 %}
+        {% if type == 'prefLabel' %}
+        <h4 class="subheader">{% trans %}prefLabel{% endtrans %}:</h4>
+        {% elif type == 'altLabel' %}
+        <h4 class="subheader">{% trans %}altLabel{% endtrans %}:</h4>
+        {% elif type == 'hiddenLabel' %}
+        <h4 class="subheader">{% trans %}hiddenLabel{% endtrans %}:</h4>
+        {% endif %}
+		<ul class="concept">
+		    {%- for label in type_labels|sort(attribute='label') %}
+            <li>{{ label.label}} <em class="language">({{ label.language }})</em></li>
+		    {%- endfor %}
+		</ul>
+    {% endif %}
+{% endmacro %}
