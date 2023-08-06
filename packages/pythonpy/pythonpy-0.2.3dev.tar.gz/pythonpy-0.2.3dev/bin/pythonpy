@@ -1,0 +1,139 @@
+#!/usr/bin/env python
+from __future__ import (unicode_literals, absolute_import,
+                        print_function, division)
+import argparse
+import json
+import re
+import sys
+
+class PythonPy(object):
+    def __init__(self):
+        self.parser = self.get_parser()
+
+    def run(self):
+        self.args = self.parser.parse_args()
+        self.stdin = self.preprocess()
+        self.lazy_imports()
+        results = self.process()
+        self.post_process(results)
+
+    def get_parser(self):
+        parser = argparse.ArgumentParser()
+        parser.add_argument('evaluation', nargs='?', default='None')
+        parser.add_argument('-x', dest='lines_of_stdin', action='store_const',
+                            const=True, default=False,
+                            help='treat each row as x')
+        parser.add_argument('-fx', dest='filter_result', action='store_const',
+                            const=True, default=False,
+                            help='keep rows satisfying condition(x)')
+        parser.add_argument('-l', dest='list_of_stdin', action='store_const',
+                            const=True, default=False,
+                            help='treat list of stdin as l')
+        parser.add_argument('-c', dest='cmd', help='run code before expression')
+        parser.add_argument('--i', '--ignore_exceptions',
+                            dest='ignore_exceptions', action='store_const',
+                            const=True, default=False,
+                            help='')
+        parser.add_argument('--si', '--split_input', dest='split_input',
+                            help='pre-process each row with re.split(delimiter)')
+        parser.add_argument('--so', '--split_output', dest='split_output',
+                            help='post-process each row with delimiter.join(row)')
+        parser.add_argument('--ji' '--json_input',
+                            dest='json_input', action='store_const',
+                            const=True, default=False,
+                            help='pre-process each row with json.loads(row)')
+        parser.add_argument('--jo' '--json_output',
+                            dest='json_output', action='store_const',
+                            const=True, default=False,
+                            help='post-process each row with json.dumps(row)')
+        return parser
+
+    def lazy_imports(self):
+        query = (self.args.evaluation if self.args.evaluation else '' +
+                 self.args.cmd if self.args.cmd else '')
+        if 'base64' in query: global base64; import base64
+        if 'calendar' in query: global calendar; import calendar
+        if 'csv' in query: global csv; import csv
+        if 'datetime' in query: global datetime; import datetime
+        if 'glob' in query: global glob; import glob
+        if 'hashlib' in query: global hashlib; import hashlib
+        if 'itertools' in query: global itertools; import itertools
+        if 'math' in query: global math; import math
+        if 'os' in query: global os; import os
+        if 'random' in query: global random; import random
+        if 'shutil' in query: global shutil; import shutil
+        if 'tempfile' in query: global tempfile; import tempfile
+        if 'Counter' in query: global Counter; from collections import Counter
+        if 'OrderedDict' in query: global OrderedDict; from collections import OrderedDict
+        if 'uuid4' in query: global uuid4; from uuid import uuid4
+
+    def preprocess(self):
+
+        if self.args.json_input:
+            stdin = (json.loads(x.rstrip()) for x in sys.stdin)
+        elif self.args.split_input:
+            stdin = (re.split(self.args.split_input, x.rstrip()) for x in sys.stdin)
+        else:
+            stdin = (x.rstrip() for x in sys.stdin)
+
+        if self.args.evaluation:
+            self.args.evaluation = self.args.evaluation.replace("`", "'")
+        if self.args.cmd:
+            self.args.cmd = self.args.cmd.replace("`", "'")
+        return stdin
+
+    def safe_eval(self, text, x):
+        try:
+            return eval(text)
+        except:
+            return None
+
+    def process(self):
+        if self.args.cmd:
+            exec self.args.cmd in globals(), locals()
+
+        if self.args.lines_of_stdin:
+            if self.args.ignore_exceptions:
+                result = (self.safe_eval(self.args.evaluation, x) for x in self.stdin)
+            else:
+                result = (eval(self.args.evaluation) for x in self.stdin)
+        elif self.args.filter_result:
+            if self.args.ignore_exceptions:
+                result = (x for x in self.stdin if self.safe_eval(self.args.evaluation, x))
+            else:
+                result = (x for x in self.stdin if eval(self.args.evaluation))
+        elif self.args.list_of_stdin:
+            l = list(self.stdin)
+            result = eval(self.args.evaluation)
+        else:
+            result = eval(self.args.evaluation)
+        return result
+
+    def post_process(self, results):
+        def format(output):
+            if output == None:
+                return None
+            elif self.args.json_output:
+                return json.dumps(output)
+            elif self.args.split_output:
+                return self.args.split_output.join(output)
+            else:
+                return output
+
+        if hasattr(results, '__iter__'):
+            for x in results:
+                formatted = format(x)
+                if formatted is not None:
+                    print(formatted)
+        else:
+            formatted = format(results)
+            if formatted is not None:
+                print(formatted)
+
+
+def main():
+    PythonPy().run()
+
+
+if __name__ == '__main__':
+    main()
