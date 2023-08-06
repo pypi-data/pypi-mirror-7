@@ -1,0 +1,68 @@
+#!/usr/bin/python
+
+from __future__ import unicode_literals, print_function, absolute_import
+
+import json
+import argparse
+import requests
+import os.path
+import smtplib
+from email.mime.text import MIMEText
+import subprocess
+import shlex
+
+parser = argparse.ArgumentParser(description='Monitors a web server. This program is meant to be called by cron and ' +
+    "will send mails to an administrator to report problems.")
+parser.add_argument('url', help='The url of the web page to test.')
+parser.add_argument('-d', '--state-db', help='The file used to store the previous state of the monitored service. Defaults to ./.state-db',
+    default=".state-db")
+parser.add_argument('-e', '--email', help='The email of the administrator to contact when the state changes. For this '+
+    'parameter to work you need to have a smtp server on localhost using user authentication.')
+parser.add_argument('-s', '--stop-command', help='A command to execute when the web server is detected as unreachable.')
+parser.add_argument('-r', '--restart-command', help='A command to execute when the web server has restarted.')
+
+args = parser.parse_args()
+
+state_db = {args.url: True}
+
+if os.path.exists(args.state_db):
+    with open(args.state_db, 'r') as file_:
+        state_db = json.loads(file_.read().decode("utf8"))
+
+success = True
+try:
+    r = requests.get(args.url)
+    if r.status_code != 200:
+        success = False
+except:
+    success = False
+
+if success:
+    print("Managed to reach successfully url %s" % args.url)
+else:
+    print("Error detected when trying to reach %s" % args.url)
+
+if state_db[args.url] != success:
+    if success and args.restart_command:
+        subprocess.call(shlex.split(args.restart_command))
+    elif not success and args.stop_command:
+        subprocess.call(shlex.split(args.stop_command))
+
+    if args.email is not None:
+        if success == True:
+            msg = MIMEText("The service %s is now running correctly." % args.url)
+        else:
+            msg = MIMEText("A problem was detected with service %s. It is not reachable anymore." % args.url)
+
+        msg['Subject'] = 'Alert about service %s' % args.url
+        msg['To'] = args.email
+
+        s = smtplib.SMTP('localhost')
+        s.sendmail(None, [args.email], msg.as_string())
+        s.quit()
+
+
+state_db[args.url] = success
+
+with open(args.state_db, 'w') as file_:
+    file_.write(json.dumps(state_db).encode('utf8'))
