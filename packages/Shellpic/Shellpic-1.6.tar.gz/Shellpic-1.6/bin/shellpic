@@ -1,0 +1,110 @@
+#!/usr/bin/env python
+# -*- coding: utf-8; mode: Python -*-
+#
+#
+# Lars Jørgen Solberg <supersolberg@gmail.com> 2014
+#
+
+from __future__ import print_function
+from __future__ import division
+from __future__ import unicode_literals
+
+import argparse
+import sys
+import io
+import time
+
+from shellpic import *
+
+from PIL import Image
+
+def main():    
+    # parse command line parameters
+    parser = argparse.ArgumentParser()
+    parser.add_argument("image", help="Use '-' to read from STDIN")
+    parser.add_argument("--version", action="version", version="Version: " + shellpic.VERSION,
+                        help="Print verions number and exit.")
+
+    parser.add_argument("--shell4", action="store_const", const=Shell4Bit, dest='formatter_class',
+                        help="Print text suitable for a shell capable of displaying 16 colors")
+    parser.add_argument("--shell8", action="store_const", const=Shell8Bit, dest='formatter_class',
+                        help="Print text suitable for a shell capable of displaying 8bit colors (default)")
+    parser.add_argument("--shell24", action="store_const", const=Shell24Bit, dest='formatter_class', 
+                        help="Print text suitable for a shell capable of displaying 24bit colors")
+    parser.add_argument("--irc", action="store_const", const=Irc, dest='formatter_class', 
+                        help="Print text suitable for piping to an irc client")
+    parser.add_argument("--nuts", action="store_const", const=Nuts, dest='formatter_class', 
+                        help="Print text suitable for piping to a NUTS talker client")
+    parser.add_argument("--tinymux", action="store_const", const=Tinymux, dest='formatter_class', 
+                        help="Print text suitable for piping to a TinyMUX server")
+
+    parser.add_argument("--no-scale", action="store_true",
+                        help="Do not attempt to scale the image to fit the terminal")
+    parser.add_argument("--scale-x", nargs=1, type=int,
+                        help="Scale the image to this width")
+    parser.add_argument("--scale-y", nargs=1, type=int,
+                        help="Scale the image to this height")
+
+    parser.add_argument("--animate", action="store_true", 
+                        help="Animate the image once")
+    parser.add_argument("--loop", action="store_true", 
+                        help="Animate the image and loop indefinetly")
+    args = parser.parse_args()    
+
+
+    # create the right kind of 'Formatter'
+    if args.formatter_class:
+        formatter = args.formatter_class()
+    else:
+        formatter = Shell8Bit()
+
+    
+    anim = Animation(args.image, args.animate or args.loop)
+
+    # scale it to fit the terminal
+    if not args.no_scale:
+        dimensions = formatter.dimensions()
+        if args.scale_x:
+            dimensions = [args.scale_x[0], dimensions[1]]
+        if args.scale_y:
+            dimensions = [dimensions[0], args.scale_y[0]]            
+        anim.scale(*dimensions)
+
+    # convert the frame from RGBA to a colorspace useful for our formatter
+    anim.convert_colors(formatter.color_value)
+
+    # print the image as an animation
+    if args.animate or args.loop:
+        try:
+            while True:
+                for frame in anim.frames:
+                    start = time.time()
+                    if sys.version_info[0] == 3:
+                        print(formatter.format(frame), end='')
+                    else:
+                        print(formatter.format(frame).encode('utf-8'), end='')
+                    sys.stdout.flush()
+                    done = time.time()
+                    time.sleep(max(0.0 , frame.delay - (done - start)))
+                if not args.loop:
+                    print()
+                    break
+        except KeyboardInterrupt:
+            if sys.version_info[0] == 3:
+                print(formatter.format(frame))
+            else:
+                print(formatter.format(frame).encode('utf-8'))
+            
+        except NotImplementedError:
+            sys.stderr.write('Animation is not implemented for ' + formatter.__class__.__name__ + '\n')
+            exit(1)
+    else:
+        # or print the result to STDOUT        
+        if sys.version_info[0] == 3:
+            print(formatter.format(anim.frames[0]))
+        else:
+            print(formatter.format(anim.frames[0]).encode('utf-8'))
+
+
+if __name__ == "__main__":
+    main()
