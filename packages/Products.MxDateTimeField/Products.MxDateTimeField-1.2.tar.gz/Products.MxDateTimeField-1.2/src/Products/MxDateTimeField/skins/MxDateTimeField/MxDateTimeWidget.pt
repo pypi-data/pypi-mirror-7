@@ -1,0 +1,66 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:metal="http://xml.zope.org/namespaces/metal"
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+      i18n:domain="plone">
+
+  <head><title></title></head>
+
+  <body>
+
+    <!-- Calendar Widgets -->
+
+    <metal:view_macro define-macro="view"
+       tal:define="d accessor;"
+       tal:replace="structure python:d" />
+
+
+  <metal:define define-macro="edit">
+      <metal:use use-macro="field_macro | here/widgets/field/macros/edit">
+
+	    <input metal:fill-slot="widget_body"
+	       type="text"
+	       tal:attributes="name fieldName;
+	       value value;
+	       size widget/size;
+	       maxlength widget/maxlength;"
+	       />
+
+      </metal:use>
+    </metal:define>
+
+
+    <metal:define define-macro="search">
+      <metal:field use-macro="here/widgets/field/macros/edit">
+        <metal:slot fill-slot="widget_body">
+          <tal:from define="id fieldName;
+                            inputname fieldName;
+                            formname string:search_form;
+                            inputvalue python:min(request.form.get(fieldName, None) or request.other.get(fieldName, None) or ('1975-05-26',)).strip();
+                            tabindex tabindex/next">
+            <metal:box tal:content="accessor">
+              a calendar, hopefully
+            </metal:box>
+          </tal:from>
+          -
+          <tal:to define="id fieldName;
+                          inputname fieldName;
+                          formname string:search_form;
+                          inputvalue python:max(request.form.get(fieldName, None) or request.other.get(fieldName, None) or ('2975-05-26',)).strip();
+                          tabindex tabindex/next">
+            <metal:box use-macro="here/calendar_slot/macros/calendarDatePickerBox">
+              a calendar, hopefully
+            </metal:box>
+          </tal:to>
+          <input type="hidden"
+                 name="field_usage"
+                 value="range:min:max"
+                 tal:attributes="name string:${fieldName}_usage"
+                 />
+        </metal:slot>
+      </metal:field>
+    </metal:define>
+
+  </body>
+
+</html>
