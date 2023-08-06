@@ -1,0 +1,103 @@
+F2 DBMS in Python
+-----------------
+
+version 1.3.1 - Th. Estier - 2014. 
+
+Opening the archive:
+
+  If you can read this file, you probably already manage to open the distribution file. 
+  Nevertheless, the normal way is to download an F2 distribution file, then to
+  unfold it in some appropriate folder of yours, by a command like:
+  
+      tar zxvf F2-1.3.1.tar.gz
+      
+
+Installing F2:
+
+  1) install ZODB and ZEO using the python package index (pypi.python.org)
+  
+  2) type the following command:
+  
+       python setup.py install
+       
+Testing your install:
+
+   Type the following command:
+       
+       python -c 'import F2'
+       
+   If this command returns without any effect or message, then your installation is
+   a success. If it displays any form of error message containg "ImportError" then
+   something failed during the preceding steps.
+   
+Testing F2 without server (DB in a simple file):
+
+   Type the following command:
+    
+       python bootf2.py file:root.db
+       
+   You should normally see a succession of lines commenting the ongoing bootstrap of
+   a F2 kernel. The resulting database will be in the current directory under name 'root.db'.
+   
+ Testing F2 with a client/server configuration:
+ 
+   1) verify that port 8080 is not already used on your machine, this is the port
+      on which your F2 server will listen clients. If this is the case, replace '8080'
+      by some other appropriate port number in the file 'start_f2_server' (this is a
+      simple text file that you can edit by any standard editor). 
+      
+   2) create a local subdirectory called 'var' in the current directory. The
+      server will store data files, logs and other control files in it.
+      
+   3) launch your server with the following command:
+   
+        ./start_f2_server
+      
+   4) bootstrap the server database with the following command:
+   
+        python bootf2.py rpc:127.0.0.1:8080
+      
+      You will of course replace '8080' by the port number you choosed in point 1)
+      if you changed it. The '127.0.0.1' address is the standard IP address designing
+      your own machine. A client program running on another machine would use instead
+      the IP adress you have indicated to join your machine. This supposes you opened
+      the port 8080 to other machines. If this is the case, BEWARE because anyone can
+      use your F2 database while your server is running. When in doubt, ask your local
+      network administrator.
+      
+   5) To stop your F2 server use:
+   
+       ./stop_f2_server
+       
+ Continuing with your F2 DBMS in python:
+ 
+   From now on, if you want you can read the documentation (in directory ./doc) to 
+   continue your discovery of F2. Fasten seat belts.
+   
+ 
+ Cheers, 
+ Th. Estier - sept 2014
+ 
+ --------------------------------------------------------------
+ RELEASE NOTES:
+ 
+ 1.1 :  essentially introduces since version 1.0:
+        - OID's are now unique to a full F2 database, and never reused. OID's creation
+          uniqueness is garanteed even in client/server context (using ZEO), it is
+          both thread safe and transaction compatible: even if a transaction is
+          rollbacked, created OID's are never recycled.
+          
+          This has strong implications (simplifications) on restructuration mechanisms.
+          
+        - some convenient new methods in base python classes,
+        
+        - bootstrap process is now integrated in the F2 package (instead of a
+          separated program), this simplifies usage of F2 from inside
+          application servers (like Radixa or Zope): a program creating a
+          new F2 database can launch the bootstrap process "a la volée",
+        
+        - some bugs corrected,
+        
+        - documentation grew up significantly.
+        
+        
