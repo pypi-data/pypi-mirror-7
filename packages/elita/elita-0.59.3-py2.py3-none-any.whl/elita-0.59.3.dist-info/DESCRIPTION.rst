@@ -1,0 +1,67 @@
+Elita
+=====
+
+Elita is an engine/framework for continuous deployment and API-driven infrastructure utilizing git
+and salt. Elita maps build packages to filesystem locations on an arbitrary number of remote servers and allows deployment
+(and more) via RESTful HTTP calls.
+
+(for more, see:  http://elita.readthedocs.org/en/latest/intro.html )
+
+Documentation
+=============
+
+*   http://elita.readthedocs.org/en/latest
+
+
+Installation
+============
+
+*   http://elita.readthedocs.org/en/latest/install.html
+
+
+Quickstart
+==========
+
+*   http://http://elita.readthedocs.org/en/latest/quickstart.html
+
+
+Mailing List
+============
+
+*   https://groups.google.com/d/forum/elita-users
+
+
+Issues/Bugs
+===========
+
+*   https://bitbucket.org/scorebig/elita/issues
+
+
+Source/Homepage
+===============
+
+*   https://bitbucket.org/scorebig/elita
+
+
+
+0.59.3
+- Fix exceptions in application census
+- Remove application census from top-level application view
+- Small fix to Deployment model
+- Add ordered gitdeploy information to documentation for groups
+- Change repo link, homepage in README
+- Fix docs version, copyright
+
+0.59.2
+- Add documentation links to README
+
+0.59.1
+- Fix issue where gitdeploy ordering was not respected with deployments consisting only of nonrolling groups
+- Consolidate all nonrolling groups into first batch
+- Fix minor bug with deployment result job logging
+
+0.59
+- First public release
+
+
+
