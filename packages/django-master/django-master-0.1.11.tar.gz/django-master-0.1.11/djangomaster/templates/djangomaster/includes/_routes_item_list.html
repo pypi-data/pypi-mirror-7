@@ -1,0 +1,40 @@
+{% load url from future %}
+
+<div class="pure-u-5-5 route-item">
+    <a class="route-name">{{ route.url }}</a>
+
+    <div class="route-subitem">
+
+        <div class="pure-u-5-5">
+            {{ route.view }}
+            {% if route.name %}
+                [name="{{ route.name }}"]
+                {% if route.args_count == 0 %}
+                    <br />
+                    Link: <a href="{{ route.url_reversed }}" target="_blank">{{ route.url_reversed }}</a>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        {% if route.name and route.args_count > 0 %}
+        <div class="pure-u-5-5 pure-form">
+            <fieldset>
+            {% for index, arg in route.args %}
+                <input type="text" placeholder="{{arg}}" />
+            {% endfor %}
+
+            <button class="pure-button" data-reverse="{{route.url}}">Reverse</button>
+            <div class="pure-u-5-5 route-link-wrapper is-hidden">
+                Link: <a href="#" target="_blank" class="route-link"></a>
+            </div>
+            </fieldset>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% with template_name='djangomaster/includes/_routes_item_list.html' %}
+    {% for subroute in route.sub_urls %}
+        {% include template_name with route=subroute only %}
+    {% endfor %}
+{% endwith %}
