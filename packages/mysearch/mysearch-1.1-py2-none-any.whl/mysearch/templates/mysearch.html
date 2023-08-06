@@ -1,0 +1,69 @@
+      {% include "header.html" %}
+      {% for failure in failures.values() %}
+      <div class="list-error">
+      {{failure}}
+      </div>
+      {% endfor %}
+      {% if no_results == False %}
+        {% if results.has_key("wiki") %}
+        <div class="list-links">
+            {% for result in results["wiki"] %}
+            <div class="item">
+                <a class="link" href="{{result.redirect_link_url}}">{{ result.link_name }}</a>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% if results.has_key("location") %}
+        <div class="list-links">
+            {% for result in results["location"] %}
+            <div class="item">
+                <a class="link" href="{{ result.redirect_link_url }}">{{ result.link_name }}</a>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% if results.has_key("video") %}
+        <div class="list-links category-videos">
+            {% for result in results["video"] %}
+            <div class="item">
+                <div class="video_preview">
+                    <a href="{{result.redirect_link_url}}"><img class="video_preview_image" src="{% if result.image_data != None %}{{ result.image_data }}{% else %}{{ result.image_url }}{% endif %}"/></a>
+                </div>
+                <a class="link" href="{{result.redirect_link_url}}">{{ result.link_name }}</a>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% if results.has_key("img") %}
+        <script src="/jquery-1.7.2.min.js"></script>
+        <script src="/google_images_layout.js"></script>
+        <div class="list-links category-images">
+            {% for result in results["img"] %}
+                <a href="{{result.redirect_link_url}}"><img class="image_preview_image" src="{% if result.image_data != None %}{{ result.image_data }}{% else %}{{ result.image_url }}{% endif %}"  data-height="{{ result.height }}" data-width="{{ result.width }}"/></a>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        {% if results.has_key("txt") %}
+        <div class="list-links">
+            {% for result in results["txt"] %}
+            <div class="item">
+                <a class="link" href="{{result.redirect_link_url}}">{{ result.link_name }}</a>
+                <div class="resume">{{ result.link_resume }}</div>
+                <div class="link-info">{{ result.link_url }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+      <div class="more_results" >
+        <a href="javascript:document.getElementById('search form').more_results.value = {{ more_results+1 }}; document.getElementById('search form').submit();">More results >>></a>
+      </div>
+      {% else %}
+      <div class="list-links">
+      No matching results
+      </div>
+      {% endif %}
+    </body>
+</html>

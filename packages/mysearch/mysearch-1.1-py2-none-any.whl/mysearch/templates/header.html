@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="utf-8">
+        <title>{% if query %}{{ query }} - {% endif %}MySearch</title>
+        <link rel="stylesheet" href="mysearch.css" type="text/css" media="screen">
+        <link rel="search" href="opensearchdescription.xml" type="application/opensearchdescription+xml" title="MySearch" />
+        <link rel="icon" type="image/x-icon" href="favicon.ico" />
+        <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body>
+      <script>
+      function Submit_button_callback(form)
+      {        
+        if (document.getElementById('search_button_icon').className == 'button_icon more_icon')
+        {
+          document.getElementById('search form').more_results.value = {{ more_results+1 }};
+        }
+      }
+      </script> 
+      <header class="head_bar">
+        <form id ="search form" action="/mysearch" onsubmit="Submit_button_callback()" >
+        <input type="hidden" name="more_results" id="more_results" value="{{ more_results }}">
+         <div class="head_part1">
+           <div class="head_line">
+             <div class="search_input">
+              <input autofocus autocomplete="off" oninput="document.getElementById('search_button_icon').className='button_icon search_icon';(elem=document.getElementById('more_results')).parentNode.removeChild(elem);" autocorrect="off" class="search_input_text" name="q"  spellcheck="false" type="text" value="{{ query }}"/>
+             </div>
+
+             <button id="search_button" type="submit">
+             <span id="search_button_icon" class="button_icon {% if not query %}search_icon{% else %}more_icon{% endif %}"></span>
+            </button>
+           </div>
+         </div>
+         <div id="head_options">
+            <div id="backend_chooser">
+              Search engine 
+              <select name="backend" id="backend_selector" onchange="this.form.submit();">
+              {% for backend in backends %}<option {% if backend.name == current_backend %}selected{% endif %}>{{ backend.name }}</option>
+              {% endfor %}
+              </select>
+            </div>
+            <div id="lang_chooser">
+              Language
+              <select name="locale" id="lang_selector" onchange="this.form.submit();">
+              {% for locale in locales %}<option {% if locale == current_locale %}selected{% endif %}>{{ locale }}</option>
+              {% endfor %}
+              </select>
+            </div>
+         </div>
+       </form>
+     </header>
