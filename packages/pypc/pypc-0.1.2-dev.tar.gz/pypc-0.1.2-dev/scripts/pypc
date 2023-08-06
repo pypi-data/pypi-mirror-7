@@ -1,0 +1,31 @@
+#!/usr/bin/env python
+#-*- coding: utf-8 -*-
+
+import os
+import argparse
+from pypc.pypc import Package
+
+TITLE = "Pypc, the Python3 Package Creator"
+
+def argparser():
+    """
+    options:
+        o - offline (does not pip install dependencies)
+    """
+    parser = argparse.ArgumentParser(description=TITLE)
+    parser.add_argument(action="store", dest="path", help="Package full path")
+    return parser
+
+def normalize_path(path):
+    if os.sep in path:
+        return path
+    return os.path.join(os.getcwd(), path)
+
+if __name__ == "__main__":
+    parser = argparser()
+    args = parser.parse_args()
+    path = normalize_path(args.path)    
+    pkg = Package(path, venv='venv')
+    pkg.new()
+    pkg.install_virtualenv()
+    pkg.install_requirements()
