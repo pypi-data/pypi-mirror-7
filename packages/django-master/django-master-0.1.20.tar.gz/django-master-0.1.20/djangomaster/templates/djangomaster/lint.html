@@ -1,0 +1,43 @@
+{% extends 'djangomaster/_single_col.html' %}
+{% load i18n %}
+{% load url from future %}
+
+{% block page_title %}{{page_title}}{% endblock %}
+
+
+{% block content %}
+
+    {% if not LINT_IS_INSTALLED %}
+        <p>{% blocktrans with lint_cmd=LINT_CMD %}{{ lint_cmd }} isn't installed.{% endblocktrans %}</p>
+    {% elif not settings.BASE_DIR %}
+        {% url 'djangomaster:home' as home_url %}
+        <p>{% blocktrans with home_url=home_url %}settings.BASE_DIR isn't define. Please, <a href="{{home_url}}#requirements">add it</a>.{% endblocktrans %}</p>
+    {% endif %}
+
+
+    {% if results %}
+        <p>{% blocktrans with lint_cmd=LINT_CMD %}Executing {{ lint_cmd }}.{% endblocktrans %}</p>
+    {% endif %}
+
+    <div class="pure-5-5">
+        {% for result in results %}
+            {% if result.result %}
+                <div>{{ result.filename }} {% if not result.result %}=){% endif %}</div>
+                <div style="margin-left: 10px;">
+                    <small><pre>{{ result.result }}</pre></small>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <h4>{% trans 'Files with no output' %}</h4>
+    <div class="pure-5-5">
+        {% for result in results %}
+            {% if not result.result %}
+                <div>{{ result.filename }}</div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+
+{% endblock %}

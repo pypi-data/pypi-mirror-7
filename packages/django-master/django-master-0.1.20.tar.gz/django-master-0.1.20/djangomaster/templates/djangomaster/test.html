@@ -1,0 +1,71 @@
+{% extends 'djangomaster/_single_col.html' %}
+{% load i18n %}
+{% load url from future %}
+
+{% block page_title %}Django Test{% endblock %}
+
+{% block extra_css %}{% endblock %}
+
+{% block extra_js %}
+    <script>
+    var cmd = "{{ cmd }}";
+    new Vue({
+        el: '#the-form',
+        data: { cmd: cmd, output: '', executing: false, file: '' },
+        methods: {
+            onFormSubmit: function(ev){
+                ev.preventDefault();
+                this.$data.executing = true;
+                this.execute();
+            },
+            execute: function(){
+                var that = this,
+                    params = { 'cmd': that.$data.cmd };
+
+                jQuery.getJSON('{% url "djangomaster:test_execute" %}', params, function(data){
+                    that.$data.file = data.file;
+                    that.check();
+                });
+            },
+            check: function(){
+                var that = this,
+                    params = {'file': that.$data.file };
+
+                jQuery.getJSON('{% url "djangomaster:test_check" %}', params, function(data){
+                    that.$data.output = data.output;
+
+                    if(data.finished){
+                        return;
+                    }
+
+                    window.setTimeout(function(){
+                        that.check();
+                    }, 500);
+                });
+            }
+        }
+    });
+    </script>
+{% endblock %}
+
+{% block content %}
+
+    <p>&nbsp;</p>
+    <form id="the-form" action="{% url 'djangomaster:test' %}" class="pure-form" method="get" v-cloak v-on="submit: onFormSubmit">
+        {% csrf_token %}
+        <fieldset>
+            <small>python manage.py <span v-text="cmd"></span></small><br />
+            <input type="text" name="cmd" v-model="cmd" class="pure-input-1-2" />
+            <button type="submit" class="pure-button pure-button-primary" v-show="!executing">{% trans 'Execute' %}</button>
+            <button type="button" class="pure-button pure-button-primary pure-button-disabled" v-show="executing">{% trans 'Executing' %}</button>
+        </fieldset>
+
+        <pre v-text="output"></pre>
+    </form>
+
+    <div class="pure-g settings-list">
+        <div class="pure-u-5-5">=)</div>
+    </div>
+
+{% endblock %}
+
