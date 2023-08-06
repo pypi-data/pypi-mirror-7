@@ -1,0 +1,143 @@
+test_invalid.doctest - test for invalid PSKC file
+
+Copyright (C) 2014 Arthur de Jong
+
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301 USA
+
+
+>>> from pskc import PSKC
+
+
+Load a number of invalid files.
+
+
+This file is plain invalid XML.
+
+>>> pskc = PSKC('tests/invalid-notxml.pskcxml')
+Traceback (most recent call last):
+    ...
+ParseError: Error parsing XML
+
+
+This XML file has a wrong top-level element.
+
+>>> pskc = PSKC('tests/invalid-wrongelement.pskcxml')
+Traceback (most recent call last):
+    ...
+ParseError: Missing KeyContainer
+
+
+This file has an unknown PSKC version.
+
+>>> pskc = PSKC('tests/invalid-wrongversion.pskcxml')
+Traceback (most recent call last):
+    ...
+ParseError: Unsupported version
+
+
+This PSKC file has one key with an unknown algorithm and one key without an
+algorithm specified.
+
+>>> pskc = PSKC('tests/invalid-encryption.pskcxml')
+>>> key = pskc.keys[0]
+>>> key.id
+'12345678'
+>>> key.secret
+Traceback (most recent call last):
+    ...
+DecryptionError: No key available
+>>> pskc.encryption.key = '12345678901234567890123456789012'.decode('hex')
+>>> key.secret
+Traceback (most recent call last):
+    ...
+DecryptionError: Unsupported algorithm: ...
+>>> key = pskc.keys[1]
+>>> key.id
+'45678901'
+>>> key.secret
+Traceback (most recent call last):
+    ...
+DecryptionError: No algorithm specified
+
+
+Specify an unknown key derivation algorithm specified.
+
+>>> pskc = PSKC('tests/rfc6030-figure7.pskcxml')
+>>> pskc.encryption.derivation.algorithm = 'unknown'
+>>> pskc.encryption.derive_key('qwerty')
+Traceback (most recent call last):
+    ...
+KeyDerivationError: Unsupported algorithm: ...
+
+
+Figure 6 does use encryption but with a pre-shared key. Attempting key
+derivation with such a PSKC file should result in an exception.
+
+>>> pskc = PSKC('tests/rfc6030-figure6.pskcxml')
+>>> pskc.encryption.derive_key('qwerty')
+Traceback (most recent call last):
+    ...
+KeyDerivationError: No algorithm specified
+
+
+Specify an unknown PBKDF2 PRF (pseudorandom function).
+
+>>> pskc = PSKC('tests/rfc6030-figure7.pskcxml')
+>>> pskc.encryption.derivation.pbkdf2_prf = 'unknown'
+>>> pskc.encryption.derive_key('qwerty')
+Traceback (most recent call last):
+    ...
+KeyDerivationError: Pseudorandom function unsupported: ...
+
+
+There is a ValueMAC element but no MACMethod element.
+
+>>> pskc = PSKC('tests/invalid-no-mac-method.pskcxml')
+>>> pskc.encryption.key = '12345678901234567890123456789012'.decode('hex')
+>>> key = pskc.keys[0]
+>>> key.id
+'12345678'
+>>> key.secret
+Traceback (most recent call last):
+    ...
+DecryptionError: No MAC key available
+
+
+There is an unknown algorithm specified in MACMethod.
+
+>>> pskc = PSKC('tests/invalid-mac-algorithm.pskcxml')
+>>> pskc.encryption.key = '12345678901234567890123456789012'.decode('hex')
+>>> key = pskc.keys[0]
+>>> key.id
+'12345678'
+>>> key.secret
+Traceback (most recent call last):
+    ...
+DecryptionError: Unsupported MAC algorithm: ...
+
+
+The MAC value does not match the calculated MAC, something was modified in
+transit.
+
+>>> pskc = PSKC('tests/invalid-mac-value.pskcxml')
+>>> pskc.encryption.key = '12345678901234567890123456789012'.decode('hex')
+>>> key = pskc.keys[0]
+>>> key.id
+'12345678'
+>>> key.secret
+Traceback (most recent call last):
+    ...
+DecryptionError: MAC value does not match
