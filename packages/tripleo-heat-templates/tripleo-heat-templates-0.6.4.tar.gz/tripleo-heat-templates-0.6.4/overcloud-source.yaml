@@ -1,0 +1,678 @@
+Description: Nova API,Keystone,Heat Engine and API,Glance,Neutron,Dedicated MySQL
+  server,Dedicated RabbitMQ Server,Group of Nova Computes
+HeatTemplateFormatVersion: '2012-12-12'
+Parameters:
+  AdminPassword:
+    Default: unset
+    Description: The password for the keystone admin account, used for monitoring, querying neutron etc.
+    Type: String
+    NoEcho: true
+  AdminToken:
+    Default: unset
+    Description: The keystone auth secret.
+    Type: String
+    NoEcho: true
+  CinderPassword:
+    Default: unset
+    Description: The password for the cinder service account, used by cinder-api.
+    Type: String
+    NoEcho: true
+  CinderISCSIHelper:
+    Default: tgtadm
+    Description: The iSCSI helper to use with cinder.
+    Type: String
+  CinderLVMLoopDeviceSize:
+    Default: 5000
+    Description: The size of the loopback file used by the cinder LVM driver.
+    Type: Number
+  ExtraConfig:
+    Default: {}
+    Description: |
+      Additional configuration to inject into the cluster. The JSON should have
+      the following structure:
+        {"FILEKEY":
+          {"config":
+            [{"section": "SECTIONNAME",
+              "values":
+                [{"option": "OPTIONNAME",
+                  "value": "VALUENAME"
+                 }
+                ]
+             }
+            ]
+          }
+        }
+      For instance:
+        {"nova":
+          {"config":
+            [{"section": "default",
+              "values":
+                [{"option": "compute_manager",
+                  "value": "ironic.nova.compute.manager.ClusterComputeManager"
+                 }
+                ]
+             },
+             {"section": "cells",
+              "values":
+                [{"option": "driver",
+                  "value": "nova.cells.rpc_driver.CellsRPCDriver"
+                 }
+                ]
+             }
+            ]
+          }
+        }
+    Type: Json
+  OvercloudControlFlavor:
+    Default: baremetal
+    Description: Flavor for control nodes to request when deploying.
+    Type: String
+  OvercloudComputeFlavor:
+    Default: baremetal
+    Description: Flavor for compute nodes to request when deploying.
+    Type: String
+  GlancePort:
+    Default: 9292
+    Description: Glance port.
+    Type: String
+  GlanceProtocol:
+    Default: http
+    Description: Protocol to use when connecting to glance, set to https for SSL.
+    Type: String
+  GlancePassword:
+    Default: unset
+    Description: The password for the glance service account, used by the glance services.
+    Type: String
+    NoEcho: true
+  GlanceNotifierStrategy:
+    Description: Strategy to use for Glance notification queue
+    Type: String
+    Default: noop
+  GlanceLogFile:
+    Description: The filepath of the file to use for logging messages from Glance.
+    Type: String
+    Default: ''
+  HeatPassword:
+    Default: unset
+    Description: The password for the Heat service account, used by the Heat services.
+    Type: String
+    NoEcho: true
+  ImageUpdatePolicy:
+    Default: 'REBUILD_PRESERVE_EPHEMERAL'
+    Description: What policy to use when reconstructing instances. REBUILD for rebuilds, REBUILD_PRESERVE_EPHEMERAL to preserve /mnt.
+    Type: String
+  KeyName:
+    Default: default
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instances
+    Type: String
+  NeutronBridgeMappings:
+    Description: The OVS logical->physical bridge mappings to use.
+    Type: String
+    Default: ''
+  NeutronPassword:
+    Default: unset
+    Description: The password for the neutron service account, used by neutron agents.
+    Type: String
+    NoEcho: true
+  CeilometerComputeAgent:
+    Description: Indicates whether the Compute agent is present and expects nova-compute to be configured accordingly
+    Type: String
+    Default: ''
+    AllowedValues: ['', Present]
+  CeilometerMeteringSecret:
+    Default: unset
+    Description: Secret shared by the ceilometer services.
+    Type: String
+    NoEcho: true
+  CeilometerPassword:
+    Default: unset
+    Description: The password for the ceilometer service account.
+    Type: String
+    NoEcho: true
+  SnmpdReadonlyUserName:
+    Default: ro_snmp_user
+    Description: The user name for SNMPd with readonly rights running on all Overcloud nodes
+    Type: String
+  SnmpdReadonlyUserPassword:
+    Default: unset
+    Description: The user password for SNMPd with readonly rights running on all Overcloud nodes
+    Type: String
+    NoEcho: true
+  CloudName:
+    Default: ''
+    Description: The DNS name of this cloud. E.g. ci-overcloud.tripleo.org
+    Type: String
+  NovaComputeDriver:
+    Default: libvirt.LibvirtDriver
+    Type: String
+  NovaComputeLibvirtType:
+    Default: ''
+    Type: String
+  NovaImage:
+    Type: String
+    Default: overcloud-compute
+  NovaPassword:
+    Default: unset
+    Description: The password for the nova service account, used by nova-api.
+    Type: String
+    NoEcho: true
+  NeutronFlatNetworks:
+    Type: String
+    Default: ''
+    Description: If set, flat networks to configure in neutron plugins.
+  HypervisorNeutronPhysicalBridge:
+    Default: ''
+    Description: An OVS bridge to create on each hypervisor.
+    Type: String
+  HypervisorNeutronPublicInterface:
+    Default: ''
+    Description: What interface to add to the HypervisorNeutronPhysicalBridge.
+    Type: String
+  NeutronPublicInterface:
+    Default: eth0
+    Description: What interface to bridge onto br-ex for network nodes.
+    Type: String
+  NeutronPublicInterfaceDefaultRoute:
+    Default: ''
+    Description: A custom default route for the NeutronPublicInterface.
+    Type: String
+  NeutronPublicInterfaceIP:
+    Default: ''
+    Description: A custom IP address to put onto the NeutronPublicInterface.
+    Type: String
+  NeutronPublicInterfaceRawDevice:
+    Default: ''
+    Description: If set, the public interface is a vlan with this device as the raw device.
+    Type: String
+  NeutronControlPlaneID:
+    Default: ''
+    Type: String
+    Description: Neutron ID for ctlplane network.
+  NeutronDnsmasqOptions:
+    Default: 'dhcp-option-force=26,1400'
+    Description: Dnsmasq options for neutron-dhcp-agent. The default value here forces MTU to be set to 1400 to account for the gre tunnel overhead.
+    Type: String
+  controllerImage:
+    Type: String
+    Default: overcloud-control
+  NtpServer:
+    Type: String
+    Default: ''
+  RabbitUserName:
+    Default: guest
+    Description: The username for RabbitMQ
+    Type: String
+  RabbitPassword:
+    Default: guest
+    Description: The password for RabbitMQ
+    Type: String
+    NoEcho: true
+  RabbitCookieSalt:
+    Type: String
+    Default: unset
+    Description: Salt for the rabbit cookie, change this to force the randomly generated rabbit cookie to change.
+  HeatStackDomainAdminPassword:
+    Description: Password for heat_domain_admin user.
+    Type: String
+    Default: ''
+    NoEcho: true
+  LiveUpdateUserName:
+    Type: String
+    Description: The live-update username for the undercloud Glance API.
+    Default: ''
+  LiveUpdateTenantName:
+    Type: String
+    Description: The live-update tenant name for the undercloud Glance API.
+    Default: ''
+  LiveUpdateHost:
+    Type: String
+    Description: The IP address for the undercloud Glance API.
+    Default: ''
+  LiveUpdatePassword:
+    Type: String
+    Default: ''
+    Description: The live-update password for the undercloud Glance API.
+    NoEcho: true
+  LiveUpdateComputeImage:
+    Type: String
+    Description: The image ID for live-updates to the overcloud compute nodes.
+    Default: ''
+  MysqlInnodbBufferPoolSize:
+    Description: >
+        Specifies the size of the buffer pool in megabytes. Setting to
+        zero should be interpreted as "no value" and will defer to the
+        lower level default.
+    Type: Number
+    Default: 0
+  ControlVirtualInterface:
+    Default: 'br-ex'
+    Description: Interface where virtual ip will be assigned.
+    Type: String
+  ControlFixedIPs:
+    Default: []
+    Description: Should be used for arbitrary ips.
+    Type: Json
+  KeystoneCACertificate:
+    Default: ''
+    Description: Keystone self-signed certificate authority certificate.
+    Type: String
+  KeystoneSigningCertificate:
+    Default: ''
+    Description: Keystone certificate for verifying token validity.
+    Type: String
+  KeystoneSigningKey:
+    Default: ''
+    Description: Keystone key for signing tokens.
+    Type: String
+    NoEcho: true
+Resources:
+  ControlVirtualIP:
+    Type: OS::Neutron::Port
+    Properties:
+      name: control_virtual_ip
+      network_id: {Ref: NeutronControlPlaneID}
+      fixed_ips:
+        Ref: ControlFixedIPs
+  MysqlClusterUniquePart:
+    Type: OS::Heat::RandomString
+    Properties:
+      length: 10
+  RabbitCookie:
+    Type: OS::Heat::RandomString
+    Properties:
+      length: 20
+      salt:
+        Ref: RabbitCookieSalt
+  NovaCompute0Config:
+    Type: FileInclude
+    Path: nova-compute-instance.yaml
+    SubKey: Resources.NovaCompute0Deploy
+    Parameters:
+        NovaApiHost: {'Fn::Select': [ip_address, 'Fn::Select': [0, 'Fn::GetAtt': [ControlVirtualIP, fixed_ips]]]}
+        KeystoneHost: {'Fn::Select': [ip_address, 'Fn::Select': [0, 'Fn::GetAtt': [ControlVirtualIP, fixed_ips]]]}
+        NeutronHost: {'Fn::Select': [ip_address, 'Fn::Select': [0, 'Fn::GetAtt': [ControlVirtualIP, fixed_ips]]]}
+        GlanceHost: {'Fn::Select': [ip_address, 'Fn::Select': [0, 'Fn::GetAtt': [ControlVirtualIP, fixed_ips]]]}
+        NovaDSN: {"Fn::Join": ['', ['mysql://nova:unset@', {'Fn::Select': [ip_address, 'Fn::Select': [0, 'Fn::GetAtt': [ControlVirtualIP, fixed_ips]]]}, '/nova']]}
+        CeilometerDSN: {"Fn::Join": ['', ['mysql://ceilometer:unset@', {'Fn::Select': [ip_address, 'Fn::Select': [0, 'Fn::GetAtt': [ControlVirtualIP, fixed_ips]]]}, '/ceilometer']]}
+        NeutronDSN: {"Fn::Join": ['', ['mysql://neutron:unset@', {'Fn::Select': [ip_address, 'Fn::Select': [0, 'Fn::GetAtt': [ControlVirtualIP, fixed_ips]]]}, '/neutron']]}
+        NeutronNetworkType: "gre"
+        NeutronEnableTunnelling: "True"
+        NeutronFlatNetworks:
+            Ref: NeutronFlatNetworks
+        NeutronNetworkVLANRanges: ""
+        NeutronPhysicalBridge:
+            Ref: HypervisorNeutronPhysicalBridge
+        NeutronPublicInterface:
+            Ref: HypervisorNeutronPublicInterface
+        NeutronBridgeMappings:
+            Ref: NeutronBridgeMappings
+  NovaCompute0AllNodes:
+    Type: FileInclude
+    Path: nova-compute-instance.yaml
+    SubKey: Resources.NovaCompute0AllNodesDeploy
+    Parameters:
+        AllNodesConfig: {Ref: allNodesConfig}
+  NovaCompute0Passthrough:
+    Type: OS::Heat::StructuredDeployment
+    Properties:
+      config: {Ref: NovaComputePassthrough}
+      server: {Ref: NovaCompute0}
+      signal_transport: NO_SIGNAL
+      input_values:
+        passthrough_config: {Ref: ExtraConfig}
+  NovaCompute0:
+    Type: FileInclude
+    Path: nova-compute-instance.yaml
+    SubKey: Resources.NovaCompute0
+  controllerConfig:
+    Type: OS::Heat::StructuredConfig
+    Properties:
+      group: os-apply-config
+      config:
+        completion-signal: {get_input: deploy_signal_id}
+        admin-password:
+          Ref: AdminPassword
+        admin-token:
+          Ref: AdminToken
+        bootstack:
+          public_interface_ip:
+            Ref: NeutronPublicInterfaceIP
+        bootstrap_host:
+          bootstrap_nodeid:
+            Fn::Select:
+            - 0
+            - Fn::Select:
+              - 0
+              - Merge::Map:
+                  controller0:
+                  - Fn::Select:
+                    - name
+                    - Fn::GetAtt:
+                      - controller0
+                      - show
+          nodeid: {get_input: bootstack_nodeid}
+        cinder:
+          db: mysql://cinder:unset@localhost/cinder
+          volume_size_mb:
+            Ref: CinderLVMLoopDeviceSize
+          service-password:
+            Ref: CinderPassword
+          iscsi-helper:
+            Ref: CinderISCSIHelper
+        controller-address:
+          get_input: controller_host
+        db-password: unset
+        glance:
+          registry:
+            host: {get_input: controller_virtual_ip}
+          backend: swift
+          db: mysql://glance:unset@localhost/glance
+          host:
+            get_input: controller_host
+          port:
+            Ref: GlancePort
+          protocol:
+            Ref: GlanceProtocol
+          service-password:
+            Ref: GlancePassword
+          swift-store-user: service:glance
+          swift-store-key:
+            Ref: GlancePassword
+          notifier-strategy:
+            Ref: GlanceNotifierStrategy
+          log-file:
+            Ref: GlanceLogFile
+        heat:
+          admin_password:
+            Ref: HeatPassword
+          admin_tenant_name: service
+          admin_user: heat
+          auth_encryption_key: unset___________
+          db: mysql://heat:unset@localhost/heat
+          stack_domain_admin_password: {Ref: HeatStackDomainAdminPassword}
+          watch_server_url: {get_input: heat.watch_server_url}
+          metadata_server_url: {get_input: heat.metadata_server_url}
+          waitcondition_server_url: {get_input: heat.waitcondition_server_url}
+        keystone:
+          db: mysql://keystone:unset@localhost/keystone
+          host:
+            get_input: controller_host
+          ca_certificate: {Ref: KeystoneCACertificate}
+          signing_key: {Ref: KeystoneSigningKey}
+          signing_certificate: {Ref: KeystoneSigningCertificate}
+        mysql:
+          innodb_buffer_pool_size: {Ref: MysqlInnodbBufferPoolSize}
+          nodes:
+            Merge::Map:
+              controller0:
+                ip: {"Fn::Select": [ 0, {"Fn::Select": [ "ctlplane", {"Fn::GetAtt": [controller0, networks]} ]} ] }
+          cluster_name:
+            Fn::Join:
+              - '-'
+              - - 'tripleo'
+                - {Ref: MysqlClusterUniquePart}
+        neutron:
+          flat-networks: {Ref: NeutronFlatNetworks}
+          host: {get_input: controller_virtual_ip}
+          metadata_proxy_shared_secret: unset
+          ovs:
+            enable_tunneling: 'True'
+            local_ip:
+              get_input: controller_host
+            bridge_mappings: {Ref: NeutronBridgeMappings}
+            public_interface:
+              Ref: NeutronPublicInterface
+            public_interface_raw_device:
+              Ref: NeutronPublicInterfaceRawDevice
+            public_interface_route:
+              Ref: NeutronPublicInterfaceDefaultRoute
+            physical_bridge: br-ex
+            tenant_network_type: gre
+          ovs_db: mysql://neutron:unset@localhost/ovs_neutron?charset=utf8
+          service-password:
+            Ref: NeutronPassword
+          dnsmasq-options:
+            Ref: NeutronDnsmasqOptions
+        ceilometer:
+          db: mysql://ceilometer:unset@localhost/ceilometer
+          metering_secret: {Ref: CeilometerMeteringSecret}
+          service-password:
+            Ref: CeilometerPassword
+        snmpd:
+          export_MIB: UCD-SNMP-MIB
+          readonly_user_name:
+            Ref: SnmpdReadonlyUserName
+          readonly_user_password:
+            Ref: SnmpdReadonlyUserPassword
+        nova:
+          compute_driver: libvirt.LibvirtDriver
+          db: mysql://nova:unset@localhost/nova
+          default_floating_pool:
+            ext-net
+          host: {get_input: controller_virtual_ip}
+          metadata-proxy: true
+          service-password:
+            Ref: NovaPassword
+        rabbit:
+          username:
+            Ref: RabbitUserName
+          password:
+            Ref: RabbitPassword
+          cookie:
+            Fn::GetAtt:
+            - RabbitCookie
+            - value
+        ntp:
+          servers:
+              - {server: {Ref: NtpServer}, fudge: "stratum 0"}
+        keepalived:
+          keepalive_interface:
+            Ref: NeutronPublicInterface
+          priority: 101
+        virtual_ips:
+            -
+              ip: {'Fn::Select': [ip_address, 'Fn::Select': [0, 'Fn::GetAtt': [ControlVirtualIP, fixed_ips]]]}
+              interface:
+                Ref: ControlVirtualInterface
+        haproxy:
+          nodes:
+            Merge::Map:
+              controller0:
+                ip: {"Fn::Select": [ 0, {"Fn::Select": [ "ctlplane", {"Fn::GetAtt": [controller0, networks]} ]} ] }
+                name: {"Fn::Select": [ name, {"Fn::GetAtt": [controller0, show]} ] }
+          net_binds:
+            - ip: {'Fn::Select': [ip_address, 'Fn::Select': [0, 'Fn::GetAtt': [ControlVirtualIP, fixed_ips]]]}
+          services:
+            - name: keystone_admin
+              port: 35357
+            - name: keystone_public
+              port: 5000
+            - name: horizon
+              port: 80
+            - name: neutron
+              port: 9696
+            - name: cinder
+              port: 8776
+            - name: glance_api
+              port: 9292
+            - name: glance_registry
+              port: 9191
+            - name: heat_api
+              port: 8004
+            - name: heat_cloudwatch
+              port: 8003
+            - name: heat_cfn
+              port: 8000
+            - name: nova_ec2
+              port: 8773
+            - name: nova_osapi
+              port: 8774
+            - name: nova_metadata
+              port: 8775
+            - name: ceilometer
+              port: 8777
+            - name: swift_proxy_server
+              port: 8080
+  controllerPassthrough:
+    Type: OS::Heat::StructuredConfig
+    Properties:
+      group: os-apply-config
+      config: {get_input: passthrough_config}
+  controller0:
+    Type: OS::Nova::Server
+    Properties:
+      image:
+        Ref: controllerImage
+      image_update_policy:
+        Ref: ImageUpdatePolicy
+      flavor:
+        Ref: OvercloudControlFlavor
+      key_name:
+        Ref: KeyName
+      user_data_format: SOFTWARE_CONFIG
+  controller0AllNodesConfig:
+    Type: OS::Heat::StructuredDeployment
+    Properties:
+      config: {Ref: allNodesConfig}
+      server: {Ref: controller0}
+      signal_transport: NO_SIGNAL
+  controller0Deployment:
+    Type: OS::Heat::StructuredDeployment
+    Properties:
+      config: {Ref: controllerConfig}
+      server: {Ref: controller0}
+      input_values:
+        bootstack_nodeid:
+          Fn::Select:
+          - name
+          - Fn::GetAtt:
+            - controller0
+            - show
+        controller_host:
+          Fn::Select:
+            - 0
+            - Fn::Select:
+              - ctlplane
+              - Fn::GetAtt:
+                - controller0
+                - networks
+        controller_virtual_ip:
+          {'Fn::Select': [ip_address, 'Fn::Select': [0, 'Fn::GetAtt': [ControlVirtualIP, fixed_ips]]]}
+        heat.watch_server_url:
+          Fn::Join:
+            - ''
+            - - 'http://'
+              - {'Fn::Select': [ip_address, 'Fn::Select': [0, 'Fn::GetAtt': [ControlVirtualIP, fixed_ips]]]}
+              - ':8003'
+        heat.metadata_server_url:
+          Fn::Join:
+            - ''
+            - - 'http://'
+              - {'Fn::Select': [ip_address, 'Fn::Select': [0, 'Fn::GetAtt': [ControlVirtualIP, fixed_ips]]]}
+              - ':8000'
+        heat.waitcondition_server_url:
+          Fn::Join:
+            - ''
+            - - 'http://'
+              - {'Fn::Select': [ip_address, 'Fn::Select': [0, 'Fn::GetAtt': [ControlVirtualIP, fixed_ips]]]}
+              - ':8000/v1/waitcondition'
+  allNodesConfig:
+    Type: OS::Heat::StructuredConfig
+    Properties:
+      config:
+        hosts:
+          Fn::Join:
+          - "\n"
+          - - Fn::Join:
+              - "\n"
+              - Merge::Map:
+                  NovaCompute0:
+                    Fn::Join:
+                    - ' '
+                    - - Fn::Select:
+                        - 0
+                        - Fn::Select:
+                          - ctlplane
+                          - Fn::GetAtt:
+                            - NovaCompute0
+                            - networks
+                      - Fn::Select:
+                        - name
+                        - Fn::GetAtt:
+                          - NovaCompute0
+                          - show
+                      - Fn::Join:
+                        - '.'
+                        - - Fn::Select:
+                            - name
+                            - Fn::GetAtt:
+                              - NovaCompute0
+                              - show
+                          - 'novalocal'
+            - Fn::Join:
+              - "\n"
+              - Merge::Map:
+                  controller0:
+                    Fn::Join:
+                    - ' '
+                    - - Fn::Select:
+                        - 0
+                        - Fn::Select:
+                          - ctlplane
+                          - Fn::GetAtt:
+                            - controller0
+                            - networks
+                      - Fn::Select:
+                        - name
+                        - Fn::GetAtt:
+                          - controller0
+                          - show
+                      - Fn::Join:
+                        - '.'
+                        - - Fn::Select:
+                            - name
+                            - Fn::GetAtt:
+                              - controller0
+                              - show
+                          - 'novalocal'
+                      - {Ref: CloudName}
+        rabbit:
+          nodes:
+            Fn::Join:
+              - ','
+              - Merge::Map:
+                  controller0:
+                    {"Fn::Select": [ name, {"Fn::GetAtt": [controller0, show]} ] }
+  controller0SSLDeployment:
+    Type: OS::Heat::StructuredDeployment
+    Properties:
+      config: {Ref: SSLConfig}
+      server: {Ref: controller0}
+      signal_transport: NO_SIGNAL
+      input_values:
+        ssl_certificate: {Ref: SSLCertificate}
+        ssl_key: {Ref: SSLKey}
+        ssl_ca_certificate: {Ref: SSLCACertificate}
+  controller0Passthrough:
+    Type: OS::Heat::StructuredDeployment
+    Properties:
+      config: {Ref: controllerPassthrough}
+      server: {Ref: controller0}
+      signal_transport: NO_SIGNAL
+      input_values:
+        passthrough_config: {Ref: ExtraConfig}
+Outputs:
+  KeystoneURL:
+    Description: URL for the Overcloud Keystone service
+    Value:
+      Fn::Join:
+      - ''
+      - - http://
+        - Fn::Select:
+          - ip_address
+          - Fn::Select:
+            - 0
+            - Fn::GetAtt:
+              - ControlVirtualIP
+              - fixed_ips
+        - :5000/v2.0/

@@ -1,0 +1,237 @@
+HeatTemplateFormatVersion: '2012-12-12'
+Description: 'Nova Compute'
+Parameters:
+  AdminPassword:
+    Default: unset
+    Description: The password for the keystone admin account, used for monitoring, querying neutron etc.
+    Type: String
+    NoEcho: true
+  ExtraConfig:
+    Description: |
+      Additional configuration to inject into the cluster. The JSON should have
+      the following structure:
+        {"FILEKEY":
+          {"config":
+            [{"section": "SECTIONNAME",
+              "values":
+                [{"option": "OPTIONNAME",
+                  "value": "VALUENAME"
+                 }
+                ]
+             }
+            ]
+          }
+        }
+      For instance:
+        {"nova":
+          {"config":
+            [{"section": "default",
+              "values":
+                [{"option": "compute_manager",
+                  "value": "ironic.nova.compute.manager.ClusterComputeManager"
+                 }
+                ]
+             },
+             {"section": "cells",
+              "values":
+                [{"option": "driver",
+                  "value": "nova.cells.rpc_driver.CellsRPCDriver"
+                 }
+                ]
+             }
+            ]
+          }
+        }
+    Type: Json
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instances
+    Type: String
+    Default: default
+  OvercloudComputeFlavor:
+    Description: Use this flavor
+    Type: String
+    Default: baremetal
+  ImageUpdatePolicy:
+    Default: 'REBUILD_PRESERVE_EPHEMERAL'
+    Description: What policy to use when reconstructing instances. REBUILD for rebuilds, REBUILD_PRESERVE_EPHEMERAL to preserve /mnt.
+    Type: String
+  NovaImage:
+    Type: String
+    Default: overcloud-compute
+  NtpServer:
+    Type: String
+    Default: ''
+  KeystoneHost:
+    Type: String
+  NeutronFlatNetworks:
+    Type: String
+    Default: ''
+    Description: If set, flat networks to configure in neutron plugins.
+  NeutronHost:
+    Type: String
+  NeutronPhysicalBridge:
+    Default: ''
+    Description: An OVS bridge to create for accessing external networks.
+    Type: String
+  NeutronPublicInterface:
+    Default: ''
+    Description: A port to add to the NeutronPhysicalBridge.
+    Type: String
+  RabbitUserName:
+    Type: String
+  RabbitPassword:
+    Type: String
+    NoEcho: true
+  CeilometerComputeAgent:
+    Description: Indicates whether the Compute agent is present and expects nova-compute to be configured accordingly
+    Type: String
+    Default: ''
+    AllowedValues: ['', Present]
+  CeilometerMeteringSecret:
+    Default: unset
+    Description: Secret shared by the ceilometer services.
+    Type: String
+    NoEcho: true
+  CeilometerPassword:
+    Default: unset
+    Description: The password for the ceilometer service account.
+    Type: String
+    NoEcho: true
+  SnmpdReadonlyUserName:
+    Default: ro_snmp_user
+    Description: The user name for SNMPd with readonly rights running on all Overcloud nodes
+    Type: String
+  SnmpdReadonlyUserPassword:
+    Default: unset
+    Description: The user password for SNMPd with readonly rights running on all Overcloud nodes
+    Type: String
+    NoEcho: true
+  NovaComputeDriver:
+    Type: String
+    Default: libvirt.LibvirtDriver
+  NovaComputeLibvirtType:
+    Type: String
+    Default: ''
+  NovaApiHost:
+    Type: String
+  NovaPassword:
+    Default: unset
+    Description: The password for the nova service account, used by nova-api.
+    Type: String
+    NoEcho: true
+  GlanceHost:
+    Type: String
+  GlancePort:
+    Default: 9292
+    Description: Glance port.
+    Type: String
+  GlanceProtocol:
+    Default: http
+    Description: Protocol to use when connecting to glance, set to https for SSL.
+    Type: String
+  CeilometerDSN:
+    Type: String
+  NovaDSN:
+    Type: String
+  NeutronDSN:
+    Type: String
+  NeutronBridgeMappings:
+    Type: String
+  NeutronNetworkVLANRanges:
+    Type: String
+  NeutronNetworkType:
+    Type: String
+  NeutronEnableTunnelling:
+    Type: String
+  AllNodesConfig:
+    Type: String
+    Description: OS::Heat::Config to use for all nodes deployment
+  LiveUpdateUserName:
+    Type: String
+    Description: The live-update username for the undercloud Glance API.
+    Default: ''
+  LiveUpdateTenantName:
+    Type: String
+    Description: The live-update tenant name for the undercloud Glance API.
+    Default: ''
+  LiveUpdateHost:
+    Type: String
+    Description: The IP address for the undercloud Glance API.
+    Default: ''
+  LiveUpdatePassword:
+    Type: String
+    Default: ''
+    Description: The live-update password for the undercloud Glance API.
+    NoEcho: true
+  LiveUpdateComputeImage:
+    Type: String
+    Description: The image ID for live-updates to the overcloud compute nodes.
+    Default: ''
+Resources:
+  NovaCompute0:
+    Type: OS::Nova::Server
+    Properties:
+      image:
+        {Ref: NovaImage}
+      image_update_policy:
+        Ref: ImageUpdatePolicy
+      flavor: {Ref: OvercloudComputeFlavor}
+      key_name: {Ref: KeyName}
+      user_data_format: SOFTWARE_CONFIG
+  NovaCompute0Deploy:
+    DependsOn: [controller0Deployment]
+    Type: OS::Heat::StructuredDeployment
+    Properties:
+      config: {Ref: NovaComputeConfig}
+      server: {Ref: NovaCompute0}
+      input_values:
+        nova_compute_driver: {Ref: NovaComputeDriver}
+        nova_compute_libvirt_type: {Ref: NovaComputeLibvirtType}
+        nova_dsn: {Ref: NovaDSN}
+        nova_api_host: {Ref: NovaApiHost}
+        nova_password: {Ref: NovaPassword}
+        ceilometer_dsn: {Ref: CeilometerDSN}
+        ceilometer_metering_secret: {Ref: CeilometerMeteringSecret}
+        ceilometer_password: {Ref: CeilometerPassword}
+        ceilometer_compute_agent: {Ref: CeilometerComputeAgent}
+        snmpd_readonly_user_name: {Ref: SnmpdReadonlyUserName}
+        snmpd_readonly_user_password: {Ref: SnmpdReadonlyUserPassword}
+        glance_host: {Ref: GlanceHost}
+        glance_port: {Ref: GlancePort}
+        glance_protocol: {Ref: GlanceProtocol}
+        keystone_host: {Ref: KeystoneHost}
+        neutron_flat_networks: {Ref: NeutronFlatNetworks}
+        neutron_host: {Ref: NeutronHost}
+        neutron_dsn: {Ref: NeutronDSN}
+        neutron_local_ip: {"Fn::Select": [ 0, "Fn::Select": [ ctlplane, { "Fn::GetAtt": [ NovaCompute0, networks ]}]]}
+        neutron_tenant_network_type: {Ref: NeutronNetworkType}
+        neutron_network_vlan_ranges: {Ref: NeutronNetworkVLANRanges}
+        neutron_bridge_mappings: {Ref: NeutronBridgeMappings}
+        neutron_enable_tunneling: {Ref: NeutronEnableTunnelling}
+        neutron_physical_bridge: {Ref: NeutronPhysicalBridge}
+        neutron_public_interface: {Ref: NeutronPublicInterface}
+        neutron_password: {Ref: NeutronPassword}
+        admin_password: {Ref: AdminPassword}
+        rabbit_username: {Ref: RabbitUserName}
+        rabbit_password: {Ref: RabbitPassword}
+        live_update_host: {Ref: LiveUpdateHost}
+        live_update_username: {Ref: LiveUpdateUserName}
+        live_update_password: {Ref: LiveUpdatePassword}
+        live_update_tenant_name: {Ref: LiveUpdateTenantName}
+        nova_image: {Ref: NovaImage}
+        live_update_image_id: {Ref: LiveUpdateComputeImage}
+        ntp_server: {Ref: NtpServer}
+  NovaCompute0AllNodesDeploy:
+    Type: OS::Heat::StructuredDeployment
+    Properties:
+      config: {Ref: AllNodesConfig}
+      server: {Ref: NovaCompute0}
+      signal_transport: NO_SIGNAL
+  NovaCompute0Passthrough:
+    Type: OS::Heat::StructuredDeployment
+    Properties:
+      config: {Ref: NovaComputePassthrough}
+      server: {Ref: NovaCompute0}
+      signal_transport: NO_SIGNAL
+      input_values:
+        passthrough_config: {Ref: ExtraConfig}
