@@ -1,0 +1,304 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+
+'''usage: pysed [-h] [-v] [-p] [-s] [-i]
+
+Utility that parses and transforms text
+
+optional arguments:
+  -h, --help		show this help message and exit
+  -v, --version		print version and exit
+  -p, --print		print text
+  -s, m(n), u, l /	replace text
+  -i, m(n) /		insert text'''
+
+
+
+import re
+import os
+import sys
+import platform
+
+
+__author__ = "dslackw"
+__version__ = "0.0.7"
+__license__ = "GNU General Public License v3 (GPLv3)"
+__email__ = "d.zlatanidis@gmail.com"
+
+
+
+if platform.system() == 'Linux':
+	path = os.getcwd() + '/'
+
+elif platform.system() == 'Windows':
+	path = os.getcwd() + '\/'
+
+
+def get_from_arg(arg):
+	result = []
+	for char in arg:
+        	result.append(char)
+        	if char == '/':
+                	break
+
+	return ''.join(result).replace('/','')
+
+
+
+def get_nums(text):
+
+	nums = '0123456789'
+
+	result = []
+	for t in text:
+        	for n in nums:
+                	if n == t:
+                        	result.append(n)
+
+	return ''.join(result)
+
+
+
+def print_text(file, arg0, arg2, arg3):
+	result = []
+
+	extra_arg = get_from_arg(arg2)
+	arg2 = arg2.replace(extra_arg + '/', '')
+
+	nums = get_nums(extra_arg)
+	extra_arg = extra_arg.replace(nums, '')
+	if nums == '':
+		nums = 0
+	
+	try :
+		file = open(path + file, 'r')
+	       	read = file.read()
+        	file.close()
+
+
+		try:
+		        find_text = re.findall(arg2, read)
+			if find_text == []:
+				sys.exit()
+		except re.error:
+			sys.exit()
+
+		if arg0 == '-p' or arg0 == '--print':
+			print read,
+			sys.exit()
+
+		elif arg0 == '-s':
+			if extra_arg == 'm':
+	               	        result = read.replace(find_text[0], arg3, int(nums))
+
+			elif extra_arg == 'u' and arg3 == '^':
+				result = read.replace(find_text[0], find_text[0].upper())
+
+			elif extra_arg == 'u' and arg3 == '*':
+				result = read.upper()
+
+			elif extra_arg == 'l' and arg3 == ',':
+				result = read.replace(find_text[0], find_text[0].lower())			
+
+			elif extra_arg == 'l' and arg3 == '*':
+				result = read.lower()
+
+			else:
+				result = read.replace(find_text[0], arg3)
+
+		elif arg0 == '-i':
+			if extra_arg == 'm':
+	               	        result = read.replace(find_text[0], find_text[0] + arg3, int(nums))
+			
+			else:
+				result = read.replace(find_text[0], find_text[0] + arg3)
+
+	        if result != []:
+        	        print result,	
+
+	except IOError:
+                print ("pysed: can't read %s: No such file or directory" % file)
+
+
+
+
+def replace_text(file, arg1, arg2):
+	result = []
+
+	extra_arg = get_from_arg(arg1)
+        arg1 = arg1.replace(extra_arg + '/', '')
+
+        nums = get_nums(extra_arg)
+        extra_arg = extra_arg.replace(nums, '')
+        if nums == '':
+                nums = 0
+
+	try:
+	        file =  open(path + file, 'r+')
+		read = file.read()
+	
+		try:
+			find_text = re.findall(arg1, read)
+			if find_text == []:
+                                sys.exit()
+		except re.error:
+			sys.exit()
+
+		if extra_arg == 'm':
+			result = read.replace(find_text[0], arg2, int(nums))
+
+		elif extra_arg == 'u' and arg2 == '^':
+	                result = read.replace(find_text[0], find_text[0].upper())
+
+                elif extra_arg == 'u' and arg2 == '*':
+        	        result = read.upper()
+
+                elif extra_arg == 'l' and arg2 == ',':
+                	result = read.replace(find_text[0], find_text[0].lower())
+
+                elif extra_arg == 'l' and arg2 == '*':
+	                result = read.lower()
+
+		else:
+			result = read.replace(find_text[0], arg2)
+		
+
+	        if result != []:
+			file.seek(0)
+			file.truncate()
+			file.write(result)
+
+		file.close()
+
+	except IOError:
+		print ("pysed: can't read %s: No such file or directory" % file)
+
+
+
+def append_text(file, arg1, arg2):
+	result = []
+
+	extra_arg = get_from_arg(arg1)
+        arg1 = arg1.replace(extra_arg + '/', '')
+
+        nums = get_nums(extra_arg)
+        extra_arg = extra_arg.replace(nums, '')
+        if nums == '':
+                nums = 0
+
+
+	try:
+		file = open(path + file, 'r+')
+        	read = file.read()
+	
+		try:
+		        find_text = re.findall(arg1, read)
+			if find_text == []:
+                                sys.exit()
+		except re.error:
+        	        sys.exit()
+	
+		if extra_arg == 'm':
+			result = read.replace(find_text[0], find_text[0] + arg2, int(nums))
+
+                else:
+   			result = read.replace(find_text[0], find_text[0] + arg2)
+
+
+
+	        if result != []:
+			file.seek(0)
+			file.truncate()
+	                file.write(result)
+
+	        file.close()
+
+	except IOError:
+		print ("pysed: can't read %s: No such file or directory" % file)
+
+
+
+def version():
+	print ('version :'),  __version__	
+	print ('License :'),  __license__
+	print ('Email   :'),  __email__
+
+
+
+def arguments_view():
+	print ('usage: pysed [-h] [-v] [-p] [-s] [-i]\n')
+        print ('Utility that parses and transforms text\n')
+        print ('optional arguments:')
+        print ('  -h, --help            show this help message and exit')
+        print ('  -v, --version         print version and exit')
+        print ('  -p, --print           print text')
+        print ('  -s, m(n), u, l /	replace text')
+        print ('  -i, m(n) /		insert text')
+
+
+
+def arguments_error(arg0, argx):
+	print ('usage: pysed [-h] [-v] [-p] [-s] [-i]\n')
+
+	if arg0 == '':
+		print ('pysed: error: argument: expected one argument')
+
+
+	elif arg0 in ['-h', '-v', '-p', '-s', '-i']:
+		print ('pysed: argument %s: expected at least one argument' % arg0)
+
+	else:
+		print ('pysed: error: unrecognized arguments: %s %s' % (arg0, ' '.join(argx)))
+
+
+
+def main():
+
+	arg = sys.argv
+	arg.pop(0)
+
+
+	if len(arg) == 2:
+		file = arg[1]
+
+	elif len(arg) == 4:
+		file = arg[3]
+
+	elif len(arg) == 5:
+		file = arg[4]
+
+
+	if len(arg) == 0:
+		arguments_error('', '')
+
+	elif len(arg) == 1 and arg[0] == '-h' or len(arg) == 1 and arg[0] == '--help':
+		arguments_view()
+
+	elif len(arg) == 1 and arg[0] == '-v' or len(arg) == 1 and arg[0] == '--version':
+		version()
+
+	elif len(arg) == 2 and arg[0] == '-p' or len(arg) == 2 and arg[0] == '--print':
+		print_text(file, arg[0], '', '')
+
+	elif len(arg) == 5 and arg[1] == '-p' or len(arg) == 5 and arg[1] == '--print':
+		print_text(file, arg[0], arg[2], arg[3])
+
+	elif len(arg) == 4 and arg[0] == '-s':
+		replace_text(file, arg[1], arg[2])
+
+	elif len(arg) == 4 and arg[0] == '-i':
+		append_text(file, arg[1], arg[2])
+
+	elif not any([len(arg) == 1 and arg[0] == '-h', len(arg) == 1 and arg[0] == '-v',
+		len(arg) == 1 and arg[0] == '-p', len(arg) == 1 and arg[0] == '-s',
+		len(arg) == 1 and arg[0] == '-i']):
+		arguments_error(arg[0], arg[1:])
+
+	elif arg[0] in ['-h', '-v', '-p', '-s', '-i']:
+		arguments_error(arg[0], arg[1:])
+
+
+
+if __name__ == "__main__":
+    main()
