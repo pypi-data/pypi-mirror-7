@@ -1,0 +1,1178 @@
+#!/usr/bin/python
+#
+# Odoo environment adminitrator
+#
+
+import sys, os, signal, ConfigParser
+import argparse
+import re
+from os.path import abspath, lexists, join, basename, dirname, normpath, expanduser, expandvars, relpath, islink
+from os import remove, rename, readlink, symlink, chmod, makedirs, kill
+import stat
+from glob import iglob
+import signal
+import psycopg2
+import pprint
+import datetime
+import subprocess
+import distutils
+import bzrlib
+import logging
+from urlparse import urlparse
+from urllib import urlretrieve
+from odooenv import *
+
+try:
+    import pysvn
+except:
+    print "Can't use SVN repositories. Please install pysvn. Debian: sudo aptitude install python-svn"
+
+def init(args):
+    """
+    Init an environment in the work path or in the declared path. 
+
+    config_url: Initial configuration file. Could be an URL.
+    path: Where environment will exists.
+    """
+    print "Init environment."
+    
+    path = abspath(args.path if args.path else 'odoo')
+    config = args.config if args.config else defaults.config.origin
+
+    # Create environment.
+    try:
+        oerpenv = create_environment(path, defaults.config.origin)
+    except RuntimeError, s:
+        print s
+        return -1
+
+    # Create/upgrade repository
+    try:
+        for operation, local_branch_url, remote_branch_url in oerpenv.update(iterate=True):
+            if operation == 'update':
+                print "Updating %s from %s" % (local_branch_url, remote_branch_url)
+            if operation == 'create':
+                print "Creating %s from %s" % (local_branch_url, remote_branch_url)
+    except bzrlib.errors.NotBranchError, m:
+        print "Trouble creating/updating local repository."
+        print "ERROR: %s" % m
+        print "Please remove %s and execute the command again" % local_branch_url 
+        return -1
+    except bzrlib.errors.InvalidURL:
+        print "Trouble acceding remote repository."
+        print "The url <%s> in the environment.yml is invalid. Modify it and try again." % remote_branch_url 
+        return -1
+
+def setup(args):
+    """
+    Write default files to environment. 
+    """
+    oerpenv = OdooEnvironment(config_filename=args.config)
+
+    for filename in defaults.default_files:
+        with open(filename % { 'root': oerpenv.env_path }, 'w') as file:
+            file.write(defaults.default_files[filename] % { 'root': oerpenv.root_path })
+
+def update(args):
+    """
+    Update sources. 
+    """
+    oerpenv = OdooEnvironment()
+
+    try:
+        for operation, local_branch_url, remote_branch_url in oerpenv.update(iterate=True, repositories=args.repositories):
+            if operation == 'update':
+                print "Updating %s from %s" % (local_branch_url, remote_branch_url)
+            if operation == 'create':
+                print "Creating %s from %s" % (local_branch_url, remote_branch_url)
+    except bzrlib.errors.NotBranchError:
+        print "Trouble creating/updating local repository."
+        print "Please remove %s and execute the command again." % local_branch_url 
+        return -1
+    except bzrlib.errors.InvalidURL:
+        print "Trouble acceding remote repository."
+        print "Please check the url <%s> in the environment.yml and try again." % remote_branch_url 
+        return -1
+    except pysvn._pysvn.ClientError, m:
+        print "Trouble acceding remote repository."
+        if 'callback_ssl_server_trust_prompt' in m:
+            print "You must accept the server certificate first. Execute the following command and answer 'p' to the question."
+            print "cd sources; svn co %s %s; cd .." % (remove_branch_url, local_branch_url)
+        else:
+            print m
+        return -1
+
+def create(args):
+    """
+    Create a new python environment.
+    """
+    oerpenv = OdooEnvironment(config_filename=args.config)
+
+    print "Creating environment %s" % args.name[0]
+
+    oerpenv.create_python_environment(args.name[0])
+
+def add(args):
+    """
+    Add a branch with to the sources list.
+    """
+    oerpenv = OdooEnvironment(config_filename=args.config)
+    oerpenv.load()
+
+    oerpenv.add_repository(args.name[0], args.url[0])
+
+    oerpenv.save()
+
+def install(args):
+    """
+    Install all software in the default environment of in the declared.
+    """
+    oerpenv = OdooEnvironment()
+
+    print "Checking for availables applications."
+    itemstoinstall = [ i.lower() for i in args.itemstoinstall ]
+    installables = [ app for app in oerpenv.installables if app.name.lower() in itemstoinstall ] \
+                    if len(itemstoinstall) > 0 \
+                    else oerpenv.installables
+    installables = list(installables)
+
+    if len(installables) == 0:
+        print "I cant find %s in installables." % ','.join([i.name for i in installables])
+        print "Execute 'oerpenv list-installables' to view available applications to install."
+        print "Or please check if you define it in the list 'installables' of section 'Environment' in the 'environment.yml' file."
+
+    for app in installables:
+        print "Installing %s" % app.name
+        if app.install():
+            print "Successfull installed"
+        else:
+            print "ERROR: Can't confirm the application or module is installed."
+            print "Please, execute 'oerpenv test base' to check if server is working"
+            print "To check if client is working execute 'odoo client'"
+            print "If not working, recreate the python environment and try again"
+            print
+
+def list_installables(args):
+    """
+    List all availables applications in sources.
+    """
+    oerpenv = OdooEnvironment(config_filename=args.config)
+    oerpenv.set_python_environment(args.environment)
+
+    for application in oerpenv.installables:
+        print "--"
+        print "Application:", application.name
+        print "Version:", application.fullname
+        print "Description:", application.description
+
+def list_addons(args):
+    """
+    List availables addons in sources. Show all addons if not filter expression declared.
+    """
+    oerpenv = OdooEnvironment(config_filename=args.config)
+    oerpenv.set_python_environment(args.environment)
+
+    for addon in oerpenv.addons(args.filter_string):
+        state = 'e' if addon.is_enable(oerpenv) else 'd' if addon.is_saned(oerpenv) else 'b'
+        print "{1} {0:<25} {2:<40} {3}".format(addon.token, state, addon.name, relpath(addon.path))
+
+def enable_addon(args):
+    """
+    Enabel addons on the environment. Create a symbolic link.
+    """
+    oerpenv = OdooEnvironment()
+    logger = oerpenv.logger
+
+    try:
+        addons_path = oerpenv.get_addonsourcepath()
+    except:
+        if addons_path == "":
+           logger.error("Server is not installed")
+           return
+
+    ignore_filter = re.compile(args.ignore_filter) if args.ignore_filter is not None else None
+
+    addons = dict([ (addon.token, addon) for addon in oerpenv.addons()
+                   if ignore_filter is None or ignore_filter.search(addon.path) is None ])
+    addons_set = set(addons.keys())
+
+    ignore_depends = args.ignore_depends
+
+    if 'all' in args.addon:
+        to_install = addons_set
+    else:
+        to_install = set( args.addon )
+
+    c_t = len(to_install)
+
+    if not lexists(addons_path):
+        print "Execute 'oerpenv install' before 'oerpenv enable'"
+        return -1
+
+    if not to_install <= addons_set:
+        print "No available addons '%s'." % ' '.join(to_install)
+        return -1
+
+    who_install = {}
+    yet_enabled = set()
+
+    c = 0
+
+    while to_install:
+        addon_name = to_install.pop()
+
+        if addon_name in addons:
+            addon = addons[addon_name]
+        else:
+            print "ERROR: %s try to install %s, but is unavailable." % (who_install[addon_name], addon_name)
+            continue
+
+        for item in set(addon.depends):
+            who_install[item] = addon_name
+
+        if not ignore_depends:
+            to_install.update(addon.depends)
+        
+        if addon.is_enable(oerpenv):
+            print "Updating %s (%i:%s)" % (addon_name, len(to_install), addon.path)
+        else:
+            print "Installing %s (%i:%s)" % (addon_name, len(to_install), addon.path)
+
+        yet_enabled.add(addon_name)
+        to_install = to_install - yet_enabled
+        addon.enable(oerpenv, force=True)
+
+        if 'base' in to_install:
+            to_install.remove('base')
+
+        c = c + 1
+
+    if c_t > c:
+            print "Can't install %s modules" % (c_t - c)
+
+    return 0
+
+def disable_addon(args):
+    """
+    Disable addons on the environment. Remove a symbolic link.
+    """
+    oerpenv = OdooEnvironment()
+
+    addons_path = oerpenv.get_addonsourcepath()
+    config_filename = oerpenv.addon_config_filename
+
+    files = iglob(join(addons_path, args.addon[0]))
+
+    for addon_path in files:
+        addon = Addon(join(addon_path, config_filename))
+        if addon.is_enable(oerpenv):
+            print "Removing %s." % addon.token
+            addon.disable(oerpenv)
+        else:
+            print "Addon %s not enabled." % args.addon[0]
+
+    return 0
+
+def create_dummy_addon(args):
+    """
+    Create a dummy addon. Useful to create new addon.
+    """
+    oerpenv = OdooEnvironment(config_filename=args.config)
+    oerpenv.set_python_environment(args.environment)
+
+    source_path = join(oerpenv.sources_path, args.addon[0])
+    if lexists(source_path):
+        print "Exists directory %s. Please remove it if you want a new dummy addon" % source_path
+        return
+    print "Creating dummy addon on %s" % source_path
+
+    # Create addon path structure
+    makedirs(source_path)
+    for subdir in ['i18n', 'process', 'report', 'security', 'test', 'wizard']:
+        makedirs(join(source_path, subdir))
+
+    # Create __init__.py files
+    for subdir in ['.', 'report', 'wizard']:
+        with open(join(source_path, subdir, '__init__.py'), 'w') as file:
+            file.write(defaults.odoo_header)
+            file.write(defaults.init_body)
+            file.write(defaults.odoo_footer)
+
+    with open(join(source_path, oerpenv.desc_filename), 'w') as file:
+        pp = pprint.PrettyPrinter(indent=4, stream=file)
+        file.write(defaults.odoo_header)
+        pp.pprint(defaults.addon_description(args.addon[0]))
+        file.write(defaults.odoo_footer)
+
+    oerpenv.save()
+
+def test_addon(args):
+    """
+    Execute the server in test mode for this addon.
+    """
+    oerpenv = OdooEnvironment()
+    addons_path = oerpenv.get_addonsourcepath()
+
+    test_config = oerpenv.get_tests()
+    tests = args.tests
+    cleandb = args.clean
+
+    for test in tests:
+        print "Running test %s" % test
+        if test not in test_config:
+            print "Skipping."
+            continue
+
+        dbname = test_config[test].get('database', "_test_%s_" % test)
+        addons = test_config[test].get('addons').split(' ')
+        logfile = test_config[test].get('logfile')
+        try:
+            if not tools.exists_db(dbname) or cleandb:
+                print "Create db %s" % dbname
+                tools.create_database(dbname);
+        except PostgresNotRunningError, m:
+            print m.message
+            return -1
+
+        options = ['--stop-after-init', '--test-enable']
+        options += [ '-d', dbname ]
+        options += [ '--init', ','.join(addons) ]
+        if oerpenv.server_config_filename:
+            options += [ '--config', oerpenv.server_config_filename ]
+        if args.debug:
+            options += ['--debug', '--log-level=debug']
+        else:
+            options += ['--log-level=test']
+        if args.commit:
+            options += ['--test-commit']
+        if logfile:
+            options += ['--logfile',logfile]
+
+        print "Executing:\n odoo-server", " ".join(options)
+        oerpenv.execute('odoo.py', options)
+
+    #notify_send = distutils.spawn.find_executable('notify-send')
+    #if notify_send:
+    #    src_p = subprocess.Popen([ notify_send, 'Test finished'])
+
+    #if args.keep_db:
+    #    pass
+    #else:
+    #    print "Drop db %s" % dbname
+    #    tools.drop_database(dbname);
+
+    print "TEST FINISHED."
+
+def start(args):
+    """
+    Start the server.
+    """
+    oerpenv = OdooEnvironment()
+
+    snapshot = args.snapshot if args.snapshot is not None else oerpenv.snapshot
+    database =  args.database if args.database is not None else oerpenv.database
+    debug =  args.debug or oerpenv.debug
+    update =  args.update if args.update is not None else oerpenv.modules_update
+    install =  args.install if args.install is not None else oerpenv.modules_install
+    production =  args.production or oerpenv.production
+    force_start = args.force_start or False
+    language =  args.language if args.language is not None else oerpenv.language
+    extracommands =  args.extracommands if args.extracommands is not None else oerpenv.extracommands
+    save =  args.save or False
+
+    options = []
+
+    if not lexists(oerpenv.server_config_filename):
+        options += [ '--save' ]
+        options += [ '--addons-path', oerpenv.get_addonsourcepath() ]
+
+    if save:
+        debug = True
+        options += [ '--save', '--stop-after-init' ]
+        options += [ '--addons-path', oerpenv.get_addonsourcepath() ]
+
+    if database and database is not None:
+        options += [ '-d', database ]
+
+    if oerpenv.server_config_filename:
+        options += [ '--config', oerpenv.server_config_filename ]
+
+    if debug:
+        options += [ '--debug' ]
+        #options += [ '--log-level=debug_rpc', '--logfile=%s/odoo-server.log' % oerpenv.root_path ]
+
+    if production:
+        options += [ '--without-demo=all','--test-disable' ]
+
+    if language is not None:
+        options += [ '--load-language',language,'--language',language ]
+
+    if not update is None and len(update) > 0:
+        options += sum([ ['-u', module ] for module in update ], [])
+
+    if not install is None and len(install) > 0:
+        options += sum([ ['-i', module ] for module in install ], [])
+
+    if extracommands is not None:
+        options += extracommands
+
+    if snapshot:
+        if database is None:
+            print "ERROR: Cant recover snapshot %s, because not defined database" % snapshot
+            return -1
+        print "Recovering snapshot '%s' of the database '%s'." % (snapshot, database)
+        if not tools.recover_snapshot(database, snapshot, oerpenv):
+            print "ERROR: Cant recover snapshot %s." % snapshot
+            return -1
+
+    # Setup pid file
+    pid_filename = join(oerpenv.root_path, 'var', 'server.pid')
+    if not lexists(dirname(pid_filename)):
+        makedirs(dirname(pid_filename))
+    options += ['--pidfile', pid_filename]
+
+    try:
+        if lexists(pid_filename):
+            pid = int(''.join(open(pid_filename).readlines()))
+            kill(pid, 0)
+            print "A server is running or .server_pid has not been deleted at the end of the server."
+            print "Execute 'oerpenv stop' to stop the server and remove this file."
+            return -1
+        print "Running with options: %s" % ' '.join(options)
+        oerpenv.execute('odoo.py', options, no_wait=not debug)
+    except KeyboardInterrupt:
+        print "KeyboardInterrupt event."
+    except OSError, m:
+        import sys, traceback
+        print "Environment Error."
+        print "ERROR: %s" % m
+        traceback.print_exc(file=sys.stdout)
+        print "If you move the environment please rebuild default python environment and check directories in environment.yml file."
+        print "If all ok, be sure you executed 'oerpenv install' before run this command."
+
+def stop(args):
+    """
+    Stop the server.
+    """
+    oerpenv = OdooEnvironment()
+    pid_filename = join(oerpenv.root_path, 'var', 'server.pid')
+    try:
+        with open(pid_filename, 'r') as f:
+            pid = int(f.readline())
+        os.kill(pid, signal.SIGINT)
+    except IOError, m:
+        print "No server information."
+        print "ERROR: %s" % m
+        return -1
+    except OSError, m:
+        print "No server running."
+        print "ERROR: %s" % m
+        return -1
+    os.remove(pid_filename)
+    return 0
+
+def search_object(args):
+    """
+    Search addons with this object.
+    """
+    oerpenv = OdooEnvironment(config_filename=args.config)
+    oerpenv.set_python_environment(args.environment)
+
+    print "Definition:"
+    for addon in oerpenv.addons(object_filter=args.objects[0]):
+        print "%35s:%s" % (addon.token, addon.name)
+
+    print "Inherited:"
+    for addon in oerpenv.addons(inherited_filter=args.objects[0]):
+        print "%35s:%s" % (addon.token, addon.name)
+ 
+def search_entity(args):
+    """
+    Search in xml some declared entity with id
+    """
+    oerpenv = OdooEnvironment(config_filename=args.config)
+    oerpenv.set_python_environment(args.environment)
+ 
+    for addon in oerpenv.addons(entity_filter=args.entity[0]):
+        print "%35s:%s:%s" % (addon.token, addon.name, ':'.join([ e for e in addon.entity(args.entity[0])]))
+        #for filename, entity, = addon.entities
+
+def show_addon(args):
+    """
+    Show addon information.
+    """
+    oerpenv = OdooEnvironment(config_filename=args.config)
+    oerpenv.set_python_environment(args.environment)
+
+    addons = dict([ (addon.token, addon) for addon in oerpenv.addons(token_filter=args.objects[0]) ])
+    if args.objects[0] in addons:
+        addon = addons[args.objects[0]]
+        print "Token:", addon.token
+        print "Name:", addon.name
+        print "Version:", addon.version
+        print "Author:", addon.author
+        print "Description:", addon.description
+        print "Web:", addon.website
+        print "Depends:", ','.join(addon.depends)
+        objects = addon.objects
+        print "Defined Objects:", ','.join(objects[0]) 
+        print "Inhereted Objects:", ','.join(objects[1])
+        print "Source:", addon.path 
+
+def list_db(args):
+    """
+    List availables databases.
+    """
+    try:
+        conn = psycopg2.connect(database="template1")
+        cur = conn.cursor()
+        cur.execute("select datname from pg_database where datdba=(select usesysid from pg_user where usename=%s) and datname not in ('template0', 'template1', 'postgres') order by datname", (args.user,))
+        rows = cur.fetchall()
+        for (table,) in rows:
+            print table
+    except psycopg2.OperationalError, m:
+        print "Is postgres running?"
+        print "ERROR: %s" % m
+
+def shell_db(args):
+    """
+    Execute a shell for sql commands over the database.
+    """
+    P = subprocess.Popen(['psql', args.database])
+    P.wait()
+    pass
+
+def create_db(args):
+    """
+    Create a void database.
+    """
+    try:
+        tools.create_database(args.database[0])
+    except psycopg2.OperationalError, m:
+        print "Is postgres running?"
+        print "ERROR: %s" % m
+
+def drop_db(args):
+    """
+    Remove a database.
+    """
+    try:
+        tools.drop_database(args.database[0])
+    except psycopg2.OperationalError, m:
+        print "Is postgres running?"
+        print "ERROR: %s" % m
+
+def init_db(args):
+    """
+    Prepare a minimalistic Odoo database.
+    """
+    oerpenv = OdooEnvironment(config_filename=args.config)
+    oerpenv.set_python_environment(args.environment)
+
+    try:
+        oerpenv.execute('odoo-server', ['--init', 'base', '-d', args.database[0], '--stop-after-init'])
+    except KeyboardInterrupt:
+        print "KeyboardInterrupt event."
+    except OSError, m:
+        print "Error in the environment."
+        print "ERROR: %s" % m
+        print "If you move the environment please rebuild default python environment and check directories in environment.yml file."
+        print "If all ok, be sure you executed 'oerpenv install' before run this command."
+    pass
+
+def dump_db(args):
+    """
+    Create a backup file of a database.
+    """
+    dbname = args.database[0]
+    if args.outfile is None:
+        outfile = "%s.dump" % dbname
+    else:
+        outfile = args.outfile
+    P = subprocess.Popen(['pg_dump', '-Fc', '--compress', '9', '-f', outfile, dbname])
+    P.wait()
+    pass
+
+def clone(args):
+    """
+    Clone environments.
+    """
+    pass
+
+def snapshot(args):
+    """
+    Generate a database snapshot.
+    """
+    oerpenv = OdooEnvironment()
+    snapshots = oerpenv.snapshots_path
+
+    dbname = args.database[0]
+    snapshot_name = args.name
+    outfile = join(snapshots, "%s_%s.dump" % (dbname, snapshot_name))
+    
+    P = subprocess.Popen(['pg_dump', '-Fc', '--compress', '9', '-f', outfile, dbname])
+    r = P.wait()
+    if r:
+        print "ERROR: Cant dump the snapshot."
+ 
+def restore(args):
+    """
+    Restore a database snapshot.
+    """
+    oerpenv = OdooEnvironment(config_filename=args.config)
+    snapshots = oerpenv.snapshots_path
+
+    dbname = args.database[0]
+    snapshot_name = args.name
+    infile = join(snapshots, "%s_%s.dump" % (dbname, snapshot_name))
+
+    # Check if exists database
+    cmd = ['psql', '-c', '\\q', '-d', dbname ]
+    P = subprocess.Popen(cmd, stderr=subprocess.PIPE)
+    r = P.wait()
+    create_db = (r == 2)
+
+    cmd = ['pg_restore', '-x', '-O', '--disable-triggers', '-Fc' ]
+    if create_db:
+            cmd.append('-C')
+            cmd.append('-d')
+            cmd.append('template1')
+    else:
+            cmd.append('-1')
+            cmd.append('-c')
+            cmd.append('-d')
+            cmd.append(dbname)
+    cmd.append(infile)
+
+    P = subprocess.Popen(cmd)
+    r = P.wait()
+
+    if r:
+        print "ERROR: Cant recover the snapshot."
+
+def extradite(args):
+    """
+    Copy database from remote/local server to local/remote server.
+    """
+    oerpenv = OdooEnvironment()
+    snapshots = oerpenv.snapshots_path
+
+    operation = args.operation.pop()
+    host = args.host.pop()
+    dbname = args.database.pop()
+
+    cmd = []
+    if operation == 'from':
+        drp_cmd = [ 'psql', '-c' ,'DROP DATABASE IF EXISTS \"%s\"' % dbname ]
+        src_cmd = [ 'ssh', host, 'pg_dump', '-Fc', '--compress', '9', dbname ]
+        dst_cmd = [ 'pg_restore', '-x', '-C', '-O', '--disable-triggers', '-Fc', '-d', 'postgres' ]
+    elif operation == 'to':
+        drp_cmd = [ 'ssh', host, 'psql', '-c' ,'DROP DATABASE IF EXISTS %s' % dbname ]
+        src_cmd = [ 'pg_dump', '-Fc', '--compress', '9', dbname ]
+        dst_cmd = [ 'ssh', host, 'pg_restore', '-x', '-C', '-O', '--disable-triggers', '-Fc', '-d', 'postgres' ] 
+    else:
+        print "ERROR: Invalid operation. Options are from or to."
+        return
+
+    drp_p = subprocess.Popen(drp_cmd) #, stdout=subprocess.PIPE)
+    drp_p.poll()
+    src_p = subprocess.Popen(src_cmd, stdout=subprocess.PIPE)
+    dst_p = subprocess.Popen(dst_cmd, stdin=src_p.stdout, stdout=subprocess.PIPE)
+    src_p.stdout.close()
+    output = dst_p.communicate()
+    dst_p.poll()
+    src_p.poll()
+        
+    return
+
+def pip(args):
+    """
+    Install Python packages in the virtual environment.
+    """
+    oerpenv = OdooEnvironment(config_filename=args.config)
+    oerpenv.set_python_environment(args.environment)
+
+    command =  args.command[0] if args.command[0] in [
+        'help', 'install', 'bundle', 'freeze', 'install',
+        'search', 'uninstall', 'unzip', 'zip' ] else 'help'
+    parameters =  args.parameters
+
+    options = [ command ]
+
+    if parameters is not None:
+        options += parameters
+
+    pid = oerpenv.execute('pip', options, no_wait=0)
+
+def csv2xml(args):
+    """
+    Convert CSV files to an XML files.
+    """
+    infile =  args.infile.pop()
+    outfile =  args.outfile.pop()
+    id_template =  args.id_template if args.id_template is not None else None
+    maps = args.map if args.map is not None else []
+
+    # Read maps of references
+    import xml.etree.ElementTree as ET
+    mapping_dict = {}
+    mapping = {}
+    for map in maps:
+        filename, model, name, fields = map.split(':')
+        tree = ET.parse(filename)
+        root = tree.getroot()
+        mapping_dict[model] = {}
+        for record in root.findall("./data/record[@model='%s']"%model):
+            mapping_dict[model][record.find("./field[@name='%s']"%name).text] = record.attrib['id']
+        for field in fields.split(','):
+            mapping[field] = mapping_dict[model]
+
+    with open(infile) as IN:
+        import csv
+        from Cheetah.Template import Template
+
+        templateDef = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data noupdate="True">
+        #for $id, $record in $records
+        <record model='$model' id='$id'>
+            #for $key, $value in $record.items()
+            #if $key in $mapping
+                <field name='$key' ref='$mapping[$key][$value]'/>
+            #else
+                <field name='$key'>$value</field>
+            #end if
+            #end for
+        </record> 
+        #end for
+    </data>
+</odoo>
+        """
+        reader = csv.DictReader(IN)
+        if id_template is not None:
+            pass
+        elif 'code' in reader.fieldnames:
+            id_template = "%(code)s"
+        else:
+            id_template = "%(_id)s"
+
+        records = list(reader)
+        records = zip(range(len(records)), records)
+        records = [ (id_template % dict(r, _id=id), r) for id, r in records ]
+
+        nameSpace={'model': '.'.join(infile.split('.')[:-1]),
+                   'records': records,
+                   'mapping': mapping}
+        t = Template(templateDef, searchList=[nameSpace])
+
+        with open(outfile, 'w') as OUT:
+            print >> OUT, t
+
+
+def activate(args):
+    """
+    Active bash instance in virtual environment.
+    """
+    oerpenv = OdooEnvironment(config_filename=args.config)
+    oerpenv.set_python_environment(args.environment)
+
+    print "Activating"
+    path=join(oerpenv.env_path, 'bin', 'activate')
+    P = subprocess.Popen(['bash', path ])
+    P.wait()
+
+def repath(args):
+    """
+    Change path to enviroment scripts.
+    """
+    oerpenv = OdooEnvironment(config_filename=args.config)
+    oerpenv.set_python_environment(args.environment)
+
+    binpath_re = re.compile('^#!(.*)(bin/)(.*)$')
+    linkpath_re = re.compile('^(.*)(sources/.*)$')
+
+
+    print "Repathing links...",
+    for root, dirs, files in os.walk("./default", topdown=False):
+        for filename in files:
+            ori_filename = join(root,filename)
+            if islink(ori_filename):
+                ori_link = abspath(join(dirname(ori_filename), readlink(ori_filename)))
+                if ori_link.find(oerpenv.env_path):
+                    m = linkpath_re.search(ori_link)
+                    if m:
+                        ori_path, ori_link = m.groups()
+                        tar_link = abspath(join(oerpenv.root_path, ori_link))
+                        remove(ori_filename)
+                        symlink(tar_link, ori_filename)
+    print "Done"
+
+    print "Repathing scripts...",
+    for root, dirs, files in os.walk("./default/bin", topdown=False):
+        for filename in files:
+            ori_filename = join(root,filename)
+            with  open(ori_filename) as f:
+                l = f.readline()
+                m = binpath_re.search(l)
+                if m:
+                    ori_path, default_bin, bin_file = m.groups()
+                    new_first_line =  "#!%s\n" % abspath(join(oerpenv.env_path, default_bin, bin_file))
+                    tar_filename = join(root, filename + '.new')
+                    with open(tar_filename, 'w') as df:
+                        df.write(new_first_line)
+                        for l in f:
+                            df.write(l)
+                        df.close()
+                        f.close()
+                        rename(tar_filename, ori_filename)
+                        chmod(ori_filename,
+                              stat.S_IXOTH | stat.S_IXGRP | stat.S_IXUSR |
+                              stat.S_IROTH | stat.S_IRGRP | stat.S_IRUSR |
+                              stat.S_IWUSR)
+                else:
+                    f.close()
+    print "Done"
+
+def main():
+    parser = argparse.ArgumentParser()
+
+    subparsers = parser.add_subparsers(help='commands',
+                                       description='The Odoo environment administrator help you to administrate Odoo environments. You can use the following commands.')
+
+    # The init command
+    parser_init = subparsers.add_parser('init', help=init.__doc__)
+
+    parser_init.add_argument('path', metavar='path', type=str, nargs='?',
+                             help='Path to the environment to init.')
+    parser_init.add_argument('config', metavar='config', type=str, nargs='?',
+                             help='Initial environment configuration file.')
+    parser_init.set_defaults(func=init)
+
+    # The setup command
+    parser_setup = subparsers.add_parser('setup', help=init.__doc__)
+
+    parser_setup.add_argument('--repository', '-r', metavar='repository', type=str, nargs='?',
+                             help='Local repository of sources.')
+    parser_setup.set_defaults(func=setup,
+                             config=defaults.config.filename)
+
+    # The update command
+    parser_update = subparsers.add_parser('update', help=update.__doc__)
+    parser_update.add_argument('repositories', metavar='repositories', type=str, nargs='*',
+                             help='Repositories to update. None means all.')
+    parser_update.add_argument('--config', '-c', metavar='config', type=str, nargs='?',
+                             help='Environment configuration file.')
+    parser_update.set_defaults(func=update,
+                             repositories=None,
+                             config=defaults.config.filename)
+
+    # The create command
+    parser_create = subparsers.add_parser('create', help=create.__doc__)
+    parser_create.add_argument('name', metavar='name', type=str, nargs=1,
+                             help='Name for the python environment.')
+    parser_create.add_argument('--config', '-c', metavar='config', type=str, nargs='?',
+                             help='Environment configuration file.')
+    parser_create.set_defaults(func=create,
+                             config=defaults.config.filename)
+
+    # The add command
+    parser_add = subparsers.add_parser('add', help=add.__doc__)
+    parser_add.add_argument('name', metavar='name', type=str, nargs=1,
+                             help='Name of the branch.')
+    parser_add.add_argument('url', metavar='url', type=str, nargs=1,
+                             help='URL to the repository.')
+    parser_add.add_argument('--config', '-c', metavar='config', type=str, nargs='?',
+                             help='Environment configuration file.')
+    parser_add.set_defaults(func=add,
+                             config=defaults.config.filename)
+
+    # The install command
+    parser_install = subparsers.add_parser('install', help=install.__doc__)
+    parser_install.add_argument('--config', '-c', metavar='config', type=str, nargs='?',
+                             help='Environment configuration file.')
+    parser_install.add_argument('itemstoinstall', metavar='item_to_install', type=str, nargs='*',
+                             help='Item to install.')
+    parser_install.set_defaults(func=install,
+                             config=defaults.config.filename,
+                             )
+
+    # The list_installables command
+    parser_list_installables = subparsers.add_parser('list-installables', help=list_installables.__doc__)
+    parser_list_installables.add_argument('--config', '-c', metavar='config', type=str, nargs='?',
+                             help='Environment configuration file.')
+    parser_list_installables.set_defaults(func=list_installables,
+                             config=defaults.config.filename)
+
+    # The list_addons command
+    parser_list_addons = subparsers.add_parser('list-addons', help=list_addons.__doc__)
+    parser_list_addons.add_argument('filter_string', metavar='filter_string', type=str, nargs='?',
+                             help='String filter.')
+    parser_list_addons.add_argument('--config', '-c', metavar='config', type=str, nargs='?',
+                             help='Environment configuration file.')
+    parser_list_addons.set_defaults(func=list_addons,
+                             filter_string='',
+                             config=defaults.config.filename)
+
+    # The enable_addon command
+    parser_enable_addon = subparsers.add_parser('enable', help=enable_addon.__doc__)
+    parser_enable_addon.add_argument('addon', metavar='addon', type=str, nargs='+',
+                             help='Addon name.')
+    parser_enable_addon.add_argument('--path', '-p', metavar='path', type=str, nargs='?',
+                             help='Path to search.')
+    parser_enable_addon.add_argument('--config', '-c', metavar='config', type=str, nargs='?',
+                             help='Environment configuration file.')
+    parser_enable_addon.add_argument('--ignore-filter', '-i', metavar='ignore_filter', type=str, nargs='?',
+                             help='Ignore addons with directory accepted by this regular expression.')
+    parser_enable_addon.add_argument('--ignore-depends', '-d', action='store_true',
+                             help='Not install dependecies.')
+    parser_enable_addon.set_defaults(func=enable_addon,
+                             path=None,
+                             config=defaults.config.filename,
+                             filter=None)
+
+    # The disable_addon command
+    parser_disable_addon = subparsers.add_parser('disable', help=disable_addon.__doc__)
+    parser_disable_addon.add_argument('addon', metavar='addon', type=str, nargs=1,
+                             help='Addon name.')
+    parser_disable_addon.add_argument('--config', '-c', metavar='config', type=str, nargs='?',
+                             help='Environment configuration file.')
+    parser_disable_addon.set_defaults(func=disable_addon,
+                             config=defaults.config.filename)
+
+    # The dummy command
+    parser_create_dummy_addon = subparsers.add_parser('dummy', help=create_dummy_addon.__doc__)
+    parser_create_dummy_addon.add_argument('addon', metavar='addon', type=str, nargs=1,
+                             help='Addon name.')
+    parser_create_dummy_addon.add_argument('--config', '-c', metavar='config', type=str, nargs='?',
+                             help='Environment configuration file.')
+    parser_create_dummy_addon.set_defaults(func=create_dummy_addon,
+                             config=defaults.config.filename)
+
+    # The test command
+    parser_test_addon = subparsers.add_parser('test', help=test_addon.__doc__)
+    parser_test_addon.add_argument('tests', metavar='tests', type=str, nargs='+',
+                             help='Tests names defined in environment.')
+    parser_test_addon.add_argument('--clean', '-C', action='store_true',
+                             help='Clean database before start the tests.')
+    parser_test_addon.add_argument('--commit', '-m', action='store_true',
+                             help='Commit test changes in database.')
+    parser_test_addon.add_argument('--debug', '-g', action='store_true',
+                             help='Set server in debug mode.')
+    parser_test_addon.add_argument('--config', '-c', metavar='config', type=str, nargs='?',
+                             help='Environment configuration file.')
+    parser_test_addon.set_defaults(func=test_addon,
+                             config=defaults.config.filename,
+                             )
+
+    # The start subcommand
+    parser_start = subparsers.add_parser('start', help=start.__doc__)
+    parser_start.add_argument('--database', '-D',  metavar='database', type=str, nargs='?',
+                             help='Database name.')
+    parser_start.add_argument('--config', '-c', metavar='config', type=str, nargs='?',
+                             help='Environment configuration file.')
+    parser_start.add_argument('--save', '-v', action='store_true',
+                             help='Save initial configuration file.')
+    parser_start.add_argument('--snapshot', '-s', metavar='snapshot', type=str, nargs='?',
+                             help='Snapshot of the database.')
+    parser_start.add_argument('--debug', '-d', action='store_true',
+                             help='Start server in debug mode. Stop until an exception.')
+    parser_start.add_argument('--force-start', '-f', action='store_true',
+                             help='Forces server start. Does not check whether a process file is present or not.')
+    parser_start.add_argument('--production', '-p', action='store_true',
+                             help='Start server in production mode. No test and demos.')
+    parser_start.add_argument('--update', '-u', metavar='MODULES', type=str, nargs='*',
+                             help='Update modules')
+    parser_start.add_argument('--install', '-i', metavar='MODULES', type=str, nargs='*',
+                             help='Install modules')
+    parser_start.add_argument('--language', '-l', metavar='LANG', type=str, nargs='?',
+                             help='Default Language')
+    parser_start.add_argument('extracommands', nargs='*', help='Commands direct to odoo-server')
+    parser_start.set_defaults(func=start,
+                             config=defaults.config.filename,
+                             extracommands=None)
+
+    # The stop subcommand
+    parser_stop = subparsers.add_parser('stop', help=stop.__doc__)
+    parser_stop.add_argument('--config', '-c', metavar='config', type=str, nargs='?',
+                             help='Environment configuration file.')
+    parser_stop.set_defaults(func=stop,
+                             config=defaults.config.filename)
+
+    # The search_object command
+    parser_search_object = subparsers.add_parser('search-object', help=search_object.__doc__)
+    parser_search_object.add_argument('objects', metavar='objects', type=str, nargs=1,
+                             help='Object name.')
+    parser_search_object.add_argument('--config', '-c', metavar='config', type=str, nargs='?',
+                             help='Environment configuration file.')
+    parser_search_object.set_defaults(func=search_object,
+                             config=defaults.config.filename)
+
+    # The search_entity command
+    parser_search_entity = subparsers.add_parser('search-entity', help=search_entity.__doc__)
+    parser_search_entity.add_argument('entity', metavar='entity', type=str, nargs=1,
+                             help='Entity name.')
+    parser_search_entity.add_argument('--config', '-c', metavar='config', type=str, nargs='?',
+                             help='Environment configuration file.')
+    parser_search_entity.set_defaults(func=search_entity,
+                             config=defaults.config.filename)
+
+    # The show_addon command
+    parser_show_addon = subparsers.add_parser('show', help=show_addon.__doc__)
+    parser_show_addon.add_argument('objects', metavar='objects', type=str, nargs=1,
+                             help='Object name.')
+    parser_show_addon.add_argument('--config', '-c', metavar='config', type=str, nargs='?',
+                             help='Environment configuration file.')
+    parser_show_addon.set_defaults(func=show_addon,
+                             config=defaults.config.filename)
+
+    # The list-db command
+    parser_list_db = subparsers.add_parser('list-db', help=list_db.__doc__)
+    parser_list_db.set_defaults(func=list_db)
+
+    # The shell-db command
+    parser_shell_db = subparsers.add_parser('shell-db', help=shell_db.__doc__)
+    parser_shell_db.add_argument('database', metavar='database', type=str, nargs='?',
+                             help='Database name.')
+    parser_shell_db.set_defaults(func=shell_db,
+                             database=defaults.database.user)
+
+    # The create-db command
+    parser_create_db = subparsers.add_parser('create-db', help=create_db.__doc__)
+    parser_create_db.add_argument('database', metavar='database', type=str, nargs=1,
+                             help='Database name.')
+    parser_create_db.add_argument('--config', '-c', metavar='config', type=str, nargs='?',
+                             help='Environment configuration file.')
+    parser_create_db.set_defaults(func=create_db,
+                             config=defaults.config.filename)
+
+    # The drop-db command
+    parser_drop_db = subparsers.add_parser('drop-db', help=drop_db.__doc__)
+    parser_drop_db.add_argument('database', metavar='database', type=str, nargs=1,
+                             help='Database name.')
+    parser_drop_db.add_argument('--config', '-c', metavar='config', type=str, nargs='?',
+                             help='Environment configuration file.')
+    parser_drop_db.set_defaults(func=drop_db,
+                             config=defaults.config.filename)
+
+    # The init-db command
+    parser_init_db = subparsers.add_parser('init-db', help=init_db.__doc__)
+    parser_init_db.add_argument('database', metavar='database', type=str, nargs=1,
+                             help='Database name.')
+    parser_init_db.add_argument('--config', '-c', metavar='config', type=str, nargs='?',
+                             help='Environment configuration file.')
+    parser_init_db.set_defaults(func=init_db,
+                             config=defaults.config.filename)
+
+    # The snapshot command
+    parser_snapshot = subparsers.add_parser('snapshot', help=snapshot.__doc__)
+    parser_snapshot.add_argument('database', metavar='database', type=str, nargs=1,
+                             help='Database name.')
+    parser_snapshot.add_argument('name', metavar='name', type=str, nargs='?',
+                             help='Snapshot name.')
+    parser_snapshot.add_argument('--config', '-c', metavar='config', type=str, nargs='?',
+                             help='Environment configuration file.')
+    parser_snapshot.set_defaults(func=snapshot,
+                             name=datetime.datetime.today().strftime("%Y%m%d%H%M%S"),
+                             config=defaults.config.filename)
+
+    # The extradite command
+    parser_extradite = subparsers.add_parser('extradite', help=extradite.__doc__)
+    parser_extradite.add_argument('operation', metavar='name', type=str, nargs=1,
+                             help='from or to.')
+    parser_extradite.add_argument('host', metavar='database', type=str, nargs=1,
+                             help='Host origin/target of the database')
+    parser_extradite.add_argument('database', metavar='database', type=str, nargs=1,
+                             help='Database name.')
+    parser_extradite.add_argument('--config', '-c', metavar='config', type=str, nargs='?',
+                             help='Environment configuration file.')
+    parser_extradite.set_defaults(func=extradite,
+                             config=defaults.config.filename)
+
+    # The restore command
+    parser_restore = subparsers.add_parser('restore', help=restore.__doc__)
+    parser_restore.add_argument('database', metavar='database', type=str, nargs=1,
+                             help='Database name.')
+    parser_restore.add_argument('name', metavar='name', type=str, nargs='?',
+                             help='Snapshot name.')
+    parser_restore.add_argument('--config', '-c', metavar='config', type=str, nargs='?',
+                             help='Environment configuration file.')
+    parser_restore.set_defaults(func=restore,
+                             config=defaults.config.filename)
+
+    # The pip command
+    parser_pip = subparsers.add_parser('pip', help=pip.__doc__)
+    parser_pip.add_argument('--config', '-c', metavar='config', type=str, nargs='?',
+                             help='Environment configuration file.')
+    parser_pip.add_argument('command', metavar='command', type=str, nargs=1,
+                             help='Pip command [help, install, bundle, freeze, install, search, uninstall, unzip, zip]')
+    parser_pip.add_argument('parameters', nargs='*', help='Parameters to pip command')
+    parser_pip.set_defaults(func=pip,
+                             config=defaults.config.filename,
+                             parameters=None)
+
+    # The csv2xml command
+    parser_csv2xml = subparsers.add_parser('csv2xml', help=csv2xml.__doc__)
+    parser_csv2xml.add_argument('infile', metavar='infile', type=str, nargs=1,
+                             help='CSV file to convert in xml')
+    parser_csv2xml.add_argument('outfile', metavar='outfile', type=str, nargs=1,
+                             help='XML destination file')
+    parser_csv2xml.add_argument('id_template', metavar='id_template', type=str, nargs='?',
+                             help='Template for record id')
+    parser_csv2xml.add_argument('--map', '-m', metavar='map', type=str, nargs='*',
+                                help='Map a reference to an id in XML file. Format: [filename.xml]:[model]:[ID field]:[separated by comma list of fields witch refer the record model]')
+    parser_csv2xml.set_defaults(func=csv2xml,
+                             config=defaults.config.filename,
+                             id_template=None)
+
+    # The activate command
+    parser_activate = subparsers.add_parser('activate', help=activate.__doc__)
+    parser_activate.add_argument('--config', '-c', metavar='config', type=str, nargs='?',
+                             help='Environment configuration file.')
+    parser_activate.set_defaults(func=activate,
+                             config=defaults.config.filename,
+                             parameters=None)
+
+    # The activate command
+    parser_repath = subparsers.add_parser('repath', help=repath.__doc__)
+    parser_repath.add_argument('--config', '-c', metavar='config', type=str, nargs='?',
+                             help='Environment configuration file.')
+    parser_repath.set_defaults(func=repath,
+                             config=defaults.config.filename,
+                             parameters=None)
+
+    # Parse and execute
+    args = parser.parse_args()
+
+    try:
+        args.func(args)
+    except NoEnvironmentConfigFileError, m:
+        print "ERROR:", m.message
+        print """
+Go to a environment directory where environment.yml exists, or
+create one using 'oerpenv init' command.
+"""
+        return -1
+    except NoVersionAvailableError, m:
+        print "ERROR:", m.message
+        print """
+I can't manage this version. Please advise to developers using
+this link http://launchpad.org/oerpenv/bugs. 
+
+
+"""
+        return -1
+    return 0
+
+
+#def signal_handler(signal, frame):
+#    print "WARNING: STOP by user."
+#    sys.exit(-1)
+
+if __name__ == "__main__":
+#    signal.signal(signal.SIGINT, signal_handler)
+
+    r = main()
+    sys.exit(r)
+
+# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
