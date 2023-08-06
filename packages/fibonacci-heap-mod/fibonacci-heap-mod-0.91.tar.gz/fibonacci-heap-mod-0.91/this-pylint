@@ -1,0 +1,196 @@
+#!/usr/bin/python
+
+import os
+import re
+import sys
+import subprocess
+
+IGNORE_MESSAGES = []
+
+WHICH_2 = '/usr/local/cpython-2.6/bin/pylint'
+WHICH_3 = '/usr/local/cpython-3.3/bin/pylint'
+
+
+def usage(retval):
+    w = sys.stderr.write
+    w('Usage: %s\n' % sys.argv[0])
+    w('    --ignore-message re1 --ignore-message re2\n')
+    w('    --verbose\n')
+    w('    --which-2 %s\n' % (WHICH_2, ))
+    w('    --which-3 %s\n' % (WHICH_3, ))
+    w('    --to-pylint args\n')
+    sys.exit(retval)
+
+
+def get_output_ignore_exit_code(command):
+    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    #process.communicate()
+    stdout = process.stdout.read()
+    dummy = process.wait()
+    lines = stdout.split(b'\n')
+    return lines
+
+
+def is_relevant(line):
+    for prefix in [ b'***', b'C:', b'E:', b'F:', b'I:', b'R:', b'W:', ]:
+        if line.startswith(prefix):
+            return True
+    return False
+
+
+def is_traceback(line):
+    if line.startswith(b'Traceback (most recent call last):'):
+        return True
+    else:
+        return False
+
+
+def has_traceback(lines):
+    if any(is_traceback(line) for line in lines):
+        return True
+    else:
+        return False
+
+
+def remove_semi_relevant(lines):
+    for line in lines:
+        if is_semi_relevant(line):
+            pass
+        else:
+            yield line
+
+
+def is_semi_relevant(line):
+    if b'FIXME' in line:
+        return True
+    elif line.startswith(b'I:') and b'Locally disabling' in line:
+        return True
+    elif line.startswith(b'***'):
+        return True
+    else:
+        for ignore_message in IGNORE_MESSAGES:
+            # We compile these more than necessary, but this isn't really much of a bottleneck
+            ignore_regex = re.compile(ignore_message, re.IGNORECASE)
+            match = ignore_regex.match(line)
+            if match:
+                return True
+        else:
+            return False
+
+
+def to_bytes(string):
+    try:
+        result = bytes(string, 'ASCII')
+    except TypeError:
+        result = string
+    return result
+
+
+def main():
+    global WHICH_2
+    global WHICH_3
+    to_pylint = ''
+    verbose = False
+    while sys.argv[1:]:
+        if sys.argv[1] == '--ignore-message':
+            IGNORE_MESSAGES.append(to_bytes(sys.argv[2]))
+            del sys.argv[1]
+        elif sys.argv[1] == '--verbose':
+            verbose = True
+        elif sys.argv[1] == '--which-2':
+            lower_argv_2 = sys.argv[2].lower()
+            if lower_argv_2 == 'none':
+                WHICH_2 = None
+            else:
+                WHICH_2 = sys.argv[2]
+            del sys.argv[1]
+        elif sys.argv[1] == '--which-3':
+            lower_argv_2 = sys.argv[2].lower()
+            if lower_argv_2 == 'none':
+                WHICH_3 = None
+            else:
+                WHICH_3 = sys.argv[2]
+            del sys.argv[1]
+        elif sys.argv[1] in '--to-pylint':
+            to_pylint = ' '.join(sys.argv[2:])
+            del sys.argv[2:]
+        elif sys.argv[1] in [ '--help', '-h' ]:
+            usage(0)
+        else:
+            sys.stderr.write('%s: Unrecognized option: %s\n' % (sys.argv[0], sys.argv[1]))
+            usage(1)
+        del sys.argv[1]
+
+    significant_found = False
+    messages_of_interest = []
+    pylints = []
+    if WHICH_2 and WHICH_2.endswith('/python'):
+        sys.stderr.write('{}: --which-2 needs a pylint, not a python'.format(sys.argv[0]))
+        sys.exit(1)
+    if WHICH_3 and (WHICH_3.endswith('/python') or WHICH_3.endswith('/python3')):
+        sys.stderr.write('{}: --which-3 needs a pylint, not a python'.format(sys.argv[0]))
+        sys.exit(1)
+    if WHICH_2:
+        pylints.append(WHICH_2)
+    if WHICH_3:
+        pylints.append(WHICH_3)
+    if not pylints:
+        sys.stderr.write('%s: No python 2.x /and/ no python 3.x.  Nothing to do.\n' % (sys.argv[0], ))
+        sys.exit(1)
+
+    traceback_count = 0
+
+    for pylint in pylints:
+        if not os.path.exists(pylint):
+            sys.stderr.write('%s: pylint %s does not exist\n' % (sys.argv[0], pylint))
+            sys.exit(1)
+        command = ('%s ' % pylint) + \
+            ('--init-hook=\'import sys; sys.path.append("%s"); sys.path.append(".")\' ' % os.path.expanduser('~/lib')) + \
+            '--max-line-length=133 ' + \
+            "--indent-string='    ' " + \
+            '--module-rgx="[A-Za-z_][-a-zA-Z0-9_]+$" ' + \
+            '--class-rgx="[A-Za-z_][-a-zA-Z0-9_]+$" ' + \
+            to_pylint
+        if verbose:
+            sys.stderr.write('\n{}\n\n'.format(command))
+        output_lines=get_output_ignore_exit_code(command)
+        if verbose:
+            sys.stderr.write('Output from {} was:\n'.format(pylint, ))
+            for line in output_lines:
+                sys.stderr.write('    {}\n'.format(line))
+            sys.stderr.write('\n')
+        if len(output_lines) == 1 and output_lines[0] == '':
+            sys.stderr.write('Error, {} returned no output\n'.format(pylint))
+            sys.exit(1)
+        if has_traceback(output_lines):
+            sys.stderr.write('\n%s: Detected %s traceback:\n' % (sys.argv[0], pylint))
+            sys.stderr.write('\n'.join(output_lines))
+            traceback_count += 1
+            #sys.exit(1)
+            continue
+        relevant_lines = [ output_line for output_line in output_lines if is_relevant(output_line) ]
+        pruned_lines = set(remove_semi_relevant(relevant_lines))
+        if pruned_lines:
+            significant_found = True
+            for relevant_line in relevant_lines:
+                if relevant_line in pruned_lines:
+                    prefix = b'relevant     '
+                else:
+                    prefix = b'semirelevant '
+                messages_of_interest.append(prefix + relevant_line)
+
+    if traceback_count:
+        sys.stderr.write('\n%s pylint tracebacks detected\n' % traceback_count)
+
+    if traceback_count:
+        sys.exit(1)
+    else:
+        if significant_found:
+            for message_of_interest in messages_of_interest:
+                sys.stderr.write('%s\n' % message_of_interest.decode('ISO-8859-1'))
+            sys.exit(1)
+        else:
+            sys.exit(0)
+
+
+main()
