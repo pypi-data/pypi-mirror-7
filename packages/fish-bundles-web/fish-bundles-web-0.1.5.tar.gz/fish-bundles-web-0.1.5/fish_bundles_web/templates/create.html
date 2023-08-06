@@ -1,0 +1,76 @@
+{% extends "master.html" %}
+
+{% block main %}
+<div class="container create-bundle">
+    <h2>New Bundle</h2>
+    <form class="form-horizontal" role="form">
+        <div class="form-group">
+            <div class="alert alert-danger alert-dismissible" id="duplicate-name" role="alert">
+                <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                Either <strong>you or some other member</strong> of this repository has already registered it with fish-bundles. Please try again!
+            </div>
+            <div class="alert alert-danger alert-dismissible" id="no-config" role="alert">
+                <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                The specified repository does not have a valid bundle.yml file. Are you sure the repository you selected is a <strong>valid fish-bundle</strong>? Please try again!
+            </div>
+            <div class="alert alert-danger alert-dismissible" id="no-repo" role="alert">
+                <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                You must select a repository from the list below before creating a bundle.
+            </div>
+
+            <div class="first-row row">
+                <label for="bundle-category" class="col-sm-1 input-lg control-label">Category</label>
+                <div class="col-sm-7">
+                    <select name='bundle-category' id='bundle-category' class="form-control">
+                        <option value="1">Language Integration</option>
+                        <option value="2">Source Control</option>
+                        <option value="3">Sys Admin</option>
+                        <option value="4">Others</option>
+                    </select>
+                </div>
+
+                <div class="col-sm-4">
+                    <button type="button" class="btn btn-success btn-lg btn-block create-bundle-button">Create Bundle</button>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-12">
+                    <table id="tbl-repositories" class="display" cellspacing="0" width="100%">
+                        <thead>
+                            <tr>
+                                <th>Organization</th>
+                                <th>Repo Owner</th>
+                                <th>Repo Name</th>
+                            </tr>
+                        </thead>
+
+                        <tfoot>
+                            <tr>
+                                <th>Organization</th>
+                                <th>Repo Owner</th>
+                                <th>Repo Name</th>
+                            </tr>
+                        </tfoot>
+
+                        <tbody>
+                            {% for repository in repos %}
+                            <tr data-selected-id="{{ repository.repo_name }}">
+                                <td>{{ repository.organization.org_name }}</td>
+                                <td>{{ repository.username }}</td>
+                                <td>{{ repository.name }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="alert alert-warning" role="alert">If the repository you are looking for <strong>is not showing above</strong>, it might have been added as a bundle already. <div>If you think <strong>it has not been added yet</strong>, please <a href="/update-bundles" class="resync-repos">resync your repositories</a>.</div><div>Be advised that github will block your requests if you keep syncing too often.</div></div>
+            </div>
+        </div>
+    </form>
+
+</div>
+{% endblock %}
