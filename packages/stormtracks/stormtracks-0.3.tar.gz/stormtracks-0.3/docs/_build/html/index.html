@@ -1,0 +1,245 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>stormtracks Documentation &mdash; stormtracks 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="stormtracks 0.1 documentation" href="#" />
+    <link rel="next" title="stormtracks API" href="api.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="api.html" title="stormtracks API"
+             accesskey="N">next</a> |</li>
+        <li><a href="#">stormtracks 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="stormtracks-documentation">
+<h1><a class="toc-backref" href="#id1">stormtracks Documentation</a><a class="headerlink" href="#stormtracks-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#stormtracks-documentation" id="id1">stormtracks Documentation</a><ul>
+<li><a class="reference internal" href="#installing-and-running" id="id2">Installing and Running</a></li>
+<li><a class="reference internal" href="#stormtracks-api" id="id3">stormtracks API</a></li>
+<li><a class="reference internal" href="#stormtracks-testing" id="id4">stormtracks Testing</a></li>
+<li><a class="reference internal" href="#change-log" id="id5">Change Log</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<p><strong>Warning, this project is in Alpha, it will be hard to get working and you can&#8217;t trust the documentation!</strong></p>
+<p>The main aim of this project is to develop an algorithm to detect and track tropical cyclones in the <a class="reference external" href="http://www.esrl.noaa.gov/psd/data/gridded/data.20thC_ReanV2.html">C20 Reanalysis Project</a>. The algorithm will then be run against these data looking for trends in the time range of the data, from 1871 to 2013. Currently the algorithm uses vorticity maxima to locate potential candiates for cyclones, and tracks these maxima using a neareat neighbour approach from time frame to time frame. These tracks are then matched to best tracks from the <a class="reference external" href="https://climatedataguide.ucar.edu/climate-data/ibtracs-tropical-cyclone-best-track-data">IBTrACS catalogue</a>, which it is hoped will allow for automated categorisation of these tracks (and the corresponding cyclones) through a machine learning technique: Support Vector Machines (SVMs).</p>
+<div class="section" id="installing-and-running">
+<h2><a class="toc-backref" href="#id2">Installing and Running</a><a class="headerlink" href="#installing-and-running" title="Permalink to this headline">¶</a></h2>
+<p>The project is <a class="reference external" href="https://pypi.python.org/pypi?name=stormtracks&amp;:action=display">hosted on PyPI</a>, and can be installed using:</p>
+<div class="highlight-python"><div class="highlight"><pre>pip install stormtracks
+</pre></div>
+</div>
+<p>The code is <a class="reference external" href="https://github.com/markmuetz/stormtracks">hosted on github</a>. Documentation can be found over at <a class="reference external" href="http://pythonhosted.org/stormtracks/">python hosted</a>.</p>
+<p>To run the analysis, you will first need to download some C20 Reanalysis data and the ibtracs data (<a class="reference external" href="https://raw.githubusercontent.com/markmuetz/stormtracks/master/stormtracks/demo/download_2005.py">download_2005.py</a>):</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">stormtracks.download</span> <span class="kn">as</span> <span class="nn">dl</span>
+
+<span class="c"># Data will be saved to ~/stormtracks/data/</span>
+<span class="n">dl</span><span class="o">.</span><span class="n">download_ibtracs</span><span class="p">()</span>
+<span class="c"># N.B. one year is 4.2 GB of data! This will take a while.</span>
+<span class="c"># It will download 3 files, two with the wind velocities at ~sea level (u9950/v9950)</span>
+<span class="c"># and Pressure at Sea Level (prmsl).</span>
+<span class="n">dl</span><span class="o">.</span><span class="n">download_full_c20</span><span class="p">(</span><span class="mi">2005</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To run some analysis (<a class="reference external" href="https://raw.githubusercontent.com/markmuetz/stormtracks/master/stormtracks/demo/run_analysis_2005.py">run_analysis_2005.py</a>):</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">datetime</span> <span class="kn">as</span> <span class="nn">dt</span>
+
+<span class="kn">import</span> <span class="nn">pylab</span> <span class="kn">as</span> <span class="nn">plt</span>
+
+<span class="kn">from</span> <span class="nn">stormtracks.c20data</span> <span class="kn">import</span> <span class="n">C20Data</span><span class="p">,</span> <span class="n">GlobalEnsembleMember</span>
+<span class="kn">from</span> <span class="nn">stormtracks.ibtracsdata</span> <span class="kn">import</span> <span class="n">IbtracsData</span>
+<span class="kn">from</span> <span class="nn">stormtracks.matching</span> <span class="kn">import</span> <span class="n">match</span><span class="p">,</span> <span class="n">good_matches</span>
+<span class="kn">from</span> <span class="nn">stormtracks.tracking</span> <span class="kn">import</span> <span class="n">VortmaxFinder</span><span class="p">,</span> <span class="n">VortmaxNearestNeighbourTracker</span>
+
+<span class="kn">import</span> <span class="nn">stormtracks.plotting</span> <span class="kn">as</span> <span class="nn">pl</span>
+
+<span class="c"># Create a wrapper for the C20 Reanalysis data.</span>
+<span class="n">c20data</span> <span class="o">=</span> <span class="n">C20Data</span><span class="p">(</span><span class="mi">2005</span><span class="p">)</span>
+<span class="n">c20data</span><span class="o">.</span><span class="n">first_date</span><span class="p">()</span>
+<span class="c"># Plot PSL for 1st of Jan 2005.</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">raster_on_earth</span><span class="p">(</span><span class="n">c20data</span><span class="o">.</span><span class="n">lons</span><span class="p">,</span> <span class="n">c20data</span><span class="o">.</span><span class="n">lats</span><span class="p">,</span> <span class="n">c20data</span><span class="o">.</span><span class="n">psl</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="c"># Plot vorticity for 1st of Jan 2005.</span>
+<span class="n">pl</span><span class="o">.</span><span class="n">raster_on_earth</span><span class="p">(</span><span class="n">c20data</span><span class="o">.</span><span class="n">lons</span><span class="p">,</span> <span class="n">c20data</span><span class="o">.</span><span class="n">lats</span><span class="p">,</span> <span class="n">c20data</span><span class="o">.</span><span class="n">vort</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="c"># Load IBTrACS data for 2005.</span>
+<span class="n">ibtracs</span> <span class="o">=</span> <span class="n">IbtracsData</span><span class="p">()</span>
+<span class="n">best_tracks</span> <span class="o">=</span> <span class="n">ibtracs</span><span class="o">.</span><span class="n">load_ibtracks_year</span><span class="p">(</span><span class="mi">2005</span><span class="p">)</span>
+
+<span class="c"># Run the analysis for 2005.</span>
+<span class="n">gdata</span> <span class="o">=</span> <span class="n">GlobalEnsembleMember</span><span class="p">(</span><span class="n">c20data</span><span class="p">,</span> <span class="n">ensemble_member</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="n">vort_finder</span> <span class="o">=</span> <span class="n">VortmaxFinder</span><span class="p">(</span><span class="n">gdata</span><span class="p">)</span>
+<span class="n">vort_finder</span><span class="o">.</span><span class="n">find_vort_maxima</span><span class="p">(</span><span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2005</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2005</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="n">tracker</span> <span class="o">=</span> <span class="n">VortmaxNearestNeighbourTracker</span><span class="p">()</span>
+<span class="n">tracker</span><span class="o">.</span><span class="n">track_vort_maxima</span><span class="p">(</span><span class="n">vort_finder</span><span class="o">.</span><span class="n">vortmax_time_series</span><span class="p">)</span>
+
+<span class="c"># Match the generated tracks agains the best tracks.</span>
+<span class="n">matches</span> <span class="o">=</span> <span class="n">match</span><span class="p">(</span><span class="n">tracker</span><span class="o">.</span><span class="n">vort_tracks_by_date</span><span class="p">,</span> <span class="n">best_tracks</span><span class="p">)</span>
+<span class="n">gms</span> <span class="o">=</span> <span class="n">good_matches</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">gm</span> <span class="ow">in</span> <span class="n">gms</span><span class="p">:</span>
+    <span class="n">pl</span><span class="o">.</span><span class="n">plot_match_with_date</span><span class="p">(</span><span class="n">gm</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="stormtracks-api">
+<h2><a class="toc-backref" href="#id3">stormtracks API</a><a class="headerlink" href="#stormtracks-api" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">stormtracks API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api.html#running">Running</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#module-stormtracks.download"><tt class="docutils literal"><span class="pre">stormtracks.download</span></tt> &#8211; Download Necessary Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#module-stormtracks.run_stormtracks"><tt class="docutils literal"><span class="pre">stormtracks.run_stormtracks</span></tt> &#8211; Run the Project</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#main-modules">Main Modules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#module-stormtracks.analysis"><tt class="docutils literal"><span class="pre">stormtracks.analysis</span></tt> &#8211; Analysis of results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#module-stormtracks.c20data"><tt class="docutils literal"><span class="pre">stormtracks.c20data</span></tt> &#8211; C20 Reanalysis Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#module-stormtracks.ibtracsdata"><tt class="docutils literal"><span class="pre">stormtracks.ibtracsdata</span></tt> &#8211; IBTrACS Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#module-stormtracks.tracking"><tt class="docutils literal"><span class="pre">stormtracks.tracking</span></tt> &#8211; Tracking of Features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#module-stormtracks.matching"><tt class="docutils literal"><span class="pre">stormtracks.tracking</span></tt> &#8211; Matching of Tracks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#module-stormtracks.results"><tt class="docutils literal"><span class="pre">stormtracks.results</span></tt> &#8211; Store and Access Results</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#module-stormtracks.utils.utils">Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#running-in-cluster-mode">Running in Cluster Mode</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pyro_cluster.html">stormtracks Running in Cluster Mode</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="stormtracks-testing">
+<h2><a class="toc-backref" href="#id4">stormtracks Testing</a><a class="headerlink" href="#stormtracks-testing" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tests.html">stormtracks Testing</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="change-log">
+<h2><a class="toc-backref" href="#id5">Change Log</a><a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#version-0-3-beta-planned-for-july-25-2014">Version 0.3 (Beta) - planned for July 25, 2014</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#version-0-2-alpha-july-18-2014">Version 0.2 (Alpha) - July 18, 2014</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#version-0-1-alpha-july-10-2014">Version 0.1 (Alpha) - July 10, 2014</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#version-0-0-x">Version 0.0.X</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">stormtracks Documentation</a><ul>
+<li><a class="reference internal" href="#installing-and-running">Installing and Running</a></li>
+<li><a class="reference internal" href="#stormtracks-api">stormtracks API</a></li>
+<li><a class="reference internal" href="#stormtracks-testing">stormtracks Testing</a></li>
+<li><a class="reference internal" href="#change-log">Change Log</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Next topic</h4>
+  <p class="topless"><a href="api.html"
+                        title="next chapter">stormtracks API</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="api.html" title="stormtracks API"
+             >next</a> |</li>
+        <li><a href="#">stormtracks 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Mark Muetzelfeldt.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
