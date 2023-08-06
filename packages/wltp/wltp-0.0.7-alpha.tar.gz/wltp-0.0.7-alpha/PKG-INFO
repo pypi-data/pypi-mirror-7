@@ -1,0 +1,542 @@
+Metadata-Version: 1.1
+Name: wltp
+Version: 0.0.7-alpha
+Summary: wltp: A *wltc* gear-shifts calculator
+
+Home-page: https://github.com/ankostis/wltp
+Author: Kostis Anagnostopoulos @ European Commission (JRC)
+Author-email: ankostis@gmail.com
+License: European Union Public Licence 1.1 or later (EUPL 1.1+)
+Description: #####################################
+        
+        wltp: A *wltc* gear-shifts calculator
+        
+        #####################################
+        
+        :Home:          https://github.com/ankostis/wltp
+        
+        :Documentation: http://wltp.readthedocs.org/
+        
+        :Copyright:     2013-2014 European Commission (JRC)
+        
+        :License:       `EUPL 1.1+ <https://joinup.ec.europa.eu/software/page/eupl>`_
+        
+        
+        
+        
+        
+        A calculator of the gear-shifts profile for light-duty-vehicles (cars)
+        
+        according to UN's draft on the
+        
+        `Worldwide harmonized Light vehicles Test Procedures <https://en.wikipedia.org/wiki/Worldwide_harmonized_Light_vehicles_Test_Procedures>`_.
+        
+        
+        
+        
+        
+        Overview:
+        
+        =========
+        
+        
+        
+        It accepts as input the vehicle-specifications and parameters for modifying the execution
+        
+        of the WLTC-cycle and spits-out the it gear-shifts of the vehicle, the attained speed-profile,
+        
+        and any warnings.  It certainly does not calculate any CO2 emissions or other metrics.
+        
+        
+        
+        
+        
+        An "execution" or a "run" of an experiment is depicted in the following diagram::
+        
+        
+        
+        
+        
+                 .-------------------.    ______________        .-------------------.
+        
+                /        Model      /    | Experiment   |       / Model(augmented)  /
+        
+               /-------------------/     |--------------|      /-------------------/
+        
+              / +--vehicle        /  ==> |  .----------.| ==> / +...              /
+        
+             /  +--params        /       | / WLTC-data/ |    /  +--cycle_run     /
+        
+            /                   /        |'----------'  |   /                   /
+        
+            '------------------'         |______________|  '-------------------'
+        
+        
+        
+        .. important:: This simulator is still in *alpha* stage.
+        
+            The difference of the results from the specs are described in the :doc:`CHANGES.rst`.
+        
+        
+        
+        
+        
+        Install:
+        
+        ========
+        
+        Requires Python 3.3+.
+        
+        Install it directly from the PyPI repository with the usual::
+        
+        
+        
+            $ pip3 install wltc
+        
+        
+        
+        Or assuming you have download the sources::
+        
+        
+        
+            $ python setup.py install
+        
+        
+        
+        
+        
+        .. Seealso:: `WinPython <http://winpython.sourceforge.net/>`_
+        
+        
+        
+        
+        
+        
+        
+        Cmd-line usage:
+        
+        ===============
+        
+        :TODO: Not implemented in this vesion
+        
+        
+        
+        To get help::
+        
+        
+        
+            $ python wltc --help          ## to get generic help for cmd-line syntax
+        
+            $ python wltc -M /vehicle     ## to get help for specific model-paths
+        
+        
+        
+        
+        
+        and then, assuming ``vehicle.csv`` is a CSV file with the vehicle parameters
+        
+        for which you want to override the ``n_idle`` only, run the following::
+        
+        
+        
+            $ python wltc -v \
+        
+                -I vehicle.csv file_frmt=SERIES model_path=/params header@=None \
+        
+                -m /vehicle/n_idle:=850 \
+        
+                -O cycle.csv model_path=/cycle_run
+        
+        
+        
+        .. Seealso:: `WinPython <http://winpython.sourceforge.net/>`_
+        
+        
+        
+        Python Usage:
+        
+        =============
+        
+        A usage example::
+        
+        
+        
+            >> import wltc
+        
+        
+        
+            >> model = {
+        
+                "vehicle": {
+        
+                    "mass":     1500,
+        
+                    "v_max":    195,
+        
+                    "p_rated":  100,
+        
+                    "n_rated":  5450,
+        
+                    "n_idle":   950,
+        
+                    "n_min":    None, # Can be overriden by manufacturer.
+        
+                    "gear_ratios":      [120.5, 75, 50, 43, 37, 32],
+        
+                    "resistance_coeffs":[100, 0.5, 0.04],
+        
+                }
+        
+            }
+        
+        
+        
+            >> experiment = wltc.Experiment(model)
+        
+        
+        
+            >> model = experiment.run()
+        
+        
+        
+            >> print(model['params'])
+        
+            >> print(model['cycle_run'])
+        
+            >> print(Experiment.driveability_report())
+        
+        
+        
+        
+        
+        
+        
+            >> {
+        
+                'wltc_class':   'class3b'
+        
+                'v_class':      [ 0.,  0.,  0., ...,  0.,  0.,  0.],
+        
+                'f_downscale':  0,
+        
+                'v_target':     [ 0.,  0.,  0., ...,  0.,  0.,  0.],
+        
+                'gears':        [0, 0, 0, ..., 0, 0, 0],
+        
+                'clutch':       array([ True,  True,  True, ...,  True,  True,  True], dtype=bool),
+        
+                'v_real':       [ 0.,  0.,  0., ...,  0.,  0.,  0.],
+        
+                'driveability': {...},
+        
+            }
+        
+        
+        
+        
+        
+        For information on the model-data, check the schema::
+        
+        
+        
+            >> print(wltc.model.model_schema())
+        
+        
+        
+        
+        
+        For more examples, download the sources and check the test-cases
+        
+        found at ``/wltp/test``.
+        
+        
+        
+        
+        
+        
+        
+        Contribute:
+        
+        ===========
+        
+        :Issue Tracker: https://github.com/ankostis/wltp/issues
+        
+        :Source Code: https://github.com/ankostis/wltp
+        
+        
+        
+        .. Seealso:: :doc:`INSTALL.rst`
+        
+        
+        
+        
+        
+        
+        
+        Contributors:
+        
+        =============
+        
+        * Steven Heinz for his test-data and the cooperation on the tricky parts of the specification.
+        
+        * Giorgos Fontaras for physics, policy and admin support.
+        
+        * Kostis Anagnostopoulos, author.
+        
+        
+        
+        
+        
+        
+        
+        History:
+        
+        ========
+        
+        Implemented from scratch based on the UN's specs (document also included in the `docs` dir):
+        
+        
+        
+        * http://www.unece.org/trans/main/wp29/wp29wgs/wp29grpe/grpedoc_2013.html
+        
+        * https://www2.unece.org/wiki/pages/viewpage.action?pageId=2523179
+        
+        * But probably a better spec is this one:
+        
+          https://www2.unece.org/wiki/display/trans/DHC+draft+technical+report
+        
+        
+        
+        .. Seealso:: :doc:`CHANGES.rst`
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        v0.0.7-alpha, 31-Jul-2014 - 1st Alpha *public* release
+        
+        ------------------------------------------------------
+        
+        * Rename project to 'wltp'.
+        
+        * Switch license from AGPL --> EUPL (the same license assumed *retrospectively* for older version)
+        
+        * Add wltp_db files.
+        
+        * Unify instances & schemas in ``model.py``.
+        
+        * Possible to Build as standalone `.exe` using `cx_freeze`.
+        
+        * Preparations for PyPI/github distribution.
+        
+            * Rename project to "wltp".
+        
+            * Prepare Sphinx documentation for http://readthedocs.org.
+        
+            * Update setup.py
+        
+            * Update project-coordinates (authors, etc)
+        
+        * TODOs:
+        
+            * -Add cmd-line front-end.
+        
+            * -No automatic calculation of resistance-coefficients.
+        
+            * -Driveability-rules not ordered as defined in the latest task-force meeting.
+        
+            * -The ``n_min_drive`` is not calculated as defined in the latest task-force meeting,
+        
+              along with other recent updates.
+        
+            * -Results are not yet compared with the new wltp_db sample-vehicles.
+        
+        
+        
+        
+        
+        
+        
+        v0.0.6-alpha, 5-Feb-2014 -- Alpha release
+        
+        -----------------------------------------
+        
+        * Make it build as standalone `.exe` using `cx_freeze`.
+        
+        * Possible to transplant base-gears and then apply on them driveability-rules.
+        
+        * Embed Model --> Experiment to simplify client-code.
+        
+        * Changes in the data-schema for facilitating conditional runs.
+        
+        * More reverse-engineered comparisons with heinz's data.
+        
+        
+        
+        
+        
+        v0.0.5-alpha, 18-Feb-2014 -- Alpha release
+        
+        ------------------------------------------
+        
+        * Many driveability-improvements found by trial-n-error comparing with Heinz's.
+        
+        * Changes in the data-schema for facilitating storing of tabular-data.
+        
+        * Use Euro6 polynomial full_load_curve from Fontaras.
+        
+        * Smooth-away INALID-GEARS.
+        
+        * Make the plottings of comparisons of sample-vehicle with Heinz'results interactively report driveability-rules.
+        
+        * Also report GEARS_ORIG, RPM_NORM, P_AVAIL, RPM, GEARS_ORIG, RPM_NORM results.
+        
+        
+        
+        
+        
+        v0.0.4.alpha, 18-Jan-2014 -- Alpha release
+        
+        ------------------------------------------
+        
+        * Starting to compare with Heinz's data - FOUND DISCREPANCIES IMPLTYING ERROR IN BASE CALCS.
+        
+        * Test-enhancements and code for comparing with older runs to track algo behavior.
+        
+        * Calc 'V_real'.
+        
+        * Also report RPMS, P_REQ, DIRVEABILITY results.
+        
+        * Make v_max optionally calculated from max_gear /  gear_ratios.
+        
+        * BUGFIX: in P_AVAIL 100% percents were mixed [0, 1] ratios!
+        
+        * BUGFIX: make `goodVehicle` a function to avoid mutation side-effects.
+        
+        * BUGFIX: add forgotten division on p_required Accel/3.6.
+        
+        * BUGFIX: velocity-profile mistakenly rounded to integers!
+        
+        * BUGFIX: v_max calculation based on n_rated (not 1.2 * n_rated).
+        
+        * FIXME: get default_load_curve floats from Heinz-db.
+        
+        * FIXME: what to to with INVALID-GEARS?
+        
+        
+        
+        
+        
+        v0.0.3_alpha, 22-Jan-2014 -- Alpha release
+        
+        ------------------------------------------
+        
+        * -Driveability rules not-implemented:
+        
+            * missing some conditions for rule-f.
+        
+            * no test-cases.
+        
+            * No velocity_real.
+        
+            * No preparation calculations (eg. vehicle test-mass).
+        
+            * Still unchecked for correctness of results.
+        
+        * -Pending Experiment tasks:
+        
+            * FIXME: Apply rule(e) also for any initial/final gear (not just for i-1).
+        
+            * FIXME: move V==0 into own gear.
+        
+            * FIXME: move V==0 into own gear.
+        
+            * FIXME: NOVATIVE rule: "Clutching gear-2 only when Decelerating.".
+        
+            * FIXME: What to do if no gear foudn for the combination of Power/Revs??
+        
+            * NOTE: "interpratation" of specs for Gear-2
+        
+            * NOTE: Rule(A) not needed inside x2 loop.
+        
+            * NOTE: rule(b2): Applying it only on non-flats may leave gear for less than 3sec!
+        
+            * NOTE: Rule(c) should be the last rule to run, outside x2 loop.
+        
+            * NOTE: Rule(f): What if extra conditions unsatisfied? Allow shifting for 1 sec only??
+        
+            * TODO: Construct a matrix of n_min_drive for all gears, including exceptions for gears 1 & 2.
+        
+            * TODO: Prepend row for idle-gear in N_GEARS
+        
+            * TODO: Rule(f) implement further constraints.
+        
+            * TODO: Simplify V_real calc by avoiding multiply all.
+        
+        
+        
+        
+        
+        v0.0.2_alpha, 7-Jan-2014 -- Alpha release
+        
+        -----------------------------------------
+        
+        * -Still unchecked for correctness of results.
+        
+        
+        
+        
+        
+        v0.0.1, 6-Jan-2014 -- Alpha release
+        
+        -----------------------------------
+        
+        * -Unchecked for correctness.
+        
+        * Runs OK.
+        
+        * Project with python-packages and test-cases.
+        
+        * Tidied code.
+        
+        * Selects appropriate classes.
+        
+        * Detects and applies downscale.
+        
+        * Interpreted and implemented the nonsensical specs concerning ``n_min`` engine-revolutions for gear-2
+        
+          (Annex 2-3.2, p71).
+        
+        * -Not implemented yet driveability rules.
+        
+        * -Does not output real_velocity yet - inly gears.
+        
+        
+        
+        
+        
+        v0.0.0, 11-Dec-2013 -- Inception stage
+        
+        --------------------------------------
+        
+        * Mostly setup.py work, README and help.
+        
+Keywords: LDVs,UN,UNECE,cars,fuel-consumption,simulation,simulator,gears,gearshifs,rpm,vehicles,wltc,wltp
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: Development Status :: 3 - Alpha
+Classifier: Natural Language :: English
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Operating System :: POSIX
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Science/Research
+Classifier: Intended Audience :: Manufacturing
+Classifier: License :: OSI Approved :: European Union Public Licence 1.1 (EUPL 1.1)
+Classifier: Operating System :: OS Independent
+Classifier: Topic :: Scientific/Engineering
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
