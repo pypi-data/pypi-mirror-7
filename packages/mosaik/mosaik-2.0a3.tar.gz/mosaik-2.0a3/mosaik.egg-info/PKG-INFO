@@ -1,0 +1,256 @@
+Metadata-Version: 1.1
+Name: mosaik
+Version: 2.0a3
+Summary: Mosaik is a flexible Smart-Grid co-simulation framework.
+Home-page: https://moaik.offis.de
+Author: Stefan Scherfke
+Author-email: stefan.scherfke at offis.de
+License: UNKNOWN
+Description: Mosaik
+        ======
+        
+        Mosaik is a simulation compositor for Smart Grid simulations.
+        
+        It lets you re-use existing simulators and couple them to simulate large-scale
+        Smart Grid scenarios. Mosaik offers powerful mechanisms to specify and compose
+        these scenarios.
+        
+        Example
+        -------
+        
+        A simple demo scenario with mosaik::
+        
+           >>> import mosaik
+           >>>
+           >>> sim_config = {
+           ...     'ExampleSim': {'python': 'example_sim.mosaik:ExampleSim'},
+           ... }
+           >>>
+           >>> def create_scenario(world):
+           ...     exsim1 = world.start('ExampleSim')
+           ...     exsim2 = world.start('ExampleSim')
+           ...
+           ...     a = [exsim1.A(init_val=0) for i in range(3)]
+           ...     b = exsim2.B.create(2, init_val=0)
+           ...
+           ...     for i, j in zip(a, b):
+           ...         world.connect(i, j, ('val_out', 'val_in'))
+           >>>
+           >>> world = mosaik.World(sim_config)
+           >>> create_scenario(world)
+           >>> world.run(until=2)
+           Progress: 25.00%
+           Progress: 50.00%
+           Progress: 75.00%
+           Progress: 100.00%
+        
+        
+        Installation
+        ------------
+        
+        Mosaik requires Python >= 3.3. Use `pip`__ to install it, preferably into
+        a `virtualenv`__::
+        
+            $ pip install mosaik
+        
+        __ http://pip.readthedocs.org/en/latest/installing.html
+        __ http://virtualenv.readthedocs.org/en/latest/
+        
+        Documentation, Source code and issues
+        -------------------------------------
+        
+        The documentation is available at https://mosaik.readthedocs.org.
+        
+        Please report bugs and ideas for improvment to our `issue tracker`__.
+        
+        __ https://bitbucket.org/mosaik/mosaik/issues
+        
+        
+        Changelog
+        =========
+        
+        2.0a3 – 2014-06-26
+        ------------------
+        
+        - [NEW] Hierarchical entities: Entities can now have a list of child entities
+          (`issue #14`_).
+        - [NEW] The ``World`` class now has a ``get_data()`` method that allows you to
+          get data from entities while creating a scenario.
+        - [NEW] ``World.connect(a, b, ('X', 'X'))`` can now be simplified to
+          ``World.connect(a, b, 'X')``.
+        - [NEW] Attribute ``Entity.full_id`` which uniquely identifies an entity:
+          ``'<sid>/<eid>'``
+        - [NEW] Attribute ``ModelFactory.meta`` which is the meta data dictionary of
+          a simulator.
+        - [NEW] ``World()`` now accepts a configuration dictionary which can, e.g.,
+          specify the network address for mosaik.
+        - [NEW] Overview section for the docs
+        - [NEW] Description of the mosaik API in the docs
+        - [CHANGE] When you create entities, mosaik checks if the model parameters
+          actually exists and raises an error if not (`issue #9`_).
+        - [CHANGE] The mosaik API’s ``init()`` function now receives the simulator ID
+          as first argument (`issue #15`_).
+        - [CHANGE] The behavior of the ``get_related_entities()`` RPC that simulators
+          can perform has been changed.
+        - [CHANGE] Various internal improvements
+        - [FIX] `issue #18`_. Improved the error message if a Python simulator could
+          not be imported.
+        - [REMOVED] Attribute ``Entity.rel``.
+        
+        .. _`issue #9`: https://bitbucket.org/mosaik/mosaik/issue/9/
+        .. _`issue #14`: https://bitbucket.org/mosaik/mosaik/issue/14/
+        .. _`issue #15`: https://bitbucket.org/mosaik/mosaik/issue/15/
+        .. _`issue #18`: https://bitbucket.org/mosaik/mosaik/issue/18/
+        
+        
+        2.0a2 – 2014-05-05
+        ------------------
+        
+        - [NEW] Preliminary documentation and installation instructions
+          (https://mosaik.readthedocs.org)
+        
+        - [NEW] Simulators can now set data to other simulators using the
+          asynchronous request *set_data* (`issue #1`_).
+        
+        - [NEW] There is now a start timeout for external processes (`issue #11`_).
+        
+        - [CHANGE] Mosaik now raises an error if a simulator uses the wrong API version
+          (`issue #4`_).
+        
+        - [CHANGE] Mosaik prints everything to *stdout* instead of using the Python
+          logging module (`issue #7`_).
+        
+        - [FIX] `issue #2`_. Scheduling now works properly for processes using async.
+          requests. New keyword argument *async_requests* for ``World.connect()``.
+        
+        - [FIX] `issue #3`_. Local (in-process) Simulators can now also perform async.
+          requests to mosaik (*get_progress*, *get_related_entities*, *get_data*,
+          *set_data*).
+        
+        - [FIX] `issue #8`_. Cleaned up the code a bit.
+        
+        - [FIX] `issue #10`_. Tests for the sim manager improved.
+        
+        .. _`issue #1`: https://bitbucket.org/mosaik/mosaik/issue/1/
+        .. _`issue #2`: https://bitbucket.org/mosaik/mosaik/issue/2/
+        .. _`issue #3`: https://bitbucket.org/mosaik/mosaik/issue/3/
+        .. _`issue #4`: https://bitbucket.org/mosaik/mosaik/issue/4/
+        .. _`issue #7`: https://bitbucket.org/mosaik/mosaik/issue/7/
+        .. _`issue #8`: https://bitbucket.org/mosaik/mosaik/issue/8/
+        .. _`issue #10`: https://bitbucket.org/mosaik/mosaik/issue/10/
+        .. _`issue #11`: https://bitbucket.org/mosaik/mosaik/issue/11/
+        
+        
+        2.0a1 – 2014-03-26
+        ------------------
+        
+        - Mosaik 2 is a complete rewrite of mosaik 1 in order to improve its
+          maintainability and flexibility. It is still an early alpha version and
+          neither feature complete nor bug free.
+        
+        - Removed features:
+        
+          - The *mosl* DSL (including Eclipse xtext and Java) are now gone. Mosaik now
+            only uses Python.
+        
+          - Mosaik now longer has executables but is now used as a library.
+        
+          - The platform manager is gone.
+        
+          - Mosaik no longer includes a database.
+        
+          - Mosaik no longer includes a web UI.
+        
+        - Mosaik now consists of four core components with the following feature sets:
+        
+          - mosaik API
+        
+            - The API has bean cleaned up and simplified.
+        
+            - Simulators and control strategies share the same API.
+        
+            - There are only four calls from mosaik to a simulator: *init*, *create*,
+              *step* and *get_data*.
+        
+            - Simulators / processes can make asynchronous requests to mosaik during a
+              step: *get_progress*, *get_related_entities*, *get_data*.
+        
+            - ZeroMQ with JSON is replaced by plain network sockets with JSON.
+        
+          - Scenarios:
+        
+            - Pure Python is now used to describe scenarios. This offers you more
+              flexibility to create complex scenarios.
+        
+            - Scenario creation simplified: Start a simulator to get a model factory.
+              Use the factory to create model instances (*entities*). Connect entities.
+              Run simulation.
+        
+            - Connection rules are are no based on a primitive *connect* function that
+              only connects two entities with each other. On top of that, any
+              connection strategy can be implemented.
+        
+          - Simulation Manager:
+        
+            - Simulators written in Python 3 can be executed *in process*.
+        
+            - Simulators can be started as external processes.
+        
+            - Mosaik can connect to an already running instance of a simulator. This
+              can be used as a replacement for the now gone platform manager.
+        
+          - Simulation execution:
+        
+            - The simulation is now event-based. No schedule and no synchronization
+              points need to be computed.
+        
+            - Simulators can have different and varying step sizes.
+        
+        - Mosaik ecosystem:
+        
+          - A high-level implementation of the mosaik 2 API currently only exists for
+            Python. See https://bitbucket.org/mosaik/mosaik-api-python.
+        
+          - *mosaik-web* is a simple visualization for mosaik simulations. See
+            https://bitbucket.org/mosaik/mosaik-web.
+        
+          - *mosaik-pypower* is an adapter for the *PYPOWER* load flow analysis
+            library. See https://bitbucket.org/mosaik/mosaik-pypower and
+            https://github.com/rwl/PYPOWER.
+        
+          - *mosaik-csv* and *mosaik-householdsim* are simple demo simulators that you
+            can use to "simulate" CSV data sets and load-profile based households. See
+            https://bitbucket.org/mosaik/mosaik-csv and
+            https://bitbucket.org/mosaik/mosaik-householdsim.
+        
+          - There is a repository containing a simple demo scenario for mosaik. See
+            https://bitbucket.org/mosaik/mosaik-demo.
+        
+        
+         You can find information about older versions on the `history page`__
+        
+        __ https://mosaik.readthedocs.org/en/latest/about/history.html
+        
+        
+        Authors
+        =======
+        
+        The original concepts for mosaik were developed by Steffen Schütten and Stefan
+        Scherfke.
+        
+        The author of mosaik version 2 is Stefan Scherfke.
+        
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Environment :: Console
+Classifier: Intended Audience :: Science/Research
+Classifier: Natural Language :: English
+Classifier: License :: OSI Approved :: GNU Lesser General Public License v2 (LGPLv2)
+Classifier: Natural Language :: English
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Topic :: Scientific/Engineering
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
