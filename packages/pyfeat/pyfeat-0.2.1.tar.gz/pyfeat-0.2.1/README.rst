@@ -1,0 +1,102 @@
+******
+pyfeat
+******
+
+The python free energy analysis toolkit.
+
+**Please note that this code is still under heavy development!**
+
+
+Authors
+=======
+
+- Antonia Mey\ :superscript:`*` <antonia.mey@fu-berlin.de>
+- Christoph Wehmeyer\ :superscript:`*` <christoph.wehmeyer@fu-berlin.de>
+- Fabian Paul
+- Hao Wu
+- Frank Noé
+
+
+``*``) equal contribution
+
+
+Manifest
+========
+
+- ``README.rst`` (this file)
+- ``LICENCE.rst``
+- ``setup.py``
+- ``pyfeat/`` (package)
+- ``ext/`` (C/Cython implementation)
+- ``iPythonNotebooks/`` (examples)
+
+
+Getting started
+===============
+
+For a **development installation** from source, run ::
+
+   python setup.py develop --user --verbose
+
+
+and make sure, that your ``PATH`` and ``PYTHONPATH`` environment variables are set and include the ``bin`` and ``site-packages`` directories which you can find in the verbose output.
+
+For a **regular installation**, run ::
+
+   python setup.py install [--user] [--verbose]
+
+
+Example: MBAR (via shell script)
+================================
+
+Go to your bash and run ::
+
+   cd PATH_TO_REPOSITORY/iPythonNotebooks
+   python generators/gen_st_adwp.py
+   run_mbar.py --verbose data/ST_ADW/replica.dat --kT_file data/ST_ADW/kT.dat
+
+
+Example: WHAM (via shell script)
+================================
+
+Go to your bash and run ::
+
+   cd PATH_TO_REPOSITORY/iPythonNotebooks
+   python generators/gen_st_adwp.py
+   run_wham.py --verbose data/ST_ADW/replica.dat --kT_file data/ST_ADW/kT.dat --wham_file data/ST_ADW/st_wham.dat
+
+
+References
+==========
+
+- **Shirts MR and Chodera JD**. Statistically optimal analysis of samples from multiple equilibrium states. *J. Chem. Phys.* 129:124105 (2008).
+- **Kumar, S. et al**. The weighted histogram analysis method for free-energy calculations on biomolecules. I. The method. *J. Comp. Chem.* 13(8), 1011–1021 (1992).
+
+
+Copyright notice
+================
+
+Copyright (c) 2014, Computational Molecular Biology Group, FU Berlin, 14195 Berlin, Germany.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+1. Redistributions of source code must retain the above copyright notice,
+this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
