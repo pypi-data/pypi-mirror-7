@@ -1,0 +1,233 @@
+# This work was created by participants in the DataONE project, and is
+# jointly copyrighted by participating institutions in DataONE. For
+# more information on DataONE, see our web site at http://dataone.org.
+#
+#   Copyright 2009-2012 DataONE
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This file contains templates for the MN Deployment Ticket Generator. The file
+# is coded in the YAML data serialization format and correct formatting must
+# be maintained when editing.
+
+Tasks:
+  # Initial Preparation
+ 
+  - Title: Initial Preparation
+
+    Tasks:        
+
+      - Title: Establish contact with potential MN organization
+        Desc: Establish contact with the developers and/or administrators who will be responsible for developing and/or deploying the new MN.
+
+      - Title: Determine feasibility
+        Desc: Determine if the potential MN organization has the required resources for becoming a MN.
+
+  # Planning
+  
+  - Title: Planning
+
+    Tasks:
+
+      - Title: Join DataONE
+
+        Tasks:
+
+          - Title: Integrate MN representatives with community
+            Desc: Add MN representatives to MNF/developers/community, other lists as needed.
+
+          - Title: Create DataONE identities
+            Desc: Create DataONE identities for one or more of the MN contacts, to enable access to docs.dataone.org, Redmine, etc.
+
+          - Title: Create MN description document
+            Desc: Work with MN POC to create MN description document, logo, etc. Attach here when complete; store PDF in docs.dataone.org.
+
+      - Title: Scope the implementation
+        Desc: Select the MN Tier, etc.
+        
+      - Title: Plan the implementation
+        Desc: Determine which software stack to use, etc.
+
+  # Developing
+  
+  - Title: Developing
+      
+    Tasks:
+      - Title: Design, code and component test a new MN implementation
+        Desc: If a new MN is being developed from scratch, tickets in this section will track progress.
+
+      - Title: Local Testing
+          
+        Tasks:
+          - Title: Verify that MN passes the Web Tester
+
+          - Title: Verify that MN passes the Replication Tester
+
+  # Testing
+  
+  - Title: Testing
+
+    Tasks:
+      - Title: Registration in environment
+        Env: TEST
+        
+        Tasks: &EnvironmentRegistrationTasks
+          
+          - Title: Register new Science Metadata formats
+            Desc: All Science Objects on the MN should be of types that are known to the CN. Any unknown types should be registered.
+            
+          - Title: SSL Certificates
+            Desc: Set up and verify correct operation of SSL client and server side certificates
+
+            Tasks:
+              
+              - Title: Generate client certificate.
+                Desc: Create the client certificate and send it to to the Member Node contacts. When the certificate has been installed on the MN, the MN contacts should notify DataONE.
+
+              - Title: Verify successful installation of client side certificate
+                Desc: After notification from the MN that the client side certificate has been installed, verify that it is working correctly.
+                
+              - Title: Verify successful installation of server side certificate
+                Desc: After notification from the MN that the server side certificate has been installed, verify that it is working correctly.
+                
+          - Title: Register MN
+          
+            Tasks:
+
+              - Title: Set up Node document
+              
+              - Title: Set the node status to approved (start synchronization)
+              
+          - Title: Synchronization
+            Desc: Setting the MN up for synchronization and verifying that it works correctly.
+            
+            Tasks:
+              
+              - Title: Set up synchronization of the MN
+                Desc: Enable synchronization for the MN.
+
+          - Title: Content Review
+            Desc: Verify that all content on the MN appears correctly and is successfully processed by CNs.
+            
+            Tasks:
+              - Title: Verify Science Data
+                Desc: Tasks related to ensuring that the Science Data is correctly represented on the MN.
+                
+                Tasks:
+                  
+                  - Title: Verify Science Data content
+                    Desc: Verify that the Science Data is present, complete and correctly formatted. I.e., can be opened in the applications that are designed to handle the formats.
+                      
+                  - Title: Verify that the Science Data is returned with the correct HTTP Content-Type
+                    Desc: The HTTP Content-Type header should correctly represent the Science Data when downloaded. For instance, EML , TIFF, and RDF documents should have Content-Type of text/xml, image/tiff, and application/rdf+xml respectively.
+                  
+              - Title: Verify Science Metadata
+                Desc: Tasks related to ensuring that the Science Metadata is correctly represented on the MN.
+                
+                Tasks:
+                  
+                  - Title: Verify Science Metadata content
+                    Desc:
+                      Verify that the Science Metadata is present, complete and correctly formatted.
+                      
+                      I.e., can be opened in the applications that are designed to handle the formats.
+
+
+                  - Title: Verify Science Metadata is returned with the correct HTTP Content-Type
+                    Desc:
+                      The HTTP Content-Type header should correctly represent the Science Metadata when downloaded.
+                    
+                      For instance, EML , TIFF, and RDF documents should have Content-Type of text/xml, image/tiff, and application/rdf+xml respectively.
+
+
+                  - Title: Verify that the Science Metadata is correctly processed by CNs
+                    Desc:
+                      Verify that CNs are able to index any supported Science Metadata objects.
+                      
+                      Successfully indexed objects appear in the Solr index. Not all Science Metadata formats are supported by DataONE.
+                      If the MN does not expose any supported objects, this ticket can be closed directly.
+
+
+              - Title: Verify Resource Maps
+                Desc: DataONE uses Resource Maps to create associations between objects.
+              
+                Tasks:
+                  
+                  - Title: Verify Resource Map content
+                    Desc: Verify that Resource Maps are complete, correctly formatted and represent the intended associations.
+              
+                    
+                  - Title: Verify Resource Map is returned with the correct HTTP Content-Type
+              
+              
+                  - Title: Verify that Resource Maps are correctly processed by CNs.
+                    Desc:
+                      Verify that CNs are able to process the Resource Maps.
+                      
+                      Successfully processed Resource Maps will cause objects to be associated in the Solr index.
+
+
+          - Title: Authentication and Authorization
+            Desc: Tasks related to ensuring that permissions are correct on Science Data, Science Metadata and log records and that the permissions are correctly enforced by the MN.
+            
+            Tasks:
+              
+              - Title: Science Data access
+                Desc:
+                  Verify that Science Data has the correct read, write and updatePermissions permissions.
+                
+                  Verify that Science Data can be accessed only by users who have the required permissions.
+                
+                
+              - Title: Science Metadata access
+                Desc:
+                  Verify that Science Metadata has the correct read, write and updatePermissions permissions.
+              
+                  Verify that Science Metadata can be accessed only by users who have the required permissions.
+
+
+              - Title: Log record access
+                Desc: Verify that Log Records can be accessed only as allowed by the MN policy.
+              
+          - Title: Replication testing (if Tier 4)
+                  
+
+      # Duplicate "Registration in environment" for production.
+
+      - Title: Registration in environment
+        Env: PROD
+    
+        Tasks:
+          *EnvironmentRegistrationTasks
+
+      # Transition to production
+      
+      - Title: Transition to production
+        Desc: Tasks related to moving the new MN into production.
+        
+        Tasks:
+          
+          - Title: Mutual acceptance
+            Desc: Change to "approved" in production.
+            
+          - Title: Verify content available for Current MNs web page
+            Desc: Update the Current MNs webpage with information about the new MN.
+            
+          - Title: Create legal documents
+            Desc: Legal language (any partnership agreements, MOUs, etc.)
+            
+          - Title: Create news item
+            Desc: Draft news item for public release and coordinate with MN for any announcements they wish to do from their perspective
+            
+          - Title: Formal announcement
+            Desc: Announce the new MN on DataONE website, press release, ListServ, Twitter, etc.
