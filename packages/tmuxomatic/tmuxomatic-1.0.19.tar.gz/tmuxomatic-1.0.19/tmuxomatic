@@ -1,0 +1,1669 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+
+BSD 3-Clause License
+
+Copyright 2013-2014, Oxidane
+All rights reserved
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+disclaimer in the documentation and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products
+derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+"""
+
+##----------------------------------------------------------------------------------------------------------------------
+##
+## Name ....... tmuxomatic
+## Synopsis ... Automated window layout and session management for tmux
+## Author ..... Oxidane
+## License .... BSD 3-Clause
+## Source ..... https://github.com/oxidane/tmuxomatic
+##
+##---------------+------------------------------------------------------------------------------------------------------
+##     About     |
+##---------------+
+##
+## QUICKSTART: Examine the session file "session_example", and run it with "tmuxomatic session_example".
+##
+## The tmux interface for creating window splits is technically simple, but to use those splits to arrange layouts is a
+## tedious and inefficient process.  Other tmux session management tools offer no solutions when it comes to splitting
+## windows, so they have the same usability problem of tmux, compounded by their needy configuration files.
+##
+## Ideally I wanted a more intuitive interface, completely reinvented to be as simple and as user-friendly as possible.
+## You depict the window pane layout in a "windowgram", where each unique character identifies a pane.  Then each pane
+## is linked by its character to an optional directory, run commands, and focus state.  The program would then translate
+## this information to the necessary tmux commands for splitting, scaling, pathing, and sendkeys.
+##
+## So that's exactly what tmuxomatic does.
+##
+## For a quick introduction that demonstrates the core feature set of tmuxomatic, see the readme file.
+##
+##-------------------+--------------------------------------------------------------------------------------------------
+##     Revisions     |
+##-------------------+
+##
+HOMEPAGE = "https://github.com/oxidane/tmuxomatic"	# NOTE: Variables HOMEPAGE and VERSION are now used by setup.py
+VERSION = "1.0.19"									# x.y.z: x = Rewrite, y = Major feature, z = Minor feature / Bug fix
+##
+##	1.0.19	2014-07-30	Installation with pip should now be fully functional
+##						If the user is not using YAML, installation of PyYAML is optional
+##
+##	1.0.18	2014-07-29	Added support for multiple panes per command, this is an undocumented feature
+##						Fixed issue #6: Installation with pip now installs to the bin directory
+##
+##	1.0.17	2014-07-29	Added save to YAML session file, this allows scale to be used with YAML sessions
+##						Shorthand session file loader was broken in 1.0.16, this has been fixed
+##						The pypi setup.py file now extracts the version and homepage from the source
+##						Added error reporting of YAML line numbers (limited to a range)
+##
+##	1.0.16	2014-07-27	Session file management moved from session parser into its own class
+##						Simplified the session parser now that load and save are separate
+##						Finished YAML support, note that scale is not yet supported
+##						Added new session file that demonstrates how to use YAML
+##
+##	1.0.15	2014-07-25	Began working on YAML support, this will not be enabled until it's ready
+##						Fixed issue #4: Support for Solaris and other hosts without "stty size"
+##						Added option to destroy the session on disconnect, disabled by default
+##						Added pypi support, now installable using "pip install tmuxomatic".
+##
+##	1.0.14	2014-07-22	The previously unnamed central concept in tmuxomatic is now called a windowgram
+##						For readability, blank lines between window name and windowgram are allowed
+##						Added undocumented command synonyms to avoid user documentation lookups
+##						Rewrote examples since they were mostly just early development tests
+##						Rewrote the introduction in the readme file and added links to tmuxomatic
+##
+##	1.0.13	2014-07-21	Added example screenshot, shortened the readme example to one window
+##						Fixed issues #1, #2: Supports non-numeric tmux versions (e.g., "1.9a")
+##						Fixed issue #3: Relative loading of the python3 interpreter for portability
+##
+##	1.0.12	2014-07-21	Public release
+##						Fixed session filename
+##						Redesigned scale feature to allow differing axial scales in a single pass
+##						Fixed changing the default directory
+##
+##	1.0.11	2013-11-07	Fixed all non-stylistic pylint warnings
+##						Various updates including using the absolute location of tmux
+##
+##	1.0.10	2013-11-05	Added the readme file
+##						Added write option for scaling that updates session file
+##
+##	1.0.9	2013-11-04	Window renaming is now disabled by default, added option to turn it on
+##						Various changes to the source, documentation, and session files
+##
+##	1.0.8	2013-11-03	Added optional scaling of the window configuration
+##						Fixed some more pylint problems
+##
+##	1.0.7	2013-11-02	It now checks the tmux version before proceeding
+##						Session files have been expanded and cleaned up
+##
+##	1.0.6	2013-11-01	Fixed many problems reported by pylint
+##						Added support for relative pane sizing and made it the default
+##
+##	1.0.5	2013-10-21	Uses Python 3.x
+##						Refined sample files and cleaned up source code comments
+##						Removed space preservation option, it's now the default
+##
+##	1.0.4	2013-10-16	Session definition file is now in its most minimal form
+##						Extended support to 62 panes by adding characters A-Z, updated introduction
+##
+##	1.0.3	2013-10-11	Made squeeze 1.0.2 the default
+##						Removed options that are no longer needed
+##						Miscellaneous clean up
+##
+##	1.0.2	2013-10-11	Running in fast mode is now the default and slow mode is the option
+##						Added optional support for setting a default directory
+##						The tmux errors related to squeeze have been replaced by custom messages
+##						Spaces in window name are now changed to '_' or '\ ' depending on user option
+##						Fixed complex layouts with squeeze 1.0.2, which is an early version that was fixed
+##
+##	1.0.1	2013-10-09	Added "print tmux command list" for generating static layouts
+##						Added window focus option, add "foc" anywhere in the pane definitions
+##						Extended support to 36 panes by adding characters a-z, updated introduction
+##						Improved the splitting algorithm, resolving an edge case from version 1.0
+##						Limited support for complex layouts, full support requires tmux upgrades
+##
+##	1.0.0	2013-10-04	First version
+##
+##--------------------+-------------------------------------------------------------------------------------------------
+##     Expansions     |
+##--------------------+
+##
+## Minor:
+##
+##		Video demonstration of tmuxomatic, including the "--scale" feature and how it's used for rapid development
+##		and modification of windowgrams ("12\n34" -> 4x -> add small windows).  Keep it short, fast paced,
+##		demonstrating at least one small and one large example.
+##
+##		Manual page.  Include command line examples.
+##
+##		Possibly embed the examples in the program, allowing the user to run, extract, or view the session files.
+##
+##		Would be great to add a file format template that adds color to the tmuxomatic session file in text editors.
+##		If it could give an even unique color (e.g., evenly spaced over color wheel) to each pane in the windowgram,
+##		then I think it would make the custom format much more appealing.  Detection abilities may be limited in some
+##		IDEs though, so an extension may be necessary.  Anyway, a dimension of color will allow the windowgram to be
+##		more rapidly assessed at-a-glance.
+##
+##		Support other multiplexers like screen, if they have similar capabilities (vertical splits, shell driven, etc).
+##		Screen currently does not have the ability to modify panes from the command line, this is required for support.
+##
+##		Add tmuxomatic flex.  A windowgram modification console.  Allows users to perform multiple actions on their
+##		windowgrams, including: scale, rotate, mirror, flip, break <pane>, rename <pane1> <pane2>, swap <pane1> <pane2>.
+##		Session is specified from command line, console is entered with "--flex" argument.  Windows from session are
+##		listed and chosen with the flex command "window <number>".  Maintain changes as an action chain, and modifiable
+##		with the commands: undo, redo.  Store serialized action chain in the session file as a base64 block between the
+##		window header and the windowgram.  User may exit or run the session when they're done.
+##
+##		If filename is not specified, show running tmuxomatic sessions, and allow reconnect without file being present.
+##
+##		Port the readme to a format compatible with pypi.
+##
+## Major:
+##
+##		Session Binding: A mode that keeps the session file and its running session synchronized.  Some things won't be
+##		easy to do.  Changing the name of a window is easy, but changing windowgram may not be (without unique
+## 		identifiers in tmux).  Use threading to keep them in sync.  Error handling could be shown in a created error
+##		window, which would be destroyed on next session load if there was no error.
+##
+##		Possible console-driven option that allows individual window adjustments on a specified session.  It would also
+##		automatically save the session file on every change, and with it a compressed and encoded undo list in case the
+##		user needs to revert.  Some example commands: "v+", "v-", "h+", "h-" (for window adjustments), "2bd1" (pane 2
+##		bottom down 1), "3sh" (pane 3 split horizontally).  The command list could become too lengthy.  If this feature
+##		is added, it has to be kept simple, and then a user could describe how they want a window laid out in a very
+##		responsive manner that is guaranteed to be read by the loader properly.  Could probably put this in flex.
+##
+## Possible:
+##
+##		Multiple commands in a single call to tmux for faster execution (requires tmux "stdin").
+##
+##		Creating two differently-named tmuxomatic sessions at the same time may conflict.  If all the tmux commands
+##		could be sent at once then this won't be a problem (requires tmux "stdin").
+##
+##		The tmuxomatic pane numbers could be made equal to tmux pane numbers (a=10, A=36, etc), but only if tmux will
+##		support pane renumbering, which is presently not supported (requires tmux "renumber-pane").
+##
+##		If tmux ever supports some kind of aggregate window pane arrangements then the tmux edge case represented by the
+##		example "session_unsupported" could be fixed (requires tmux "add-pane").
+##
+##		Maybe support pane groups in the windowgram linker.  For example "12 run ls" instead of "1 run ls\n2 run ls".
+##		This might introduce complexity that could be confusing for new users.  Perhaps as an undocumented feature.
+##
+##------------------+---------------------------------------------------------------------------------------------------
+##     Requests     |
+##------------------+
+##
+## Further development largely depends on tmux.  These are some features I would like to see in tmux that would improve
+## tmuxomatic.  If anyone adds these features to tmux, notify me and I'll upgrade tmuxomatic accordingly.
+##
+##		1) tmux --stdin					Run multiple line-delimited commands in one tmux call (with error reporting).
+##										Upgrades: Faster tmuxomatic run time, no concurrent session conflicts.
+##
+##		2) tmux renumber-pane old new	Changes the pane number, once set it doesn't change, except with this command.
+##										Upgrades: The tmux pane numbers will reflect those in the session file.
+##
+##		3) tmux add-pane x y w h		Explicit pane creation (exact placement and dimensions).  This automatically
+##										pushes neighbors, subdivides, or re-appropriates, the affected unassigned panes.
+##										Upgrades: Fast, precise arbitrary windowgram algorithm; resolves the edge case.
+##
+## If tmux could preserve pane percentages, when xterm is resized, the panes would be proportionally adjusted.  This
+## feature would save users from having to restart tmuxomatic when the xterm size at session creation differed from what
+## they intend to use.  See relative pane sizing notes for more information.
+##
+##---------------+------------------------------------------------------------------------------------------------------
+##     Terms     |
+##---------------+
+##
+##		windowgram	An rectangle comprised of unique alphanumeric rectangles representing panes in a window.
+##
+##		xterm		Represents the user's terminal window, this may be xterm, putty, securecrt, or similar.
+##
+##		session		A single session that contains one or more windows.
+##
+##		window		One window within a session that contains one or more panes.
+##
+##		pane		A division of a window that contains its own shell.
+##
+##---------------+------------------------------------------------------------------------------------------------------
+##     Notes     |
+##---------------+
+##
+## This program addresses only the session layout (windows, panes).  For tmux settings (status bar, key bindings)
+## consult an online tutorial for ".tmux.conf".
+##
+## For best results, design windowgrams that have a similar width-to-height ratio as your xterm.
+##
+## The way tmuxomatic (and tmux) works is by recursively subdividing the window using vertical and horizontal splits.
+## If you specify a windowgram where such a split is not possible, then it cannot be supported by tmux, or tmuxomatic.
+## For more information about this limitation, including an example, see file "session_unsupported".
+##
+## Supports any pane arrangement that is also supported by tmux.  Some windowgrams, like those in "session_unsupported",
+## won't work because of tmux (see "add-pane").
+##
+## The pane numbers in the session file will not always correlate with tmux (see "renumber-pane").
+##
+## For a list of other tmux feature requests that would improve tmuxomatic support, see the "Expansions" section.
+##
+## This was largely written when I was still new to Python, so not everything is pythonic.
+##
+##--------------------+-------------------------------------------------------------------------------------------------
+##     Other Uses     |
+##--------------------+
+##
+## The windowgram parser and splitting code could be used for some other purposes:
+##
+##		* HTML table generation
+##
+##		* Layouts for other user interfaces
+##
+##		* Level design for simple tiled games (requires allowing overlapped panes and performing depth ordering)
+##
+##----------------------------------------------------------------------------------------------------------------------
+
+import sys, os, time, subprocess, argparse, signal, re, math, copy
+
+INSTALLED_PYYAML = False
+try:
+	import yaml
+	INSTALLED_PYYAML = True
+except ImportError as e:
+	pass
+
+
+
+##
+## Globals
+##
+
+ARGS 			= None
+
+# Flexible Settings (may be safely changed)
+
+MAXIMUM_WINDOWS	= 16					# Maximum windows (not panes), easily raised by changing this value alone
+VERBOSE_WAIT	= 1.5					# Wait time prior to running commands, time is seconds, only in verbose mode
+DEBUG_SCANLINE	= False					# DEBUG: Shows the clean break scanline in action (run with -vvv)
+PROGRAM_THIS	= "tmuxomatic"			# Name of this executable, alternatively: sys.argv[0][sys.argv[0].rfind('/')+1:]
+EXE				= "tmux"				# Short variable name for short line lengths, also changes to an absolute path
+
+# Fixed Settings (requires source update)
+
+PANE_CHARACTERS	= "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" # "[0-9a-zA-Z]"
+MINIMUM_VERSION	= "1.8"					# Minimum supported tmux version (1.8 is required for absolute sizing)
+VERBOSE_MAX		= 4						# 0 = quiet, 1 = summary, 2 = inputs, 3 = fitting, 4 = commands
+MAXIMUM_PANES	= len(PANE_CHARACTERS)	# 62 maximum panes (not windows)
+
+# Expandable Settings
+
+ALIASES			= { 'foc': "focus keys cursor",
+					'dir': "path cd directory",
+					'run': "exec exe execute" }
+
+
+
+##----------------------------------------------------------------------------------------------------------------------
+##
+## Miscellaneous
+##
+##----------------------------------------------------------------------------------------------------------------------
+
+def synerr( errpkg, errmsg ):
+	"""
+	Syntax error: Display error and exit
+	"""
+
+	if 'quiet' in errpkg:
+		print("Error: " + errmsg)
+	elif errpkg['format'] == "shorthand":
+		# Shorthand has exact line numbers
+		print("Error on line " + str(errpkg['line']) + ": " + errmsg)
+	else:
+		# The exact line number in YAML is not easily known with pyyaml
+		print("Error on or after line " + str(errpkg['line']) + ": " + errmsg)
+	exit(0)
+
+def tmux_run( command, nopipe=False, force=False, real=False ):
+	"""
+	Executes the specified shell command (i.e., tmux)
+		nopipe ... Do not return stdout or stderr
+		force .... Force the command to execute even if ARGS.noexecute is set
+	 	real ..... Command should be issued regardless, required for checking version, session exists, etc
+	"""
+
+	noexecute = ARGS.noexecute if ARGS and ARGS.noexecute else False
+	printonly = ARGS.printonly if ARGS and ARGS.printonly else False
+	verbose   = ARGS.verbose   if ARGS and ARGS.verbose   else 0
+	if not noexecute or force:
+		if printonly and not real:
+			# Print only, do not run
+			print(str(command)) # Use "print(str(command), end=';')" to display all commands on one line
+			return
+		if verbose >= 4 and not real:
+			print("(4) " + str(command))
+		if nopipe:
+			os.system(command)
+		else:
+			proc = subprocess.Popen( command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
+			stdout, stderr = proc.communicate()
+			# Return stderr or stdout
+			if stderr: return str(stderr, "ascii")
+			return str(stdout, "ascii")
+
+def tmux_version(): # -> name, version
+	"""
+	Queries tmux for the version
+	"""
+	result = tmux_run( EXE + " -V", nopipe=False, force=True, real=True )
+	result = [ line.strip() for line in result.split("\n") if line.strip() ]
+	name = result[0].split(" ", 1)[0] # Name that was reported by tmux (should be "tmux")
+	version = result[0].split(" ", 1)[1] # Only the version is needed
+	return name, version
+
+def signal_handler_break( signal_number, frame ):
+	"""
+	On break, displays interruption message and exits.
+	"""
+	_ = repr(signal_number) + repr(frame) # Satisfies pylint
+	print("User interrupted...")
+	exit(0)
+
+def signal_handler_hup( signal_number, frame ):
+	"""
+	Use the KeyboardInterrupt exception to communicate user disconnection
+	"""
+	_ = repr(signal_number) + repr(frame) # Satisfies pylint
+	raise KeyboardInterrupt
+
+def get_xterm_dimensions_wh(): # cols (x), rows (y)
+	"""
+	Returns the dimensions of the user's xterm
+	Modified of: https://stackoverflow.com/a/566752
+	"""
+
+	rows = cols = None
+
+	#
+	# Linux
+	#
+	stty_exec = os.popen("stty size", "r").read()
+	if stty_exec:
+		stty_exec = stty_exec.split()
+		if len(stty_exec) >= 2:
+			rows = stty_exec[0]
+			cols = stty_exec[1]
+	if rows and cols:
+		return int(cols), int(rows) # cols, rows
+
+	#
+	# Solaris
+	#
+	rows = os.popen("tput lines", "r").read() # Issue #4: Use tput instead of stty on some systems
+	cols = os.popen("tput cols", "r").read()
+	if rows and cols:
+		return int(cols), int(rows) # cols, rows
+
+	#
+	# Unix
+	#
+	def ioctl_gwinsz(fd):
+		# Get xterm size via ioctl
+		try:
+			import fcntl, termios, struct
+			cr = struct.unpack("hh", fcntl.ioctl(fd, termios.TIOCGWINSZ, "1234"))
+		except (IOError, RuntimeError, TypeError, NameError):
+			return
+		return cr
+	cr = ioctl_gwinsz(0) or ioctl_gwinsz(1) or ioctl_gwinsz(2)
+	if not cr:
+		try:
+			fd = os.open(os.ctermid(), os.O_RDONLY)
+			cr = ioctl_gwinsz(fd)
+			os.close(fd)
+		except (IOError, RuntimeError, TypeError, NameError):
+			pass
+	if not cr:
+		env = os.environ
+		cr = (env.get("LINES", 25), env.get("COLUMNS", 80))
+	if cr and len(cr) == 2 and int(cr[0]) > 0 and int(cr[1]) > 0:
+		return int(cr[1]), int(cr[0]) # cols, rows
+
+	#
+	# Unsupported ... Other platforms not needed since tmux doesn't run there
+	#
+	return 0, 0 # cols, rows
+
+def which(program):
+	"""
+	Returns the absolute path of specified executable
+	Source: https://stackoverflow.com/a/377028
+	"""
+
+	def is_exe(fpath):
+		# Return true if file exists and is executable
+		return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+
+	fpath, _ = os.path.split(program)
+	if fpath:
+		if is_exe(program):
+			return program
+	else:
+		for path in os.environ["PATH"].split(os.pathsep):
+			path = path.strip('"')
+			exe_file = os.path.join(path, program)
+			if is_exe(exe_file):
+				return exe_file
+	return None
+
+def command_matches(command, primary):
+	"""
+	Matches the command (from file) with the primary (for branch)
+	Returns True if command is primary or a supported alias
+	"""
+
+	if command == primary: return True
+	if primary in ALIASES and command in ALIASES[primary].split(" "): return True
+	return False
+
+def satisfies_minimum_version(minimum, version):
+	qn = len(minimum.split("."))
+	pn = len(version.split("."))
+	if qn < pn: minimum += ".0" * (pn-qn) # Equalize the element counts
+	if pn < qn: version += ".0" * (qn-pn) # Equalize the element counts
+	ver_intlist = lambda ver_str: [int(re.sub(r'\D', r'', x)) for x in ver_str.split(".")] # Issues: #1, #2
+	for p, q in zip( ver_intlist(version), ver_intlist(minimum) ):
+		if int(p) == int(q): continue # Qualifies so far
+		if int(p) > int(q): break # Qualifies
+		return False
+	return True
+
+
+
+##----------------------------------------------------------------------------------------------------------------------
+##
+## Windowgram
+##
+##----------------------------------------------------------------------------------------------------------------------
+
+def tmuxomatic_split( dim, at_linkid, linkid, list_split, list_links, how, of_this ):
+	"""
+
+	Splits the window 'at_linkid' along axis 'how'
+
+	Variable 'how': 'v' = Vertical (new = below), 'h' = Horizontal (new = right)
+
+	"""
+
+	def translate( pane, window, screen ):
+		# Returns scaled pane according to windowgram and screen dimensions
+		return int( float(pane) / float(window) * float(screen) )
+
+	# Initialize
+	at_tmux = ""
+	for llit in list_links:
+		if llit[0] == at_linkid:
+			at_tmux = llit[1]
+			break
+	if at_tmux == "": return
+	for llx, llit in enumerate(list_links):
+		if llit[1] > at_tmux:
+			list_links[llx] = ( llit[0], llit[1]+1 ) # Shift the index to accommodate new pane
+	linkid[0] += 1
+	this_ent = {}
+
+	# The dimensions for the newly created window are based on the parent (accounts for the one character divider)
+	for ent in list_split:
+		if ent['linkid'] == at_linkid:
+			this_ent = ent
+			break
+	if this_ent:
+		if how == 'v':
+			of_this = translate( of_this, dim['win'][1], dim['scr'][1] ) # From size-in-definition to size-on-screen
+			w = this_ent['inst_w']
+			h = of_this - 1
+			per = str( float(of_this) / float(this_ent['inst_h']) * 100.0 )
+			if not ARGS.absolute:
+				this_ent['inst_h'] = int(this_ent['inst_h']) - of_this # Subtract split from root pane
+		else: # elif how == 'h':
+			of_this = translate( of_this, dim['win'][0], dim['scr'][0] ) # From size-in-definition to size-on-screen
+			w = of_this - 1
+			h = this_ent['inst_h']
+			per = str( float(of_this) / float(this_ent['inst_w']) * 100.0 )
+			if not ARGS.absolute:
+				this_ent['inst_w'] = int(this_ent['inst_w']) - of_this # Subtract split from root pane
+
+	# Split list tracks tmux pane number at the time of split (for building the split commands)
+	list_split.append( { 'linkid':linkid[0], 'tmux':at_tmux, 'split':how, 'inst_w':w, 'inst_h':h, 'per':per } )
+
+	# Now the new window's pane id, this is shifted up as insertions below it occur (see above)
+	at_tmux += 1
+	list_links.append( (linkid[0], at_tmux) )
+
+def find_clean_break( vertical, pos, list_panes, bx, by, bw, bh ):
+	"""
+
+	Finds a split on an axis within the specified bounds, if found returns True, otherwise False.
+
+	This shares an edge case with tmux that is an inherent limitation in the way that tmux works.
+	For more information on this edge case, look over the example file "session_unsupported".
+
+	Important note about the clean break algorithm used.  The caller scans all qualifying panes,
+	then it uses each qualifying side as a base from which it calls this function.  Here we scan
+	all qualifying panes to complete a match (see scanline).  If the result is a clean break,
+	this function returns True, and the caller has the location of the break.  While there's room
+	for optimization (probably best ported to C++, where the scanline technique will be really
+	fast), additional optimization isn't needed as it's probably adequate even on embedded systems.
+
+	"""
+
+	#-----------------------------------------------------------------------------------------------
+	#
+	# Outline: Clean Break Algorithm (1.0.1)
+	# ~ Establish pointers
+	# ~ Initialize scanline, used for detecting a clean break spanning multiple panes
+	# ~ For each qualifying pane that has a shared edge
+	#   ~ If shared edge overlaps, add it to the scanline
+	#   ~ If scanline has no spaces, then a clean break has been found, return True
+	# ~ Nothing found, return False
+	#
+	#-----------------------------------------------------------------------------------------------
+
+	# Notify user
+	if DEBUG_SCANLINE and ARGS.verbose >= 3:
+		print("(3) Scanline: Find clean " + [ "horizontal", "vertical" ][vertical] + " break at position " + str(pos))
+
+	# ~ Establish pointers
+	if vertical: sl_bgn, sl_siz = bx, bw # Vertical split is a horizontal line
+	else:        sl_bgn, sl_siz = by, bh # Horizontal split is a vertical line
+
+	# ~ Initialize scanline, used for detecting a clean break spanning multiple panes
+	scanline = list(' ' * sl_siz) # Sets the scanline to spaces (used as a disqualifier)
+
+	# ~ For each qualifying pane that has a shared edge
+	for pane in list_panes:
+		# Disqualifiers
+		if 's' in pane: continue # Processed panes are out of bounds, all its edges are taken
+		if pane['y'] >= by+bh or pane['y']+pane['h'] <= by: continue # Fully out of bounds
+		if pane['x'] >= bx+bw or pane['x']+pane['w'] <= bx: continue # Fully out of bounds
+		if     vertical and pane['y'] != pos and pane['y']+pane['h'] != pos: continue # No alignment
+		if not vertical and pane['x'] != pos and pane['x']+pane['w'] != pos: continue # No alignment
+		#   ~ If shared edge found, add it to the scanline
+		if vertical: sl_pos, sl_len = pane['x'], pane['w'] # Vertical split is a horizontal line
+		else:        sl_pos, sl_len = pane['y'], pane['h'] # Horizontal split is a vertical line
+		if sl_pos < sl_bgn: sl_len -= sl_bgn - sl_pos ; sl_pos = sl_bgn # Clip before
+		if sl_pos + sl_len > sl_bgn + sl_siz: sl_len = sl_bgn + sl_siz - sl_pos # Clip after
+		for n in range( sl_pos - sl_bgn, sl_pos - sl_bgn + sl_len ): scanline[n] = 'X'
+		# Show the scanline in action
+		if DEBUG_SCANLINE and ARGS.verbose >= 3:
+			print("(3) Scanline: [" + "".join(scanline) + "]: modified by pane " + pane['n'])
+		#   ~ If scanline has no spaces, then a clean break has been found, return True
+		if not ' ' in scanline: return True
+
+	# ~ Nothing found, return False
+	return False
+
+def tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, this_linkid, bx, by, bw, bh ):
+	"""
+
+	Once the panes have been loaded, this recursive function begins with the xterm dimensions.
+	Note that at this point, all sizes are still in characters, as they will be scaled later.
+
+		linkid[]		Single entry list with last assigned linkid number (basically a reference)
+		l_split[{}]		List of splits and from which pane at the time of split for recreation
+		l_links[()]		List of linkid:tmux_pane associations, updated when split occurs
+		l_panes[{}]		List of fully parsed user-defined panes as one dict per pane
+		this_linkid		The linkid of the current window
+		bx, by, bw, bh	The bounds of the current window
+
+	This algorithm supports all layouts supported by tmux.
+
+	Possible improvement for more accurate positioning: Scan for the best possible split, as
+	defined by its closest proximity to the top or left edges (alternatively: bottom or right).
+	This has yet to be checked for the intended effect of producing more consistent sizing.
+
+	"""
+
+	#-----------------------------------------------------------------------------------------------
+	#
+	# Outline: Filler Algorithm (1.0.1)
+	# ~ If any available pane is a perfect fit, link to linkid, mark as processed, return
+	# ~ Search panes for clean break, if found then split, reenter 1, reenter 2, return
+	# ~ If reached, user specified an unsupported layout that will be detected by caller, return
+	#
+	#-----------------------------------------------------------------------------------------------
+
+	def idstr( bx, by, bw, bh ):
+		# Print the rectangle for debugging purposes.  Maybe change to use a rectangle class.
+		return "Rectangle( x=" + str(bx) + ", y=" + str(by) + ", w=" + str(bw) + ", h=" + str(bh) + " )"
+
+	v = True if ARGS.verbose >= 3 else False
+	if v: print("(3) " + idstr(bx, by, bw, bh) + ": Enter")
+
+	# ~ If any available pane is a perfect fit, link to linkid, mark as processed, return
+	for pane in l_panes:
+		# Disqualifiers
+		if 's' in pane: continue 							# Skip processed panes
+		# Perfect fit?
+		if pane['x'] == bx and pane['y'] == by and pane['w'] == bw and pane['h'] == bh:
+			if v: print("(3) " + idstr(bx, by, bw, bh) + ": Linking pane " + str(pane['n']) + " to " + str(this_linkid))
+			pane['l'] = this_linkid
+			pane['s'] = True # Linked to tmux[] / Disqualified from further consideration
+			if v: print("(3) " + idstr(bx, by, bw, bh) + ": Exit")
+			return
+
+	# ~ Search panes for clean break, if found then split, reenter 1, reenter 2, return
+	# This could be optimized (e.g., skip find_clean_break if axis line has already been checked)
+	for pane in l_panes:
+		# Disqualifiers
+		if 's' in pane: continue # Processed panes are going to be out of bounds
+		if pane['y'] >= by+bh or pane['y']+pane['h'] <= by: continue # Fully out of bounds
+		if pane['x'] >= bx+bw or pane['x']+pane['w'] <= bx: continue # Fully out of bounds
+		at = ""
+		# Split at top edge?
+		if pane['y'] > by:
+			if find_clean_break( True, pane['y'], l_panes, bx, by, bw, bh ):
+				if v: print("(3) " + idstr(bx, by, bw, bh) + ": Split vert at top of pane " + str(pane['n']))
+				at = pane['y']
+		# Split at bottom edge?
+		if pane['y']+pane['h'] < by+bh:
+			if find_clean_break( True, pane['y']+pane['h'], l_panes, bx, by, bw, bh ):
+				if v: print("(3) " + idstr(bx, by, bw, bh) + ": Split vert at bottom of pane " + str(pane['n']))
+				at = pane['y']+pane['h']
+		# Perform vertical split
+		if at:
+			linkid_1 = this_linkid
+			tmuxomatic_split( dim, this_linkid, linkid, l_split, l_links, 'v', bh-(at-by) )
+			linkid_2 = linkid[0]
+			tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, linkid_1, bx, by, bw, at-by )
+			tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, linkid_2, bx, at, bw, bh-(at-by) )
+			if v: print("(3) " + idstr(bx, by, bw, bh) + ": Exit")
+			return
+		# Split at left edge?
+		if pane['x'] < bx:
+			if find_clean_break( False, pane['x'], l_panes, bx, by, bw, bh ):
+				if v: print("(3) " + idstr(bx, by, bw, bh) + ": Split horz at left of pane " + str(pane['n']))
+				at = pane['x']
+		# Split at right edge?
+		if pane['x']+pane['w'] < bx+bw:
+			if find_clean_break( False, pane['x']+pane['w'], l_panes, bx, by, bw, bh ):
+				if v: print("(3) " + idstr(bx, by, bw, bh) + ": Split horz at right of pane " + str(pane['n']))
+				at = pane['x']+pane['w']
+		# Perform horizontal split
+		if at:
+			linkid_1 = this_linkid
+			tmuxomatic_split( dim, this_linkid, linkid, l_split, l_links, 'h', bw-(at-bx) )
+			linkid_2 = linkid[0]
+			tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, linkid_1, bx, by, at-bx, bh )
+			tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, linkid_2, at, by, bw-(at-bx), bh )
+			if v: print("(3) " + idstr(bx, by, bw, bh) + ": Exit")
+			return
+
+	# ~ If reached, user specified an unsupported layout that will be detected by caller, return
+	if v: print("(3) " + idstr(bx, by, bw, bh) + ": No match found, unsupported layout")
+	return
+
+
+
+##----------------------------------------------------------------------------------------------------------------------
+##
+## Session
+##
+##----------------------------------------------------------------------------------------------------------------------
+
+class BatchOfLines(object): # A batch of lines (delimited string) with the corresponding line numbers (int list)
+	def __init__(self):
+		self.lines = ""				# Lines delimited by \n, expects this on the last line in each batch of lines
+		self.counts = []			# For each line in lines, an integer representing the corresponding line number
+	def __repr__(self): # Debugging
+		return "lines = \"" + self.lines.replace("\n", "\\n") + "\", counts = " + repr(self.counts)
+	def AppendBatch(self, lines, start, increment=True):
+		linecount = len(lines.split("\n")[:-1])
+		self.lines += lines
+		self.counts += [line for line in range(1, linecount+1)] if increment else ([start] * linecount)
+
+class Window(object): # Common container of window data, divided into sections identified by the keys below
+	def __init__(self):
+		self.__dict__['data'] = {} # { 'title': string_of_lines, 'title_comments': string_of_lines, ... }
+		self.__dict__['line'] = {} # { 'title': first_line_number, 'title_comments': first_line_number, ... }
+		for key in self.ValidKeys(): self.ClearKey(key) # Clear all keys
+	def __getitem__(self, key): # Invalid keys always return ""
+		return self.__dict__['data'][key] if key in self.ValidKeys() else ""
+	def __setitem__(self, key, value): # Invalid keys quietly dropped
+		if key in self.ValidKeys(): self.__dict__['data'][key] = value
+	def __repr__(self): # Debugging
+		return "[ " + \
+			", ".join(
+				[ key + ": [ data = \"" + self.__dict__['data'][key].replace("\n", "\\n") + \
+				"\", starting_line_number = " + str(self.__dict__['line'][key]) + " ] " \
+				for key in self.ValidKeys() if self[key] is not "" ] \
+			) + \
+		" ]"
+	def ClearKey(self, key):
+		if key in self.ValidKeys():
+			self.__dict__['data'][key] = ""
+			self.__dict__['line'][key] = 0
+	def ValidKeys(self): # Ordered by appearance
+		return "title title_comments windowgram windowgram_comments directions directions_comments".split(" ")
+	def Serialize(self): # Serialized by appearance
+		return "".join( [ self[key] for key in self.ValidKeys() ] )
+	def WorkingKeys(self):
+		return [ key for key in self.ValidKeys() if self[key] is not "" ]
+	def IsHeader(self):
+		return True if " ".join( self.WorkingKeys() ) == "title_comments" else False
+	def FirstLine(self, key):
+		return True if key in self.ValidKeys() and self.__dict__['line'][key] == 0 else False
+	def SetLine(self, key, line):
+		if key in self.ValidKeys(): self.__dict__['line'][key] = line
+	def SetIfNotSet(self, key, line):
+		if self.FirstLine(key): self.SetLine(key, line)
+	def GetLines(self, key):
+		return self.__dict__['line'][key]
+	def SplitCleanByKey(self, key):
+		return [ line[:line.index('#')].strip() if '#' in line else line.strip() for line in self[key].split("\n") ]
+
+class SessionFile(object):
+	def __init__(self, filename):
+		self.filename = filename
+		self.Clear()
+	def Clear(self):
+		self.format = None		# "shorthand" or "yaml"
+		self.header = ""		# title comments
+		self.windows = []		# [ window, window, ... ]
+	def Load_Shorthand_SharedCore(self, bol):
+		# Actually locals
+		self.state = 0
+		self.window = Window()
+		self.line = None
+		self.actual_line_number = 0
+		# Iterate lines and append onto respective window keys
+		lines = bol.lines.split("\n")[:-1] # Why does Python always add the extra line?
+		lines_index = 0
+		while True:
+			def nextwindow(newstate=None):
+				self.windows.append( self.window )
+				self.window = Window()
+				if newstate is not None: self.state = newstate
+			if self.line is None and lines_index < len(lines): # Line
+				self.line = lines[lines_index]
+				self.actual_line_number = bol.counts[lines_index]
+				lines_index += 1
+			if self.line is None: # EOF
+				nextwindow()
+				break
+			# Stripped of comments and whitespace
+			line = self.line
+			if line.find("#") >= 0: line = line[:line.find("#")] # 1.0.17: Fixed
+			line = line.strip()
+			# Append this line onto its corresponding section string
+			if self.state != 1 and re.search(r"window[ \t]", line): nextwindow(1)
+			elif self.state == 1 and not re.search(r"window[ \t]", line): self.state = 2
+			elif ( self.state == 2 or self.state == 4 or self.state == 6 ) and line:
+				if self.state == 6:
+					# Move directions_comments into directions, since we only ever loop when "window" is found
+					self.window['directions'] += self.window['directions_comments']
+					self.window.ClearKey('directions_comments')
+					self.state = 5 # Step back and resume
+				else: self.state += 1
+			elif ( self.state == 3 or self.state == 5 ) and not line:
+				self.state += 1
+			elif self.state == 3 and ( " " in line or command_matches(line.split(" ", 1)[0], "foc") ):
+				self.state = 5 # Presence of "foc" or space in windowgram forces jump to parsing directions
+			else:
+				switchboard = [
+					"title_comments",		# state == 0 <- file header saved here in its own window
+					"title",				# state == 1 <- loops to
+					"title_comments",		# state == 2
+					"windowgram",			# state == 3
+					"windowgram_comments",	# state == 4
+					"directions",			# state == 5
+					"directions_comments",	# state == 6
+				]
+				# The full line (self.line) is saved, not the cleaned line (line) that was used in analysis
+				if self.state < len(switchboard): self.window[switchboard[self.state]] += self.line + "\n"
+				self.window.SetIfNotSet( switchboard[self.state], self.actual_line_number )
+				self.line = None
+		# Any comments at the start of the file should be extracted into the header string
+		if len(self.windows) and self.windows[0].IsHeader():
+			window = self.windows.pop(0)
+			self.header = window.Serialize()
+	def Load_Shorthand(self, rawfile):
+		self.Clear()
+		self.format = "shorthand"
+		bol = BatchOfLines()
+		bol.AppendBatch( rawfile, 1 )
+		self.Load_Shorthand_SharedCore( bol )
+	def Load_Yaml(self, rawfile):
+		self.Clear()
+		self.format = "yaml"
+		# Yaml -> Dict
+		try:
+			# Line numbers (per window) with pyyaml from: https://stackoverflow.com/a/13319530
+			loader = yaml.SafeLoader(rawfile)
+			def compose_node(parent, index):
+				line = loader.line # The line number where the previous token has ended (plus empty lines)
+				node = yaml.SafeLoader.compose_node(loader, parent, index)
+				node.__line__ = line + 1
+				return node
+			def construct_mapping(node, deep=False):
+				mapping = yaml.SafeLoader.construct_mapping(loader, node, deep=deep)
+				mapping['__line__'] = node.__line__
+				return mapping
+			loader.compose_node = compose_node
+			loader.construct_mapping = construct_mapping
+			# Load into dict, now with line numbers for location of window in YAML
+			filedict = loader.get_single_data() # filedict = yaml.safe_load( rawfile ) # Without line numbers
+		except:
+			filedict = {}
+		# Dict -> Shorthand
+		bol = BatchOfLines()
+		bol.AppendBatch( "\n", 0, False ) # Translated YAML -> Shorthand, no need for header
+		if type(filedict) is list:
+			for entry in filedict:
+				if type(entry) is dict and 'name' in entry:
+					# Windows are identified by 'name' key
+					# Should contain 'windowgram' and 'directions' as block literals
+					name = entry['name']
+					windowgram = entry['windowgram'] if 'windowgram' in entry else ""
+					directions = entry['directions'] if 'directions' in entry else ""
+					linenumber = entry['__line__'] if '__line__' in entry else 0
+					rawfile_shorthand = "window " + name + "\n\n" + windowgram + "\n" + directions + "\n\n\n"
+					# Append lines
+					bol.AppendBatch( rawfile_shorthand, linenumber, False )
+		# Shorthand -> Core
+		self.Load_Shorthand_SharedCore( bol )
+	def Load(self):
+		# Load raw data
+		rawfile = ""
+		f = open(self.filename, "rU")
+		while True:
+			line = f.readline()
+			if not line: break # EOF
+			rawfile += line
+		# Detect file format
+		format_yaml = False
+		for line in rawfile.split("\n"):
+			if line.find("#") >= 0: line = line[:line.find("#")]
+			line = line.strip()
+			if line:
+				if line[0] == "-":
+					format_yaml = True
+				break
+		# Parse the file
+		if format_yaml:
+			if not INSTALLED_PYYAML:
+				print("You have specified a session file in YAML format, yet you do not have pyyaml installed.")
+				print("Install pyyaml first, usually with a command like: `sudo pip-python3 install pyyaml`")
+				exit(0)
+			self.Load_Yaml( rawfile )
+		else:
+			self.Load_Shorthand( rawfile )
+	def Save(self):
+		if self.filename and self.format:
+			if self.format == "shorthand":
+				# Shorthand
+				f = open(self.filename, 'w')
+				f.write( self.header )
+				for window in self.windows: f.write( window.Serialize() )
+			if self.format == "yaml":
+				# YAML
+				unformatted = []
+				# Required for writing block literals, source: https://stackoverflow.com/a/6432605
+				def change_style(style, representer):
+					def new_representer(dumper, data):
+						scalar = representer(dumper, data)
+						scalar.style = style
+						return scalar
+					return new_representer
+				class literal_str(str): pass
+				represent_literal_str = change_style('|', yaml.representer.SafeRepresenter.represent_str)
+				yaml.add_representer(literal_str, represent_literal_str)
+				# Now add all windows to a dictionary for saving
+				for window in self.windows:
+					# Extract name: "window panel 1\n" -> "panel 1"
+					name = window['title'].split("\n")[0].strip()
+					if re.search(r"window[ \t]", name): name = name.split(" ", 2)[1]
+					# Append window definition
+					# TODO: Sort as "name", "windowgram", "directions".  Maybe use: http://pyyaml.org/ticket/29
+					window_dict = {
+						'name': name,
+						'windowgram': literal_str(window['windowgram']),
+						'directions': literal_str(window['directions']),
+					}
+					unformatted.append( window_dict )
+				# Format as YAML
+				formatted = yaml.dump( unformatted, indent=2, default_flow_style=False, explicit_start=True )
+				# Write file
+				f = open(self.filename, 'w')
+				f.write( formatted )
+	def Replace_Windowgram(self, window, windowgram):
+		if window > len(self.windows): return
+		self.windows[window]["windowgram"] = windowgram
+
+def tmuxomatic( program_cli, full_cli, user_wh, session_name ):
+	"""
+
+	Parse session file, build commands, execute.
+
+	"""
+
+	# Show configuration
+	if ARGS.verbose >= 1:
+		print( "" )
+		print( "(1) Session   : " + session_name )
+		print( "(1) Running   : " + full_cli )
+		print( "(1) Xterm     : " + str(user_wh[0]) + "x" + str(user_wh[1]) + " (WxH)" )
+		print( "(1) Filename  : " + ARGS.filename )
+		print( "(1) Verbose   : " + str(ARGS.verbose) + \
+			" (" + ", ".join([ 'summary', 'inputs', 'fitting', 'commands' ][:ARGS.verbose]) + ")" )
+		print( "(1) Recreate  : " + str(ARGS.recreate) )
+		print( "(1) Noexecute : " + str(ARGS.noexecute) )
+		print( "(1) Sizing    : " + [ "Relative (percentages)", "Absolute (characters)" ][ARGS.absolute] )
+
+	# Initialize
+	list_execution = [] # List of tmux command lists for a session, only executed on successful parsing
+	list_build = [] # Separate list per window
+	window_number = 0
+	window_name = ""
+	layout = {} # Indexed by line
+	panes_w = 0
+	panes_h = 0
+	focus_window = 1 # Windows in tmux are 1+
+	line = "" # Loaded line stored here
+	scale___existing_window_table = []
+
+	#
+	# Load session file
+	#
+	session = SessionFile( ARGS.filename )
+	session.Load()
+
+	#
+	# Error reporting
+	#
+	errpkg = {}
+	errpkg['command'] = program_cli
+	errpkg['format'] = session.format
+	errpkg['line'] = 0
+
+	#
+	# Reporting line numbers
+	#
+	def SetLineNumber(linebase, lineoffset):
+		if errpkg['format'] == "shorthand":
+			errpkg['line'] = linebase + lineoffset # Exact line
+		else:
+			errpkg['line'] = linebase # Approximate line
+
+	#
+	# Parse session file
+	#
+	#	Each window:
+	#
+	# 		1 = Initialize window
+	#		2 = Windowgram parser
+	#		3 = Build list_panes
+	#		4 = Directions parser
+	#		5 = Generate tmux commands
+	#
+	eof = False
+	window = 0
+	line = 0
+	for window in session.windows:
+
+		#
+		# 1) Initialize window
+		#
+		title_lines = window.SplitCleanByKey('title')
+		line = title_lines[0] if len(title_lines) else ""
+		SetLineNumber( window.GetLines('title'), 0 )
+		if not line or not re.search(r"window[ \t]", line):
+			synerr(errpkg, "Expecting a window section, found nothing")
+		window_number += 1
+		if window_number > MAXIMUM_WINDOWS:
+			synerr(errpkg, "There's a maximum of " + MAXIMUM_WINDOWS + " windows in this version")
+		window_process = line[6:].strip()
+		window_name = "" # Window name enclosed in double-quotes
+		for ch in window_process:
+			if ch == '\"': window_name = window_name + '\\"' # Escape double-quotes
+			else: window_name = window_name + ch
+		layout = {}
+		panes_w = 0
+		panes_h = 0
+		panes_y = 0
+		if ARGS.scale: scale___existing_window_table.append("  " + str(window_number) + ": " + window_name)
+		if ARGS.verbose >= 2: print("")
+
+		#
+		# 2) Windowgram parser
+		#
+		found = False
+		for ix, line in enumerate(window.SplitCleanByKey('windowgram')):
+			SetLineNumber( window.GetLines('windowgram'), ix )
+			if not line: continue
+			found = True
+			panes_h += 1 # 1.0.17: Should be here to detect Nx2 windowgram width mismatch
+			panes_y += 1
+			panes_x = 0
+			invalid = False
+			for ch in line:
+				if ch not in PANE_CHARACTERS:
+					synerr(errpkg, "Windowgram must contain valid identifiers: [0-9a-zA-Z]")
+			if panes_h > 1 and len(line) != panes_w:
+				synerr(errpkg, "Windowgram width does not match previous lines")
+			else:
+				if ARGS.verbose >= 2: print("(2) Windowgram: " + line)
+				if panes_w == 0:
+					panes_w = len(line)
+				for ch in line:
+					panes_x += 1
+					if ch not in PANE_CHARACTERS:
+						# Outside of valid pane identifier range
+						synerr(errpkg, "Windowgram must contain valid identifiers: [0-9a-zA-Z]")
+					# Builds "bounding box" around pane for easy error detection through overlap algorithm
+					if not ch in layout:
+						# New pane
+						layout[ch] = {
+							'n':ch, 'x': panes_x, 'y': panes_y, 'w': 1, 'h': 1,
+							'l': 0 # init link to 0
+						}
+					else:
+						# Expand width
+						x2 = panes_x - layout[ch]['x'] + 1
+						if x2 > layout[ch]['w']:
+							layout[ch]['w'] = x2
+						# Expand height
+						y2 = panes_y - layout[ch]['y'] + 1
+						if y2 > layout[ch]['h']:
+							layout[ch]['h'] = y2
+						# Update x
+						if layout[ch]['x'] > panes_x:
+							layout[ch]['x'] = panes_x
+		if not found:
+			synerr(errpkg, "Windowgram not specified for window number " + str(window_number))
+
+		#
+		# 3) Build list_panes
+		#
+
+		#
+		# 3.1) Sort top to bottom, left to right, move into list (layout[] -> list_panes[])
+		#
+		panes_x = 1
+		panes_y = 1
+		list_panes = [] # List of user defined panes (derived from windowgram)
+		while len(layout):
+			pane = ""
+			for it in layout:
+				if not pane: pane = it
+				elif layout[it]['y'] < layout[pane]['y']: pane = it
+				elif layout[it]['y'] == layout[pane]['y'] and layout[it]['x'] < layout[pane]['x']: pane = it
+			if pane:
+				list_panes.append(layout[pane].copy()) 	# Add to list
+				del layout[pane] 						# Remove from dict
+
+		#
+		# 3.2) Now check for overlaps
+		#
+		for pane1 in list_panes:
+			for pane2 in list_panes:
+				if pane1 != pane2:
+					# Readability
+					p1x1 = pane1['x']
+					p1x2 = p1x1 + pane1['w']
+					p1y1 = pane1['y']
+					p1y2 = p1y1 + pane1['h']
+					p2x1 = pane2['x']
+					p2x2 = p2x1 + pane2['w']
+					p2y1 = pane2['y']
+					p2y2 = p2y1 + pane2['h']
+					# Overlap detection
+					if p1x1 < p2x2 and p1x2 > p2x1 and p1y1 < p2y2 and p1y2 > p2y1:
+						synerr(errpkg, "Overlapping panes: " + pane1['n'] + " and " + pane2['n'])
+
+		#
+		# 3.3) Scale window if user requested
+		#
+		if ARGS.scale and int(ARGS.scale[0]) == window_number:
+			def scale_one( element, multiplier ):
+				# Scale element using integer rounding, multiplier must be float
+				q, r = math.modf( float(element - 1) * multiplier )
+				if q >= .5: r += 1
+				return int(r) + 1
+			def scale_windowgram( list_panes, sx, sy ):
+				# Scales the windowgram
+				# Because text is low resolution, fractional scaling may produce unsatisfactory results
+				ax, ay = float(sx), float(sy)
+				lost = 0
+				for pane in list_panes:
+					if ax: pane['w'] = scale_one( pane['x'] + pane['w'], sx )
+					if ay: pane['h'] = scale_one( pane['y'] + pane['h'], sy )
+					if ax: pane['x'] = scale_one( pane['x'], sx )
+					if ay: pane['y'] = scale_one( pane['y'], sy )
+					if ax: pane['w'] -= pane['x']
+					if ay: pane['h'] -= pane['y']
+					if not pane['x'] or not pane['y'] or not pane['w'] or not pane['h']: lost += 1
+				return lost
+			def render_windowgram( list_panes ):
+				# Prints the windowgram
+				windowgram = []
+				for pane in list_panes:
+					for y in range( pane['y'], pane['y'] + pane['h'] ):
+						for x in range( pane['x'], pane['x'] + pane['w'] ):
+							ix = int(x) - 1
+							iy = int(y) - 1
+							while len(windowgram) <= iy: windowgram.append([])
+							while len(windowgram[iy]) <= ix: windowgram[iy].append([])
+							windowgram[iy][ix] = pane['n']
+				windowgram_str = ""
+				for line in windowgram:
+					windowgram_str += "".join(line) + "\n"
+				return windowgram_str
+			def get_multiplier( param, other ):
+				# Extracts multiplier from command line argument
+				# Returns (float_multiplier, bool_duplicate)
+				if param == "." or param == "dup": return (other if other else None), True
+				elif param == "-" or param == "none": return float(1), False
+				elif 'x' in param: return float(param[:len(param)-1]), False
+				elif '%' in param: return float(param[:len(param)-1]) / 100.0, False
+				return None, False
+			# Extract the multiplier
+			ax, dx = get_multiplier(ARGS.scale[1], None)
+			ay, dy = get_multiplier(ARGS.scale[2], ax)
+			ax, _  = get_multiplier(ARGS.scale[1], ay) if not ax else (ax, dx) # Extra step to support duplication
+			# Handle errors if any
+			if not ax or not ay:
+				if dx and dy:
+					print("Cannot use \"dup\"/\".\" for both XSCALE and YSCALE.")
+				else:
+					if not ax and not dx: print("XSCALE unrecognized: \"" + ARGS.scale[1] + "\"")
+					if not ay and not dy: print("YSCALE unrecognized: \"" + ARGS.scale[2] + "\"")
+					print("Use percentage (200%) or a multiplier (2x).  Fractions are also valid (2.5x)")
+				exit(0)
+			# Perform the scale
+			list_panes_scaled = copy.deepcopy( list_panes )
+			lost = scale_windowgram( list_panes_scaled, ax, ay )
+			wincfg_scaled = render_windowgram( list_panes_scaled ) # Used either way
+			# Set the window header
+			scaled = "x=" + str(ax) + ", y=" + str(ay)
+			header = "window " + window_name + " # User scaled: " + scaled
+			# Windowgram title
+			windowgram_title = "(" + str(window_number) + ") \"" + window_name + "\""
+			# Either write to file or write to stdout
+			if ARGS.scale_replace:
+				# FILE ... Save session modified with the scaled windowgram
+				print("Scaled windowgram " + windowgram_title + "...")
+				session.Replace_Windowgram( window_number-1, wincfg_scaled )
+				session.Save()
+				print("Replaced it in session file \"" + ARGS.filename + "\"...")
+			else:
+				# STDOUT ... Print scaled window for the user to review
+				print("")
+				print("# Your windowgram " + windowgram_title + " has been scaled: " + scaled)
+				print("# If satisfactory, run again with --scale-replace and the session file will be updated")
+				if lost > 0: print("# WARNING: This scale has resulted in " + str(lost) + " lost panes !!!")
+				print("")
+				print( header ) # Window name + blank line + windowgram
+				print("")
+				print( wincfg_scaled )
+			# Always exit after scaling
+			exit(0)
+
+		#
+		# 4) Directions parser
+		#
+		first_pdl = False # Verbose only
+		for ix, line in enumerate(window.SplitCleanByKey('directions')):
+			SetLineNumber( window.GetLines('directions'), ix )
+			if not line: continue
+			if ARGS.verbose >= 2:
+				if not first_pdl: print("") ; first_pdl = True
+				print("(2) Pane definition: " + line)
+			if command_matches(line, "foc"):
+				# Window focus
+				focus_window = window_number
+				continue # Next line
+			if command_matches(line[:3], "dir"):
+				# Default directory
+				if ' ' in line or '\t' in line:
+					# Set or change the default directory.  Applies to successive panes until changed again.
+					values = line.split( None, 1 )
+					default_directory = values[1]
+				continue # Next line
+			# Splits the line into easier to handle strings, there's probably a better way to do this
+			if not ' ' in line and not '\t' in line:
+				synerr(errpkg, "Pane definition line syntax error")
+			panedef_paneids, panedef_cmdplusargs = line.split( None, 1 )
+			if not ' ' in panedef_cmdplusargs and not '\t' in panedef_cmdplusargs:
+				panedef_cmd = panedef_cmdplusargs
+				panedef_args = ''
+			else:
+				panedef_cmd, panedef_args = panedef_cmdplusargs.split( None, 1 )
+			#
+			# Make the list of targets from the specified panes
+			#
+			panelist = list(panedef_paneids)
+			for paneid in panelist:
+				if not paneid in PANE_CHARACTERS:
+					synerr(errpkg, "Pane definition id is outside of the supported range: [0-9a-zA-Z]")
+			def into(key, value, mode=0): # 0 = Set, 1 = Set or append if present, 2 = Set or skip if present
+				found = []
+				for pane in list_panes:
+					if pane['n'] in panelist:
+						if mode == 0:
+							pane[key] = value
+						if mode == 1:
+							if key in pane: pane[key].append( value )
+							else: pane[key] = [value]
+						if mode == 2:
+							if not key in pane or not pane[key]: pane[key] = value
+						found.append( pane['n'] )
+				delta = list(set(panelist) - set(found))
+				if delta:
+					synerr(errpkg, "Pane(s) '" + "".join(delta) + "' were not specified in the windowgram")
+			def all_panes_that_have_key(key):
+				found = []
+				for pane in list_panes:
+					if pane['n'] in panelist:
+						if key in pane:
+							found += [ pane['n'] ]
+				return "".join(found)
+			#
+			# Target pane specified ... Set default directory if not already set for this pane
+			#
+			into('dir', default_directory, 2)
+			#
+			# Command handlers
+			#
+			if command_matches(panedef_cmd, "run"):
+				if not panedef_args: synerr(errpkg, "Pane definition command 'run' must have arguments")
+				into('run', panedef_args, 1)
+			elif command_matches(panedef_cmd, "dir"):
+				if not panedef_args: synerr(errpkg, "Pane definition command 'dir' must have arguments")
+				into('dir', panedef_args)
+			elif command_matches(panedef_cmd, "foc"):
+				if panedef_args: synerr(errpkg, "Pane definition command 'foc' must have no arguments")
+				panes = all_panes_that_have_key('foc')
+				if panes: synerr(errpkg, "Pane definition command 'foc' already specified for panes: " + panes)
+				into('foc', True)
+			else:
+				synerr(errpkg, "Unknown command '" + panedef_cmd + "'")
+
+		#
+		# 5) Generate tmux commands ... After splitting and cross-referencing
+		#
+
+		#
+		# 5.1) Refine list_panes so all expected variables are present for cleaner reference
+		#
+		for pane in list_panes:
+			if not 'dir' in pane: pane['dir'] = ""
+			if not 'run' in pane: pane['run'] = [ "" ]
+			if not 'foc' in pane: pane['foc'] = False
+
+		#
+		# 5.2) Split window into panes
+		#
+		linkid = [ 1001 ]	# Incrementing number for cross-referencing (0 is reserved)
+		# The linkid number is a unique identifier used to track the tmux panes and cross-reference them when the
+		# window is fully divided to get the final pane index for a particular pane.  This is an essential link
+		# because panes are renumbered as splits occur, and before they're assigned to tmuxomatic pane ids.
+		# Note: 'inst_w' and 'inst_h' are the dimensions when split, the first pane uses full dimensions.
+		# Note: The first pane does not use the entires 'split' or 'tmux'.
+		iw = user_wh[0]
+		ih = user_wh[1]
+		list_split = [ { 'linkid':linkid[0], 'split':"", 'tmux':65536, 'inst_w':iw, 'inst_h':ih, 'per':"100.0" } ]
+		list_links = [ ( linkid[0], 0 ) ]	# List of cross-references (linkid, pane_tmux)
+		# Verbose
+		if ARGS.verbose >= 3:
+			print("")
+			print("(3) Fitting panes = {")
+		# Run the recursive splitter
+		dim = {}
+		dim['win'] = [ panes_w, panes_h ]
+		dim['scr'] = [ user_wh[0], user_wh[1] ]
+		tmuxomatic_filler_recursive( \
+			dim, linkid, list_split, list_links, list_panes, linkid[0], 1, 1, panes_w, panes_h )
+		# Verbose
+		if ARGS.verbose >= 3:
+			print("(3) }")
+
+		#
+		# 5.3) Build the execution list for: a) creating windows, b) sizing panes, c) running commands
+		#
+		list_build = [] # Window is independently assembled
+
+		#
+		# 5.3a) Create window panes by splitting windows
+		#
+		first_pane = True
+		for split in list_split:
+			#
+			# Readability
+			#
+			list_split_linkid = split['linkid']		# 1234			This is for cross-referencing
+			list_split_orient = split['split']		# "v" / "h"		Successive: Split vertical or horizontal
+			list_split_paneid = split['tmux']		# 0 			Successive: Pane split at time of split
+			list_split_inst_w = split['inst_w']		# w 			Successive: Ensuing window size in chars
+			list_split_inst_h = split['inst_h']		# h 			Successive: Ensuing window size in chars
+			list_split_percnt = split['per']		# 50.0			Successive: Percentage at time of split
+			ent_panes = ''
+			for i in list_panes:
+				if 'l' in i and i['l'] == list_split_linkid:
+					ent_panes = i
+					break
+			if not ent_panes:
+				synerr(errpkg,
+					"Unable to fully cross-link, probably because of an unsupported window layout.  " + \
+					"Please see the included example file session_unsupported for more information...")
+			list_panes_dir = ent_panes['dir']		# "/tmp"		Directory of pane
+			if list_panes_dir: adddir = " -c " + list_panes_dir
+			else: adddir = ""
+			#
+			# Add the commands for this split
+			#
+			if first_pane: # First
+				first_pane = False
+				if window_number == 1:
+					# First pane of first window
+					# The shell's cwd must be set, the only other way to do this is to discard the
+					# window that is automatically created when calling "new-session".
+					cwd = "cd " + list_panes_dir + " ; " if list_panes_dir else ""
+					list_build.append(
+						cwd + EXE + " new-session -d -s " + session_name + " -n \"" + window_name + "\"" )
+					# Normally, tmux automatically renames windows based on whatever is running in the focused pane.
+					# There are two ways to fix this.  1) Add "set-option -g allow-rename off" to your ".tmux.conf".
+					# 2) Add "export DISABLE_AUTO_TITLE=true" to your shell's run commands file (e.g., ".bashrc").
+					# Here we automatically do method 1 for the user, unless the user requests otherwise.
+					list_build.append( EXE + " set-option -t " + session_name + " quiet on" )
+					renaming = [ "off", "on" ][ARGS.renaming]
+					list_build.append( EXE + " set-option -t " + session_name + " allow-rename " + renaming )
+					list_build.append( EXE + " set-option -t " + session_name + " automatic-rename " + renaming )
+				else:
+					# First pane of successive window
+					list_build.append( EXE + " new-window -n \"" + window_name + "\"" + adddir )
+			else: # Successive
+				# Perform the split on this pane
+				list_build.append( EXE + " select-pane -t " + str(list_split_paneid) )
+				# Pane sizing
+				if not ARGS.absolute:
+					# Relative pane sizing (percentage)
+					percentage = str( int( float( list_split_percnt ) ) ) # Integers are required by tmux 1.8
+					list_build.append( EXE + " split-window -" + list_split_orient + " -p " + percentage + adddir )
+				else:
+					# Absolute pane sizing (characters)
+					if list_split_orient == 'v': addaxis = " -y " + str( list_split_inst_h )
+					else: addaxis = " -x " + str( list_split_inst_w )
+					list_build.append( EXE + " split-window -" + list_split_orient + adddir )
+					list_build.append( EXE + " resize-pane -t " + str(list_split_paneid + 1) + addaxis )
+
+		#
+		# 5.3b) Prepare shell commands ... This is done separately after the pane size has been established
+		#
+		for ent_panes in list_panes:
+			# Now that the tmux pane index correlates, cross-reference for easier lookups
+			list_panes_l = ent_panes['l']			# 1234			This is for cross-referencing
+			ent_panes['tmux'] = str([tup[1] for tup in list_links if tup[0] == list_panes_l][0])
+		focus_actual_tmux_pane_index = "0" # Default pane_index
+		for ent_panes in list_panes:
+			#
+			# Readability
+			#
+			list_panes_l = ent_panes['l']			# 1234			This is for cross-referencing
+			list_panes_run = ent_panes['run']		# ["cd", "ls"]	Commands to run on pane
+			list_panes_foc = ent_panes['foc']		# True			Determines if pane is in focus
+			list_panes_index = ent_panes['tmux']
+			#
+			# Run
+			#
+			if list_panes_run:
+				for run in list_panes_run:
+					clean_run = re.sub(r'([\"])', r'\\\1', run) # Escape double-quotes
+					if clean_run:
+						list_build.append( EXE + " select-pane -t " + list_panes_index )
+						list_build.append( EXE + " send-keys \"" + clean_run + "\" C-m" )
+			if not focus_actual_tmux_pane_index or list_panes_foc:
+				focus_actual_tmux_pane_index = list_panes_index
+		if focus_actual_tmux_pane_index:
+			list_build.append( EXE + " select-pane -t " + focus_actual_tmux_pane_index )
+
+		#
+		# 5.4) Add this batch to the main execution list to be run later
+		#
+		list_execution.append( list_build )
+
+		#
+		# Done
+		#
+
+	#
+	# Set default window
+	#
+	list_build.append( EXE + " select-window -t " + str(focus_window - 1) ) # Windows are 0+ in tmux
+
+	#
+	# Notify user that tmux execution will begin and allow for time to break (ARGS.verbose >= 1)
+	#
+	if ARGS.verbose >= 1:
+		print("")
+		if VERBOSE_WAIT != 0:
+			print("(1) Waiting " + str(VERBOSE_WAIT) + " seconds before running tmux commands...")
+			time.sleep(VERBOSE_WAIT)
+		print("(1) Running tmux commands...")
+		print("")
+
+	#
+	# Run the tmux commands
+	#
+	for block in list_execution:
+		for command in block:
+			error = tmux_run(command)
+			if error:
+				if "pane too small" in error:
+					errpkg['quiet'] = True
+					msg = "Window splitting error (pane too small), make your window larger and try again"
+				else:
+					msg = "An error occurred in tmux: " + error
+				synerr(errpkg, msg )
+
+	#
+	# A valid scale should not have made it this far
+	#
+	if ARGS.scale:
+		print("Window " + ARGS.scale[0] + " is out of range in session file \"" + ARGS.filename + "\"")
+		if not scale___existing_window_table: print("No windows found")
+		else:
+			print("Found these windows:")
+			for item in scale___existing_window_table: print(item)
+		exit(0)
+
+	#
+	# Attach to the newly created session
+	#
+	tmux_run( EXE + " attach-session -t " + session_name )
+
+
+
+##----------------------------------------------------------------------------------------------------------------------
+##
+## Main (tmuxomatic)
+##
+##----------------------------------------------------------------------------------------------------------------------
+
+def main():
+
+	# Verify pane count
+	if MAXIMUM_PANES != 62 or len(PANE_CHARACTERS) != MAXIMUM_PANES:
+		print("Pane count does not match")
+		exit(0)
+
+	# Check tmux version (req = required, rep = reported)
+	tmux_req = MINIMUM_VERSION
+	tmux_cli, tmux_rep = tmux_version()
+	if tmux_cli != "tmux" or not tmux_rep:
+		print("The tmux executable cannot be found")
+		exit(0)
+	if not satisfies_minimum_version( tmux_req, tmux_rep ):
+		print("This requires tmux " + tmux_req + " or higher, found tmux " + tmux_rep)
+		exit(0)
+
+	# Settings
+	program_cli = sys.argv[0]					# Program cli: "./tmuxomatic"
+	user_wh = get_xterm_dimensions_wh()			# Screen dimensions
+
+	# Constrain arguments
+	ancillary = False # Used with printonly and scale, to skip over the main tmuxomatic functionality
+	ARGS.verbose = int(ARGS.verbose or 0)
+	if ARGS.verbose > VERBOSE_MAX: ARGS.verbose = VERBOSE_MAX
+	if ARGS.scale and ARGS.printonly:
+		print("The options --printonly and --scale are mutually exclusive.")
+		exit(0)
+	elif ARGS.scale:							# Overrides for --scale
+		ancillary = True
+		ARGS.noexecute = True
+		ARGS.verbose = 0
+	elif ARGS.printonly: 						# Overrides for --printonly
+		ancillary = True
+		ARGS.noexecute = False
+		ARGS.verbose = 0
+	if ARGS.scale_replace and not ARGS.scale:
+		print("The option --scale-replace is only valid with --scale.")
+		exit(0)
+
+	# Check for presence of specified session filename
+	if not os.path.exists(ARGS.filename):
+		print("The specified session file does not exist: " + ARGS.filename)
+		exit(0)
+
+	# Make sure the session file is not unexpectedly large (say the user accidentally specified a binary file)
+	if 2**20 < os.stat(ARGS.filename).st_size:
+		print("The specified session exceeds 1 megabyte, that's nearly 1 megabyte more than expected.")
+		exit(0)
+
+	# Session name in tmux is always derived from the filename (pathname is dropped to avoid confusion)
+	filename_only = ARGS.filename[ARGS.filename.rfind('/')+1:] # Get the filename only (drop the pathname)
+	session_name = PROGRAM_THIS + "_" + filename_only # Session name with the executable name as a prefix
+	session_name = re.sub(r'([/])', r'_', session_name) # In case of session path: replace '/' with '_'
+	session_name = re.sub(r'\_\_+', r'_', session_name) # Replace two or more consecutive underscores with one
+
+	# Kill session on disconnect
+	def destroy():
+		if ARGS.destroy:
+			tmux_run( EXE + " kill-session -t " + session_name, nopipe=True, force=True, real=True )
+
+	# Existing session handler (skipped when printing or scaling)
+	if not ancillary:
+		# Detect existing session
+		result = tmux_run( EXE + " has-session -t " + session_name, nopipe=False, force=True, real=True )
+		if not result:
+			# Handle existing session
+			if ARGS.recreate:
+				# Destroy existing session (optional)
+				print("Destroying running session, \"" + session_name + "\"...")
+				tmux_run( EXE + " kill-session -t " + session_name, nopipe=False, force=False, real=True )
+			else:
+				# Attach existing session
+				print("Attaching running session, \"" + session_name + "\"...")
+				try:
+					tmux_run( EXE + " attach-session -t " + session_name, nopipe=True, force=False, real=True )
+				except KeyboardInterrupt: # User disconnected
+					destroy()
+				exit(0)
+
+	# If printing, display header
+	if ARGS.printonly:
+		print("###")
+		print("### Session \"" + session_name + "\"")
+		print("### Generated by tmuxomatic for static configurations")
+		print("### Using screen dimensions: " + str(user_wh[0]) + "x" + str(user_wh[1]) + " (WxH)")
+		print("###")
+
+	# Process session: generates a new session and attaches, or prints, or scales
+	if not ancillary: print("Running new session, \"" + session_name + "\"...")
+	try:
+		tmuxomatic( program_cli, " ".join(sys.argv), user_wh, session_name )
+	except KeyboardInterrupt: # User disconnected
+		destroy()
+	exit(0)
+
+
+
+##----------------------------------------------------------------------------------------------------------------------
+##
+## Main (python)
+##
+##----------------------------------------------------------------------------------------------------------------------
+
+if __name__ == "__main__":
+
+	# Signal handlers
+	signal.signal(signal.SIGINT, signal_handler_break) # SIGINT (user break)
+	signal.signal(signal.SIGHUP, signal_handler_hup) # SIGHUP (user disconnect)
+
+	# Argument parser
+	PARSER = argparse.ArgumentParser( description=\
+		"The easiest way to define tmux sessions! ... An introduction and example " + \
+		"sessions are on the project home page: " + HOMEPAGE )
+	PARSER.add_argument( "-V", "--version", action="version", version=PROGRAM_THIS + " " + VERSION, help=\
+		"Show the version number and exit" )
+	PARSER.add_argument( "-v", "--verbose", action="count", help=\
+		"Increase the verbosity level, up to " + str(VERBOSE_MAX) + " (-" + (VERBOSE_MAX * 'v') + ")" )
+	PARSER.add_argument( "-r", "--recreate", action="store_true", help=\
+		"If the session exists, it will be recreated.  Normally, " + \
+		"if it's already running, it will reconnect to it.")
+	PARSER.add_argument( "-n", "--renaming", action="store_true", help=\
+		"Let tmux automatically rename the windows" )
+	PARSER.add_argument( "-p", "--printonly", action="store_true", help=\
+		"Print only the tmux commands, then exit" )
+	PARSER.add_argument( "-x", "--noexecute", action="store_true", help=\
+		"Do everything except issue commands to tmux" )
+	PARSER.add_argument( "-a", "--absolute", action="store_true", help=\
+		"Absolute pane sizing (default is relative).  This " + \
+		"feature requires tmux 1.8 or later." )
+	PARSER.add_argument( "-d", "--destroy", action="store_true", help=\
+		"When you disconnect, the session will be destroyed.  " + \
+		"Most useful in situations where you don't want to " + \
+		"consume resources when you're not plugged in." )
+	PARSER.add_argument( "-s", "--scale", nargs=3, metavar=('SEQ', 'XSCALE', 'YSCALE'), help=\
+		"Loads window SEQ, scales it by XSCALE and YSCALE, then " + \
+		"prints the resulting windowgram, then exits.  " + \
+		"SCALE is a multiplier (1.5x), or a percentage (150%%).  " + \
+		"to skip scaling an axis, specify either \"-\" or \"none\".  " + \
+		"To duplicate the scaling from other axis, specify \".\" or " + \
+		"\"dup\".  Example: " + PROGRAM_THIS + " FILENAME -s 1 3x 2x" )
+	PARSER.add_argument( "-w", "--scale-replace", action="store_true", help=\
+		"Instead of printing, replace the windowgram in the " + \
+		"session file.  This is only valid when used with window " + \
+		"scale (-s).  Use with caution since this overwrites the " + \
+		"specified session file." )
+	PARSER.add_argument( "filename", help=\
+		"The tmuxomatic session filename (required)" )
+	ARGS = PARSER.parse_args()
+
+	# Locate tmux
+	EXE = which(EXE)
+	if not EXE:
+		print("This requires tmux to be installed on your system...")
+		print("If it's already installed, add it to your $PATH, or set EXE to an absolute filename...")
+		exit(0)
+
+	# Run tmuxomatic ... A separate function was needed to quiet pylint (local variable scope)
+	main()
+
+
+
