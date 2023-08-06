@@ -1,0 +1,83 @@
+#!/usr/bin/env python
+#
+# Script to enable an image for SVM
+#
+# Copyright (c) 2014 Ravello Systems Inc. Released under Apache 2 license.
+
+import os
+import sys
+import argparse
+import socket
+
+from getpass import getpass
+from ravello_sdk import *
+
+svm_cpuids = [
+    { "value": "0000000768747541444d416369746e65", "index": "0" },
+    { "value": "000006fb00000800c0802000078bfbfd", "index": "1" },
+    { "value": "8000000a000000000000000000000000", "index": "80000000" },
+    { "value": "00000000000000000000001520100800", "index": "80000001" },
+    { "value": "00000001000000400000000000000088", "index": "8000000a" }, ]
+
+
+def create_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-u', '--username',
+                        help='Ravello API username', required=True)
+    parser.add_argument('-p', '--password',
+                        help='Ravello API password (default: $RAVELLO_PASSWORD)')
+    parser.add_argument('-n', '--resolve-name', action='store_true',
+                        help='Resolve image name to ID')
+    parser.add_argument('image')
+    return parser
+
+
+parser = create_parser()
+args = parser.parse_args()
+
+if not args.image.isdigit() and not args.resolve_name:
+    sys.stderr.write('Error: either specify the numeric image ID, or use -n\n')
+    sys.exit(1)
+
+if not args.password:
+    args.password = os.environ.get('RAVELLO_PASSWORD')
+if not args.password and sys.stdin.isatty():
+    args.password = getpass('Please enter API password: ')
+if not args.password:
+    sys.stdout.write('Error: no password available\n')
+    sys.stdout.write('Use -p/--password or set $RAVELLO_PASSWORD\n')
+    sys.exit(1)
+
+client = RavelloClient()
+try:
+    client.connect()
+    client.login(args.username, args.password)
+except (socket.error, RavelloError) as e:
+    sys.stderr.write('Error: could not login with supplied credentials\n')
+    sys.exit(1)
+
+if args.resolve_name:
+    images = client.get_images({'name': args.image})
+    if len(images) == 0:
+        sys.stdout.write('Error: unknown image: {0}\n'.format(args.image))
+        sys.exit(1)
+    elif len(images) > 1:
+        sys.stdout.write('Error: multiple images match: {0}\n'.format(args.image))
+        sys.exit(1)
+    image = client.reload(images[0])
+    print('Image {0} resolved to ID {1}'.format(args.image, image['id']))
+
+else:
+    image = client.get_image(int(args.image))
+    if image is None:
+        sys.stderr.write('Error: no such image: {0}\n'.format(args.image))
+        sys.exit(1)
+
+image['cpuIds'] = svm_cpuids
+try:
+    client.update_image(image)
+except (socket.error, RavelloError) as e:
+    sys.stderr.write('Error: {0!s}\n'.format(e))
+    sys.exit(1)
+
+print('Image {0} succesfully marked for SVM'.format(image['id']))
