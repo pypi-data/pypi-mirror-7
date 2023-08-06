@@ -1,0 +1,111 @@
+Metadata-Version: 1.1
+Name: pytz-memcache
+Version: 2014.4.33
+Summary: pytz with memcache modified to be high performance that also works on GAE ( copied from pytz-2014.4 )
+Home-page: https://github.com/HatsuneMiku/pytz-memcache
+Author: 999hatsune (original pytz by Stuart Bishop)
+Author-email: 999hatsune@gmail.com
+License: MIT License
+Download-URL: https://pypi.python.org/packages/source/p/pytz-memcache/pytz-memcache-2014.4.33.tar.gz
+Description: pytz-memcache
+        =============
+        
+        latest version at https://github.com/HatsuneMiku/pytz-memcache
+        
+        pytz with memcache modified to be high performance that also works on
+        GAE
+        
+        ( copied from pytz-2014.4 )
+        
+        Usage
+        -----
+        
+        -  copy zoneinfo.zip to your application directory (current directory on
+           GAE)
+        -  copy pytz-2014.4-gae-py2.X.egg to your application directory
+        
+        ::
+        
+            import os
+        
+            if 'SERVER_SOFTWARE' in os.environ.keys(): # on GAE
+              from google.appengine.api import memcache
+              from google.appengine.ext import webapp
+              # use zoneinfo.zip on current directory
+              # pytz-2014.4-py2.5.egg does not work on GAE (pytz.common_timezones is [])
+              sys.path.append('pytz-2014.4-gae-py2.5.egg')
+            else:
+              import memcache
+        
+            import pytz
+        
+            class GAEHandler(webapp.RequestHandler):
+              def get(self, param):
+                self.response.out.write(pytz.common_timezones)
+        
+        Remarks
+        -------
+        
+        -  'zoneinfo.zip' must be in your application directory
+        -  memcached must be running on '127.0.0.1:11211' (for local test only)
+        -  (memcached has been running on GAE)
+        -  it takes about few seconds to run at the first time, but faster next
+        -  (it takes very long time when memcahced is not running because worst
+           case)
+        -  please delete key 'pytz\_loaded' from cache when update pytz zoneinfo
+        
+        Do It Yourself
+        --------------
+        
+        -  unzip pytz-2014.4-py2.X.egg
+        -  delete \*.pyc
+        -  zip recursive pytz/zoneinfo/ to zoneinfo.zip
+        -  copy zoneinfo.zip to your application directory (current directory on
+           GAE)
+        -  replace **init**.py open\_resource function (in this repository)
+        -  zip pytz/ to pytz-2014.4-gae-py2.X.egg (without zoneinfo.zip)
+        -  copy pytz-2014.4-gae-py2.X.egg to your application directory
+        
+        Links
+        -----
+        
+        -  https://github.com/HatsuneMiku/pytz-memcache
+        -  https://github.com/HatsuneMiku/pytz-memcache/wiki
+        -  https://pypi.python.org/pypi/pytz-memcache
+        
+        Requirements
+        ------------
+        
+        -  pytz (included)
+        -  python-memcached (for local test only)
+        
+        Relations
+        ---------
+        
+        -  pytz https://pypi.python.org/pypi/pytz
+        -  python-memcached (client OS independent)
+           https://pypi.python.org/pypi/python-memcached
+        -  GAE https://appengine.google.com/
+        -  memcached (server for UNIX) http://memcached.org/
+        -  MemCacheD Manager (server for windows)
+           http://allegiance.chi-town.com/MemCacheDManager.aspx
+        
+        
+Keywords: pytz timezone tzinfo datetime time memcache memcached GAE Google App Engine
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Console
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: System Administrators
+Classifier: Intended Audience :: End Users/Desktop
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Natural Language :: English
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 2.5
+Classifier: Programming Language :: Python :: 2.6
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 2 :: Only
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: System :: Networking
+Classifier: Topic :: Utilities
+Requires: pytz
