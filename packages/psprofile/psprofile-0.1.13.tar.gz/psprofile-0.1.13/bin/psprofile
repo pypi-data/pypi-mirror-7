@@ -1,0 +1,53 @@
+#!/usr/bin/env python
+import time
+import os
+import sys
+import json
+
+from psprofile.main import main
+from psprofile.util import which
+
+
+if __name__ == '__main__':
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Profile resource usage of a command')
+    parser.add_argument('-o', '--output_file', help='File to store output of profile to.')
+    parser.add_argument('-i', '--poll_interval', type=int, default=1,
+                        help='How often to poll the resource usage information in /proc, in seconds (default 1).')
+    #parser.add_argument('command_script', help="path to a shell script to run")
+    parser.add_argument('-w', '--wait', help="time to wait for executable to exist", default=0)
+    parser.add_argument('-s', '--shell', help="Shell to execute command with, default is /bin/bash", default='/bin/bash')
+    parser.add_argument('-x', '--skip_profile', action='store_true', help="do not profile, just get exit_status and wall time")
+    parser.add_argument('command', nargs='+', help="The command to run.")
+    args = parser.parse_args()
+
+    # assert executable exists
+    start = time.time()
+    bin = args.command[0].split(' ')[0]
+    while not (os.path.exists(bin) or which(bin)):
+        if time.time() - start > args.wait:
+            raise IOError('`%s` does not exist!' % bin)
+        time.sleep(.5)
+
+    # assert output dir exists
+    if args.output_file:
+        out_dir = os.path.dirname(args.output_file)
+        if not os.path.exists(out_dir):
+            raise IOError('output directory does not exist: `%s`' % out_dir)
+
+    # Run Profile
+    output = main(args.command, args.poll_interval, args.shell, args.skip_profile)
+
+    # Write output
+    output_json = json.dumps(output, indent=4)
+
+    if args.output_file:
+        # if os.path.exists(args.output_file):
+        #     os.unlink(args.output_file)
+        with open(args.output_file, 'w') as fh:
+            fh.write(output_json)
+    else:
+        print >> sys.stdout, output_json
+
+    sys.exit(output['exit_status'])
