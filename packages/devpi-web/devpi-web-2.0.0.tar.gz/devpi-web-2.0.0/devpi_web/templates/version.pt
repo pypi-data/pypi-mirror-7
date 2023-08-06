@@ -1,0 +1,60 @@
+<html>
+    <head>
+        <title>${title}</title>
+        <metal:head use-macro="request.macros['head']" />
+    </head>
+    <body>
+        <metal:search use-macro="request.macros['navigation']" />
+        <div id="content">
+        <h1>${title}</h1>
+
+        <p class="projectnavigation" tal:condition="nav_links">
+            <tal:link repeat="link nav_links"><a href="${link.url}">${link.title}</a><tal:sep condition="not repeat.link.end"> | </tal:sep></tal:link>
+        </p>
+        <p id="summary" tal:condition="summary" tal:content="summary" />
+
+        <table class="projectinfos">
+            <tr tal:repeat="info infos" class="${info[0]}">
+                <td class="key">${info[0]}</td>
+                <td class="value" tal:content="structure info[1]"></td>
+            </tr>
+        </table>
+
+        <table class="files" tal:condition="files">
+            <thead>
+                <tr>
+                    <th>File</th>
+                    <th>Type</th>
+                    <th>Py Version</th>
+                    <th>Size</th>
+                    <th class="toxresults" tal:condition="show_toxresults">Tox results</th>
+                    <th class="md5">MD5</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr tal:repeat="file files">
+                    <td><a href="${file.url}">${file.title}</a></td>
+                    <td>${file.dist_type}</td>
+                    <td>${file.py_version}</td>
+                    <td>${file.size}</td>
+                    <td class="toxresults" tal:condition="show_toxresults">
+                        <tal:toxresults condition="file.get('toxresults')">
+                            <div tal:repeat="toxresult file.get('toxresults')">
+                                <a href="${make_toxresult_url(basename=file.basename, toxresult=toxresult.basename)}#${toxresult._key}" tal:attributes="class 'failed' if toxresult.failed else 'passed'">
+                                    ${toxresult.host} ${toxresult.platform} ${toxresult.envname} ${toxresult.get('pyversion')}
+                                </a>
+                            </div>
+                            <a href="${make_toxresults_url(basename=file.basename)}">
+                                All toxresults …
+                            </a>
+                        </tal:toxresults>
+                    </td>
+                    <td class="md5"><code>${file.md5}</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div id="description" tal:content="structure content" />
+        </div>
+    </body>
+</html>
