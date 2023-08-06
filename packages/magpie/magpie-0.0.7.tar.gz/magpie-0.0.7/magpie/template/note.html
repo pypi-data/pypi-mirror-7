@@ -1,0 +1,76 @@
+{% extends base.html %}
+{% block title %}{{ note_name }}{% end block %}
+
+{% block js %}
+  <script type=text/javascript>
+    function checkbox_replace(el) {
+      uncheck_regex=/\[ \](.*)<\/p>/g;
+      checked_regex=/\[x\](.*)<\/p>/g;
+      uncheck_html="<label><input type=checkbox onchange=\"toggle(this)\">$1</label>";
+      checked_html="<label><input type=checkbox onchange=\"toggle(this)\" checked=true>$1</label>";
+      el.innerHTML=el.innerHTML.replace(uncheck_regex, uncheck_html);
+      el.innerHTML=el.innerHTML.replace(checked_regex, checked_html);
+    }
+    function toggle(el) {
+      $.post("{{ note_name }}", data={'note': el.parentNode.textContent,
+                                    'toggle': true, 'save': true}).done(
+                                      window.location="{{ note_name }}"
+                                    );
+    }
+  </script>
+{% end block %}
+
+{% block bodytag %}
+onload="checkbox_replace(document.getElementById('rendered_note'))";
+{% end block %}
+
+{% block body %}
+  {% if edit %}
+    <br>
+    <form method=POST>
+    <input type=submit class="btn btn-success" value=Save name=save>
+    <input type=submit class="btn btn-danger" value=Cancel name=cancel>
+    <br>
+    <br>
+    <textarea cols=100 rows=25 name=note tabindex=1>{{ note_contents }}</textarea>
+    {% if autosave %}
+        <script>
+          var autosave = function(){
+            $.ajax({
+               url:  "{{ note_name }}?a=edit"
+              ,type: "POST"
+              ,data: {
+                 save: "Save"
+                ,note: $("textarea").val()
+              }
+            });
+          };
+          setInterval(autosave, 5000);
+        </script>
+    {% end if %}
+  {% else %}
+    <br>
+    {% if dot %}
+      <button class="btn btn-primary" onclick="window.location='.{{ note_name }}?a=edit'">
+    {% else %}
+      <button class="btn btn-primary" onclick="window.location='{{ note_name }}?a=edit'">
+    {% end if %}
+    Edit</button>
+    <button class='btn btn-danger' onclick="window.location='{{ note_name }}?a=delete'">
+    Delete</button>
+    {% if dot %}
+      <br>
+      <br>
+      <button class="btn btn-primary" onclick="window.location='{{note_name}}?dl=True'">
+      <span class="glyphicon glyphicon-cloud-download"></span>
+      Download Original
+      <span class="glyphicon glyphicon-cloud-download"></span>
+      </button>
+    {% end if %}
+    <br>
+    <br>
+    <div id=rendered_note>
+      {% raw note_contents %}
+    </div>
+  {% end if %}
+{% end block %}
