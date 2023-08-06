@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rules
+    xmlns="http://namespaces.plone.org/diazo"
+    xmlns:css="http://namespaces.plone.org/diazo/css"
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+
+  <theme href="blank.html" />
+
+  <replace css:theme="title" css:content="title" />
+  <replace css:theme="base" css:content="base" />
+
+  <after content="/html/head/meta" theme-children="/html/head" />
+
+  <!-- default jquery.mobile theme -->
+  <before theme-children="html/head/meta" if="$mobile_theme = 'default'">
+    <link rel="stylesheet" href="++theme++zettwerk.mobile/jquery.mobile-1.4.2/jquery.mobile-1.4.2.min.css" />
+  </before>
+  <!-- custom theme -->
+  <before theme-children="html/head/meta" if="$mobile_theme != 'default'">
+    <link rel="stylesheet" href="++zettwerkmobile++{$mobile_theme}/themes/{$mobile_theme}.min.css" />
+    <link rel="stylesheet" href="++zettwerkmobile++{$mobile_theme}/themes/jquery.mobile.icons.min.css" />
+    <link rel="stylesheet" href="++theme++zettwerk.mobile/jquery.mobile-1.4.2/jquery.mobile.structure-1.4.2.min.css" />
+  </before>
+
+  <after content="/html/head/script" theme-children="/html/head" />
+
+  <merge attributes="class" css:content="body" css:theme="body" />
+  <copy attributes="id dir" css:content="body" css:theme="body" />
+
+  <!-- <replace css:content="#portal-logo" css:theme="#logo" /> -->
+  <replace css:content="h1.documentFirstHeading" css:theme="h1.page_title" />
+  <replace css:content="p.documentDescription" css:theme="p.documentDescription" />
+
+  <!-- copy the global nav content to the mobile mavigation -->
+  <replace css:content='#portal-globalnav li' css:theme-children='#global-navigation' />
+
+  <!-- copy the page content -->
+  <replace css:content-children="#content" css:theme-children="#content" />
+  <before css:content=".portalMessage" css:theme="#content" />
+
+
+  <!-- portlets without callapsible -->
+
+  <!-- <replace css:theme="#portlets"> -->
+  <!--   <xsl:for-each css:select="dl.portlet"> -->
+  <!--     <div class="ui-corner-all"> -->
+  <!-- 	<div class="ui-header ui-bar ui-bar-a"> -->
+  <!-- 	  <h3><xsl:copy-of select="dt" /></h3> -->
+  <!-- 	</div> -->
+  <!-- 	<div class="ui-body ui-body-a"> -->
+  <!-- 	  <xsl:copy-of select="dd" /> -->
+  <!-- 	</div> -->
+  <!--     </div> -->
+  <!--     <br /> -->
+  <!--   </xsl:for-each> -->
+  <!-- </replace> -->
+
+  <!-- portlets with collapsible -->
+  <replace css:theme-children="#portlets">
+    <xsl:for-each css:select="dl.portlet">
+      <div data-role="collapsible" data-collapsed-icon="carat-d" data-expanded-icon="carat-u">
+  	<h4><xsl:copy-of select="dt" /></h4>
+  	<xsl:copy-of select="dd" />
+      </div>
+    </xsl:for-each>
+  </replace>
+
+  <replace css:content='#portal-footer' css:theme-children='#footer' />
+
+</rules>
