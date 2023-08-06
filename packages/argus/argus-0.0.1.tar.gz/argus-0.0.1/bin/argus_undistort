@@ -1,0 +1,67 @@
+#!/usr/bin/env python
+"""
+If the calibration is working right, the movie when undistorted should
+look `straight' as in the pattern should preserve straight lines and 
+right angles.  It may still be distorted at the very edges; this is a 
+limitation of using only 3 radial terms. 
+"""
+
+
+import cv2
+import numpy as np
+import argparse
+import pickle
+import logging
+import argus
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Check calibration by viewing undistorted movie", epilog=__doc__)
+    parser.add_argument("movie",help=".mp4 movie to undistort")
+    parser.add_argument("ifile",help=".csv file with input calibration list")
+    parser.add_argument("--scale",default=1.,
+                        help="scale factor for display")
+    parser.add_argument("--noheader",action="store_true",
+                        help="file has no header")
+    args = parser.parse_args()
+
+    movie = cv2.VideoCapture(args.movie)
+    cv2.namedWindow("undistorted",cv2.cv.CV_WINDOW_NORMAL)
+
+    ifile = file(args.ifile,"r")
+    if args.noheader:
+        line = ifile.readline()
+    else:
+        _ = ifile.readline()
+        line = ifile.readline()
+    ifile.close
+
+    best = argus.Camera.from_vec(map(float,line.split(",")))
+    cM = best.cM
+    dC = best.dC
+
+    R = np.eye(3)
+    newcM = cM
+    newsize = ((int(movie.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)*float(args.scale)),
+                int(movie.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)*float(args.scale))))
+    map1,map2 = cv2.initUndistortRectifyMap(cM,dC,R,newcM,newsize,cv2.cv.CV_32FC1)
+
+    #boardsize = (7,10)
+
+    for a in range(int(movie.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))):
+        retval,raw = movie.read()
+
+        if retval:
+            draw = raw
+            gray = cv2.cvtColor(draw,cv2.COLOR_RGB2GRAY)
+    
+            #retval2,corners = cv2.findChessboardCorners(gray,boardsize)
+            #cv2.drawChessboardCorners(gray,boardsize,corners,retval2)
+            undistorted = cv2.remap(gray,map1,map2,cv2.INTER_LINEAR)
+
+            cv2.imshow("undistorted",undistorted)
+            cv2.waitKey(1)
+
+
+    movie = None
+    cv2.destroyWindow("undistorted")

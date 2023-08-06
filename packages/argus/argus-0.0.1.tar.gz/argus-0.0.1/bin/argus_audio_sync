@@ -1,0 +1,89 @@
+#!/usr/bin/env python
+"""
+Uses an FFT-based cross correlation to determine the frame offsets between
+the first video and each subsequent video listed.  The output (defaults to
+'frame_offsets.csv') is a comma-separated text file containing the 
+video filenames, the synchronization offset in frames for each camera, and
+a normalized coefficient (ranging between 0 and 1).  
+
+Offset values can be used in DLTDV5 and other subsequent processing to shift
+videos that do not have a hardware sync.  
+
+Known bugs: For long videos (longer than 2 minutes), the script currently 
+works with 1 minute segements; if videos are more than 30 seconds out of sync,
+the results may be spurious.  The MATLAB version of this code handles this
+issue using the 'full' flag.  
+
+We recommand organizing video files such that each trial is in its own folder,
+with files named so that camera 0 is first after sorting alpha-numerically. 
+
+Example command-line usage:
+
+argus_audio_sync *.MP4 
+will produce a file 'frame_offsets.csv' that gives the offsets analyzed in 1
+minute segments, using all videos in the directory, with camera 0 set as the
+first alpha-numeric file. 
+
+argus_audio_sync --first trial02_green.MP4 --ofile trial02_offsets.csv *.MP4
+will output 'trial02_offsets.csv' with offsets for all video files in the
+directory, but with camera 'green' as the camera 0. 
+
+Brandon Jackson and Dennis Evangelista
+June 2014
+"""
+
+import argparse
+import logging
+import os
+import argus
+
+DEFAULT_OFILE = "frame_offsets.csv"
+
+
+if __name__ == "__main__":
+
+   # Parse command line arguments using standard Python argparse library
+   parser = argparse.ArgumentParser(description="Find frame offsets in several videos",epilog=__doc__)
+   parser.add_argument("ifiles",nargs="+",
+                       help="filenames to process")
+   parser.add_argument("--first",default=None,
+                       help="specify name of camera 0, optional")
+   parser.add_argument("--ofile",default=None,
+                       help="output filename, defaults to {0}".format(DEFAULT_OFILE))
+   parser.add_argument("-v","--verbose",action="store_true",
+                       help="toggle verbosity")
+   args = parser.parse_args()
+
+   if args.verbose:
+       logging.basicConfig(level=logging.DEBUG)
+       logging.debug("Verbose mode")
+   else:
+       logging.basicConfig(level=logging.INFO)
+
+   if args.first:
+      while args.first in args.ifiles: args.ifiles.remove(args.first)
+   else:
+      args.first = args.ifiles.pop(0)
+   logging.debug("Processing {0} as first, {1}".format(args.first, args.ifiles))
+   logging.debug("Loading audio for camera 0 from {0}".format(args.first))
+   signal0 = argus.get_audio(args.first)
+
+   if args.ofile is None:
+      args.ofile = os.path.join(os.path.dirname(args.first),DEFAULT_OFILE)
+   logging.debug("Writing output to {0}".format(args.ofile))
+   ofile = file(args.ofile,"w")
+   ofile.write("filename,frame_offset,confidence")
+   ofile.write("\n{0},0.0,1.0".format(args.first))
+
+   for each in args.ifiles:
+       signal1 = argus.get_audio(each)      
+       frame_offset, confidence = argus.find_offset(signal0,signal1) 
+       #write the result to the output file or screen as desired 
+       ofile.write("\n{0},{1},{2}".format(each,frame_offset,confidence[0]))
+       logging.debug("{0},{1},{2}".format(each,frame_offset,confidence[0]))
+       
+   # Cleanup
+   logging.debug("Done writing, cleaning up")
+   ofile.close()
+
+
