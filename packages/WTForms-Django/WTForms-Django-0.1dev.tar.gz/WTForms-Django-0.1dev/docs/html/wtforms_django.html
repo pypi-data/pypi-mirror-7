@@ -1,0 +1,243 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>WTForms-Django &mdash; WTForms-Django 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="WTForms-Django 0.1 documentation" href="index.html" />
+    <link rel="prev" title="WTForms-Django documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="WTForms-Django documentation"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">WTForms-Django 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-wtforms_django">
+<span id="wtforms-django"></span><h1>WTForms-Django<a class="headerlink" href="#module-wtforms_django" title="Permalink to this headline">¶</a></h1>
+<p>This extension provides templatetags to make it easier to work with Django
+templates and WTForms&#8217; html attribute rendering. It also provides a generator
+for automatically creating forms based on Django ORM models.</p>
+<div class="section" id="module-wtforms_django.templatetags.wtforms">
+<span id="templatetags"></span><h2>Templatetags<a class="headerlink" href="#module-wtforms_django.templatetags.wtforms" title="Permalink to this headline">¶</a></h2>
+<p>Django templates does not allow arbitrarily calling functions with parameters,
+making it impossible to use the html attribute rendering feature of WTForms. To
+alleviate this, we provide a templatetag.</p>
+<p>Adding <a class="reference internal" href="#module-wtforms_django" title="wtforms_django"><tt class="xref py py-mod docutils literal"><span class="pre">wtforms_django</span></tt></a> to your INSTALLED_APPS will make the wtforms
+template library available to your application.  With this you can pass extra
+attributes to form fields similar to the usage in jinja:</p>
+<div class="highlight-django"><div class="highlight"><pre><span class="cp">{%</span> <span class="k">load</span> <span class="nv">wtforms</span> <span class="cp">%}</span><span class="x"></span>
+
+<span class="cp">{%</span> <span class="k">form_field</span> <span class="nv">form.username</span> <span class="nv">class</span><span class="o">=</span><span class="s2">&quot;big_text&quot;</span> <span class="nv">onclick</span><span class="o">=</span><span class="s2">&quot;do_something()&quot;</span> <span class="cp">%}</span><span class="x"></span>
+</pre></div>
+</div>
+<p><strong>Note</strong> By default, using the <tt class="docutils literal"><span class="pre">{{</span> <span class="pre">form.field</span> <span class="pre">}}</span></tt> syntax in django models will
+be auto-escaped.  To avoid this happening, use Django&#8217;s <tt class="docutils literal"><span class="pre">{%</span> <span class="pre">autoescape</span> <span class="pre">off</span> <span class="pre">%}</span></tt>
+block tag or use WTForms&#8217; <cite>form_field</cite> template tag.</p>
+</div>
+<div class="section" id="module-wtforms_django.orm">
+<span id="model-forms"></span><h2>Model forms<a class="headerlink" href="#module-wtforms_django.orm" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="wtforms_django.orm.model_form">
+<tt class="descclassname">wtforms_django.orm.</tt><tt class="descname">model_form</tt><big>(</big><em>model</em>, <em>base_class=Form</em>, <em>only=None</em>, <em>exclude=None</em>, <em>field_args=None</em>, <em>converter=None</em><big>)</big><a class="headerlink" href="#wtforms_django.orm.model_form" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a wtforms Form for a given Django model class:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">wtforms_django.orm</span> <span class="kn">import</span> <span class="n">model_form</span>
+<span class="kn">from</span> <span class="nn">myproject.myapp.models</span> <span class="kn">import</span> <span class="n">User</span>
+<span class="n">UserForm</span> <span class="o">=</span> <span class="n">model_form</span><span class="p">(</span><span class="n">User</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>model</strong> &#8211; A Django ORM model class</li>
+<li><strong>base_class</strong> &#8211; Base form class to extend from. Must be a <tt class="docutils literal"><span class="pre">wtforms.Form</span></tt> subclass.</li>
+<li><strong>only</strong> &#8211; An optional iterable with the property names that should be included in
+the form. Only these properties will have fields.</li>
+<li><strong>exclude</strong> &#8211; An optional iterable with the property names that should be excluded
+from the form. All other properties will have fields.</li>
+<li><strong>field_args</strong> &#8211; An optional dictionary of field names mapping to keyword arguments used
+to construct each field object.</li>
+<li><strong>converter</strong> &#8211; A converter to generate the fields based on the model properties. If
+not set, <tt class="docutils literal"><span class="pre">ModelConverter</span></tt> is used.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p><a class="reference internal" href="#wtforms_django.orm.model_form" title="wtforms_django.orm.model_form"><tt class="xref py py-func docutils literal"><span class="pre">model_form()</span></tt></a> attempts to glean as much metadata as possible from
+inspecting the model&#8217;s fields, and will even attempt to guess at what
+validation might be wanted based on the field type. For example, converting
+an <cite>EmailField</cite> will result in a <tt class="xref py py-class docutils literal"><span class="pre">StringField</span></tt> with
+the <tt class="xref py py-class docutils literal"><span class="pre">Email</span></tt> validator on it. if the <cite>blank</cite>
+property is set on a model field, the resulting form field will have the
+<tt class="xref py py-class docutils literal"><span class="pre">Optional</span></tt> validator set.</p>
+<p>Just like any other Form, forms created by model_form can be extended via
+inheritance:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">UserFormBase</span> <span class="o">=</span> <span class="n">model_form</span><span class="p">(</span><span class="n">User</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">UserForm</span><span class="p">(</span><span class="n">UserFormBase</span><span class="p">):</span>
+    <span class="n">new_pass</span>     <span class="o">=</span> <span class="n">PasswordField</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(),</span> <span class="n">validators</span><span class="o">.</span><span class="n">equal_to</span><span class="p">(</span><span class="s">&#39;confirm_pass&#39;</span><span class="p">)])</span>
+    <span class="n">confirm_pass</span> <span class="o">=</span> <span class="n">PasswordField</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>When combined with <tt class="xref py py-meth docutils literal"><span class="pre">form</span> <span class="pre">iteration</span></tt>,
+model_form is a handy way to generate dynamic CRUD forms which update with
+added fields to the model. One must be careful though, as it&#8217;s possible the
+generated form fields won&#8217;t be as strict with validation as a hand-written
+form might be.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-wtforms_django.fields">
+<span id="orm-backed-fields"></span><h2>ORM-backed fields<a class="headerlink" href="#module-wtforms_django.fields" title="Permalink to this headline">¶</a></h2>
+<p>While linking data to most fields is fairly easy, making drop-down select lists
+using django ORM data can be quite repetitive. To this end, we have added some
+helpful tools to use the django ORM along with wtforms.</p>
+<dl class="class">
+<dt id="wtforms_django.fields.QuerySetSelectField">
+<em class="property">class </em><tt class="descclassname">wtforms_django.fields.</tt><tt class="descname">QuerySetSelectField</tt><big>(</big><em>default field args</em>, <em>queryset=None</em>, <em>get_label=None</em>, <em>allow_blank=False</em>, <em>blank_text=u''</em><big>)</big><a class="headerlink" href="#wtforms_django.fields.QuerySetSelectField" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a QuerySet either at initialization or inside a view, will display a
+select drop-down field of choices. The <cite>data</cite> property actually will
+store/keep an ORM model instance, not the ID. Submitting a choice which is
+not in the queryset will result in a validation error.</p>
+<p>Specify <cite>get_label</cite> to customize the label associated with each option. If
+a string, this is the name of an attribute on the model object to use as
+the label text. If a one-argument callable, this callable will be passed
+model instance and expected to return the label text. Otherwise, the model
+object&#8217;s <cite>__str__</cite> or <cite>__unicode__</cite> will be used.</p>
+<p>If <cite>allow_blank</cite> is set to <cite>True</cite>, then a blank choice will be added to the
+top of the list. Selecting this choice will result in the <cite>data</cite> property
+being <cite>None</cite>.  The label for the blank choice can be set by specifying the
+<cite>blank_text</cite> parameter.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">ArticleEdit</span><span class="p">(</span><span class="n">Form</span><span class="p">):</span>
+    <span class="n">title</span>    <span class="o">=</span> <span class="n">StringField</span><span class="p">()</span>
+    <span class="n">column</span>   <span class="o">=</span> <span class="n">QuerySetSelectField</span><span class="p">(</span><span class="n">get_label</span><span class="o">=</span><span class="s">&#39;title&#39;</span><span class="p">,</span> <span class="n">allow_blank</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">category</span> <span class="o">=</span> <span class="n">QuerySetSelectField</span><span class="p">(</span><span class="n">queryset</span><span class="o">=</span><span class="n">Category</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">())</span>
+
+<span class="k">def</span> <span class="nf">edit_article</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
+    <span class="n">article</span> <span class="o">=</span> <span class="n">Article</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pk</span><span class="o">=</span><span class="nb">id</span><span class="p">)</span>
+    <span class="n">form</span> <span class="o">=</span> <span class="n">ArticleEdit</span><span class="p">(</span><span class="n">obj</span><span class="o">=</span><span class="n">article</span><span class="p">)</span>
+    <span class="n">form</span><span class="o">.</span><span class="n">column</span><span class="o">.</span><span class="n">queryset</span> <span class="o">=</span> <span class="n">Column</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">author</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>As shown in the above example, the queryset can be set dynamically in the
+view if needed instead of at form construction time, allowing the select
+field to consist of choices only relevant to the user.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="wtforms_django.fields.ModelSelectField">
+<em class="property">class </em><tt class="descclassname">wtforms_django.fields.</tt><tt class="descname">ModelSelectField</tt><big>(</big><em>default field args</em>, <em>model=None</em>, <em>get_label=''</em>, <em>allow_blank=False</em>, <em>blank_text=u''</em><big>)</big><a class="headerlink" href="#wtforms_django.fields.ModelSelectField" title="Permalink to this definition">¶</a></dt>
+<dd><p>Like a QuerySetSelectField, except takes a model class instead of a
+queryset and lists everything in it.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="wtforms_django.fields.DateTimeField">
+<em class="property">class </em><tt class="descclassname">wtforms_django.fields.</tt><tt class="descname">DateTimeField</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#wtforms_django.fields.DateTimeField" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds support for Django&#8217;s timezone utilities.
+Requires Django &gt;= 1.4</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">WTForms-Django</a><ul>
+<li><a class="reference internal" href="#module-wtforms_django.templatetags.wtforms">Templatetags</a></li>
+<li><a class="reference internal" href="#module-wtforms_django.orm">Model forms</a></li>
+<li><a class="reference internal" href="#module-wtforms_django.fields">ORM-backed fields</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">WTForms-Django documentation</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/wtforms_django.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="WTForms-Django documentation"
+             >previous</a> |</li>
+        <li><a href="index.html">WTForms-Django 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, WTForms Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
