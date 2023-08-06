@@ -1,0 +1,58 @@
+name: pyul-test
+description: "This job will test any commits pushed to any branch for pyul"
+assigned_node: python
+
+properties:
+- type: github-project
+  project_url: http://github.com/rocktavious/pyul
+  
+scms:
+- type: git
+  repo_url: https://jenkins-mmf:efibCek9@github.com/rocktavious/pyul.git
+  branches:
+  - 'origin/*'
+  
+triggers:
+- type: github-push
+
+builders:
+- type: shell
+  command: |
+    . ./jenkins/clean.sh
+    . ./jenkins/virtualenv.sh
+    . ./jenkins/test.sh
+
+publishers:
+- type: flexible
+  actions:
+  - type: conditional
+    condition:
+      type: string
+      arg1: $GIT_BRANCH
+      arg2: "origin/master"
+      ignore_case: true
+    steps:
+    - type: cobertura
+      report_path: test_output/coverage.xml
+  - type: conditional
+    condition:
+      type: string
+      arg1: $GIT_BRANCH
+      arg2: "origin/master"
+      ignore_case: true
+    steps:
+    - type: junit
+      results: test_output/*.xml
+  - type: conditional
+    condition:
+      type: string
+      arg1: $GIT_BRANCH
+      arg2: "origin/master"
+      ignore_case: true
+    steps:
+    - type: coverage.py
+- type: github_commit_status
+
+buildWrappers:
+- type: namesetter
+  name_format: '#${BUILD_NUMBER}-${ENV,var="GIT_BRANCH"}'
