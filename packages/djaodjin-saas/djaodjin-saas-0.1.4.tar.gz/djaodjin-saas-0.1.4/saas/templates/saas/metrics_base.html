@@ -1,0 +1,31 @@
+{% extends "saas/base.html" %}
+{% load saas_tags %}
+
+{% block saas_content %}
+<section id="metrics_table">
+  <h1>{{title}} for {{organization}}</h1>
+  <table>
+    <thead>
+      <tr>
+        <th></th>
+        {% for entry in data.0.table.0.values %}
+        <th {% if entry.0|is_incomplete_month %}title="ends {{entry.0}}"{% endif %}>{{entry.0|monthly_caption}}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for key, elements in data.items %}
+      {% for row in elements.table %}
+      <tr>
+        <th>{{row.key}}</th>
+          {% for values in row.values %}
+          <td align="right">{{values.1}}</td>
+          {% endfor %}
+      </tr>
+      {% endfor %}
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}
+
