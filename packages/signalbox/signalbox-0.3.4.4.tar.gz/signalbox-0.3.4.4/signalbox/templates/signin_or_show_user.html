@@ -1,0 +1,25 @@
+{% if not request.user.is_authenticated %}
+    <form class="navbar-form pull-right"
+        method="post"
+        action="{% url "django.contrib.auth.views.login"  %}"
+    >
+      {{ request.login_form.username }}
+      {{ request.login_form.password }}
+      {% csrf_token %}<input type="hidden" name="next" value="{{ next }}" />
+      <button type="submit" class="btn">Sign in</button>
+    </form>
+{% else %}
+    <p class="navbar-text pull-right">
+
+        Welcome back
+        <a href="{% url "user_homepage" %}">{{request.user.username|title}}</a>.
+
+        (Not {{request.user.username|title}}? <a href="{% url 'logout' %}">Logout here </a>)
+
+      {% if not hideprofilebutton%}
+
+          <a class="btn btn-mini btn-primary" style="display:inline;" href="{% url "user_homepage" %}">Check tasks</a>
+
+      {% endif %}
+    </p>
+{% endif %}

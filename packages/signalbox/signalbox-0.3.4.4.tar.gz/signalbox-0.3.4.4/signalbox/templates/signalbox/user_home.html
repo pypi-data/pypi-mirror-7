@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% load markup %}
+
+{% block title %}User profile for: {{user}}{% endblock %}
+{% block base_content %}
+
+    <div class="row">
+        {% with user.userprofile.tasklist_observations|length as l %}
+        <div class="tabbable span12"> <!-- Only required for left/right tabs -->
+        <ul class="nav nav-tabs" id="usertabs">
+
+            <li class="active"><a href="#tabtasks" data-toggle="tab">
+                Tasks to do
+
+                <span class="
+                badge {% if l %}badge-warning{%else%}badge-info{% endif %}
+                badge {% if participant.has_observation_expiring_today %}badge-important{% endif %}
+                ">{{l}}</span> </a>
+
+            </li>
+            <li><a href="#tabextra" data-toggle="tab">Extra questionnaires</a></li>
+            <li><a href="#tabstudies" data-toggle="tab">Studies</a></li>
+            <li><a href="#tabdetails" data-toggle="tab">Personal details</a></li>
+        </ul>
+
+          <div class="tab-content">
+            <div class="tab-pane active" id="tabtasks">
+                 <h2>
+                    <span style="text-transform:capitalize;">
+                    {% if user.first_name %}
+                        {{user.first_name}},
+                    {% else %}
+                        {{user.username}},
+                    {% endif %}
+                </span>
+
+                {% if l > 0 %}
+                    you have questionnaires to complete:</h2><br/><br/>
+                    {% with user.userprofile.obs_by_study as obs_by_study %}
+                        {% include 'manage/observations_todo_fragment.html' %}
+                    {% endwith %}
+                {%else%}
+                       you're up to date with everything.</h2>
+                {%endif%}
+            </div>
+            {% endwith %}
+
+            <div class="tab-pane" id="tabextra">
+                {% with request.user as participant %}
+                    {% include "admin/signalbox/_fragments/_ad_hoc_scripts.html" %}
+                {% endwith %}
+            </div>
+            <div class="tab-pane span8" id="tabdetails">
+                    <p><a class="btn" href="{% url "update_profile_for_studies" %}">Update your details</a></p>
+
+                    <table class="small">
+                    <tr>
+                        <td>Email:</td>
+                        <td>{{user.email}}</td>
+                    </tr>
+                    <tr>
+                        <td>Mobile:</td>
+                        <td>{{user.userprofile.formatted_mobile}}</td>
+                    </tr>
+                    </table>
+
+
+            </div>
+
+
+            <div class="tab-pane" id="tabstudies">
+
+                {% if user.userprofile.current_memberships %}
+                <h4>Current studies</h4>
+
+                <ul>
+                    {% for m in user.userprofile.current_memberships %}
+                    <li><a href="{% url 'membership_home' m.id %}">{{m.study.name}}</a>
+
+                        {% if m.study.show_study_condition_to_user %}
+                            {% if m.condition.display_name %}
+                                ({{m.condition.display_name}})
+                            {% else %}
+                                ({{m.condition.tag}})
+                            {% endif %}
+                        {%endif%}
+                    </li>
+                {% endfor %}
+                </ul>
+                {% endif %}
+
+
+                {% if user.userprofile.other_memberships %}
+                <h4>You previously took part in:</h4>
+                <ul>
+                {% for m in user.userprofile.other_memberships %}
+                    <li>{{m.study.name}}</li>
+                {% endfor %}
+                </ul>
+                {% endif %}
+
+
+            </div>
+
+
+          </div>
+        </div>
+
+    </div>
+
+
+
+
+{% endblock %}
+

@@ -1,0 +1,44 @@
+{% load markup humanize %}
+{% load signalbox_tags %}
+{% load cache %}
+{% cache 500 prev_replies  request.user.username  %}
+{% regroup participant.userprofile.previous_reply_set by observation.dyad as memberships %}
+
+
+{% for m in memberships %}
+{% with m as m %}
+<h3 class="span12">
+            {% if m.grouper %}
+                {{ m.grouper.study.name }}:
+            {% else %}
+                Not linked to a particular study:
+            {% endif %}
+</h3>
+<h5 class="span12">
+            {% if m.grouper.relates_to %}
+                (related to {{m.grouper.relates_to}})
+            {% endif %}
+</h5>
+<table class="table span8">
+<tr>
+    <th>Last submit</th>
+    <th>Script name</th>
+    <th>Last saved</th>
+</tr>
+{% for reply in m.list %}
+{% with reply as reply  and reply.observation as ro %}
+    <tr>
+        <td>{{reply.last_submit}}</td>
+        {% if ro %}
+            <td>{{ro.label}}</td>
+        {% else %}
+            <td>{{reply.asker}}</td>
+        {% endif %}
+        <td>{{reply.last_submit}}</td>
+    </tr>
+{% endwith %}
+{% endfor %}
+</table>
+{% endwith %}
+{% endfor %}
+{% endcache %}

@@ -1,0 +1,47 @@
+    {% extends "admin/base_site.html" %}
+    {% block title %}SignalBox Dashboard{% endblock %}
+
+    {% block extra_style %}
+    .green { color:green;}
+    {% endblock %}
+
+    {% block breadcrumbs %}
+    <ul class="breadcrumb">
+        <li><a href="/admin">Home</a><span class="divider">/</span></li>
+        <li><a href="/admin/signalbox">Signalbox</a><span class="divider">/</span></li>
+        <li><a href="{% url resolve_double_entry_conflicts %}">Resolve Duplicate Observation</a><span class="divider">/</span></li>
+        <li><a href="/admin/signalbox/study/{{study.id}}">{{study.name}}</a><span class="divider">/</span></li>
+    </ul>
+    {% endblock %}
+
+    {% block content_title %}
+    <a class="brand">Observations with duplicate data</a>{% endblock %}
+
+
+
+    {% block content %}
+    {% if with_dupes %}
+    <table class="table">
+        <tr>
+            <th>Observation</th><th>User</th><th>Study</th><th>Reply selected</th><th></th>
+        </tr>
+
+
+        {% for i in with_dupes %}
+        <tr>
+            <td>{{i.label}} (#{{i.id}})</td>
+            <td>{{i.dyad.user}}</td>
+            <td>{{i.dyad.study}}</td>
+            <td><img src="{{STATIC_URL}}admin/img/icon-{% if i.has_manually_selected_canonical_reply %}yes{%else%}no{%endif%}.gif">
+            </td>
+            <td>
+                <a class="btn btn-primary" href="{% url 'resolve_double_entry_conflicts_for_observation' i.id %}">Select a Reply</a></td>
+        </tr>
+        {% endfor %}
+
+    </table>
+    {% else %}
+        <p class="alert">No observations have duplicate replies</p>
+    {% endif %}
+
+    {% endblock %}

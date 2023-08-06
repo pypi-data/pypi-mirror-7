@@ -1,0 +1,50 @@
+{%load humanize%}
+
+{% if user.userprofile.has_observation_expiring_today %}
+<h2> Alert: You have questionnaires which must be completed today...</h2>
+{% else %}
+{% endif %}
+<div class="row">
+<div class="">
+
+
+<table class="table  table-hover span8">
+    {% for study, obs_due in obs_by_study %}
+
+    {% for o in obs_due %}
+            <tr>
+                <td width=1%><span class="text-warning">
+                    {% if o.display_time_remaining %}
+                    <i class="icon-time"></i>{% endif %}
+                    </span>
+                </td>
+                <td>
+                    <a class="btn btn-large pull-right  {% if not forloop.first %}disabled{% endif %}
+                            btn-primary" href="
+                            {% if perms.ask.can_double_enter %}
+                            {% url 'start_data_entry' o.token %}?next={{next}}
+                            {% else %}
+                            {% url 'start_data_entry' o.token %}
+                            {% endif %}
+                        ">
+                        {% if o.script.user_instructions %}
+                            {{o.script.user_instructions}}
+                        {% else %}
+                            Start
+                        {% endif %}
+                    </a>
+
+                    <p class="information">
+
+                    {% if o.link %}
+                    <h3>{{o.label}}</h3>
+                    {% endif %}
+                    (Will take approx {{o.script.asker.approximate_time_to_complete}} minutes)
+                    </p>
+                </td>
+            </tr>
+    {% endfor %}
+{% endfor %}
+</table>
+</div>
+</div>
