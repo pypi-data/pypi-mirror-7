@@ -1,0 +1,74 @@
+
+===================
+Reference Databases Needed
+===================
+
+To run the pipelines, you will need to have reference databases installed on your cluster. If you are using the
+AWS installation, these databases are provided for you.  If you need to install your references, please install the ones below.
+Omics Pipe is compatible with all species genome files.  Examples below are for hg19, but you can substitute them for the equivalent files from other species. 
+
+All Pipelines
+===========
+
+Genome
+------------------
+
+* .fa file can be downloaded from: `<http://cufflinks.cbcb.umd.edu/igenomes.html>`_
+
+Reference Annotation Files
+------------------------------
+You can use any reference annotations you would like, as long as they are GTF files. 
+
+Examples include: 
+
+* gencode.v18.annotation.gtf
+
+* UCSC genes.gtf
+
+References for Variants (RNA-seq cancer, RNA-seq cancer TCGA, WES and WGS pipelines)
+==============
+
+* dbsnp_137.hg19.vcf
+
+* Mills_and_1000G_gold_standard.indels.hg19.vcf
+
+* 1000G_phase1.indels.hg19.vcf
+
+* hapmap_3.3.hg19.vcf
+
+* 1000G_omni2.5.hg19.vcf
+
+* dbNSFP2.0.txt
+
+* common_no_known_medical_impact_00-latest.vcf
+
+* cadd.tsv.gz
+
+* drugbank.tsv
+
+* cosmic.tsv
+
+* clinvar.txt
+
+
+WES Pipeline 
+======
+
+* truseq_exome_targeted_regions.hg19.bed
+
+
+ChIP-seq Pipelines
+========
+* hg19.chrom.sizes
+
+
+SNPiR Pipelines (RNA-seq cancer and RNA-seq cancer TCGA pipelines)
+==============================================
+
+* BWA Index
+
+* RNA editing sites (Human_AG_all_hg19.bed)
+
+* RepeatMasker.bed
+
+* anno_combined_sorted

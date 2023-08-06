@@ -1,0 +1,7 @@
+.. index:: omics_pipe; license
+
+=========
+License
+=========
+
+.. include:: ../LICENSE

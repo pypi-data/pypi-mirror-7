@@ -1,0 +1,272 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>OmicsPipe on the Amazon Cloud (AWS EC2) Tutorial &mdash; Omics Pipe v1.0.16 Documentation</title>
+    
+    <link rel="stylesheet" href="_static/cloud.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.0.16',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="_static/cloud.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="copyright" title="Copyright" href="copyright.html" />
+    <link rel="top" title="Omics Pipe v1.0.16 Documentation" href="index.html" />
+    <link rel="next" title="Omics Pipe Tutorial – Installation" href="tutorial.html" />
+    <link rel="prev" title="Using Omics Pipe" href="installation.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="relbar-top">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="tutorial.html" title="Omics Pipe Tutorial – Installation"
+             accesskey="N">next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="installation.html" title="Using Omics Pipe"
+             accesskey="P">previous</a> &nbsp; &nbsp;</li>
+    <li><a href="contents.html">Omics Pipe 1.0.16 Documentation</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="omicspipe-on-the-amazon-cloud-aws-ec2-tutorial">
+<span id="index-0"></span><h1>OmicsPipe on the Amazon Cloud (AWS EC2) Tutorial<a class="headerlink" href="#omicspipe-on-the-amazon-cloud-aws-ec2-tutorial" title="Permalink to this headline">¶</a></h1>
+<p>OmicsPipe on AWS uses a custom <a class="reference external" href="http://star.mit.edu/cluster/">StarCluster</a> image, created with <a class="reference external" href="https://www.docker.io/">docker.io</a> ( which installs <a class="reference external" href="https://www.docker.io/">docker.io</a>, <a class="reference external" href="http://modules.sourceforge.net/)">environment-modules</a>, and <a class="reference external" href="https://github.com/hpcugent/easybuild)">easybuild</a> on an AWS EC2 cluster.
+All you have to do is get the docker image, upload your data, launch the Amazon cluster and run a single command to analyze all of your data according to published, best-practice methods.</p>
+<div class="section" id="load-the-the-omicspipe-on-aws-docker-image-on-your-machine">
+<h2>Load the the OmicsPipe on AWS docker image on your machine<a class="headerlink" href="#load-the-the-omicspipe-on-aws-docker-image-on-your-machine" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic">
+<li><p class="first">Download <a class="reference external" href="https://www.docker.io/">docker.io</a> following the instructions at <a class="reference external" href="http://docs.docker.io/introduction/get-docker/">Get-Docker</a></p>
+</li>
+<li><p class="first">From inside the Docker environment, run the command:</p>
+<div class="highlight-python"><pre>docker run -i -t omicspipe/aws\_readymade /bin/bash</pre>
+</div>
+</li>
+</ol>
+</div>
+<div class="section" id="setting-up-aws">
+<h2>Setting up AWS<a class="headerlink" href="#setting-up-aws" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple" start="0">
+<li>Create an AWS account by following the instructions at <a href="#id2"><span class="problematic" id="id3">`Amazon-AWS`_</span></a></li>
+<li>Create data volumes to store raw data, results and access the reference databases</li>
+</ol>
+<blockquote>
+<div><ul>
+<li><p class="first">Within the Docker environment, run the commands:</p>
+<div class="highlight-python"><pre>starcluster createvolume --name=data -i ami-52112317 -d -s &lt;volume size in GB&gt; us-west-1b
+
+starcluster createvolume --name=results -i ami-52112317 -d -s &lt;volume size in GB&gt; us-west-1b</pre>
+</div>
+</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>Note the &#8220;VOLUME_ID&#8221;s in the output</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>Go to the <a class="reference external" href="https://console.aws.amazon.com">AWS-Console</a></li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>Click on the <a class="reference external" href="https://console.aws.amazon.com/ec2">EC2 option</a></li>
+<li>Click on Volumes</li>
+<li>Click on &#8220;Create Volume&#8221;</li>
+<li>Create a third volume using the Snapshot ID &#8220;omicspipe_db&#8221; to get a copy of all needed databases from our S3 snapshot</li>
+<li>Note the &#8220;VOLUME_ID&#8221;</li>
+</ul>
+</div>
+<div class="section" id="to-use-starcluster">
+<h2>To use StarCluster<a class="headerlink" href="#to-use-starcluster" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic">
+<li><p class="first">Run the command:</p>
+<div class="highlight-python"><pre>nano ~/.starcluster/config</pre>
+</div>
+</li>
+</ol>
+<p>(This will open the config file with the text editor, nano. Vim is also available if it is preferred.)</p>
+<blockquote>
+<div><ul class="simple">
+<li>enter your &#8220;AWS ACCESS KEY ID&#8221;, &#8220;AWS SECRET ACCESS KEY&#8221;, and &#8220;AWS USER ID&#8221; along with the &#8220;VOLUME_ID&#8221;s of your S3 buckets</li>
+<li>**NOTE: if you do not live in the AWS us-west region, change your &#8220;AWS REGION NAME&#8221; and &#8220;AWS REGION HOST&#8221; variables as appropriate</li>
+<li>save the file</li>
+</ul>
+</div></blockquote>
+<ol class="arabic" start="2">
+<li><p class="first">Run the command:</p>
+<div class="highlight-python"><pre>starcluster createkey omicspipe -o ~/.ssh/omicspipe.rsa</pre>
+</div>
+</li>
+<li><dl class="first docutils">
+<dt>Run the command::</dt>
+<dd><p class="first last">starcluster start mypipe</p>
+</dd>
+</dl>
+</li>
+</ol>
+</div>
+<div class="section" id="upload-your-data">
+<h2>Upload your data<a class="headerlink" href="#upload-your-data" title="Permalink to this headline">¶</a></h2>
+<p>There are two options to upload your data:</p>
+<ol class="arabic">
+<li><dl class="first docutils">
+<dt>Run the command::</dt>
+<dd><p class="first last">starcluster put mypipe &lt;myfile&gt; /data/raw</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Webmin</dt>
+<dd><ul class="first last simple">
+<li>In the AWS Managemnt Console got to &#8220;Security Groups&#8221;</li>
+<li>Select the &#8220;StarCluster-0_95_5&#8221; group</li>
+<li>On the Inbound tab click on &#8220;Edit&#8221;</li>
+<li>Click on &#8220;Add Rule&#8221; and a new &#8220;Custom TCP Rule&#8221; will apear. On &#8220;Port Range&#8221; enter &#8220;10000&#8221; and on &#8220;Source&#8221; select &#8220;My IP&#8221;</li>
+<li>Hit &#8220;Save&#8221;</li>
+<li>Selct Instances in the AWS managemnt console and note the &#8220;Public IP&#8221; of your instance</li>
+<li>In a Webbrowser enter <a class="reference external" href="https://the_public_ip:10000">https://the_public_ip:10000</a>. Login: root / sulab</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ol>
+<p>After these steps, your StarCluster AWS EC2 cluster will be created with one slave node. Edit the ~/.starcluster/config file to further modify your EC2 cluster.</p>
+<p>The Dockerfiles in OmicsPipe can be used to build the dockerCluster image.</p>
+</div>
+<div class="section" id="to-build-your-own-docker-image-using-the-dockerfile">
+<h2>To build your own docker image using the Dockerfile<a class="headerlink" href="#to-build-your-own-docker-image-using-the-dockerfile" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic">
+<li><p class="first">Download docker.io following the instructions at <a class="reference external" href="http://docs.docker.io/introduction/get-docker/">Get-Docker</a></p>
+</li>
+<li><p class="first">Run the command:</p>
+<div class="highlight-python"><pre>docker build -t &lt;Repository Name&gt; https://bitbucket.org/sulab/omics\_pipe/downloads/Dockerfile\_AWS\_custombuild</pre>
+</div>
+</li>
+</ol>
+<p>This will store the dockercluster image in the Repository Name of your choice.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+        <p class="logo"><a href="contents.html" title="contents">
+          <img class="logo" src="_static/logo.jpg" alt="Logo"/>
+        </a></p><div class="sphinxlocaltoc">
+    <h3><a href="contents.html">Page contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">OmicsPipe on the Amazon Cloud (AWS EC2) Tutorial</a><ul>
+<li><a class="reference internal" href="#load-the-the-omicspipe-on-aws-docker-image-on-your-machine">Load the the OmicsPipe on AWS docker image on your machine</a></li>
+<li><a class="reference internal" href="#setting-up-aws">Setting up AWS</a></li>
+<li><a class="reference internal" href="#to-use-starcluster">To use StarCluster</a></li>
+<li><a class="reference internal" href="#upload-your-data">Upload your data</a></li>
+<li><a class="reference internal" href="#to-build-your-own-docker-image-using-the-dockerfile">To build your own docker image using the Dockerfile</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div class="sphinxprev">
+    <h4>Previous page</h4>
+    <p class="topless"><a href="installation.html"
+                          title="Previous page">&larr; Using Omics Pipe</a></p>
+  </div>
+  <div class="sphinxnext">
+    <h4>Next page</h4>
+    <p class="topless"><a href="tutorial.html"
+                          title="Next page">&rarr; Omics Pipe Tutorial &#8211;  Installation</a></p>
+  </div>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/AWS_installation.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="tutorial.html" title="Omics Pipe Tutorial – Installation"
+             >next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="installation.html" title="Using Omics Pipe"
+             >previous</a> &nbsp; &nbsp;</li>
+    <li><a href="contents.html">Omics Pipe 1.0.16 Documentation</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer">
+        &copy; <a href="copyright.html">Copyright</a> 2014, Kathleen Fisch, Ph.D..
+      Last updated on Jul 09, 2014.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>

@@ -1,0 +1,97 @@
+.. index:: omics_pipe; AWS_installation
+
+===================================
+OmicsPipe on the Amazon Cloud (AWS EC2) Tutorial
+===================================
+
+OmicsPipe on AWS uses a custom `StarCluster`_ image, created with `docker.io`_ ( which installs `docker.io`_, `environment-modules`_, and `easybuild`_ on an AWS EC2 cluster.
+All you have to do is get the docker image, upload your data, launch the Amazon cluster and run a single command to analyze all of your data according to published, best-practice methods.
+
+.. _StarCluster: http://star.mit.edu/cluster/
+.. _docker.io: https://www.docker.io/
+.. _environment-modules: http://modules.sourceforge.net/)
+.. _easybuild: https://github.com/hpcugent/easybuild)
+
+
+Load the the OmicsPipe on AWS docker image on your machine
+=========================================
+1. Download `docker.io`_ following the instructions at `Get-Docker`_  
+2. From inside the Docker environment, run the command::
+	
+	docker run -i -t omicspipe/aws\_readymade /bin/bash
+
+.. _Get-Docker: http://docs.docker.io/introduction/get-docker/
+
+Setting up AWS
+===========
+0. Create an AWS account by following the instructions at `Amazon-AWS`_
+1. Create data volumes to store raw data, results and access the reference databases
+ * Within the Docker environment, run the commands::
+	
+	starcluster createvolume --name=data -i ami-52112317 -d -s <volume size in GB> us-west-1b
+		
+	starcluster createvolume --name=results -i ami-52112317 -d -s <volume size in GB> us-west-1b
+    
+* Note the "VOLUME_ID"s in the output
+ * Go to the `AWS-Console`_
+* Click on the `EC2 option`_
+* Click on Volumes
+* Click on "Create Volume"
+* Create a third volume using the Snapshot ID "omicspipe_db" to get a copy of all needed databases from our S3 snapshot
+* Note the "VOLUME_ID"
+
+.. _Amazon-AWS: http://aws.amazon.com/getting-started/?sc_ichannel=ha&sc_icountry=en&sc_icampaigntype=general_info&sc_icampaign=ha_en_GettingStarted&sc_ipage=homepage&sc_iplace=ha_en_ed&sc_icategory=none&sc_iproduct=none&sc_isegment=none&sc_icontent=default&sc_idetail=none/
+.. _AWS-Console: https://console.aws.amazon.com
+.. _EC2 option: https://console.aws.amazon.com/ec2
+
+To use StarCluster
+===============
+1. Run the command::
+
+	nano ~/.starcluster/config 
+	
+(This will open the config file with the text editor, nano. Vim is also available if it is preferred.)
+
+    * enter your "AWS ACCESS KEY ID", "AWS SECRET ACCESS KEY", and "AWS USER ID" along with the "VOLUME_ID"s of your S3 buckets
+    * \*\*NOTE: if you do not live in the AWS us-west region, change your "AWS REGION NAME" and "AWS REGION HOST" variables as appropriate
+    * save the file
+
+2. Run the command::
+	
+	starcluster createkey omicspipe -o ~/.ssh/omicspipe.rsa
+
+3. Run the command::
+	starcluster start mypipe
+
+Upload your data
+============
+There are two options to upload your data:
+
+1. Run the command::
+	starcluster put mypipe <myfile> /data/raw
+	
+2. Webmin
+    * In the AWS Managemnt Console got to "Security Groups"
+    * Select the "StarCluster-0_95_5" group
+    * On the Inbound tab click on "Edit"
+    * Click on "Add Rule" and a new "Custom TCP Rule" will apear. On "Port Range" enter "10000" and on "Source" select "My IP"
+    * Hit "Save"
+    * Selct Instances in the AWS managemnt console and note the "Public IP" of your instance
+    * In a Webbrowser enter https://the_public_ip:10000. Login: root / sulab
+    
+
+After these steps, your StarCluster AWS EC2 cluster will be created with one slave node. Edit the ~/.starcluster/config file to further modify your EC2 cluster.
+
+The Dockerfiles in OmicsPipe can be used to build the dockerCluster image.
+
+To build your own docker image using the Dockerfile
+====================================
+1. Download docker.io following the instructions at `Get-Docker`_ 
+
+2. Run the command::
+	
+	docker build -t <Repository Name> https://bitbucket.org/sulab/omics\_pipe/downloads/Dockerfile\_AWS\_custombuild
+
+This will store the dockercluster image in the Repository Name of your choice.
+
+.. _Get-Docker: http://docs.docker.io/introduction/get-docker/
