@@ -1,0 +1,184 @@
+Metadata-Version: 1.1
+Name: extender
+Version: 0.0.7
+Summary: extender: A simple plug-in/extension system on Python
+Home-page: https://github.com/messense/extender
+Author: messense
+Author-email: messense@icloud.com
+License: MIT License
+Description: extender
+        ========
+        
+        A simple plug-in/extension system on Python inspired by Sentry project.
+        
+        |Build Status| |Coverage Status|
+        
+        Installation
+        ------------
+        
+        In your terminal run
+        
+        .. code:: bash
+        
+            pip install https://github.com/messense/extender/archive/master.zip
+        
+        Or simply install it from PyPi by executing
+        
+        .. code:: bash
+        
+            pip install extender
+        
+        How to write a plugin
+        ---------------------
+        
+        A plugins layout generally looks like the following:
+        
+        ::
+        
+            setup.py
+            pluginname/
+            pluginname/__init__.py
+            pluginname/plugin.py
+        
+        The **init**.py file should contain no plugin logic, and at most, a
+        ``__version__ = ‘x.x.x’`` line. For example, if you want to pull the
+        version using pkg\_resources (which is what we recommend), your file
+        might contain:
+        
+        .. code:: python
+        
+            try:
+                __version__ = __import__('pkg_resources') \
+                    .get_distribution(__name__).version
+            except Exception:
+                __version__ = 'unknown'
+        
+        Inside of plugin.py, you’ll declare your Plugin class:
+        
+        .. code:: python
+        
+            # -*- coding: utf-8 -*-
+            from extender import Plugin
+            import plugin1
+        
+        
+            class PluginName(Plugin):
+                title = 'Plugin Name'
+                slug = 'pluginname'
+                description = 'My awesome plugin!'
+                version = plugin1.__version__
+        
+                author = 'Your Name'
+                author_url = 'https://github.com/yourname/pluginname'
+        
+                def test_func(self, msg):
+                    return msg
+        
+        And you’ll register it via entry\_points in your setup.py:
+        
+        .. code:: python
+        
+            # -*- coding: utf-8 -*-
+            from setuptools import setup
+        
+            setup(
+                name='pluginname',
+                version='0.0.1',
+                author='Your name',
+                author_email='Your Email address',
+                url='https://github.com/yourname/pluginname',
+                packages=[
+                    'pluginname'
+                ],
+                description='plugin description',
+                install_requires=[
+                    'extender',
+                ],
+                include_package_data=True,
+                entry_points={
+                    'extender.plugins': [
+                        'pluginname = pluginname.plugin:PluginName',
+                    ]
+                },
+            )
+        
+        You can change entry\_points key ``extender.plugins`` to whatever you
+        want.
+        
+        That’s it! Users will be able to install your plugin via
+        ``pip install <package name>``.
+        
+        How to install plugins in your code
+        -----------------------------------
+        
+        .. code:: python
+        
+            from extender import PluginManager
+        
+            plugins = PluginManager()
+            plugins.install('extender.plugins')
+        
+        The ``PluginManager.install`` method takes an argument ``entry_points``
+        to install all plugins(just some python package) registered to that
+        entry\_point automatically.
+        
+        How to invoke a method of plugins
+        ---------------------------------
+        
+        .. code:: python
+        
+            from extender import PluginManager
+        
+            plugins = PluginManager()
+            plugins.install('extender.plugins')
+        
+            """ invoke func_name(1, 2), return the result of the first called method """
+            result = plugins.first('func_name', 1, 2)
+            """ invoke func_name(1, msg='hello'), return a list of result like map function """
+            result_list = plugins.call('func_name', 1, msg='hello')
+            """ invoke apply func_name to modify value by every plugin then return it """
+            value = plugins.apply('func_name', 1)
+        
+        LICENSE
+        -------
+        
+        The MIT License (MIT)
+        
+        Copyright (c) 2014 messense
+        
+        Permission is hereby granted, free of charge, to any person obtaining a
+        copy of this software and associated documentation files (the
+        "Software"), to deal in the Software without restriction, including
+        without limitation the rights to use, copy, modify, merge, publish,
+        distribute, sublicense, and/or sell copies of the Software, and to
+        permit persons to whom the Software is furnished to do so, subject to
+        the following conditions:
+        
+        The above copyright notice and this permission notice shall be included
+        in all copies or substantial portions of the Software.
+        
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+        OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+        MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+        IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+        CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+        TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+        SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+        
+        .. |Build Status| image:: https://travis-ci.org/messense/extender.svg
+           :target: https://travis-ci.org/messense/extender
+        .. |Coverage Status| image:: https://coveralls.io/repos/messense/extender/badge.png
+           :target: https://coveralls.io/r/messense/extender
+        
+Keywords: extender,plugin,extension
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Environment :: Plugins
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: MacOS
+Classifier: Operating System :: POSIX
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3.3
+Classifier: Programming Language :: Python :: 3.4
