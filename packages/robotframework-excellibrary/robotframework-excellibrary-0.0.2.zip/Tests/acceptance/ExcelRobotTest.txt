@@ -1,0 +1,75 @@
+*** Settings ***
+Library 			ExcelLibrary
+Library 			Collections
+
+*** Variables ***
+${Names}
+${Num}
+${Excel_File_Path}   C:\\Python27\\ExcelRobotTest\\
+${SheetName}         Graph Data
+${NewSheetName}      NewSheet
+
+*** Test Cases ***
+Excel Test
+	Get Values and Modify Spreadsheet
+	Add Date To Sheet
+	Perform Function and Change Date
+	Create a New Excel
+	Add a New Sheet
+	Check New Sheet Values
+
+*** Keywords ***
+Get Values and Modify Spreadsheet
+	Open Excel Current Directory   ExcelRobotTest.xls
+	${Names}=      Get Sheet Names
+	Set Suite Variable   ${Names}
+	${Num}=        Get Number of Sheets
+	Set Suite Variable   ${Num}
+	${Col}=        Get Column Count    TestSheet1
+	${Row}=        Get Row Count       TestSheet1
+	${ColVal}=     Get Column Values   TestSheet2   1
+	${RowVal}=     Get Row Values      TestSheet2   1
+	${Sheet}=      Get Sheet Values    DataSheet
+	Log   ${Sheet}
+	${Workbook}=   Get Workbook Values   False
+	Log   ${Workbook}
+	${ByName}=     Read Cell Data By Name          GraphSheet   B2
+	${ByCoords}=   Read Cell Data By Coordinates   GraphSheet   1   1
+	Check Cell Type      TestSheet1   0   1
+	Put Number To Cell   TestSheet1   1   1   90
+	Put String To Cell   TestSheet3   1   1   yellow
+	Put Date To Cell     TestSheet2   1   1   1.4.1989
+	Put Date To Cell     TestSheet2   1   2   12.10.1991
+	Save Excel           ${Excel_File_Path}TestExcel.xls
+
+Add Date To Sheet
+	Open Excel        ${Excel_File_Path}TestExcel.xls
+	Add To Date       TestSheet2   1   2   5
+    Check Cell Type   TestSheet2   1   2
+	Save Excel        ${Excel_File_Path}NewDateExcel.xls
+
+Perform Function and Change Date
+	Open Excel           ${Excel_File_Path}NewDateExcel.xls
+	Modify Cell With     TestSheet1   1   1   *   45
+	Subtract From Date   TestSheet2   1   1   1
+	Save Excel           ${Excel_File_Path}FunctionExcel.xls
+
+Create a New Excel
+	Create Excel Workbook    NewExcelSheet
+	Save Excel               ${Excel_File_Path}NewExcel.xls
+
+Add a New Sheet
+	Open Excel      ${Excel_File_Path}FunctionExcel.xls
+	Add New Sheet   ${NewSheetName}
+	Save Excel      ${Excel_File_Path}NewSheetExcel.xls
+
+Check New Sheet Values
+	Open Excel     ${Excel_File_Path}NewSheetExcel.xls
+	${NewNames}=   Get Sheet Names
+	${NewNum}=     Get Number of Sheets
+	Should Not Be Equal As Strings    ${Names}   ${NewNames}
+	Should Not Be Equal As Integers   ${Num}     ${NewNum}
+	${Sheet}=      Get Sheet Values   TestSheet3   False
+	Log            ${Sheet}
+	${stringList}=   Convert To String   ${Sheet}
+	Should Contain   ${stringList}   yellow
