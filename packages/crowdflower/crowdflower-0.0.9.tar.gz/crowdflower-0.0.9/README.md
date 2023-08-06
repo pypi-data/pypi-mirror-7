@@ -1,0 +1,78 @@
+# crowdflower
+
+Client library for interacting with the [CrowdFlower](http://www.crowdflower.com/) [API](http://success.crowdflower.com/customer/portal/articles/1288323-api-documentation) with Python.
+
+
+## Installation
+
+Install from PyPI:
+
+    easy_install -U crowdflower
+
+Or install the latest version GitHub:
+
+    git clone https://github.com/chbrown/crowdflower.git
+    cd crowdflower
+    python setup.py develop
+
+
+## Import examples
+
+Import:
+
+    import crowdflower
+
+CrowdFlower API keys are 20 characters long; the one below is just random characters.
+
+    conn = crowdflower.Connection('LbcxvIlE3x1M8F6TT5hN')
+
+The library will default to an environment variable called `CROWDFLOWER_API_KEY` if
+none is specified here:
+
+    conn = crowdflower.Connection()
+
+If you want to cache job responses, like judgments, properties, and tags, you
+can initialize the connection with a cache. `cache='filesystem'` is the only
+option currently supported, and serializes JSON files to `/tmp/crowdflower/*`.
+
+    conn = crowdflower.Connection(cache='filesystem')
+
+## More examples
+
+Loop through all your jobs and print the titles:
+
+    for job in conn.jobs():
+        print job.properties['title']
+
+Create a new job with some new units:
+
+    data = [
+        {'id': '1', 'name': 'Chris Narenz', 'gender_gold': 'male'},
+        {'id': '2', 'name': 'George Henckels'},
+        {'id': '3', 'name': 'Maisy Ester'},
+    ]
+    job = conn.upload(data)
+    job.update({
+        'title': 'Gender labels',
+        'included_countries': ['US', 'GB'],  # Limit to the USA and United Kingdom
+        'payment_cents': 5,
+        'judgments_per_unit': 2,
+        'instructions': <some instructions html>,
+        'cml': <some layout cml>,
+        'options': {
+            'front_load': 1, # quiz mode = 1; turn off with 0
+        }
+    })
+    job.gold_add('gender', 'gender_gold')
+
+    print job
+
+
+## References
+
+This package uses [kennethreitz](https://github.com/kennethreitz)'s [Requests](http://docs.python-requests.org/en/latest/api/) to communicate with the CrowdFlower API over HTTP. Requests is [Apache2 licensed](http://docs.python-requests.org/en/latest/user/intro/#apache2-license).
+
+
+## License
+
+Copyright © 2014 Christopher Brown. [MIT Licensed](https://raw.github.com/chbrown/crowdflower/master/LICENSE).
