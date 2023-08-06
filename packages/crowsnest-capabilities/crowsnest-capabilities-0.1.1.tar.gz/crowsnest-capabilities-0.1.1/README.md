@@ -1,0 +1,184 @@
+# Crowsnest capabilities
+
+*I got 99 problems, and naming is all of them.*
+
+This repository is home to definitions for the high-level language of the Crowsnest API and
+plugin system. This provides defnitions of all actions and events, all of which is
+done in yaml (found in `/crowsnest_capabilities/definitions/`; schema explained below).
+
+The definitions provided here are not of devices themselves, but of the building blocks for devices.
+A device is a collection of the actions and events defined here.
+
+
+## Python API
+
+In addition to the definitions, this module provides a Python API, the core of which is a
+`capabilities` object for interacting with the definitions programmatically. Each entry includes
+cleaning helper functions that are used to sanitize and validate data as it flows through the
+system.
+
+As an example, let's inspect the generic action for turning a device on,
+`action.generic.power.set`:
+
+```python
+>>> from crowsnest_capabilities import capabilities
+>>> power_set = capabilities['action.generic.power.set']
+```
+
+The schema for this action is
+
+```yaml
+action.generic.power.set:
+    inputs:
+        value:
+            - on
+            - off
+    outputs: {}
+    async_generated_event: event.generic.power.changed
+```
+
+so, we know that the valid values for inputs are `on` and `off` (`True` and `False` in Python).
+Inputs are validated and cleaned with `.clean_input()`:
+
+```python
+>>> power_set.clean_input({'value': True})
+{'value': True}
+>>> # extraneous entries are removed
+>>> power_set.clean_input({'value': False, 'foo': 'bar'})
+{'value': False}
+>>> # bad values raise a ValidationError
+>>> power_set.clean_input({'value': 10})
+  ValidationError: `value` must be one of [True, False]
+```
+
+`.clean_output()` on both `Action` and `Event` work the same way.
+
+You can get a group of entries under a common prefix using  `.group()`.
+
+```python
+>>> capabilities.group('event.generic.power')
+[<Event: event.generic.power.changed>, <Event: event.generic.power.restarted>]
+>>> # any number of dots are allowed
+>>> capabilities.group('event.generic')  # 6 Events
+>>> capabilities.group('event')  # all of the Events
+>>> capabilities.group()  # all of the entries
+>>> # bogus prefixes return an empty list
+>>> capabilities.group('asdf')
+[]
+```
+
+
+## Requirements
+
+- The layout of a capabilities hierarchy (ie, every level of `<type>.<class>.<attribute>.<interaction>`) should be semantically the same for each device that implements it.
+    - Examples:
+        - `action.camera.still.capture` - Capture a still image from a camera
+        - `action.microwave.power_level.set` - Set the power level of the magnetron
+        - `action.generic.power.set` - Turn the master power on and off for a device
+        - `action.sensor.dissolved_ions.read` - Read the sensor for disolved ion content
+        - `action.sensor.magnet.read` - Read the value of the magnetic sensor
+        - `event.sensor.magnet.changed` - Fired when the value of the magnetic sensors changes (when this is fired may be configurable by the device plugin using thresholds)
+        - `event.generic.boolean.changed` - Fired when a two-stage switch changes state
+- Actions and events (or whatever they're eventually called) should be distinctly different
+    - They should, however, be related and able to interact with one another (eg, requesting some action from a device that results in async handling as an "event")
+    - They should be easily relatable semantically
+- Actions and events should be specific enough to not complicate their usage, but simple enough to be reused. "We'll know it when we see it."
+- The inputs and outputs should be well definied, and not overly complex objects.
+
+
+## Definition schema
+
+(Our schema is loosely based on [Rx](http://rx.codesimply.com/).)
+
+Let's start with an annotated example, adapted from `/crowsnest_capabilities/definitions/generic.yml`.
+
+```yaml
+action.generic.power.get:       # definitions are type.class.attribute.action
+    inputs: {}                  # no inputs for this action
+    outputs:
+        value:                  # output dict has one entry named `value`
+            valid_values:
+                - on            # valid values for `value` are `on` and `off`
+                - off
+    async_generated_event: event.generic.power.changed
+                                # if fired asynchronously, this will generate the event
+                                # named `event.generic.power.changed`
+
+action.generic.power.set:
+    inputs:
+        value:                  # the `value` field is the only input, allowing booleans
+            type: //bool
+    outputs: {}                 # no outputs
+    async_generated_event: event.generic.power.changed
+
+event.generic.power.changed:
+    outputs:                    # has the same outputs as `action.generic.power.get`,
+                                # which is linked to this
+        value:
+            - on                # `value` field uses the valid_values short-hand
+            - off
+```
+
+The details:
+
+- Definitions are in yaml
+- Definition files are stored in `/crowsnest_capabilities/definitions/`; they are discovered and loaded automatically
+- Top level entries must be a unique 4-dot-separated name of the form `<type>.<class>.<attribute>.<interaction>`, eg `action.generic.power.set`
+- `action` entries must be a dictionary with the following keys:
+    - `inputs`: data pass-through schema (see below) sent to the device describing what to do
+    - `outputs`: data pass-through schema (see below) sent by the device as a response
+    - `async_generated_event`: fully qualified name of an event this action turns into if handled
+    asynchronously, eg `event.generic.power.changed`
+- `event` entires must be a dictionary with the following keys:
+    - `outputs`: data pass through schema (see below) sent by the device describing what happened
+- The "data pass-through schema" (used for passing data to and from devices through Crowsnest) is a
+dictionary of keys, where each key is the name of the data entry. For example, if you want to send
+`{value: 10}`, then `value` is the name of the entry you define as an integer field.
+    - Each data entry is a dictionary that may define any of the following:
+        - `type`: one of DataField types: `//str`, `//num`, `//int`, `//bool`, or `//bytes`
+        - `valid_values`: a list of allowed values
+        - `required`: boolean specifying whether or not the field is required to be valid; defaults to `yes`
+        - `default`: default value if one is not provided; implies `required: no`
+    - Although not strictly required, it is *highly recommended* that you supply `type` or `valid_values`
+    unless you can make a strong case for why complete genericness is needed.
+    - There are several shortcuts for simple cases:
+        - You can supply a `type` value directly as the value to the data entry.
+
+        This means that
+
+                entry:
+                    type: //str
+        and
+
+                entry: //str
+        are equivalent.
+        - You can supply a list of `valid_values` directly as the value to the data entry.
+
+        This means that
+
+                entry:
+                    valid_values:
+                        - red
+                        - green
+                        - blue
+        and
+
+                entry:
+                    - red
+                    - green
+                    - blue
+        are equivalent.
+    - `valid_values` must match the type exactly, while `type` entries will generally try to coerce
+    to the correct type. For example,
+        - `//bool` will coerce `"foo"` and `1` to `True`; `""`, `0`, and `null` to `False`
+        - `valid_values` of `yes` and `no` will require an exact match of the booleans (no coersion)
+
+
+## Contributions and community
+
+To contribute your own entries, fork us and create a pull request. Please be sure to follow
+the guidelines, as we require strict adherence to accept pull requests. All new submissions
+will be subject to review before acceptance; these definitions are curated to provide a
+consistent experience across all Crowsnest devices.
+
+Ideas, comments, and suggestions are always welcome!
