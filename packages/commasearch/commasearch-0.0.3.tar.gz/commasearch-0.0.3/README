@@ -1,0 +1,51 @@
+When we search for ordinary written documents, we send words into a search
+engine and get pages of words back.
+
+What if we could search for spreadsheets
+by sending spreadsheets into a search engine and getting spreadsheets back?
+The order of the results would be determined by various specialized statistics;
+just as we use PageRank to find relevant hypertext documents, we can develop
+other statistics that help us find relevant spreadsheets.
+Read more `here <http://dada.pink/dada/pagerank-for-spreadsheets>`_
+
+Indexing
+------------
+To index a new spreadsheet, run this. ::
+
+    , --index [csv file]
+
+For example, ::
+
+    , --index /home/tlevine/Math Scores 2009 Copy (1).csv \
+      http://opendata.comune.bari.it/storage/f/2013-09-02T163858/2012_comune_assessori.csv
+
+Caches from the indexing process are stored in the ``~/.,`` directory.
+
+By default, CSV files that have already been indexed will be skipped; to index
+the same CSV file again, run with the ``--force`` or ``-f`` option. ::
+
+    , --index --force [csv file]
+
+Once you have indexed a bunch of CSV files, you can search. ::
+
+    , [csv file]
+
+You'll see a bunch of data tables as results. ::
+
+    $ , 'Math Scores 2009.csv'
+    /home/tlevine/math-scores-2010-gender.csv
+    /home/tlevine/Math Scores 2009.csv
+    /home/tlevine/Math Scores 2009 Copy (1).csv
+    /home/tlevine/math-scores-2009-ethnicity.csv
+    http://opendata.comune.bari.it/storage/f/2013-09-02T163858/2012_comune_assessori.csv
+    mysql://bob:password@localhost/schools
+
+To do
+--------
+
+* Add non-exact column matches so that there can be more matches.
+* Store distributions of values (``collections.Counter`` objects) instead
+  of just distinct values (``set`` objects) so that I can run more interesting
+  comparisons.
+* Store a preview of the table in the db or load it from the cache so that
+  the web interface can show the preview.
