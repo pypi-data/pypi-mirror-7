@@ -1,0 +1,57 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+
+{% block extrahead %}
+{{ block.super }}
+{{ form.media }}
+{% endblock %}
+
+{% if not is_popup %}
+    {% block breadcrumbs %}
+        <div class="breadcrumbs">
+             <a href="../../../../../../">{% trans "Home" %}</a> &rsaquo;
+             <a href="../../../../../">{{ app_label|capfirst|escape }}</a> &rsaquo;
+             {% if has_change_permission %}<a href="../../../../">{{ opts.verbose_name_plural|capfirst }}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %} &rsaquo;
+             {% if has_change_permission %}<a href="../../../">{{ original|truncatewords:"18" }}</a>{% else %}{{ original|truncatewords:"18" }}{% endif %} &rsaquo;
+             {% if has_change_permission %}<a href="../../">{% trans "Object permissions" %}</a>{% else %}{% trans "Object permissions" %}{% endif %} &rsaquo;
+             {% trans "Manage user" %}: {{ user_obj|truncatewords:"18" }}
+        </div>
+    {% endblock %}
+{% endif %}
+
+
+{% block content %}
+<div id="content-main">
+    <form action="." method="post" class="form-horizontal">
+        {% csrf_token %}
+        <fieldset class="module aligned with-legend">
+            <h3 class="legend">{% trans "Object permissions" %}</h3>
+            <div class="control-group form-row field-name ">
+                <div class="control-label">
+                    <label>{% trans "Object" %}</label>
+                </div>
+                <div class="controls">
+                    {{ object }}
+                </div>
+            </div>
+            <div class="control-group form-row field-name ">
+                <div class="control-label">
+                    <label>{% trans "User" %}</label>
+                </div>
+                <div class="controls">
+                    {{ user_obj }}
+                </div>
+            </div>
+            {% for field in form %}
+                {% include "admin/guardian/model/field.html" %}
+            {% endfor %}
+            <div class="control-group form-row">
+                <div class="control-label"></div>
+                <div class="controls">
+                    <input id="submit" type="submit" class="btn bth-high btn-info" value="{% trans "Save" %}"/>
+                </div>
+            </div>
+        </fieldset>
+    </form>
+</div>
+{% endblock %}
