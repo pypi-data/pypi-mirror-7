@@ -1,0 +1,232 @@
+#!/bin/bash
+
+# Idempotent script to create an ovs bridge and add a physical NIC
+# onto it as an OVS port. Any IP address on the physical NIC will
+# be automatically moved onto the OVS bridge.
+#
+# Uses the OS default networking script format to write out persistent
+# config files to disk. These config files persist across reboots
+# an are only updated if metadata changes are detected (these are passed
+# in as script parameters). If a config change is made the network interface
+# and OVS bridge are restarted using ifdown/ifup scripts.
+#
+# If public_interface_route is set then the current default route is
+# specialised to a 169.254.169.254/32 only route (unless there is already a
+# 169.254.169.254 route - such as a neutron network with host routes can
+# create) and a default route via public_interface_route is added on the public
+# interface.
+
+set -eu
+
+PATH=/usr/local/bin:$PATH
+
+SCRIPT_NAME=$(basename $0)
+SCRIPT_HOME=$(dirname $0)
+
+function show_options () {
+    echo "Usage: $SCRIPT_NAME [options] <br> <interface> [<ip> [<route>]]"
+    echo
+    echo "Create a bridge br with an external port interface."
+    echo
+    echo "This will ensure that br exists and that interface is a port on it."
+    echo "If IP is not empty, it will be set as the IP address for the bridge."
+    echo "Otherwise the bridge will be configured for DHCP. If route is supplied"
+    echo "it will be used as the default route."
+    echo
+    echo "Options:"
+    echo "    -h|--help -- this help."
+    echo
+    exit $1
+}
+
+TEMP=$(getopt -o h -l help -n $SCRIPT_NAME -- "$@")
+if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP"
+
+while true ; do
+    case "$1" in
+        -h|--help) show_options 0;;
+        --) shift ; break ;;
+        *) echo "Error: unsupported option $1." ; exit 1 ;;
+    esac
+done
+
+EXTERNAL_BRIDGE="$1"
+PHYSICAL_INTERFACE="$2"
+PHYSICAL_INTERFACE_IP_NETMASK="${3:-}" #optional, by default uses DHCP
+PUBLIC_INTERFACE_ROUTE="${4:-}" #optional
+EXTRA=${5:-""}
+
+if [ -z "$PHYSICAL_INTERFACE" -o -n "$EXTRA" ]; then
+    show_options 1
+fi
+
+set -x
+
+# network scripts function used on Fedora/RHEL/Centos, etc.
+function configure_bridge_interface_dhcp_netscripts() {
+
+    local bridge=$1
+    local interface=$2
+    local bridge_ip_addr=${3:-''}
+    local bridge_netmask=${4:-''}
+    local interface_mac=${5}
+    local tmp_bridge_config=$(mktemp)
+    local tmp_interface_config=$(mktemp)
+    local bridge_config="/etc/sysconfig/network-scripts/ifcfg-$bridge"
+    local interface_config="/etc/sysconfig/network-scripts/ifcfg-$interface"
+
+    #interface config
+    cat > $tmp_interface_config <<EOF_CAT
+DEVICE=$interface
+ONBOOT=yes
+DEVICETYPE=ovs
+TYPE=OVSPort
+OVS_BRIDGE=$bridge
+BOOTPROTO=none
+HOTPLUG=no
+EOF_CAT
+
+#bridge config
+    if [ -z "$bridge_ip_addr" ]; then
+        cat > $tmp_bridge_config <<EOF_CAT
+DEVICE=$bridge
+ONBOOT=yes
+DEVICETYPE=ovs
+TYPE=OVSBridge
+OVSBOOTPROTO="dhcp"
+OVSDHCPINTERFACES=$interface
+OVS_EXTRA="set bridge $bridge other-config:hwaddr=$interface_mac"
+HOTPLUG=no
+EOF_CAT
+    else
+        cat > $tmp_bridge_config <<EOF_CAT
+DEVICE=$bridge
+ONBOOT=yes
+DEVICETYPE=ovs
+TYPE=OVSBridge
+OVS_EXTRA="set bridge $bridge other-config:hwaddr=$interface_mac"
+BOOTPROTO=static
+IPADDR=$bridge_ip_addr
+NETMASK=$bridge_netmask
+HOTPLUG=no
+EOF_CAT
+    fi
+
+    if ! diff $tmp_interface_config $interface_config &>/dev/null || \
+        ! diff $tmp_bridge_config $bridge_config &>/dev/null; then
+
+        ifdown $interface &>/dev/null || true
+        ifdown $bridge &>/dev/null || true
+
+        cp $tmp_interface_config $interface_config
+        cp $tmp_bridge_config $bridge_config
+
+        ifup $bridge
+        ifup $interface
+
+    fi
+
+    rm $tmp_bridge_config
+    rm $tmp_interface_config
+
+}
+
+# elastic network interfaces used on Debian/Ubuntu, etc.
+function configure_bridge_interface_dhcp_eni() {
+
+    local bridge=$1
+    local interface=$2
+    local bridge_ip_addr=${3:-''}
+    local bridge_netmask=${4:-''}
+    local interface_mac=${5}
+    local tmp_config=$(mktemp)
+    local config="/etc/network/interfaces"
+
+    cp $config $tmp_config
+    sed -e "/auto $interface\$/,/^$/d" -i $tmp_config
+    sed -e "/auto $bridge\$/,/^$/d" -i $tmp_config
+
+    #bridge config
+    if [ -z "$bridge_ip_addr" ]; then
+        cat >> $tmp_config <<EOF_CAT
+auto $bridge
+allow-ovs $bridge
+ iface $bridge inet dhcp
+ pre-up ip addr flush dev $interface
+ ovs_type OVSBridge
+ ovs_ports $interface
+ ovs_extra set bridge $bridge other-config:hwaddr=$interface_mac
+
+EOF_CAT
+    else
+        cat >> $tmp_config <<EOF_CAT
+auto $bridge
+allow-ovs $bridge
+iface $bridge inet static
+ pre-up ip addr flush dev $interface
+ address $bridge_ip_addr
+ netmask $bridge_netmask
+ ovs_type OVSBridge
+ ovs_extra set bridge $bridge other-config:hwaddr=$interface_mac
+
+EOF_CAT
+    fi
+
+    #interface config
+    cat >> $tmp_config <<-EOF_CAT
+auto $interface
+allow-$bridge $interface
+ iface $interface inet manual
+ ovs_bridge $bridge
+ ovs_type OVSPort
+
+EOF_CAT
+
+    if ! diff $tmp_config $config &>/dev/null; then
+        ifdown $interface &>/dev/null || true
+        ifdown $bridge &>/dev/null || true
+
+        cp $tmp_config $config
+
+        ifup $bridge
+        ifup $interface
+
+    fi
+
+    rm $tmp_config
+
+}
+
+if [ -n "$PHYSICAL_INTERFACE_IP_NETMASK" ]; then
+    IP=$(python -c "import netaddr; print netaddr.IPNetwork('$PHYSICAL_INTERFACE_IP_NETMASK').ip")
+    NETMASK=$(python -c "import netaddr; print netaddr.IPNetwork('$PHYSICAL_INTERFACE_IP_NETMASK').netmask")
+else
+    IP=''
+    NETMASK=''
+fi
+
+interface_mac=$(ip link show dev "$PHYSICAL_INTERFACE" | awk '/ether/ {print $2}')
+
+if [ -d "/etc/sysconfig/network-scripts/" ]; then
+    configure_bridge_interface_dhcp_netscripts $EXTERNAL_BRIDGE $PHYSICAL_INTERFACE "$IP" "$NETMASK" $interface_mac
+elif [ -d "/etc/network" ]; then
+    configure_bridge_interface_dhcp_eni $EXTERNAL_BRIDGE $PHYSICAL_INTERFACE "$IP" "$NETMASK" $interface_mac
+else
+    echo "Unsupported network configuration type!"
+    exit 1
+fi
+
+# Handle default route replacement.
+if [ -n "$PUBLIC_INTERFACE_ROUTE" ]; then
+    DEFAULT_VIA=$(ip route show | awk '/default / { print $3 }')
+    if [ "$DEFAULT_VIA" != "$PUBLIC_INTERFACE_ROUTE" ]; then
+        if [ -z "$(ip route show 169.254.169.254)" ]; then
+            # No explicit route to 169.254.169.254 - set one.
+            ip route add 169.254.169.254/32 via $DEFAULT_VIA
+        fi
+        ip route replace default via $PUBLIC_INTERFACE_ROUTE
+    fi
+fi

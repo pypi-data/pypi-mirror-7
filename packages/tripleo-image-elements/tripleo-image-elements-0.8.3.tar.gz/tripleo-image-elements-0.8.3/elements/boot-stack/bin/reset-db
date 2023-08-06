@@ -1,0 +1,34 @@
+#!/bin/bash
+set -eux
+
+db_pass=$(os-apply-config --key db-password)
+
+PATH=/usr/local/bin:$PATH
+
+os-db-create keystone keystone $db_pass
+
+if which cinder-manage 1>/dev/null 2>&1; then
+    os-db-create cinder cinder $db_pass
+fi
+
+if which ironic-dbsync 1>/dev/null 2>&1; then
+    os-db-create ironic ironic $db_pass
+fi
+
+if which tuskar-dbsync 1>/dev/null 2>&1; then
+    os-db-create tuskar tuskar $db_pass
+fi
+
+if which ceilometer-dbsync 1>/dev/null 2>&1; then
+    os-db-create ceilometer ceilometer $db_pass
+fi
+
+os-db-create nova nova $db_pass
+
+os-db-create nova_bm nova $db_pass
+
+os-db-create glance glance $db_pass
+
+os-db-create heat heat $db_pass
+
+os-db-create ovs_neutron neutron $db_pass
