@@ -1,0 +1,1713 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>General ENCODEQT Web Tool API &mdash; ENCODEQueryTools 0.1.0a documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.0a',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="ENCODEQueryTools 0.1.0a documentation" href="index.html" />
+    <link rel="prev" title="ENCODEQT Python Module Examples" href="ENCODEQT_examples.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="ENCODEQT_examples.html" title="ENCODEQT Python Module Examples"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">ENCODEQueryTools 0.1.0a documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="general-encodeqt-web-tool-api">
+<h1>General ENCODEQT Web Tool API<a class="headerlink" href="#general-encodeqt-web-tool-api" title="Permalink to this headline">¶</a></h1>
+<p>The ENCODEQT module of the ENCODEQueryTools package is a Python wrapper around the ENCODE ChIP-Seq Significance Tool&#8217;s API (ENCODEQT API). ENCODEQT expects to receive all data as JSON-formatted text via a POST request to <a class="reference external" href="http://encodeweb-elb-726908446.us-west-2.elb.amazonaws.com/encodeqt/hyper/ENCODEQTapi.php">http://encodeweb-elb-726908446.us-west-2.elb.amazonaws.com/encodeqt/hyper/ENCODEQTapi.php</a>.</p>
+<p>The ENCODEQT API accepts JSON-formatted input and returns JSON-formatted output. Input should be POSTed to the appropriate server URL (more details below).</p>
+<p>For JSON-formatted data to the server, the server expects a single JSON container named &#8220;JSONparams&#8221; that holds all necessary data as its value. For output from the server, most results will be contained in a single JSON field named &#8220;results&#8221;. The exception to this is queryType=TFsig, which includes fields for other summary statistics such as the total number of genes analyzed in addition to the results field. Please see the examples below.</p>
+<div class="section" id="json-field-descriptions">
+<h2>JSON Field Descriptions<a class="headerlink" href="#json-field-descriptions" title="Permalink to this headline">¶</a></h2>
+<p>The ENCODEQT API accepts the following parameters:</p>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+<div class="section" id="elementtype">
+<h3>elementType<a class="headerlink" href="#elementtype" title="Permalink to this headline">¶</a></h3>
+<p><strong>elementType</strong> - the type of element to analyze. Accepted values: &#8216;genes&#8217;, &#8216;transcripts&#8217;, &#8216;pgenes&#8217;, and &#8216;ptranscripts&#8217;.</p>
+<p><em>Example:</em></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;elementType&quot;</span> <span class="o">=</span> <span class="s">&quot;genes&quot;</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The only valid elementType values for mouse analyses are &#8216;genes&#8217; and &#8216;transcripts&#8217;.</p>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="organism">
+<h3>organism<a class="headerlink" href="#organism" title="Permalink to this headline">¶</a></h3>
+<p><strong>Organism</strong> - the organism to analyze. Accepted values: &#8216;human&#8217; and &#8216;mouse&#8217;.</p>
+<p><em>Example:</em></p>
+<div class="highlight-python"><div class="highlight"><pre>&quot;organism&quot; : &quot;human&quot;
+</pre></div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="featuretype">
+<h3>featureType<a class="headerlink" href="#featuretype" title="Permalink to this headline">¶</a></h3>
+<p><strong>featureType</strong> - the feature to be used for the center of the analysis window. Accepted values: &#8216;TSS&#8217;, &#8216;TTS&#8217;, and &#8216;Genic&#8217;.</p>
+<p><em>Example:</em></p>
+<div class="highlight-python"><div class="highlight"><pre>&quot;featureType&quot; : &quot;TSS&quot;
+</pre></div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="upstream">
+<h3>upstream<a class="headerlink" href="#upstream" title="Permalink to this headline">¶</a></h3>
+<p><strong>upstream</strong> - the value to use for the upstream pad.</p>
+<p><em>Example:</em></p>
+<div class="highlight-python"><div class="highlight"><pre>&quot;upstream&quot; : -4
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The API expects this value to follow the following formula: ceiling(numberOfBasePairs / 500) * -1. The Python library converts raw basepair counts according to this formula. For other implementations, this conversion must be done manually. -1 corresponds to a 500 bp pad, -2 to a 1,000 bp pad, etc.</p>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="downstream">
+<h3>downstream<a class="headerlink" href="#downstream" title="Permalink to this headline">¶</a></h3>
+<p><strong>downstream</strong> - the value to use for the downstream pad.</p>
+<p><em>Example:</em></p>
+<div class="highlight-python"><div class="highlight"><pre>&quot;downstream&quot; : 4
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The API expects this value to follow the following formula: ceiling(numberOfBasePairs / 500). The Python library converts raw basepair counts according to this formula. For other implementations, this conversion must be done manually. 1 corresponds to a 500 bp pad, 2 to a 1,000 bp pad, etc.</p>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="symboltype">
+<h3>symbolType<a class="headerlink" href="#symboltype" title="Permalink to this headline">¶</a></h3>
+<p><strong>symbolType</strong> - the type of symbol to be used as the gene/transcript IDs. Accepted values: &#8216;symbol&#8217;, &#8216;ensembl&#8217;, &#8216;entrez&#8217;, and &#8216;havana&#8217;.</p>
+<p><em>Example:</em></p>
+<div class="highlight-python"><div class="highlight"><pre>&quot;symbolType&quot; : &quot;symbol&quot;
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Not all symbol types are valid for all organism and featureType combinations.  &#8216;entrez&#8217; is an invalid symbolType for transcript or ptranscript analyses. &#8216;havana&#8217; is only valid for human analyses.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">&#8216;symbol&#8217; refers to HGNC gene or transcript symbols.</p>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="symbollist">
+<h3>symbolList<a class="headerlink" href="#symbollist" title="Permalink to this headline">¶</a></h3>
+<p><strong>symbolList</strong> - an array of arrays containing the lists of IDs to use as the foreground.</p>
+<p><em>Example (single foreground list - truncated):</em></p>
+<div class="highlight-python"><div class="highlight"><pre>&quot;symbolList&quot; : [[&quot;ABT1&quot;,&quot;ACVR1&quot;,&quot;ADAM12&quot;,&quot;ADD3&quot;,&quot;AGGF1&quot;]]
+</pre></div>
+</div>
+<p><em>Example (multiple foreground lists - truncated):</em></p>
+<div class="highlight-python"><div class="highlight"><pre>&quot;symbolList&quot; : [[&quot;ABT1&quot;,&quot;ACVR1&quot;,&quot;ADAM12&quot;,&quot;ADD3&quot;,&quot;AGGF1&quot;],[&quot;ANKRD28&quot;,&quot;AP4S1&quot;,&quot;APBB2&quot;,&quot;APOBR&quot;,&quot;AQP2&quot;,&quot;ARHGAP44&quot;,&quot;ARID1A&quot;,&quot;ARID4A&quot;GGF1&quot;]]
+</pre></div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="listnames">
+<h3>listNames<a class="headerlink" href="#listnames" title="Permalink to this headline">¶</a></h3>
+<p><strong>listNames</strong> - an array of strings to use as labels for each foreground list.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The number of elements in this array must correspond to the number of lists provided in symbolList. This parameter is optional for queries that only use a single foreground list (a default value of &#8220;List1&#8221; will be used).</p>
+</div>
+<p><em>Example:</em></p>
+<div class="highlight-python"><div class="highlight"><pre>&quot;listNames&quot; : [&quot;AAAYRNCTG_Motifs&quot;]
+</pre></div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="celllines">
+<h3>cellLines<a class="headerlink" href="#celllines" title="Permalink to this headline">¶</a></h3>
+<p><strong>cellLines</strong> - an array of cell types to use for the query. Labels must correspond to the labels used in the ENCODEQT database (see the ENCODE Cell Types webpage).</p>
+<p><em>Example (pooling all cell lines):</em></p>
+<div class="highlight-python"><div class="highlight"><pre>&quot;cellLines : [&#39;all&#39;]
+</pre></div>
+</div>
+<p><em>Example (pooling specific cell lines):</em></p>
+<div class="highlight-python"><div class="highlight"><pre>&quot;cellLines : [&#39;Helas3&#39;,&#39;K562&#39;]
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">For queries that pool all cell lines, listNames should be a single-element array containing the value &#8220;all&#8221;.</p>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="backgroundlist">
+<h3>backgroundList<a class="headerlink" href="#backgroundlist" title="Permalink to this headline">¶</a></h3>
+<p><strong>backgroundList</strong> - an array containing the gene/transcript IDs to use as the background.</p>
+<p><em>Example (truncated):</em></p>
+<div class="highlight-python"><div class="highlight"><pre>&quot;backgroundList&quot; : [&quot;ABT1&quot;,&quot;ACVR1&quot;,&quot;ADAM12&quot;,&quot;ADD3&quot;,&quot;AGGF1&quot;]
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">To use the set of all genes as the background, this parameter should NOT be passed to the API!</p>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="querytype">
+<h3>queryType<a class="headerlink" href="#querytype" title="Permalink to this headline">¶</a></h3>
+<p><strong>queryType</strong> - the type of query to run. This parameter determines which function will be run server-side.  Accepted values are &#8216;TFsig&#8217;, &#8216;allGenes&#8217;, &#8216;listGenes&#8217;, &#8216;validateTF&#8217;, &#8216;validateCellLine&#8217;, &#8216;fuzzyFactorSearch&#8217;, &#8216;fuzzyCellLineSearch&#8217;, &#8216;getTFsAndCellLines&#8217;, and &#8216;geneCheck&#8217;.</p>
+<div class="highlight-python"><div class="highlight"><pre>&quot;queryType&quot; : &quot;TFsig&quot;
+</pre></div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="targetfactor">
+<h3>targetFactor<a class="headerlink" href="#targetfactor" title="Permalink to this headline">¶</a></h3>
+<p><strong>targetFactor</strong> - the label of the transcription factor of interest.</p>
+<p><em>Example:</em></p>
+<div class="highlight-python"><div class="highlight"><pre>&quot;targetFactor&quot; : &quot;Suz12&quot;
+</pre></div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="targetcellline">
+<h3>targetCellLine<a class="headerlink" href="#targetcellline" title="Permalink to this headline">¶</a></h3>
+<p><strong>targetCellLine</strong> - the label of the cell type of interest.</p>
+<p><em>Example:</em></p>
+<div class="highlight-python"><div class="highlight"><pre>&quot;targetCellLine&quot; : &quot;K562&quot;
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Descriptions and examples of each queryType appear below.</p>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+</div>
+<div class="section" id="example-queries">
+<h2>Example Queries<a class="headerlink" href="#example-queries" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="tfsig">
+<h3>TFsig<a class="headerlink" href="#tfsig" title="Permalink to this headline">¶</a></h3>
+<p><strong>TFsig</strong> - determines significantly enriched transcription factors given a list of genes or transcripts.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><strong>Required parameters:</strong> featureType, cellLines, symbolList, downstream, upstream, elementType, organism, symbolType, queryType</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><strong>Optional parameters:</strong> backgroundList, listNames (optional when only one symbolList is provided)</p>
+</div>
+<p><em>Input Example:</em></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+   <span class="s">&quot;JSONparams&quot;</span><span class="p">:{</span>
+      <span class="s">&quot;featureType&quot;</span><span class="p">:</span><span class="s">&quot;TSS&quot;</span><span class="p">,</span>
+      <span class="s">&quot;listNames&quot;</span><span class="p">:[</span>
+         <span class="s">&quot;AAYRNCTG_Motifs&quot;</span>
+      <span class="p">],</span>
+      <span class="s">&quot;cellLines&quot;</span><span class="p">:[</span>
+         <span class="s">&quot;all&quot;</span>
+      <span class="p">],</span>
+      <span class="s">&quot;symbolList&quot;</span><span class="p">:[</span>
+         <span class="p">[</span>
+            <span class="s">&quot;ABT1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ACVR1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ADAM12&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ADD3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;AGGF1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ANKRD12&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ANKRD28&quot;</span><span class="p">,</span>
+            <span class="s">&quot;AP4S1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;APBB2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;APOBR&quot;</span><span class="p">,</span>
+            <span class="s">&quot;AQP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ARHGAP44&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ARID1A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ARID4A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ARPC2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ARSG&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ARX&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ASB4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ASPH&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ATOH8&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ATP1A2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ATP5L&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ATPIF1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;AXDND1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;B4GALT6&quot;</span><span class="p">,</span>
+            <span class="s">&quot;BAI3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;BAMBI&quot;</span><span class="p">,</span>
+            <span class="s">&quot;BCL2L1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;BCL9&quot;</span><span class="p">,</span>
+            <span class="s">&quot;BMPR1B&quot;</span><span class="p">,</span>
+            <span class="s">&quot;BMX&quot;</span><span class="p">,</span>
+            <span class="s">&quot;BRSK2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;BTBD3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;BUB3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;C11ORF84&quot;</span><span class="p">,</span>
+            <span class="s">&quot;C11ORF92&quot;</span><span class="p">,</span>
+            <span class="s">&quot;C12ORF65&quot;</span><span class="p">,</span>
+            <span class="s">&quot;C13ORF30&quot;</span><span class="p">,</span>
+            <span class="s">&quot;C14ORF1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;C15ORF26&quot;</span><span class="p">,</span>
+            <span class="s">&quot;C17ORF28&quot;</span><span class="p">,</span>
+            <span class="s">&quot;C20ORF197&quot;</span><span class="p">,</span>
+            <span class="s">&quot;C3ORF19&quot;</span><span class="p">,</span>
+            <span class="s">&quot;C6ORF138&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CA3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CACNA2D3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CACNB2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CAPN1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CAPZA1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CASQ2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CBX2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CCNJ&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CCNY&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CDC23&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CDH2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CER1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CHRM1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CITED2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CLDN5&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CLTC&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CMKLR1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CNTLN&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CNTN1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;COCH&quot;</span><span class="p">,</span>
+            <span class="s">&quot;COL12A1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;COL1A2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;COL4A5&quot;</span><span class="p">,</span>
+            <span class="s">&quot;COL4A6&quot;</span><span class="p">,</span>
+            <span class="s">&quot;COLEC10&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CRAT&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CRH&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CRKL&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CRYGD&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CRYGS&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CSNK1A1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CSRNP3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CSTF3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CYBRD1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DAAM1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DBNDD2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DCAKD&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DDAH2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DDX4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DEF6&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DENND4A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DGKB&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DHH&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DHRS4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DHRS4L2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DIDO1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DMD&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DMRT1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DNAJA2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DNAJB3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DNAJB4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DSCAML1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DUSP4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DYNC1I1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DYRK1A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;EDA&quot;</span><span class="p">,</span>
+            <span class="s">&quot;EFNA1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;EGFLAM&quot;</span><span class="p">,</span>
+            <span class="s">&quot;EIF5&quot;</span><span class="p">,</span>
+            <span class="s">&quot;EMX2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;EPC1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;EPHA7&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ERBB4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ERRFI1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ESRP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ESRRB&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ESRRG&quot;</span><span class="p">,</span>
+            <span class="s">&quot;EYA1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FAM49A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FAM83F&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FCER1A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FGD4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FGF10&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FGF12&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FGFR1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FGFR1OP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FIZ1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FKRP&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FMNL3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FNDC9&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FOXA1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FOXG1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FOXO4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FOXP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FSIP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FST&quot;</span><span class="p">,</span>
+            <span class="s">&quot;GABRA3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;GDNF&quot;</span><span class="p">,</span>
+            <span class="s">&quot;GFI1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;GGNBP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;GJB4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;GLDN&quot;</span><span class="p">,</span>
+            <span class="s">&quot;GNAQ&quot;</span><span class="p">,</span>
+            <span class="s">&quot;GPR85&quot;</span><span class="p">,</span>
+            <span class="s">&quot;GPRC5D&quot;</span><span class="p">,</span>
+            <span class="s">&quot;GRIN2B&quot;</span><span class="p">,</span>
+            <span class="s">&quot;H3F3A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HDAC8&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HESX1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HEXIM2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HGF&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HIC2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HIP1R&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HN1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HOXA10&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HOXA5&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HOXB8&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HPSE2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HSD3B7&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ICAM4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ID1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;IGF1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;IL1RAPL1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;INHBC&quot;</span><span class="p">,</span>
+            <span class="s">&quot;IP6K2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ITGA10&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ITGA8&quot;</span><span class="p">,</span>
+            <span class="s">&quot;JPH1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KANK2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KCNIP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KCNK5&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KCNN3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KCNQ1DN&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KIAA0182&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KITLG&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KLF5&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KLHDC10&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KLHL20&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KLHL3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;LARS2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;LENG9&quot;</span><span class="p">,</span>
+            <span class="s">&quot;LHFP&quot;</span><span class="p">,</span>
+            <span class="s">&quot;LHX9&quot;</span><span class="p">,</span>
+            <span class="s">&quot;LMO7&quot;</span><span class="p">,</span>
+            <span class="s">&quot;LOC151534&quot;</span><span class="p">,</span>
+            <span class="s">&quot;LRP5&quot;</span><span class="p">,</span>
+            <span class="s">&quot;LRRC4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;LRRN4CL&quot;</span><span class="p">,</span>
+            <span class="s">&quot;LTBP1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MAML1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MANF&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MAP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MAP3K5&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MAP6&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MEIS1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MGAT1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MGAT4A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MID1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MLL&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MOAP1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MPP6&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MPPED2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MRPL13&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MTA2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MTBP&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MYF6&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MYH1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MYH10&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MYO18A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NAGLU&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NAPB&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NAV2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NAV3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NCDN&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NDNF&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NDST4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NDUFS4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NEK1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NEK2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NFATC4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NFYB&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NMI&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NMT1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NR2F1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NRG1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NTRK2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NUP54&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NXPH4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;OMA1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;OMG&quot;</span><span class="p">,</span>
+            <span class="s">&quot;OR2L13&quot;</span><span class="p">,</span>
+            <span class="s">&quot;OTX2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PACRG&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PAPD5&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PARK2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PART1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PCDH17&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PCDH18&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PCF11&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PCYT1B&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PDGFB&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PDGFRA&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PDLIM2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PDS5B&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PDZRN4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PFN2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PHC2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PHEX&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PHF1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PHF15&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PHF6&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PHOX2B&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PLAGL2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PLEC&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PLEKHM1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PLP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PMCH&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PMCHL1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PODXL2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;POFUT1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;POU2AF1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;POU4F1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PPAP2B&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PPP1R9B&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PPP2R3A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PPP2R4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PPP2R5E&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PPP3CA&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PRELP&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PRKCG&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PRKCQ&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PROK2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PTH1R&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PXN&quot;</span><span class="p">,</span>
+            <span class="s">&quot;R3HDM1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;RAB30&quot;</span><span class="p">,</span>
+            <span class="s">&quot;RAB5B&quot;</span><span class="p">,</span>
+            <span class="s">&quot;RAB5C&quot;</span><span class="p">,</span>
+            <span class="s">&quot;RAPGEF4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;RBMS3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;RGS17&quot;</span><span class="p">,</span>
+            <span class="s">&quot;RNF146&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ROBO4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ROR1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;RPLP0&quot;</span><span class="p">,</span>
+            <span class="s">&quot;RTN1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;RUFY3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;S1PR2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SCN3B&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SCN5A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SCN8A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SCOC&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SDCBP&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SEMA6D&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SEPT7&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SESN3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SGCD&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SH2D6&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SHC3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SHCBP1L&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SIPA1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SIRPA&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SLC26A6&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SLC4A1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SLC6A1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SMARCA2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SNX9&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SORBS2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SOX12&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SOX21&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SOX30&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SOX5&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SPOCK2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SPTLC2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SRGAP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SRSF8&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SSBP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ST7L&quot;</span><span class="p">,</span>
+            <span class="s">&quot;STAC3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;STAG1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;STAG2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;STC2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;STRN3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;STRN4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TAS1R2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TEF&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TFAP4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TFDP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TM2D3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TMEM182&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TMEM27&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TMEM69&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TMSB4X&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TMSB4XP1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TMSL3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TMSL6&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TNFAIP8&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TNS1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TNXB&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TP53INP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TRDN&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TREML1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TRIM28&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TRIM68&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TRIM8&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TRIML1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TRPS1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TSC22D3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TSPAN7&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TSPY26P&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TSSK3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TTC17&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TUSC2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;UBE2W&quot;</span><span class="p">,</span>
+            <span class="s">&quot;UBXN10&quot;</span><span class="p">,</span>
+            <span class="s">&quot;USP1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;VDR&quot;</span><span class="p">,</span>
+            <span class="s">&quot;VIP&quot;</span><span class="p">,</span>
+            <span class="s">&quot;VKORC1L1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;VWA5A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;WBP1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;WNT2B&quot;</span><span class="p">,</span>
+            <span class="s">&quot;WT1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;WT1-AS&quot;</span><span class="p">,</span>
+            <span class="s">&quot;XRCC1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZADH2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZBTB11&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZFP91&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZFPM2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZIC1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZIC4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZMAT3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZNF238&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZNF296&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZNF503&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZNF521&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZNF524&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZNF654&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZNF687&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZNF710&quot;</span>
+         <span class="p">]</span>
+      <span class="p">],</span>
+      <span class="s">&quot;downstream&quot;</span><span class="p">:</span><span class="mi">4</span><span class="p">,</span>
+      <span class="s">&quot;upstream&quot;</span><span class="p">:</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span>
+      <span class="s">&quot;elementType&quot;</span><span class="p">:</span><span class="s">&quot;genes&quot;</span><span class="p">,</span>
+      <span class="s">&quot;organism&quot;</span><span class="p">:</span><span class="s">&quot;human&quot;</span><span class="p">,</span>
+      <span class="s">&quot;queryType&quot;</span><span class="p">:</span><span class="s">&quot;TFsig&quot;</span><span class="p">,</span>
+      <span class="s">&quot;symbolType&quot;</span><span class="p">:</span><span class="s">&quot;symbol&quot;</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="allgenes">
+<h3>allGenes<a class="headerlink" href="#allgenes" title="Permalink to this headline">¶</a></h3>
+<p><strong>allGenes</strong> - get all genes/transcripts in our database with a transcription factor target window intersection.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><strong>Required parameters:</strong> featureType, cellLines, symbolType, downstream, upstream, elementType, organism, queryType, factorTarget</p>
+</div>
+<p><em>Input Example:</em></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+   <span class="s">&quot;JSONparams&quot;</span><span class="p">:{</span>
+      <span class="s">&quot;featureType&quot;</span><span class="p">:</span><span class="s">&quot;TSS&quot;</span><span class="p">,</span>
+      <span class="s">&quot;cellLines&quot;</span><span class="p">:[</span>
+         <span class="s">&quot;all&quot;</span>
+      <span class="p">],</span>
+      <span class="s">&quot;symbolType&quot;</span><span class="p">:</span><span class="s">&quot;symbol&quot;</span><span class="p">,</span>
+      <span class="s">&quot;downstream&quot;</span><span class="p">:</span><span class="mi">4</span><span class="p">,</span>
+      <span class="s">&quot;upstream&quot;</span><span class="p">:</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span>
+      <span class="s">&quot;elementType&quot;</span><span class="p">:</span><span class="s">&quot;genes&quot;</span><span class="p">,</span>
+      <span class="s">&quot;organism&quot;</span><span class="p">:</span><span class="s">&quot;human&quot;</span><span class="p">,</span>
+      <span class="s">&quot;queryType&quot;</span><span class="p">:</span><span class="s">&quot;allGenes&quot;</span><span class="p">,</span>
+      <span class="s">&quot;factorTarget&quot;</span><span class="p">:</span><span class="s">&quot;Suz12&quot;</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="listgenes">
+<h3>listGenes<a class="headerlink" href="#listgenes" title="Permalink to this headline">¶</a></h3>
+<p><strong>listGenes</strong> - get all genes/transcripts in symbolList with a transcription factor target window intersection.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><strong>Required parameters:</strong> featureType, downstream, upstream, symbolType, factorTarget, cellLines, elementType, organism, queryType, symbolList.</p>
+</div>
+<p><em>Input Example:</em></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+   <span class="s">&quot;JSONparams&quot;</span><span class="p">:{</span>
+      <span class="s">&quot;featureType&quot;</span><span class="p">:</span><span class="s">&quot;TSS&quot;</span><span class="p">,</span>
+      <span class="s">&quot;downstream&quot;</span><span class="p">:</span><span class="mi">4</span><span class="p">,</span>
+      <span class="s">&quot;symbolType&quot;</span><span class="p">:</span><span class="s">&quot;symbol&quot;</span><span class="p">,</span>
+      <span class="s">&quot;upstream&quot;</span><span class="p">:</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span>
+      <span class="s">&quot;targetList&quot;</span><span class="p">:</span><span class="s">&quot;List1&quot;</span><span class="p">,</span>
+      <span class="s">&quot;factorTarget&quot;</span><span class="p">:</span><span class="s">&quot;Suz12&quot;</span><span class="p">,</span>
+      <span class="s">&quot;cellLines&quot;</span><span class="p">:[</span>
+        <span class="s">&quot;all&quot;</span>
+      <span class="p">],</span>
+      <span class="s">&quot;elementType&quot;</span><span class="p">:</span><span class="s">&quot;genes&quot;</span><span class="p">,</span>
+      <span class="s">&quot;organism&quot;</span><span class="p">:</span><span class="s">&quot;human&quot;</span><span class="p">,</span>
+      <span class="s">&quot;queryType&quot;</span><span class="p">:</span><span class="s">&quot;listGenes&quot;</span><span class="p">,</span>
+      <span class="s">&quot;symbolList&quot;</span><span class="p">:[</span>
+         <span class="p">[</span>
+            <span class="s">&quot;ABT1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ACVR1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ADAM12&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ADD3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;AGGF1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ANKRD12&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ANKRD28&quot;</span><span class="p">,</span>
+            <span class="s">&quot;AP4S1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;APBB2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;APOBR&quot;</span><span class="p">,</span>
+            <span class="s">&quot;AQP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ARHGAP44&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ARID1A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ARID4A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ARPC2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ARSG&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ARX&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ASB4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ASPH&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ATOH8&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ATP1A2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ATP5L&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ATPIF1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;AXDND1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;B4GALT6&quot;</span><span class="p">,</span>
+            <span class="s">&quot;BAI3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;BAMBI&quot;</span><span class="p">,</span>
+            <span class="s">&quot;BCL2L1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;BCL9&quot;</span><span class="p">,</span>
+            <span class="s">&quot;BMPR1B&quot;</span><span class="p">,</span>
+            <span class="s">&quot;BMX&quot;</span><span class="p">,</span>
+            <span class="s">&quot;BRSK2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;BTBD3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;BUB3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;C11ORF84&quot;</span><span class="p">,</span>
+            <span class="s">&quot;C11ORF92&quot;</span><span class="p">,</span>
+            <span class="s">&quot;C12ORF65&quot;</span><span class="p">,</span>
+            <span class="s">&quot;C13ORF30&quot;</span><span class="p">,</span>
+            <span class="s">&quot;C14ORF1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;C15ORF26&quot;</span><span class="p">,</span>
+            <span class="s">&quot;C17ORF28&quot;</span><span class="p">,</span>
+            <span class="s">&quot;C20ORF197&quot;</span><span class="p">,</span>
+            <span class="s">&quot;C3ORF19&quot;</span><span class="p">,</span>
+            <span class="s">&quot;C6ORF138&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CA3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CACNA2D3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CACNB2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CAPN1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CAPZA1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CASQ2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CBX2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CCNJ&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CCNY&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CDC23&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CDH2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CER1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CHRM1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CITED2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CLDN5&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CLTC&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CMKLR1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CNTLN&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CNTN1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;COCH&quot;</span><span class="p">,</span>
+            <span class="s">&quot;COL12A1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;COL1A2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;COL4A5&quot;</span><span class="p">,</span>
+            <span class="s">&quot;COL4A6&quot;</span><span class="p">,</span>
+            <span class="s">&quot;COLEC10&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CRAT&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CRH&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CRKL&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CRYGD&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CRYGS&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CSNK1A1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CSRNP3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CSTF3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CYBRD1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DAAM1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DBNDD2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DCAKD&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DDAH2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DDX4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DEF6&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DENND4A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DGKB&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DHH&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DHRS4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DHRS4L2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DIDO1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DMD&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DMRT1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DNAJA2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DNAJB3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DNAJB4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DSCAML1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DUSP4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DYNC1I1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DYRK1A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;EDA&quot;</span><span class="p">,</span>
+            <span class="s">&quot;EFNA1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;EGFLAM&quot;</span><span class="p">,</span>
+            <span class="s">&quot;EIF5&quot;</span><span class="p">,</span>
+            <span class="s">&quot;EMX2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;EPC1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;EPHA7&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ERBB4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ERRFI1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ESRP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ESRRB&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ESRRG&quot;</span><span class="p">,</span>
+            <span class="s">&quot;EYA1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FAM49A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FAM83F&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FCER1A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FGD4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FGF10&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FGF12&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FGFR1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FGFR1OP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FIZ1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FKRP&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FMNL3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FNDC9&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FOXA1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FOXG1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FOXO4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FOXP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FSIP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FST&quot;</span><span class="p">,</span>
+            <span class="s">&quot;GABRA3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;GDNF&quot;</span><span class="p">,</span>
+            <span class="s">&quot;GFI1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;GGNBP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;GJB4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;GLDN&quot;</span><span class="p">,</span>
+            <span class="s">&quot;GNAQ&quot;</span><span class="p">,</span>
+            <span class="s">&quot;GPR85&quot;</span><span class="p">,</span>
+            <span class="s">&quot;GPRC5D&quot;</span><span class="p">,</span>
+            <span class="s">&quot;GRIN2B&quot;</span><span class="p">,</span>
+            <span class="s">&quot;H3F3A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HDAC8&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HESX1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HEXIM2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HGF&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HIC2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HIP1R&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HN1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HOXA10&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HOXA5&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HOXB8&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HPSE2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HSD3B7&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ICAM4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ID1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;IGF1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;IL1RAPL1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;INHBC&quot;</span><span class="p">,</span>
+            <span class="s">&quot;IP6K2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ITGA10&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ITGA8&quot;</span><span class="p">,</span>
+            <span class="s">&quot;JPH1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KANK2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KCNIP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KCNK5&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KCNN3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KCNQ1DN&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KIAA0182&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KITLG&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KLF5&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KLHDC10&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KLHL20&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KLHL3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;LARS2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;LENG9&quot;</span><span class="p">,</span>
+            <span class="s">&quot;LHFP&quot;</span><span class="p">,</span>
+            <span class="s">&quot;LHX9&quot;</span><span class="p">,</span>
+            <span class="s">&quot;LMO7&quot;</span><span class="p">,</span>
+            <span class="s">&quot;LOC151534&quot;</span><span class="p">,</span>
+            <span class="s">&quot;LRP5&quot;</span><span class="p">,</span>
+            <span class="s">&quot;LRRC4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;LRRN4CL&quot;</span><span class="p">,</span>
+            <span class="s">&quot;LTBP1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MAML1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MANF&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MAP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MAP3K5&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MAP6&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MEIS1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MGAT1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MGAT4A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MID1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MLL&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MOAP1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MPP6&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MPPED2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MRPL13&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MTA2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MTBP&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MYF6&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MYH1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MYH10&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MYO18A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NAGLU&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NAPB&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NAV2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NAV3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NCDN&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NDNF&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NDST4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NDUFS4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NEK1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NEK2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NFATC4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NFYB&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NMI&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NMT1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NR2F1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NRG1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NTRK2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NUP54&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NXPH4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;OMA1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;OMG&quot;</span><span class="p">,</span>
+            <span class="s">&quot;OR2L13&quot;</span><span class="p">,</span>
+            <span class="s">&quot;OTX2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PACRG&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PAPD5&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PARK2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PART1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PCDH17&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PCDH18&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PCF11&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PCYT1B&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PDGFB&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PDGFRA&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PDLIM2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PDS5B&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PDZRN4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PFN2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PHC2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PHEX&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PHF1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PHF15&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PHF6&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PHOX2B&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PLAGL2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PLEC&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PLEKHM1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PLP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PMCH&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PMCHL1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PODXL2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;POFUT1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;POU2AF1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;POU4F1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PPAP2B&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PPP1R9B&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PPP2R3A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PPP2R4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PPP2R5E&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PPP3CA&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PRELP&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PRKCG&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PRKCQ&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PROK2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PTH1R&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PXN&quot;</span><span class="p">,</span>
+            <span class="s">&quot;R3HDM1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;RAB30&quot;</span><span class="p">,</span>
+            <span class="s">&quot;RAB5B&quot;</span><span class="p">,</span>
+            <span class="s">&quot;RAB5C&quot;</span><span class="p">,</span>
+            <span class="s">&quot;RAPGEF4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;RBMS3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;RGS17&quot;</span><span class="p">,</span>
+            <span class="s">&quot;RNF146&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ROBO4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ROR1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;RPLP0&quot;</span><span class="p">,</span>
+            <span class="s">&quot;RTN1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;RUFY3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;S1PR2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SCN3B&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SCN5A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SCN8A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SCOC&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SDCBP&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SEMA6D&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SEPT7&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SESN3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SGCD&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SH2D6&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SHC3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SHCBP1L&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SIPA1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SIRPA&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SLC26A6&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SLC4A1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SLC6A1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SMARCA2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SNX9&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SORBS2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SOX12&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SOX21&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SOX30&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SOX5&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SPOCK2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SPTLC2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SRGAP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SRSF8&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SSBP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ST7L&quot;</span><span class="p">,</span>
+            <span class="s">&quot;STAC3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;STAG1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;STAG2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;STC2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;STRN3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;STRN4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TAS1R2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TEF&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TFAP4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TFDP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TM2D3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TMEM182&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TMEM27&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TMEM69&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TMSB4X&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TMSB4XP1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TMSL3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TMSL6&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TNFAIP8&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TNS1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TNXB&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TP53INP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TRDN&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TREML1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TRIM28&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TRIM68&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TRIM8&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TRIML1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TRPS1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TSC22D3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TSPAN7&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TSPY26P&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TSSK3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TTC17&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TUSC2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;UBE2W&quot;</span><span class="p">,</span>
+            <span class="s">&quot;UBXN10&quot;</span><span class="p">,</span>
+            <span class="s">&quot;USP1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;VDR&quot;</span><span class="p">,</span>
+            <span class="s">&quot;VIP&quot;</span><span class="p">,</span>
+            <span class="s">&quot;VKORC1L1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;VWA5A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;WBP1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;WNT2B&quot;</span><span class="p">,</span>
+            <span class="s">&quot;WT1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;WT1-AS&quot;</span><span class="p">,</span>
+            <span class="s">&quot;XRCC1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZADH2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZBTB11&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZFP91&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZFPM2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZIC1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZIC4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZMAT3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZNF238&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZNF296&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZNF503&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZNF521&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZNF524&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZNF654&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZNF687&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZNF710&quot;</span>
+         <span class="p">]</span>
+      <span class="p">]</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="validatetf">
+<h3>validateTF<a class="headerlink" href="#validatetf" title="Permalink to this headline">¶</a></h3>
+<p><strong>validateTF</strong> - checks if the provided transcription factor label is valid.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><strong>Required parameters:</strong> targetFactor, organism, queryType.</p>
+</div>
+<p><em>Example:</em></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+   <span class="s">&quot;JSONparams&quot;</span><span class="p">:{</span>
+      <span class="s">&quot;targetFactor&quot;</span><span class="p">:</span><span class="s">&quot;Suz12&quot;</span><span class="p">,</span>
+      <span class="s">&quot;organism&quot;</span><span class="p">:</span><span class="s">&quot;human&quot;</span><span class="p">,</span>
+      <span class="s">&quot;queryType&quot;</span><span class="p">:</span><span class="s">&quot;validateTF&quot;</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="validatecelllines">
+<h3>validateCellLines<a class="headerlink" href="#validatecelllines" title="Permalink to this headline">¶</a></h3>
+<p><strong>validateCellLine</strong> - checks if the provided cell type label is valid.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><strong>Required parameters:</strong> organism, queryType, targetCellLine.</p>
+</div>
+<p><em>Example:</em></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+   <span class="s">&quot;JSONparams&quot;</span><span class="p">:{</span>
+      <span class="s">&quot;organism&quot;</span><span class="p">:</span><span class="s">&quot;human&quot;</span><span class="p">,</span>
+      <span class="s">&quot;queryType&quot;</span><span class="p">:</span><span class="s">&quot;validateCellLine&quot;</span><span class="p">,</span>
+      <span class="s">&quot;targetCellLine&quot;</span><span class="p">:</span><span class="s">&quot;K562&quot;</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="fuzzyfactorsearch">
+<h3>fuzzyFactorSearch<a class="headerlink" href="#fuzzyfactorsearch" title="Permalink to this headline">¶</a></h3>
+<p><strong>fuzzyFactorSearch</strong> - checks the provided string against valid transcription factor labels and returns possible matches.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><strong>Required parameters:</strong> targetFactor, organism, queryType.</p>
+</div>
+<p><em>Example:</em></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+   <span class="s">&quot;JSONparams&quot;</span><span class="p">:{</span>
+      <span class="s">&quot;targetFactor&quot;</span><span class="p">:</span><span class="s">&quot;Pol2&quot;</span><span class="p">,</span>
+      <span class="s">&quot;organism&quot;</span><span class="p">:</span><span class="s">&quot;human&quot;</span><span class="p">,</span>
+      <span class="s">&quot;queryType&quot;</span><span class="p">:</span><span class="s">&quot;fuzzyFactorSearch&quot;</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="fuzzycelllinesearch">
+<h3>fuzzyCellLineSearch<a class="headerlink" href="#fuzzycelllinesearch" title="Permalink to this headline">¶</a></h3>
+<p><strong>fuzzyCellLineSearch</strong> - checks the provided string against valid cell type labels and returns possible matches.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><strong>Required parameters:</strong> organism, queryType, targetCellLine.</p>
+</div>
+<p><em>Example:</em></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+   <span class="s">&quot;JSONparams&quot;</span><span class="p">:{</span>
+      <span class="s">&quot;organism&quot;</span><span class="p">:</span><span class="s">&quot;human&quot;</span><span class="p">,</span>
+      <span class="s">&quot;queryType&quot;</span><span class="p">:</span><span class="s">&quot;fuzzyCellLineSearch&quot;</span><span class="p">,</span>
+      <span class="s">&quot;targetCellLine&quot;</span><span class="p">:</span><span class="s">&quot;He&quot;</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="gettfsandcelllines">
+<h3>getTFsAndCellLines<a class="headerlink" href="#gettfsandcelllines" title="Permalink to this headline">¶</a></h3>
+<p><strong>getTFsAndCellLines</strong> - returns all valid transcription factor/cell line combinations.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><strong>Required parameters:</strong> organism, queryType.</p>
+</div>
+<p><em>Example:</em></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+   <span class="s">&quot;JSONparams&quot;</span><span class="p">:{</span>
+      <span class="s">&quot;organism&quot;</span><span class="p">:</span><span class="s">&quot;human&quot;</span><span class="p">,</span>
+      <span class="s">&quot;queryType&quot;</span><span class="p">:</span><span class="s">&quot;getTFsAndCellLines&quot;</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="genecheck">
+<h3>geneCheck<a class="headerlink" href="#genecheck" title="Permalink to this headline">¶</a></h3>
+<p><strong>geneCheck</strong> - checks if the provided gene IDs are valid in our database.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><strong>Required parameters:</strong> symbolList, organism, elementType, queryType, symbolType.</p>
+</div>
+<p><em>Example:</em></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+   <span class="s">&quot;JSONparams&quot;</span><span class="p">:{</span>
+      <span class="s">&quot;symbolList&quot;</span><span class="p">:[</span>
+         <span class="p">[</span>
+            <span class="s">&quot;ABT1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ACVR1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ADAM12&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ADD3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;AGGF1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ANKRD12&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ANKRD28&quot;</span><span class="p">,</span>
+            <span class="s">&quot;AP4S1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;APBB2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;APOBR&quot;</span><span class="p">,</span>
+            <span class="s">&quot;AQP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ARHGAP44&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ARID1A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ARID4A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ARPC2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ARSG&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ARX&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ASB4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ASPH&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ATOH8&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ATP1A2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ATP5L&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ATPIF1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;AXDND1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;B4GALT6&quot;</span><span class="p">,</span>
+            <span class="s">&quot;BAI3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;BAMBI&quot;</span><span class="p">,</span>
+            <span class="s">&quot;BCL2L1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;BCL9&quot;</span><span class="p">,</span>
+            <span class="s">&quot;BMPR1B&quot;</span><span class="p">,</span>
+            <span class="s">&quot;BMX&quot;</span><span class="p">,</span>
+            <span class="s">&quot;BRSK2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;BTBD3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;BUB3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;C11ORF84&quot;</span><span class="p">,</span>
+            <span class="s">&quot;C11ORF92&quot;</span><span class="p">,</span>
+            <span class="s">&quot;C12ORF65&quot;</span><span class="p">,</span>
+            <span class="s">&quot;C13ORF30&quot;</span><span class="p">,</span>
+            <span class="s">&quot;C14ORF1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;C15ORF26&quot;</span><span class="p">,</span>
+            <span class="s">&quot;C17ORF28&quot;</span><span class="p">,</span>
+            <span class="s">&quot;C20ORF197&quot;</span><span class="p">,</span>
+            <span class="s">&quot;C3ORF19&quot;</span><span class="p">,</span>
+            <span class="s">&quot;C6ORF138&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CA3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CACNA2D3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CACNB2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CAPN1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CAPZA1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CASQ2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CBX2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CCNJ&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CCNY&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CDC23&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CDH2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CER1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CHRM1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CITED2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CLDN5&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CLTC&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CMKLR1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CNTLN&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CNTN1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;COCH&quot;</span><span class="p">,</span>
+            <span class="s">&quot;COL12A1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;COL1A2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;COL4A5&quot;</span><span class="p">,</span>
+            <span class="s">&quot;COL4A6&quot;</span><span class="p">,</span>
+            <span class="s">&quot;COLEC10&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CRAT&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CRH&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CRKL&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CRYGD&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CRYGS&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CSNK1A1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CSRNP3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CSTF3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;CYBRD1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DAAM1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DBNDD2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DCAKD&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DDAH2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DDX4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DEF6&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DENND4A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DGKB&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DHH&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DHRS4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DHRS4L2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DIDO1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DMD&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DMRT1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DNAJA2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DNAJB3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DNAJB4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DSCAML1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DUSP4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DYNC1I1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;DYRK1A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;EDA&quot;</span><span class="p">,</span>
+            <span class="s">&quot;EFNA1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;EGFLAM&quot;</span><span class="p">,</span>
+            <span class="s">&quot;EIF5&quot;</span><span class="p">,</span>
+            <span class="s">&quot;EMX2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;EPC1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;EPHA7&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ERBB4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ERRFI1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ESRP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ESRRB&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ESRRG&quot;</span><span class="p">,</span>
+            <span class="s">&quot;EYA1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FAM49A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FAM83F&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FCER1A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FGD4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FGF10&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FGF12&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FGFR1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FGFR1OP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FIZ1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FKRP&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FMNL3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FNDC9&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FOXA1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FOXG1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FOXO4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FOXP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FSIP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;FST&quot;</span><span class="p">,</span>
+            <span class="s">&quot;GABRA3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;GDNF&quot;</span><span class="p">,</span>
+            <span class="s">&quot;GFI1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;GGNBP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;GJB4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;GLDN&quot;</span><span class="p">,</span>
+            <span class="s">&quot;GNAQ&quot;</span><span class="p">,</span>
+            <span class="s">&quot;GPR85&quot;</span><span class="p">,</span>
+            <span class="s">&quot;GPRC5D&quot;</span><span class="p">,</span>
+            <span class="s">&quot;GRIN2B&quot;</span><span class="p">,</span>
+            <span class="s">&quot;H3F3A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HDAC8&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HESX1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HEXIM2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HGF&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HIC2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HIP1R&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HN1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HOXA10&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HOXA5&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HOXB8&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HPSE2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;HSD3B7&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ICAM4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ID1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;IGF1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;IL1RAPL1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;INHBC&quot;</span><span class="p">,</span>
+            <span class="s">&quot;IP6K2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ITGA10&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ITGA8&quot;</span><span class="p">,</span>
+            <span class="s">&quot;JPH1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KANK2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KCNIP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KCNK5&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KCNN3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KCNQ1DN&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KIAA0182&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KITLG&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KLF5&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KLHDC10&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KLHL20&quot;</span><span class="p">,</span>
+            <span class="s">&quot;KLHL3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;LARS2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;LENG9&quot;</span><span class="p">,</span>
+            <span class="s">&quot;LHFP&quot;</span><span class="p">,</span>
+            <span class="s">&quot;LHX9&quot;</span><span class="p">,</span>
+            <span class="s">&quot;LMO7&quot;</span><span class="p">,</span>
+            <span class="s">&quot;LOC151534&quot;</span><span class="p">,</span>
+            <span class="s">&quot;LRP5&quot;</span><span class="p">,</span>
+            <span class="s">&quot;LRRC4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;LRRN4CL&quot;</span><span class="p">,</span>
+            <span class="s">&quot;LTBP1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MAML1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MANF&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MAP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MAP3K5&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MAP6&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MEIS1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MGAT1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MGAT4A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MID1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MLL&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MOAP1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MPP6&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MPPED2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MRPL13&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MTA2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MTBP&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MYF6&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MYH1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MYH10&quot;</span><span class="p">,</span>
+            <span class="s">&quot;MYO18A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NAGLU&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NAPB&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NAV2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NAV3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NCDN&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NDNF&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NDST4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NDUFS4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NEK1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NEK2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NFATC4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NFYB&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NMI&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NMT1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NR2F1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NRG1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NTRK2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NUP54&quot;</span><span class="p">,</span>
+            <span class="s">&quot;NXPH4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;OMA1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;OMG&quot;</span><span class="p">,</span>
+            <span class="s">&quot;OR2L13&quot;</span><span class="p">,</span>
+            <span class="s">&quot;OTX2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PACRG&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PAPD5&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PARK2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PART1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PCDH17&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PCDH18&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PCF11&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PCYT1B&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PDGFB&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PDGFRA&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PDLIM2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PDS5B&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PDZRN4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PFN2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PHC2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PHEX&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PHF1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PHF15&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PHF6&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PHOX2B&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PLAGL2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PLEC&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PLEKHM1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PLP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PMCH&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PMCHL1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PODXL2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;POFUT1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;POU2AF1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;POU4F1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PPAP2B&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PPP1R9B&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PPP2R3A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PPP2R4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PPP2R5E&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PPP3CA&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PRELP&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PRKCG&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PRKCQ&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PROK2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PTH1R&quot;</span><span class="p">,</span>
+            <span class="s">&quot;PXN&quot;</span><span class="p">,</span>
+            <span class="s">&quot;R3HDM1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;RAB30&quot;</span><span class="p">,</span>
+            <span class="s">&quot;RAB5B&quot;</span><span class="p">,</span>
+            <span class="s">&quot;RAB5C&quot;</span><span class="p">,</span>
+            <span class="s">&quot;RAPGEF4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;RBMS3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;RGS17&quot;</span><span class="p">,</span>
+            <span class="s">&quot;RNF146&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ROBO4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ROR1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;RPLP0&quot;</span><span class="p">,</span>
+            <span class="s">&quot;RTN1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;RUFY3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;S1PR2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SCN3B&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SCN5A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SCN8A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SCOC&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SDCBP&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SEMA6D&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SEPT7&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SESN3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SGCD&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SH2D6&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SHC3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SHCBP1L&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SIPA1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SIRPA&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SLC26A6&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SLC4A1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SLC6A1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SMARCA2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SNX9&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SORBS2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SOX12&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SOX21&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SOX30&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SOX5&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SPOCK2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SPTLC2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SRGAP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SRSF8&quot;</span><span class="p">,</span>
+            <span class="s">&quot;SSBP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ST7L&quot;</span><span class="p">,</span>
+            <span class="s">&quot;STAC3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;STAG1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;STAG2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;STC2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;STRN3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;STRN4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TAS1R2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TEF&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TFAP4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TFDP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TM2D3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TMEM182&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TMEM27&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TMEM69&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TMSB4X&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TMSB4XP1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TMSL3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TMSL6&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TNFAIP8&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TNS1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TNXB&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TP53INP2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TRDN&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TREML1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TRIM28&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TRIM68&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TRIM8&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TRIML1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TRPS1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TSC22D3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TSPAN7&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TSPY26P&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TSSK3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TTC17&quot;</span><span class="p">,</span>
+            <span class="s">&quot;TUSC2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;UBE2W&quot;</span><span class="p">,</span>
+            <span class="s">&quot;UBXN10&quot;</span><span class="p">,</span>
+            <span class="s">&quot;USP1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;VDR&quot;</span><span class="p">,</span>
+            <span class="s">&quot;VIP&quot;</span><span class="p">,</span>
+            <span class="s">&quot;VKORC1L1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;VWA5A&quot;</span><span class="p">,</span>
+            <span class="s">&quot;WBP1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;WNT2B&quot;</span><span class="p">,</span>
+            <span class="s">&quot;WT1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;WT1-AS&quot;</span><span class="p">,</span>
+            <span class="s">&quot;XRCC1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZADH2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZBTB11&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZFP91&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZFPM2&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZIC1&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZIC4&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZMAT3&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZNF238&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZNF296&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZNF503&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZNF521&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZNF524&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZNF654&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZNF687&quot;</span><span class="p">,</span>
+            <span class="s">&quot;ZNF710&quot;</span>
+         <span class="p">]</span>
+      <span class="p">],</span>
+      <span class="s">&quot;elementType&quot;</span><span class="p">:</span><span class="s">&quot;genes&quot;</span><span class="p">,</span>
+      <span class="s">&quot;organism&quot;</span><span class="p">:</span><span class="s">&quot;human&quot;</span><span class="p">,</span>
+      <span class="s">&quot;queryType&quot;</span><span class="p">:</span><span class="s">&quot;geneCheck&quot;</span><span class="p">,</span>
+      <span class="s">&quot;symbolType&quot;</span><span class="p">:</span><span class="s">&quot;symbol&quot;</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">General ENCODEQT Web Tool API</a><ul>
+<li><a class="reference internal" href="#json-field-descriptions">JSON Field Descriptions</a><ul>
+<li><a class="reference internal" href="#elementtype">elementType</a></li>
+<li><a class="reference internal" href="#organism">organism</a></li>
+<li><a class="reference internal" href="#featuretype">featureType</a></li>
+<li><a class="reference internal" href="#upstream">upstream</a></li>
+<li><a class="reference internal" href="#downstream">downstream</a></li>
+<li><a class="reference internal" href="#symboltype">symbolType</a></li>
+<li><a class="reference internal" href="#symbollist">symbolList</a></li>
+<li><a class="reference internal" href="#listnames">listNames</a></li>
+<li><a class="reference internal" href="#celllines">cellLines</a></li>
+<li><a class="reference internal" href="#backgroundlist">backgroundList</a></li>
+<li><a class="reference internal" href="#querytype">queryType</a></li>
+<li><a class="reference internal" href="#targetfactor">targetFactor</a></li>
+<li><a class="reference internal" href="#targetcellline">targetCellLine</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#example-queries">Example Queries</a><ul>
+<li><a class="reference internal" href="#tfsig">TFsig</a></li>
+<li><a class="reference internal" href="#allgenes">allGenes</a></li>
+<li><a class="reference internal" href="#listgenes">listGenes</a></li>
+<li><a class="reference internal" href="#validatetf">validateTF</a></li>
+<li><a class="reference internal" href="#validatecelllines">validateCellLines</a></li>
+<li><a class="reference internal" href="#fuzzyfactorsearch">fuzzyFactorSearch</a></li>
+<li><a class="reference internal" href="#fuzzycelllinesearch">fuzzyCellLineSearch</a></li>
+<li><a class="reference internal" href="#gettfsandcelllines">getTFsAndCellLines</a></li>
+<li><a class="reference internal" href="#genecheck">geneCheck</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="ENCODEQT_examples.html"
+                        title="previous chapter">ENCODEQT Python Module Examples</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/api.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="ENCODEQT_examples.html" title="ENCODEQT Python Module Examples"
+             >previous</a> |</li>
+        <li><a href="index.html">ENCODEQueryTools 0.1.0a documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Stanford University.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
