@@ -1,0 +1,457 @@
+#:import PaintWidget paint.PaintWidget
+#:import ExportableLayout exportable_layout.ExportableLayout
+
+<DebugWidget>:
+    canvas.after:
+        Line:
+            rectangle: self.x+1,self.y+1,self.width-1,self.height-1
+            dash_offset: 5
+            dash_length: 3
+
+<TabbedPanelStrip>:
+    rows: 3
+    cols: 3
+    col_default_width: dp(100)
+    col_force_default: True
+    spacing: 5
+
+<FishActionBubble>:
+    point_pos_x: 0
+    point_pos_y: 0
+
+    size_hint: (None, None)
+    width: dp(180)
+    height: dp(50)
+
+    arrow_pos: 'top_mid'
+
+    x: self.point_pos_x - self.width/2
+    y: self.point_pos_y - self.height
+
+    BubbleButton:
+        text: "Length"
+        on_press: root.do_length()
+    BubbleButton:
+        text: "Area"
+        on_press: root.do_area()
+    BubbleButton:
+        text: "Remove"
+        on_press: root.do_remove()
+
+<FishBubble>:
+    fish_label: ''
+    point_pos_x: 0
+    point_pos_y: 0
+
+    size_hint: (None, None)
+    background_color: (0,0,0,0.7)
+    width: species_label.width
+    height: species_label.height + dp(15)
+
+    x: self.point_pos_x - self.width/2
+    y: self.point_pos_y
+
+    Label:
+        id: species_label
+        markup: True
+        font_size: root.scaled_font_size
+        text: root.fish_label
+        height: self.texture_size[1] + dp(10)
+        width: self.texture_size[0] + dp(10)
+        size_hint: (None, None)
+
+
+<FileDropDown>:
+    # Give it a solid background
+    canvas.before:
+        Color:
+            rgba: .2, .2, .2, 1
+        Rectangle:
+            # self here refers to the widget i.e BoxLayout
+            pos: self.pos
+            size: self.size
+
+    auto_width: False
+    width: '250dp'
+    Button:
+        text: "Open telemetry file"
+        height: '30dp'
+        width: '250dp'
+        size_hint_y: None
+        on_press: root.attach_to.parent.parent.parent.parent.open_telem_file(); root.dismiss()
+    Button:
+        text: "Open most recent file"
+        height: '30dp'
+        width: '250dp'
+        size_hint_y: None
+        on_press: root.attach_to.parent.parent.parent.parent.fast_telem_file(); root.dismiss()
+    Button:
+        text: "Export annotated image (.png)"
+        height: '30dp'
+        width: '250dp'
+        size_hint_y: None
+        on_press: root.attach_to.parent.parent.parent.parent.export_image(); root.dismiss()
+
+
+<OptionsDropDown>:
+    # Give it a solid background
+    canvas.before:
+        Color:
+            rgba: .2, .2, .2, 1
+        Rectangle:
+            # self here refers to the widget i.e BoxLayout
+            pos: self.pos
+            size: self.size
+
+    auto_width: False
+    width: '400dp'
+    StackLayout:
+        size_hint: (1, None)
+        height: '35dp'
+        CheckBox:
+            active: True
+            on_active: root.attach_to.parent.parent.parent.parent.enable_font_scaling(self.active)
+            height: '35dp'
+            width: '30dp'
+            size_hint: (None, None)
+        Label:
+            height: '35dp'
+            width: '300dp'
+            size_hint: (None, None)
+            text: "Keep labels readable when zooming"
+
+
+<MainWindow>:
+    id: main_window
+
+    image_scale: 1.0
+
+    BoxLayout:
+        orientation: 'horizontal'
+        padding: dp(10)
+
+        BoxLayout:
+
+            size_hint_x: None
+            width: '350dp'
+
+            orientation: 'vertical'
+
+            GridLayout:
+
+                rows: 1
+                cols: 4
+
+
+                size_hint_y: None
+                height: '35dp'
+
+                row_default_height: '30dp'
+                row_force_default: True
+
+                Button:
+                    text: 'File'
+                    on_release: root.file_dropdown.open(self)
+
+                Button:
+                    text: 'Options'
+                    on_release: root.options_dropdown.open(self)
+
+            GridLayout:
+                rows: 1
+                cols: 4
+
+                height: '55dp'
+                size_hint_y: None
+
+                row_default_height: '50dp'
+                row_force_default: True
+
+
+
+
+                ToggleButton:
+                    id: count_button
+                    text: 'Count'
+                    group: 'action_group'
+                    on_press: root.on_count_press()
+                ToggleButton:
+                    id: panzoom_button
+                    text: 'Select/Pan'
+                    group: 'action_group'
+                    state: 'down'
+                    on_press: root.on_count_press()
+
+
+
+            BoxLayout:
+                orientation: 'horizontal'
+
+                TabbedPanel:
+                    id: fish_type_panel
+                    tab_height: dp(80)
+                    tab_width: dp(70)
+                    tap_pos: 'top_middle'
+
+                    do_default_tab: True
+                    default_tab_text: "Other"
+
+
+
+        BoxLayout:
+            size_hint_y: 1
+            orientation: 'vertical'
+
+            BoxLayout:
+                orientation: 'horizontal'
+
+                ScrollView:
+                    size_hint_y: 1
+                    size_hint_x: 1
+                    do_scroll_x: False
+                    do_scroll_y: False
+
+                    id: image_view
+
+                    RelativeLayout:
+
+                        Scatter:
+                            id: image_scatter
+                            do_rotation: False
+                            #do_translate: False
+                            auto_bring_to_front: False
+
+                            size_hint_x: None
+                            size_hint_y: None
+
+                            height: image_widget.height
+                            width: image_widget.width
+
+                            do_collide_after_children: True
+
+                            ExportableLayout:
+                                id: image_layout
+                                height: image_widget.height
+                                width: image_widget.width
+
+
+
+                                Image:
+                                    id: image_widget
+                                    size_hint_y: 1
+                                    size_hint_x: 1
+                                    height: self.texture_size[1]
+                                    width: self.texture_size[0]
+                                    source: root.main_image_source
+                                    #allow_stretch: True
+
+
+                                PaintWidget:
+                                    size_hint_y: 1
+                                    size_hint_x: 1
+                                    height: image_widget.height
+                                    width: image_widget.width
+                                    id: paint_widget
+
+                                    scatter_scale: image_scatter.scale
+
+
+
+
+
+                GridLayout:
+                    rows: 7
+                    cols: 1
+
+                    width: '52dp'
+
+                    row_default_height: '45dp'
+                    row_force_default: True
+                    col_default_width: '45dp'
+                    col_force_default: True
+
+                    size_hint_x: None
+
+                    Label:
+                        text: "Zoom"
+
+                    Label:
+                        text: "{0:.2f}".format(image_scatter.scale)
+
+                    Button:
+                        text: "100%"
+                        on_press: root.set_zoom_100()
+                    Button:
+                        text: "Fit"
+                        on_press: root.set_zoom_fit()
+
+                    Button:
+                        text: "+"
+                        on_press: root.set_zoom_in()
+
+                    Button:
+                        text: "-"
+                        on_press: root.set_zoom_out()
+
+
+
+
+
+            BoxLayout:
+                orientation: 'horizontal'
+
+                size_hint_y: .2
+
+
+
+                GridLayout:
+                    rows: 5
+                    cols: 2
+
+                    width: dp(350)
+                    height: dp(125)
+
+                    size_hint_y: None
+                    size_hint_x: None
+
+                    row_default_height: '25dp'
+                    row_force_default: True
+
+                    Label:
+                        text: "Timestamp"
+
+                    Label:
+                        text: ("{} {}".format(root.image_data['date'], root.image_data['time'])) if root.image_data else ""
+
+                    Label:
+                        text: "Location"
+
+                    Label:
+                        text: ("{}, {}".format(root.image_data['latitude'], root.image_data['longitude'])) if root.image_data else ""
+
+                    Label:
+                        text: "Water Depth"
+
+                    Label:
+                        text: ("{} m".format(root.image_data['water_depth'])) if root.image_data else ""
+
+                    Label:
+                        text: "Altitude"
+
+                    Label:
+                        text: ("{} m".format(root.image_data['altitude'])) if root.image_data else ""
+
+                    Label:
+                        text: "Image area"
+
+                    Label:
+                        text: ("{} m^2".format(root.image_data['image_size_data'].area_sq_meters)) if root.image_data else ""
+
+                GridLayout:
+                    rows:2
+                    cols:2
+
+                    width: dp(300)
+
+                    size_hint_y: None
+
+
+                    Label:
+                        text: "Comment"
+                        size_hint_y: None
+                        height: self.texture_size[1] + dp(10)
+                        size_hint_x: None
+                        width: self.texture_size[0] + dp(10)
+
+                    TextInput:
+                        id: comment_text_input
+                        size_hint_y: None
+                        size_hint_x: None
+                        multiline: True
+                        text: (root.image_data['comment']) if root.image_data else ""
+                        width: dp(200)
+                        height: dp(60)
+
+                    Label:
+                        text: "Substrate"
+                        size_hint_y: None
+                        height: self.texture_size[1] + dp(30)
+                        size_hint_x: None
+                        width: self.texture_size[0] + dp(10)
+
+
+                    StackLayout:
+                        Spinner:
+                            id: substrate_spinner_1
+                            width: dp(100)
+                            height: dp(50)
+                            size_hint_x: None
+                            #size_hint_y: None
+                        Spinner:
+                            id: substrate_spinner_2
+                            width: dp(100)
+                            height: dp(50)
+                            size_hint_x: None
+
+
+                Button:
+                    height: '125dp'
+                    width: '150dp'
+                    size_hint_y: None
+                    size_hint_x: None
+                    on_press: root.previous_button_on_press()
+
+                    BoxLayout:
+                        padding: dp(3)
+                        pos: self.parent.pos
+                        size: self.parent.size
+                        orientation: 'vertical'
+                        Label:
+                            size_hint_x: 1
+                            size_hint_y: None
+                            height: dp(25)
+                            text: "Save and previous" if root.prev_button_image_source else "Save"
+
+                        Image:
+                            source: root.prev_button_image_source
+                            size_hint_x: 1
+                            opacity: 1 if root.prev_button_image_source else 0
+
+                            height: dp(90)
+                            width: dp(140)
+                            size_hint_y: None
+                            allow_stretch: True
+
+                Label:
+                    text: "Image\n" + root.current_image_num + " / " + root.total_num_images
+                    width: '100dp'
+                    size_hint_x: None
+                    halign: 'center'
+
+
+                Button:
+                    height: '125dp'
+                    width: '150dp'
+                    size_hint_y: None
+                    size_hint_x: None
+                    on_press: root.next_button_on_press()
+
+                    BoxLayout:
+                        padding: dp(5)
+                        pos: self.parent.pos
+                        size: self.parent.size
+                        orientation: 'vertical'
+                        Label:
+                            size_hint_x: 1
+                            size_hint_y: None
+                            height: dp(25)
+                            text: "Save and next" if root.next_button_image_source else "Save"
+
+                        Image:
+                            source: root.next_button_image_source
+                            size_hint_x: 1
+                            opacity: 1 if root.next_button_image_source else 0
+                            height: dp(90)
+                            width: dp(140)
+                            size_hint_y: None
+                            allow_stretch: True
