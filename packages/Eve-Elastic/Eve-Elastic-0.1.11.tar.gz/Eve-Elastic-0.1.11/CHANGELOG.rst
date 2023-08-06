@@ -1,0 +1,66 @@
+.. :changelog:
+
+Changelog
+---------
+
+0.1.11 (2014-06-27)
++++++++++++++++++++
+
+- add custom json serializer to work with `bson.ObjectId`
+
+0.1.10 (2014-06-11)
++++++++++++++++++++
+
+- fix `is_empty`
+
+0.1.9 (2014-05-29)
+++++++++++++++++++
+
+- fix `is_empty` call
+- implement `find_one_raw`
+
+0.1.8 (2014-05-29)
+++++++++++++++++++
+
+- fix remove by lookup
+
+0.1.7 (2014-05-28)
+++++++++++++++++++
+
+- preserve mapping after deleting all documents for given type
+
+0.1.6 (2014-05-09)
+++++++++++++++++++
+
+- support ``source`` param on find
+
+0.1.5 (2014-05-05)
+++++++++++++++++++
+
+- fix for elastic 1.0+ fields handling
+
+0.1.4 (2014-05-02)
+++++++++++++++++++
+
+- make it work with elastic 1.0+
+
+0.1.3 (2014-01-31)
+++++++++++++++++++
+
+- allow filtering via elasticsearch filter dsl
+
+0.1.2 (2014-01-30)
+++++++++++++++++++
+
+- fix pip install (add missing MANIFEST file)
+
+0.1.1 (2014-01-30)
+++++++++++++++++++
+
+- add changelog ;)
+- migrate readme to rst and use it for ``long_description``
+
+0.1.0 (2014-01-28)
+++++++++++++++++++
+
+- initial release
