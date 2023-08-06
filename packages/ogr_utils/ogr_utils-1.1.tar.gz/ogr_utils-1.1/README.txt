@@ -1,0 +1,52 @@
+===========
+ogr_utils
+===========
+
+ogr_utils is a small wrapper around the GDAL/ogr module. Basically it
+is an abstraction layer that adds some convience to reading, writing
+and manipulating geographic data formats.
+It provides three modules: geometry, research and copy_helper.
+
+**Important!** Obviously GDAL is required. As installation can be troublesome it is not including as a requirement in this distribution. Please install manually.
+
+Example one. Save a layer based on a query to a new shapefile::
+
+    #!/usr/bin/env python
+
+    from ogr_utils.copy_helper import CopyHelper
+    c = CopyHelper()
+    f = '/home/.../border_segs.shp'
+    shp =ogr.Open(f,0)
+    lyr = shp.GetLayer()
+    lyr.GetFeatureCount()
+    >>> 13411
+    c.lyr_2_shp(lyr,f,'line')
+    lyr_sel = shp.ExecuteSQL("select * from 'border_segs' where 'FID' < 100 ")
+    lyr_sel.GetFeatureCount()
+    >>> 100
+    c.lyr_2_shp(lyr_sel,f,'line')
+
+Example two. Save a set of geo objects to a shapefile (or any other file format supported by ogr)::
+
+    #!/usr/bin/env python
+
+    from ogr_utils.geometry import Geometry
+    g = Geometry( [(xy),], [(fieldname_1, type),(fieldname_2, type),], [(value_field_1,...),(value_field_2,...)] )
+    f = '/home/.../outfile.shp'
+    g.make_points(f)
+
+
+Example three. Get the geomtry of an evelope by it's lower left and upper right corner::
+
+    #!/usr/bin/env python
+
+    from ogr_utils.research import Research
+    prof = Research()
+    xy1 = (4.84692,52.3706) 
+    xy2 = (4.84397,52.36611)
+    bb = prof.get_bounding_box( [xy1,xy2] )
+
+
+
+
+
