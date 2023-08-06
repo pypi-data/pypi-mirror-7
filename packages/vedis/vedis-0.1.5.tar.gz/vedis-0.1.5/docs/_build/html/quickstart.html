@@ -1,0 +1,338 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Quickstart &mdash; vedis-python 0.1.2 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="vedis-python 0.1.2 documentation" href="index.html" />
+    <link rel="prev" title="Installation" href="installation.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="installation.html" title="Installation"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">vedis-python 0.1.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="quickstart">
+<h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h1>
+<p>Below is a sample interactive console session designed to show some of the basic features and functionality of the vedis-python library. Full API documentation will be available soon.</p>
+<div class="section" id="key-value-features">
+<h2>Key/value features<a class="headerlink" href="#key-value-features" title="Permalink to this headline">¶</a></h2>
+<p>You can use Vedis like a dictionary for simple key/value lookups:</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="go">In [1]: from vedis import Vedis</span>
+
+<span class="go">In [2]: db = Vedis(&#39;:memory:&#39;)  # Create an in-memory database. Alternatively you could supply a filename for an on-disk database.</span>
+
+<span class="go">In [3]: db[&#39;k1&#39;] = &#39;v1&#39;</span>
+
+<span class="go">In [4]: db[&#39;k1&#39;]</span>
+<span class="go">Out[4]: &#39;v1&#39;</span>
+
+<span class="go">In [5]: db.append(&#39;k1&#39;, &#39;more data&#39;)</span>
+
+<span class="go">In [6]: db[&#39;k1&#39;]</span>
+<span class="go">Out[6]: &#39;v1more data&#39;</span>
+
+<span class="go">In [7]: del db[&#39;k1&#39;]</span>
+
+<span class="go">In [8]: db[&#39;k1&#39;]</span>
+<span class="go">---------------------------------------------------------------------------</span>
+<span class="go">KeyError                                  Traceback (most recent call last)</span>
+<span class="go">&lt;ipython-input-8-a988c6a20437&gt; in &lt;module&gt;()</span>
+<span class="go">----&gt; 1 db[&#39;k1&#39;]</span>
+
+<span class="go">/home/charles/tmp/scrap/z1/src/vedis/vedis/core.pyc in fetch(self, key, buf_size)</span>
+<span class="go">    125             return buf.raw[:nbytes.value]</span>
+<span class="go">    126         elif rc == SXERR_NOTFOUND:</span>
+<span class="go">--&gt; 127             raise KeyError(key)</span>
+<span class="go">    128         handle_return_value(rc)</span>
+<span class="go">    129</span>
+
+<span class="go">KeyError: &#39;k1&#39;</span>
+</pre></div>
+</div>
+<p>You can set and get multiple items at a time:</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="go">In [10]: db.mset(k1=&#39;v1&#39;, k2=&#39;v2&#39;, k3=&#39;v3&#39;)</span>
+<span class="go">Out[10]: True</span>
+
+<span class="go">In [11]: db.mget(&#39;k1&#39;, &#39;k2&#39;, &#39;missing key&#39;, &#39;k3&#39;)</span>
+<span class="go">Out[11]: &lt;generator object iter_vedis_array at 0x7f37dd58be10&gt;</span>
+
+<span class="go">In [12]: list(db.mget(&#39;k1&#39;, &#39;k2&#39;, &#39;missing key&#39;, &#39;k3&#39;))</span>
+<span class="go">Out[12]: [&#39;v1&#39;, &#39;v2&#39;, None, &#39;v3&#39;]</span>
+</pre></div>
+</div>
+<p>In addition to storing string keys/values, you can also implement counters:</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="go">In [13]: db.incr(&#39;counter&#39;)</span>
+<span class="go">Out[13]: 1</span>
+
+<span class="go">In [14]: db.incr(&#39;counter&#39;)</span>
+<span class="go">Out[14]: 2</span>
+
+<span class="go">In [15]: db.incr_by(&#39;counter&#39;, 10)</span>
+<span class="go">Out[15]: 12</span>
+
+<span class="go">In [16]: db.decr(&#39;counter&#39;)</span>
+<span class="go">Out[16]: 11</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="copying-and-moving">
+<h2>Copying and Moving<a class="headerlink" href="#copying-and-moving" title="Permalink to this headline">¶</a></h2>
+<p>Keys can be copied or moved.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="go">In [55]: db[&#39;k1&#39;]</span>
+<span class="go">Out[55]: &#39;v1&#39;</span>
+
+<span class="go">In [56]: db.copy(&#39;k1&#39;, &#39;k-new1&#39;)</span>
+<span class="go">Out[56]: True</span>
+
+<span class="go">In [57]: db[&#39;k-new1&#39;]</span>
+<span class="go">Out[57]: &#39;v1&#39;</span>
+
+<span class="go">In [58]: db.move(&#39;k-new1&#39;, &#39;k-moved&#39;)</span>
+<span class="go">Out[58]: True</span>
+
+<span class="go">In [59]: db[&#39;k-moved&#39;]</span>
+<span class="go">Out[59]: &#39;v1&#39;</span>
+
+<span class="go">In [60]: db[&#39;k-new1&#39;]  # Raises KeyError</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="hashes">
+<h2>Hashes<a class="headerlink" href="#hashes" title="Permalink to this headline">¶</a></h2>
+<p>Vedis supports nested key/value lookups which have the additional benefit of supporting operations to retrieve all keys, values, the number of items in the hash, and so on.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="go">In [17]: db.hset(&#39;my_hash&#39;, &#39;k1&#39;, &#39;v1&#39;)</span>
+
+<span class="go">In [18]: db.hmset(&#39;my_hash&#39;, k2=&#39;v2&#39;, k3=&#39;v3&#39;)</span>
+
+<span class="go">In [19]: db.hgetall(&#39;my_hash&#39;)</span>
+<span class="go">Out[19]: {&#39;k1&#39;: &#39;v1&#39;, &#39;k2&#39;: &#39;v2&#39;, &#39;k3&#39;: &#39;v3&#39;}</span>
+
+<span class="go">In [20]: list(db.hmget(&#39;my_hash&#39;, &#39;k1&#39;, &#39;k3&#39;))</span>
+<span class="go">Out[20]: [&#39;v1&#39;, &#39;v3&#39;]</span>
+
+<span class="go">In [21]: db.hlen(&#39;my_hash&#39;)</span>
+<span class="go">Out[21]: 3</span>
+
+<span class="go">In [22]: db.hkeys(&#39;my_hash&#39;)</span>
+<span class="go">Out[22]: &lt;generator object iter_vedis_array at 0x7f37dd59d410&gt;</span>
+
+<span class="go">In [23]: list(db.hkeys(&#39;my_hash&#39;))</span>
+<span class="go">Out[23]: [&#39;k1&#39;, &#39;k3&#39;, &#39;k2&#39;]</span>
+
+<span class="go">In [24]: list(db.hvals(&#39;my_hash&#39;))</span>
+<span class="go">Out[24]: [&#39;v1&#39;, &#39;v3&#39;, &#39;v2&#39;]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="sets">
+<h2>Sets<a class="headerlink" href="#sets" title="Permalink to this headline">¶</a></h2>
+<p>Vedis supports a set data-type which stores a unique collection of items.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="go">In [29]: db.sadd(&#39;my_set&#39;, &#39;item1&#39;)</span>
+<span class="go">Out[29]: 1</span>
+
+<span class="go">In [30]: db.sadd(&#39;my_set&#39;, &#39;item2&#39;)</span>
+<span class="go">Out[30]: 1</span>
+
+<span class="go">In [31]: db.scard(&#39;my_set&#39;)</span>
+<span class="go">Out[31]: 2</span>
+
+<span class="go">In [32]: db.smembers(&#39;my_set&#39;)</span>
+<span class="go">Out[32]: &lt;generator object iter_vedis_array at 0x7f37dd59d5a0&gt;</span>
+
+<span class="go">In [33]: list(db.smembers(&#39;my_set&#39;))</span>
+<span class="go">Out[33]: [&#39;item1&#39;, &#39;item2&#39;]</span>
+
+<span class="go">In [34]: db.speek(&#39;my_set&#39;)</span>
+<span class="go">Out[34]: &#39;item2&#39;</span>
+
+<span class="go">In [35]: db.stop(&#39;my_set&#39;)</span>
+<span class="go">Out[35]: &#39;item1&#39;</span>
+
+<span class="go">In [36]: db.spop(&#39;my_set&#39;)</span>
+<span class="go">Out[36]: &#39;item2&#39;</span>
+
+<span class="go">In [37]: db.sismember(&#39;my_set&#39;, &#39;item1&#39;)</span>
+<span class="go">Out[37]: True</span>
+
+<span class="go">In [38]: db.srem(&#39;my_set&#39;, &#39;item1&#39;)</span>
+<span class="go">Out[38]: 1</span>
+</pre></div>
+</div>
+<p>If you have two sets, you can calculate the intersection and difference:</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="go">In [39]: db.sadd(&#39;s1&#39;, &#39;i1&#39;)</span>
+<span class="go">Out[39]: 1</span>
+
+<span class="go">In [40]: db.sadd(&#39;s1&#39;, &#39;i2&#39;)</span>
+<span class="go">Out[40]: 1</span>
+
+<span class="go">In [41]: db.sadd(&#39;s2&#39;, &#39;i2&#39;)</span>
+<span class="go">Out[41]: 1</span>
+
+<span class="go">In [42]: db.sadd(&#39;s2&#39;, &#39;i3&#39;)</span>
+<span class="go">Out[42]: 1</span>
+
+<span class="go">In [43]: db.sinter(&#39;s1&#39;, &#39;s2&#39;)</span>
+<span class="go">Out[43]: &lt;generator object iter_vedis_array at 0x7f37dd59da50&gt;</span>
+
+<span class="go">In [44]: list(db.sinter(&#39;s1&#39;, &#39;s2&#39;))</span>
+<span class="go">Out[44]: [&#39;i2&#39;]</span>
+
+<span class="go">In [45]: list(db.sdiff(&#39;s1&#39;, &#39;s2&#39;))</span>
+<span class="go">Out[45]: [&#39;i1&#39;]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="lists">
+<h2>Lists<a class="headerlink" href="#lists" title="Permalink to this headline">¶</a></h2>
+<p>Vedis also supports a list data type.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="go">In [46]: db.lpush(&#39;my_list&#39;, &#39;i1&#39;)</span>
+<span class="go">Out[46]: 1</span>
+
+<span class="go">In [47]: db.lpush(&#39;my_list&#39;, &#39;i2&#39;)</span>
+<span class="go">Out[47]: 2</span>
+
+<span class="go">In [48]: db.llen(&#39;my_list&#39;)</span>
+<span class="go">Out[48]: 2</span>
+
+<span class="go">In [49]: db.lindex(&#39;my_list&#39;, 0)</span>
+<span class="go">Out[49]: &#39;i1&#39;</span>
+
+<span class="go">In [50]: db.lindex(&#39;my_list&#39;, 1)</span>
+<span class="go">Out[50]: &#39;i2&#39;</span>
+
+<span class="go">In [51]: db.lindex(&#39;my_list&#39;, 2)</span>
+
+<span class="go">In [52]: db.lpop(&#39;my_list&#39;)</span>
+<span class="go">Out[52]: &#39;i1&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="misc">
+<h2>Misc<a class="headerlink" href="#misc" title="Permalink to this headline">¶</a></h2>
+<p>Vedis has a somewhat quirky collection of other miscellaneous commands. Below is a sampling:</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="go">In [64]: db.base64(&#39;encode me&#39;)</span>
+<span class="go">Out[64]: &#39;ZW5jb2RlIG1l&#39;</span>
+
+<span class="go">In [65]: db.base64_decode(_)</span>
+<span class="go">Out[65]: &#39;encode me&#39;</span>
+
+<span class="go">In [66]: db.random_string(10)</span>
+<span class="go">Out[66]: &#39;raurquvsnx&#39;</span>
+
+<span class="go">In [67]: db.rand(1, 6)</span>
+<span class="go">Out[67]: 4</span>
+
+<span class="go">In [68]: db.size_format(100000)</span>
+<span class="go">Out[68]: &#39;97.6 KB&#39;</span>
+
+<span class="go">In [69]: list(db.str_split(&#39;abcdefghijklmnop&#39;, 5))</span>
+<span class="go">Out[69]: [&#39;abcde&#39;, &#39;fghij&#39;, &#39;klmno&#39;, &#39;p&#39;]</span>
+
+<span class="go">In [70]: db[&#39;data&#39;] = &#39;abcdefghijklmnop&#39;</span>
+
+<span class="go">In [71]: db.strlen(&#39;data&#39;)</span>
+<span class="go">Out[71]: 16</span>
+
+<span class="go">In [72]: db.strip_tags(&#39;&lt;p&gt;This &lt;span&gt;is&lt;/span&gt; a &lt;a href=&quot;#&quot;&gt;test&lt;/a&gt;.&lt;/p&gt;&#39;)</span>
+<span class="go">Out[72]: &#39;This is a test.&#39;</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Quickstart</a><ul>
+<li><a class="reference internal" href="#key-value-features">Key/value features</a></li>
+<li><a class="reference internal" href="#copying-and-moving">Copying and Moving</a></li>
+<li><a class="reference internal" href="#hashes">Hashes</a></li>
+<li><a class="reference internal" href="#sets">Sets</a></li>
+<li><a class="reference internal" href="#lists">Lists</a></li>
+<li><a class="reference internal" href="#misc">Misc</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="installation.html"
+                        title="previous chapter">Installation</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/quickstart.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="installation.html" title="Installation"
+             >previous</a> |</li>
+        <li><a href="index.html">vedis-python 0.1.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, charles leifer.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
