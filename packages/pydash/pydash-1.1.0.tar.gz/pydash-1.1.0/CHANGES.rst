@@ -1,0 +1,186 @@
+Changelog
+=========
+
+
+v1.1.0 (2014-08-19)
+-------------------
+
+- Add ``attempt()``.
+- Add ``before()``.
+- Add ``camel_case()``.
+- Add ``capitalize()``.
+- Add ``chunk()``.
+- Add ``curry_right()``.
+- Add ``drop_right()``.
+- Add ``drop_right_while()``.
+- Add ``drop_while()``.
+- Add ``ends_with()``.
+- Add ``escape_reg_exp()`` and ``escape_re()``.
+- Add ``is_error()``.
+- Add ``is_reg_exp()`` and ``is_re()``.
+- Add ``kebab_case()``.
+- Add ``keys_in()`` as alias of ``keys()``.
+- Add ``negate()``.
+- Add ``pad()``.
+- Add ``pad_left()``.
+- Add ``pad_right()``.
+- Add ``partition()``.
+- Add ``pull_at()``.
+- Add ``repeat()``.
+- Add ``slice_()``.
+- Add ``snake_case()``.
+- Add ``sorted_last_index()``.
+- Add ``starts_with()``.
+- Add ``take_right()``.
+- Add ``take_right_while()``.
+- Add ``take_while()``.
+- Add ``trim()``.
+- Add ``trim_left()``.
+- Add ``trim_right()``.
+- Add ``trunc()``.
+- Add ``values_in()`` as alias of ``values()``.
+- Create ``pydash.api.strings`` module.
+- Deprecate ``tail()``.
+- Modify ``drop()`` to accept ``n`` argument and remove as alias of ``rest()``.
+- Modify ``take()`` to accept ``n`` argument and remove as alias of ``first()``.
+- Move ``escape()`` and ``unescape()`` from ``pydash.api.utilities`` to ``pydash.api.strings``. **possible breaking change**
+- Move ``range_()`` from ``pydash.api.arrays`` to ``pydash.api.utilities``. **possible breaking change**
+
+
+v1.0.0 (2014-08-05)
+-------------------
+
+- Add Python 2.6 and Python 3 support.
+- Add ``after()``.
+- Add ``assign()`` and ``extend()``. Thanks nathancahill_!
+- Add ``callback()`` and ``create_callback()``.
+- Add ``chain()``.
+- Add ``clone()``.
+- Add ``clone_deep()``.
+- Add ``compose()``.
+- Add ``constant()``.
+- Add ``count_by()``. Thanks nathancahill_!
+- Add ``curry()``.
+- Add ``debounce()``.
+- Add ``defaults()``. Thanks nathancahill_!
+- Add ``delay()``.
+- Add ``escape()``.
+- Add ``find_key()``. Thanks nathancahill_!
+- Add ``find_last()``. Thanks nathancahill_!
+- Add ``find_last_index()``. Thanks nathancahill_!
+- Add ``find_last_key()``. Thanks nathancahill_!
+- Add ``for_each()``. Thanks nathancahill_!
+- Add ``for_each_right()``. Thanks nathancahill_!
+- Add ``for_in()``. Thanks nathancahill_!
+- Add ``for_in_right()``. Thanks nathancahill_!
+- Add ``for_own()``. Thanks nathancahill_!
+- Add ``for_own_right()``. Thanks nathancahill_!
+- Add ``functions_()`` and ``methods()``. Thanks nathancahill_!
+- Add ``group_by()``. Thanks nathancahill_!
+- Add ``has()``. Thanks nathancahill_!
+- Add ``index_by()``. Thanks nathancahill_!
+- Add ``identity()``.
+- Add ``inject()``.
+- Add ``invert()``.
+- Add ``invoke()``. Thanks nathancahill_!
+- Add ``is_list()``. Thanks nathancahill_!
+- Add ``is_boolean()``. Thanks nathancahill_!
+- Add ``is_empty()``. Thanks nathancahill_!
+- Add ``is_equal()``.
+- Add ``is_function()``. Thanks nathancahill_!
+- Add ``is_none()``. Thanks nathancahill_!
+- Add ``is_number()``. Thanks nathancahill_!
+- Add ``is_object()``.
+- Add ``is_plain_object()``.
+- Add ``is_string()``. Thanks nathancahill_!
+- Add ``keys()``.
+- Add ``map_values()``.
+- Add ``matches()``.
+- Add ``max_()``. Thanks nathancahill_!
+- Add ``memoize()``.
+- Add ``merge()``.
+- Add ``min_()``. Thanks nathancahill_!
+- Add ``noop()``.
+- Add ``now()``.
+- Add ``omit()``.
+- Add ``once()``.
+- Add ``pairs()``.
+- Add ``parse_int()``.
+- Add ``partial()``.
+- Add ``partial_right()``.
+- Add ``pick()``.
+- Add ``property_()`` and ``prop()``.
+- Add ``pull()``. Thanks nathancahill_!
+- Add ``random()``.
+- Add ``reduce_()`` and ``foldl()``.
+- Add ``reduce_right()`` and ``foldr()``.
+- Add ``reject()``. Thanks nathancahill_!
+- Add ``remove()``.
+- Add ``result()``.
+- Add ``sample()``.
+- Add ``shuffle()``.
+- Add ``size()``.
+- Add ``sort_by()``. Thanks nathancahill_!
+- Add ``tap()``.
+- Add ``throttle()``.
+- Add ``times()``.
+- Add ``transform()``.
+- Add ``to_list()``. Thanks nathancahill_!
+- Add ``unescape()``.
+- Add ``unique_id()``.
+- Add ``values()``.
+- Add ``wrap()``.
+- Add ``xor()``.
+
+
+v0.0.0 (2014-07-22)
+-------------------
+
+- Add ``all_()``.
+- Add ``any_()``.
+- Add ``at()``.
+- Add ``bisect_left()``.
+- Add ``collect()``.
+- Add ``collections()``.
+- Add ``compact()``.
+- Add ``contains()``.
+- Add ``detect()``.
+- Add ``difference()``.
+- Add ``drop()``.
+- Add ``each()``.
+- Add ``each_right()``.
+- Add ``every()``.
+- Add ``filter_()``.
+- Add ``find()``.
+- Add ``find_index()``.
+- Add ``find_where()``.
+- Add ``first()``.
+- Add ``flatten()``.
+- Add ``head()``.
+- Add ``include()``.
+- Add ``index_of()``.
+- Add ``initial()``.
+- Add ``intersection()``.
+- Add ``last()``.
+- Add ``last_index_of()``.
+- Add ``map_()``.
+- Add ``object_()``.
+- Add ``pluck()``.
+- Add ``range_()``.
+- Add ``rest()``.
+- Add ``select()``.
+- Add ``some()``.
+- Add ``sorted_index()``.
+- Add ``tail()``.
+- Add ``take()``.
+- Add ``union()``.
+- Add ``uniq()``.
+- Add ``unique()``.
+- Add ``unzip()``.
+- Add ``where()``.
+- Add ``without()``.
+- Add ``zip_()``.
+- Add ``zip_object()``.
+
+
+.. _nathancahill: https://github.com/nathancahill
