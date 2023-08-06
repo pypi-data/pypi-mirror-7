@@ -1,0 +1,439 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>poets.image.imagefile &mdash; poets 0.2.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
+    <link rel="top" title="poets 0.2.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">poets 0.2.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for poets.image.imagefile</h1><div class="highlight"><pre>
+<span class="c"># Copyright (c) 2014, Vienna University of Technology (TU Wien), Department</span>
+<span class="c"># of Geodesy and Geoinformation (GEO).</span>
+<span class="c"># All rights reserved.</span>
+
+<span class="c"># Redistribution and use in source and binary forms, with or without</span>
+<span class="c"># modification, are permitted provided that the following conditions are met:</span>
+<span class="c">#</span>
+<span class="c"># * Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c">#   list of conditions and the following disclaimer.</span>
+<span class="c">#</span>
+<span class="c"># * Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c">#   this list of conditions and the following disclaimer in the documentation</span>
+<span class="c">#   and/or other materials provided with the distribution.</span>
+<span class="c">#</span>
+<span class="c"># * Neither the name of the Vienna University of Technology - Department of</span>
+<span class="c">#   Geodesy and Geoinformation nor the names of its contributors may be used to</span>
+<span class="c">#   endorse or promote products derived from this software without specific</span>
+<span class="c">#   prior written permission.</span>
+<span class="c">#</span>
+<span class="c"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;</span>
+<span class="c"># AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE</span>
+<span class="c"># IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE</span>
+<span class="c"># ARE DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY,</span>
+<span class="c"># DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY DIRECT, INDIRECT,</span>
+<span class="c"># INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT</span>
+<span class="c"># LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,</span>
+<span class="c"># OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF</span>
+<span class="c"># LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING</span>
+<span class="c"># NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,</span>
+<span class="c"># EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="c"># Author: Isabella Pfeil, isy.pfeil@gmx.at</span>
+<span class="c"># Creation date: 2014-07-18</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module provides functions for converting lonlat-information</span>
+<span class="sd">to pixels in an image file (eg. PNG, TIFF) and for calculating a</span>
+<span class="sd">country bounding box.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">from</span> <span class="nn">poets.shape.shapes</span> <span class="kn">import</span> <span class="n">Shape</span>
+<span class="kn">import</span> <span class="nn">math</span>
+
+
+<div class="viewcode-block" id="lonlat2px"><a class="viewcode-back" href="../../../poets.image.html#poets.image.imagefile.lonlat2px">[docs]</a><span class="k">def</span> <span class="nf">lonlat2px</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts a pair of lon and lat to its corresponding pixel</span>
+<span class="sd">    value in an image file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img : Image File, e.g. PNG, TIFF</span>
+<span class="sd">        Input image file</span>
+<span class="sd">    lon : float</span>
+<span class="sd">        Longitude</span>
+<span class="sd">    lat : float</span>
+<span class="sd">        Latitude</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Row : float</span>
+<span class="sd">        corresponding pixel value</span>
+<span class="sd">    Col : float</span>
+<span class="sd">        corresponding pixel value</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">w</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">size</span>
+    <span class="n">mw</span> <span class="o">=</span> <span class="n">w</span> <span class="o">/</span> <span class="mf">360.0</span>
+    <span class="n">mh</span> <span class="o">=</span> <span class="n">h</span> <span class="o">/</span> <span class="mf">180.0</span>
+
+    <span class="n">row</span> <span class="o">=</span> <span class="n">h</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">lat</span> <span class="o">*</span> <span class="n">mh</span>
+    <span class="n">col</span> <span class="o">=</span> <span class="n">w</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">lon</span> <span class="o">*</span> <span class="n">mw</span>
+
+    <span class="k">return</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span>
+
+</div>
+<div class="viewcode-block" id="lonlat2px_rearr"><a class="viewcode-back" href="../../../poets.image.html#poets.image.imagefile.lonlat2px_rearr">[docs]</a><span class="k">def</span> <span class="nf">lonlat2px_rearr</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts a pair of lon and lat to its corresponding pixel</span>
+<span class="sd">    value in a rearranged image file (see rearrange_img).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img : Image File, e.g. PNG, TIFF</span>
+<span class="sd">        Input image file</span>
+<span class="sd">    lon : float</span>
+<span class="sd">        Longitude</span>
+<span class="sd">    lat : float</span>
+<span class="sd">        Latitude</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Row : float</span>
+<span class="sd">        corresponding pixel value</span>
+<span class="sd">    Col : float</span>
+<span class="sd">        corresponding pixel value</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">w</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">size</span>
+    <span class="n">mw</span> <span class="o">=</span> <span class="n">w</span> <span class="o">/</span> <span class="mf">360.0</span>
+    <span class="n">mh</span> <span class="o">=</span> <span class="n">h</span> <span class="o">/</span> <span class="mf">180.0</span>
+
+    <span class="n">row</span> <span class="o">=</span> <span class="n">h</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">lat</span> <span class="o">*</span> <span class="n">mh</span>
+
+    <span class="k">if</span> <span class="n">lon</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">col</span> <span class="o">=</span> <span class="mi">0</span> <span class="o">+</span> <span class="n">lon</span> <span class="o">*</span> <span class="n">mw</span>
+    <span class="k">elif</span> <span class="n">lon</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">col</span> <span class="o">=</span> <span class="n">w</span> <span class="o">+</span> <span class="n">lon</span> <span class="o">*</span> <span class="n">mw</span>
+
+    <span class="k">return</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span>
+
+</div>
+<div class="viewcode-block" id="px2lonlat"><a class="viewcode-back" href="../../../poets.image.html#poets.image.imagefile.px2lonlat">[docs]</a><span class="k">def</span> <span class="nf">px2lonlat</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">lon_px</span><span class="p">,</span> <span class="n">lat_px</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts two arrays of row and column pixels into their</span>
+<span class="sd">    corresponding lon and lat arrays</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img : Image file</span>
+<span class="sd">        Image which the pixel values refer to</span>
+<span class="sd">    lon_px : np.array</span>
+<span class="sd">        array of column pixels</span>
+<span class="sd">    lat_px : np.array</span>
+<span class="sd">        array of row pixels</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    lon_new : np.array</span>
+<span class="sd">        List of corresponding longitude values</span>
+<span class="sd">    lat_new: np.array</span>
+<span class="sd">        List of corresponding latitude values</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">w</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">size</span>
+    <span class="n">mw</span> <span class="o">=</span> <span class="n">w</span> <span class="o">/</span> <span class="mf">360.0</span>
+    <span class="n">mh</span> <span class="o">=</span> <span class="n">h</span> <span class="o">/</span> <span class="mf">180.0</span>
+
+    <span class="n">lon_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">lon_px</span><span class="p">))</span>
+    <span class="n">lat_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">lat_px</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">lon_px</span><span class="p">)):</span>
+        <span class="n">lon_new</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">lon_px</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">w</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">mw</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">lat_px</span><span class="p">)):</span>
+        <span class="n">lat_new</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">lat_px</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">h</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">mh</span>
+
+    <span class="k">return</span> <span class="n">lon_new</span><span class="p">,</span> <span class="n">lat_new</span>
+
+</div>
+<div class="viewcode-block" id="px2lonlat_rearr"><a class="viewcode-back" href="../../../poets.image.html#poets.image.imagefile.px2lonlat_rearr">[docs]</a><span class="k">def</span> <span class="nf">px2lonlat_rearr</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">lon_px</span><span class="p">,</span> <span class="n">lat_px</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts two arrays of row and column pixels into their</span>
+<span class="sd">    corresponding lon and lat arrays</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img : Image file</span>
+<span class="sd">        Image which the pixel values refer to (rearranged image)</span>
+<span class="sd">    lon_px : np.array</span>
+<span class="sd">        array of column pixels</span>
+<span class="sd">    lat_px : np.array</span>
+<span class="sd">        array of row pixels</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    lon_new : np.array</span>
+<span class="sd">        List of corresponding longitude values</span>
+<span class="sd">    lat_new: np.array</span>
+<span class="sd">        List of corresponding latitude values</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">w</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">size</span>
+    <span class="n">mw</span> <span class="o">=</span> <span class="n">w</span> <span class="o">/</span> <span class="mf">360.0</span>
+    <span class="n">mh</span> <span class="o">=</span> <span class="n">h</span> <span class="o">/</span> <span class="mf">180.0</span>
+
+    <span class="n">lon_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">lon_px</span><span class="p">))</span>
+    <span class="n">lat_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">lat_px</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">lon_px</span><span class="p">)):</span>  <span class="c"># lon [-180, 179.999]</span>
+        <span class="k">if</span> <span class="n">lon_px</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">w</span> <span class="o">/</span> <span class="mi">2</span><span class="p">:</span>  <span class="c"># west</span>
+            <span class="n">lon_new</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">w</span> <span class="o">-</span> <span class="n">lon_px</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">/</span> <span class="n">mw</span>
+        <span class="k">elif</span> <span class="n">lon_px</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">w</span> <span class="o">/</span> <span class="mi">2</span><span class="p">:</span>  <span class="c"># east</span>
+            <span class="n">lon_new</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">lon_px</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="n">mw</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">lat_px</span><span class="p">)):</span>
+        <span class="n">lat_new</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">lat_px</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">h</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">mh</span>
+
+    <span class="k">return</span> <span class="n">lon_new</span><span class="p">,</span> <span class="n">lat_new</span>
+
+</div>
+<div class="viewcode-block" id="rearrange_img"><a class="viewcode-back" href="../../../poets.image.html#poets.image.imagefile.rearrange_img">[docs]</a><span class="k">def</span> <span class="nf">rearrange_img</span><span class="p">(</span><span class="n">img</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Rearranges image so that 0 degree Meridian is on the very left.</span>
+<span class="sd">    Used when area around the +- 180 degree Meridian is of interest</span>
+<span class="sd">    (eastern Russia, Alaska, New Zealand...).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img : Image File, e.g. PNG, TIFF</span>
+<span class="sd">        Image to be rearranged</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    img : Image file</span>
+<span class="sd">        Rearranged image</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">w</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">size</span>
+    <span class="n">blocklen</span> <span class="o">=</span> <span class="n">w</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="n">xblock</span> <span class="o">=</span> <span class="n">w</span> <span class="o">/</span> <span class="n">blocklen</span>
+    <span class="n">yblock</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">blockmap</span> <span class="o">=</span> <span class="p">[(</span><span class="n">xb</span> <span class="o">*</span> <span class="n">blocklen</span><span class="p">,</span> <span class="n">yb</span> <span class="o">*</span> <span class="n">blocklen</span><span class="p">,</span> <span class="p">(</span><span class="n">xb</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">blocklen</span><span class="p">,</span>
+                 <span class="p">(</span><span class="n">yb</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">blocklen</span><span class="p">)</span> <span class="k">for</span> <span class="n">xb</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">xblock</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">yb</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">yblock</span><span class="p">)]</span>
+    <span class="n">rearr</span> <span class="o">=</span> <span class="n">blockmap</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">img2</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">mode</span><span class="p">,</span> <span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">box</span><span class="p">,</span> <span class="n">sbox</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">blockmap</span><span class="p">,</span> <span class="n">rearr</span><span class="p">):</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">crop</span><span class="p">(</span><span class="n">sbox</span><span class="p">)</span>
+        <span class="n">img2</span><span class="o">.</span><span class="n">paste</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">box</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">img2</span>
+
+</div>
+<div class="viewcode-block" id="dateline_country"><a class="viewcode-back" href="../../../poets.image.html#poets.image.imagefile.dateline_country">[docs]</a><span class="k">def</span> <span class="nf">dateline_country</span><span class="p">(</span><span class="n">country</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Min and max longitude for countries that spread across the</span>
+<span class="sd">    international dateline.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    lon_min, lon_max : float</span>
+<span class="sd">        Min and max longitude.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">country</span> <span class="o">==</span> <span class="s">&#39;NZ&#39;</span><span class="p">:</span>
+        <span class="n">lon_min</span> <span class="o">=</span> <span class="mf">165.0</span> <span class="o">+</span> <span class="mf">52.0</span> <span class="o">/</span> <span class="mf">60.0</span> <span class="o">+</span> <span class="mf">12.0</span> <span class="o">/</span> <span class="mf">3600.0</span>
+        <span class="n">lon_max</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="mf">175.0</span> <span class="o">+</span> <span class="mf">50.0</span> <span class="o">/</span> <span class="mf">60.0</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">country</span> <span class="o">==</span> <span class="s">&#39;US&#39;</span><span class="p">:</span>
+        <span class="n">lon_min</span> <span class="o">=</span> <span class="mf">173.0</span> <span class="o">+</span> <span class="mf">11.0</span> <span class="o">/</span> <span class="mf">60.0</span>
+        <span class="n">lon_max</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="mf">66.0</span> <span class="o">+</span> <span class="mf">59.0</span> <span class="o">/</span> <span class="mf">60.0</span> <span class="o">+</span> <span class="mf">0.71006</span> <span class="o">/</span> <span class="mf">3600.0</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">country</span> <span class="o">==</span> <span class="s">&#39;RS&#39;</span><span class="p">:</span>
+        <span class="n">lon_min</span> <span class="o">=</span> <span class="mf">19.0</span> <span class="o">+</span> <span class="mf">38.0</span> <span class="o">/</span> <span class="mf">60.0</span>
+        <span class="n">lon_max</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="mf">169.0</span> <span class="o">+</span> <span class="mf">3.0</span> <span class="o">/</span> <span class="mf">60.0</span> <span class="o">+</span> <span class="mf">54.0</span> <span class="o">/</span> <span class="mf">3600.0</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">lon_min</span><span class="p">,</span> <span class="n">lon_max</span>
+
+</div>
+<div class="viewcode-block" id="bbox_img"><a class="viewcode-back" href="../../../poets.image.html#poets.image.imagefile.bbox_img">[docs]</a><span class="k">def</span> <span class="nf">bbox_img</span><span class="p">(</span><span class="n">source_file</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">shapefile</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Clips bounding box out of image file and returns data as numpy.ndarray</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    source_file : str</span>
+<span class="sd">        Path to source file.</span>
+<span class="sd">    region : str</span>
+<span class="sd">        Identifier of the region in the shapefile. If the default shapefile is</span>
+<span class="sd">        used, this would be the FIPS country code.</span>
+<span class="sd">    shapefile : str, optional</span>
+<span class="sd">        Path to shape file, uses &quot;world country admin boundary shapefile&quot; by</span>
+<span class="sd">        default.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    data : dict of numpy.arrays</span>
+<span class="sd">        Clipped image (grey values).</span>
+<span class="sd">    lon_new : numpy.array</span>
+<span class="sd">        Longitudes of the clipped image.</span>
+<span class="sd">    lat_new : numpy.array</span>
+<span class="sd">        Latitudes of the clipped image.</span>
+<span class="sd">    timestamp : datetime.date</span>
+<span class="sd">        Timestamp of the image.</span>
+<span class="sd">    metadata : dict of strings</span>
+<span class="sd">        Metadata from source netCDF file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">orig_img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">source_file</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">region</span> <span class="o">==</span> <span class="s">&#39;global&#39;</span><span class="p">:</span>
+        <span class="n">lon_min</span> <span class="o">=</span> <span class="o">-</span><span class="mi">180</span>
+        <span class="n">lon_max</span> <span class="o">=</span> <span class="mi">180</span>
+        <span class="n">lat_min</span> <span class="o">=</span> <span class="o">-</span><span class="mi">90</span>
+        <span class="n">lat_max</span> <span class="o">=</span> <span class="mi">90</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">shp</span> <span class="o">=</span> <span class="n">Shape</span><span class="p">(</span><span class="n">region</span><span class="p">,</span> <span class="n">shapefile</span><span class="p">)</span>
+        <span class="n">lon_min</span> <span class="o">=</span> <span class="n">shp</span><span class="o">.</span><span class="n">bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">lon_max</span> <span class="o">=</span> <span class="n">shp</span><span class="o">.</span><span class="n">bbox</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">lat_min</span> <span class="o">=</span> <span class="n">shp</span><span class="o">.</span><span class="n">bbox</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">lat_max</span> <span class="o">=</span> <span class="n">shp</span><span class="o">.</span><span class="n">bbox</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+
+    <span class="n">d</span> <span class="o">=</span> <span class="n">lon_max</span> <span class="o">-</span> <span class="n">lon_min</span>
+
+    <span class="c"># countries that cross the international dateline (maybe more!)</span>
+    <span class="k">if</span> <span class="n">region</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;NZ&#39;</span><span class="p">,</span> <span class="s">&#39;RS&#39;</span><span class="p">,</span> <span class="s">&#39;US&#39;</span><span class="p">]:</span>
+        <span class="n">lon_min</span><span class="p">,</span> <span class="n">lon_max</span> <span class="o">=</span> <span class="n">dateline_country</span><span class="p">(</span><span class="n">region</span><span class="p">)</span>
+
+    <span class="c"># get 2 pairs of points (upper left, lower right of bbox)</span>
+    <span class="k">if</span> <span class="n">d</span> <span class="o">&gt;</span> <span class="mi">350</span> <span class="ow">and</span> <span class="n">region</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;AY&#39;</span><span class="p">,</span> <span class="s">&#39;global&#39;</span><span class="p">]:</span>
+        <span class="n">orig_img</span> <span class="o">=</span> <span class="n">rearrange_img</span><span class="p">(</span><span class="n">orig_img</span><span class="p">)</span>
+        <span class="n">row_min</span><span class="p">,</span> <span class="n">col_min</span> <span class="o">=</span> <span class="n">lonlat2px_rearr</span><span class="p">(</span><span class="n">orig_img</span><span class="p">,</span> <span class="n">lon_min</span><span class="p">,</span> <span class="n">lat_max</span><span class="p">)</span>
+        <span class="n">row_max</span><span class="p">,</span> <span class="n">col_max</span> <span class="o">=</span> <span class="n">lonlat2px_rearr</span><span class="p">(</span><span class="n">orig_img</span><span class="p">,</span> <span class="n">lon_max</span><span class="p">,</span> <span class="n">lat_min</span><span class="p">)</span>
+
+        <span class="n">img</span> <span class="o">=</span> <span class="n">orig_img</span><span class="o">.</span><span class="n">crop</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">col_min</span><span class="p">)),</span>
+                             <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">row_min</span><span class="p">)),</span>
+                             <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">col_max</span><span class="p">)),</span>
+                             <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">row_max</span><span class="p">))))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">row_min</span><span class="p">,</span> <span class="n">col_min</span> <span class="o">=</span> <span class="n">lonlat2px</span><span class="p">(</span><span class="n">orig_img</span><span class="p">,</span> <span class="n">lon_min</span><span class="p">,</span> <span class="n">lat_max</span><span class="p">)</span>
+        <span class="n">row_max</span><span class="p">,</span> <span class="n">col_max</span> <span class="o">=</span> <span class="n">lonlat2px</span><span class="p">(</span><span class="n">orig_img</span><span class="p">,</span> <span class="n">lon_max</span><span class="p">,</span> <span class="n">lat_min</span><span class="p">)</span>
+
+        <span class="c"># crop image</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">orig_img</span><span class="o">.</span><span class="n">crop</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">col_min</span><span class="p">)),</span>
+                             <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">row_min</span><span class="p">)),</span>
+                             <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">col_max</span><span class="p">)),</span>
+                             <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">row_max</span><span class="p">))))</span>
+
+    <span class="c"># get data values from image</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;dataset&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">img</span><span class="p">)}</span>
+
+    <span class="c"># lon_new, lat_new</span>
+    <span class="n">lon_px</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">col_min</span><span class="p">)),</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">col_max</span><span class="p">)))</span>
+    <span class="n">lat_px</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">row_min</span><span class="p">)),</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">row_max</span><span class="p">)))</span>
+
+    <span class="k">if</span> <span class="n">region</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;NZ&#39;</span><span class="p">,</span> <span class="s">&#39;RS&#39;</span><span class="p">,</span> <span class="s">&#39;US&#39;</span><span class="p">]:</span>
+        <span class="n">lon_new</span><span class="p">,</span> <span class="n">lat_new</span> <span class="o">=</span> <span class="n">px2lonlat_rearr</span><span class="p">(</span><span class="n">orig_img</span><span class="p">,</span> <span class="n">lon_px</span><span class="p">,</span> <span class="n">lat_px</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">lon_new</span><span class="p">,</span> <span class="n">lat_new</span> <span class="o">=</span> <span class="n">px2lonlat</span><span class="p">(</span><span class="n">orig_img</span><span class="p">,</span> <span class="n">lon_px</span><span class="p">,</span> <span class="n">lat_px</span><span class="p">)</span>
+
+    <span class="c"># timestamp</span>
+    <span class="n">timestamp</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="c"># metadata</span>
+    <span class="n">metadata</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">lon_new</span><span class="p">,</span> <span class="n">lat_new</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">metadata</span>
+</div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/Logo_blue_transparent_64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">poets 0.2.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Thomas Mistelbauer.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,407 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>poets.poet &mdash; poets 0.2.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+    <link rel="top" title="poets 0.2.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">poets 0.2.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for poets.poet</h1><div class="highlight"><pre>
+<span class="c"># Copyright (c) 2014, Vienna University of Technology (TU Wien), Department</span>
+<span class="c"># of Geodesy and Geoinformation (GEO).</span>
+<span class="c"># All rights reserved.</span>
+
+<span class="c"># Redistribution and use in source and binary forms, with or without</span>
+<span class="c"># modification, are permitted provided that the following conditions are met:</span>
+<span class="c">#</span>
+<span class="c"># * Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c">#   list of conditions and the following disclaimer.</span>
+<span class="c">#</span>
+<span class="c"># * Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c">#   this list of conditions and the following disclaimer in the documentation</span>
+<span class="c">#   and/or other materials provided with the distribution.</span>
+<span class="c">#</span>
+<span class="c"># * Neither the name of the Vienna University of Technology - Department of</span>
+<span class="c">#   Geodesy and Geoinformation nor the names of its contributors may be used to</span>
+<span class="c">#   endorse or promote products derived from this software without specific</span>
+<span class="c">#   prior written permission.</span>
+<span class="c">#</span>
+<span class="c"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;</span>
+<span class="c"># AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE</span>
+<span class="c"># IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE</span>
+<span class="c"># ARE DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY,</span>
+<span class="c"># DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY DIRECT, INDIRECT,</span>
+<span class="c"># INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT</span>
+<span class="c"># LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,</span>
+<span class="c"># OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF</span>
+<span class="c"># LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING</span>
+<span class="c"># NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,</span>
+<span class="c"># EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="c"># Author: Thomas Mistelbauer</span>
+<span class="c"># Creation date: 2014-07-29</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module includes the poets base class `Poet`.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">netCDF4</span> <span class="kn">import</span> <span class="n">Dataset</span>
+<span class="kn">from</span> <span class="nn">poets.io.source_base</span> <span class="kn">import</span> <span class="n">BasicSource</span>
+<span class="kn">from</span> <span class="nn">poets.grid.grids</span> <span class="kn">import</span> <span class="n">ShapeGrid</span>
+
+<span class="n">valid_temp_res</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;dekad&#39;</span><span class="p">,</span> <span class="s">&#39;month&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="Poet"><a class="viewcode-back" href="../../poets.html#poets.poet.Poet">[docs]</a><span class="k">class</span> <span class="nc">Poet</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;POETS base class.</span>
+
+<span class="sd">    Provides methods to download and resample data using parameters as defined</span>
+<span class="sd">    in this class. Resampled outputfiles will be saved as NetCDF4 files.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    rootpath : str</span>
+<span class="sd">        path to the directory where data should be stored</span>
+<span class="sd">    regions : list of str, optional</span>
+<span class="sd">        Identifier of the region in the shapefile. If the default shapefile is</span>
+<span class="sd">        used, this would be the FIPS country code. Defaults to global.</span>
+<span class="sd">    spatial_resolution : float, optional</span>
+<span class="sd">        spatial resolution in degree, defaults to 0.25</span>
+<span class="sd">    temporal_resolution : str, optional</span>
+<span class="sd">        temporal resolution of the data, possible values: month, dekad,</span>
+<span class="sd">        defaults to dekad</span>
+<span class="sd">    start_date : datetime.datetime, optional</span>
+<span class="sd">        first date of the dataset, defaults to 2000-01-01</span>
+<span class="sd">    nan_value : int</span>
+<span class="sd">        NaN value to use, defaults to -99</span>
+<span class="sd">    shapefile : str, optional</span>
+<span class="sd">        Path to shape file, uses &quot;world country admin boundary shapefile&quot; by</span>
+<span class="sd">        default.</span>
+<span class="sd">    delete_rawdata : bool, optional</span>
+<span class="sd">        Original files will be deleted from rawdata_path if set True. Defaults</span>
+<span class="sd">        to False</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    rootpath : str</span>
+<span class="sd">        path to the directory where data should be stored</span>
+<span class="sd">    regions : list of str</span>
+<span class="sd">        Identifier of the region in the shapefile.</span>
+<span class="sd">    spatial_resolution : float</span>
+<span class="sd">        Spatial resolution in degree.</span>
+<span class="sd">    temporal_resolution : str</span>
+<span class="sd">        Temporal resolution of the data.</span>
+<span class="sd">    data_path : str</span>
+<span class="sd">        Path where resampled NetCDF file is stored.</span>
+<span class="sd">    rawdata_path : str</span>
+<span class="sd">        Path where original files are stored and downloaded.</span>
+<span class="sd">    tmp_path : str</span>
+<span class="sd">        Path where temporary files are stored.</span>
+<span class="sd">    nan_value : int</span>
+<span class="sd">        NaN value to use, defaults to -99.</span>
+<span class="sd">    start_date : datetime.datetime</span>
+<span class="sd">        First date of the dataset.</span>
+<span class="sd">    shapefile : str</span>
+<span class="sd">        Path to shape file.</span>
+<span class="sd">    sources : dict of poets.io.BasicSource objects</span>
+<span class="sd">        Sources used by poets given as BasicSource class.</span>
+<span class="sd">    delete_rawdata : bool</span>
+<span class="sd">        Original files will be deleted from rawdata_path if True.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rootpath</span><span class="p">,</span> <span class="n">regions</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;global&#39;</span><span class="p">],</span>
+                 <span class="n">spatial_resolution</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">temporal_resolution</span><span class="o">=</span><span class="s">&#39;dekad&#39;</span><span class="p">,</span>
+                 <span class="n">start_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2000</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">nan_value</span><span class="o">=-</span><span class="mi">99</span><span class="p">,</span>
+                 <span class="n">shapefile</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">delete_rawdata</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">rootpath</span> <span class="o">=</span> <span class="n">rootpath</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">regions</span> <span class="o">=</span> <span class="n">regions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spatial_resolution</span> <span class="o">=</span> <span class="n">spatial_resolution</span>
+
+        <span class="k">if</span> <span class="n">temporal_resolution</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;dekad&#39;</span><span class="p">,</span> <span class="s">&#39;month&#39;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Temporal resulution must be one of &quot;</span> <span class="o">+</span>
+                             <span class="nb">str</span><span class="p">(</span><span class="n">valid_temp_res</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">temporal_resolution</span> <span class="o">=</span> <span class="n">temporal_resolution</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rawdata_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rootpath</span><span class="p">,</span> <span class="s">&#39;RAWDATA&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rootpath</span><span class="p">,</span> <span class="s">&#39;DATA&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tmp_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rootpath</span><span class="p">,</span> <span class="s">&#39;TMP&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nan_value</span> <span class="o">=</span> <span class="n">nan_value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_date</span> <span class="o">=</span> <span class="n">start_date</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shapefile</span> <span class="o">=</span> <span class="n">shapefile</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delete_rawdata</span> <span class="o">=</span> <span class="n">delete_rawdata</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sources</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rawdata_path</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rawdata_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tmp_path</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tmp_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Poet.add_source"><a class="viewcode-back" href="../../poets.html#poets.poet.Poet.add_source">[docs]</a>    <span class="k">def</span> <span class="nf">add_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">filedate</span><span class="p">,</span> <span class="n">temp_res</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">protocol</span><span class="p">,</span>
+                   <span class="n">username</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">22</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                   <span class="n">dirstruct</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">begin_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2000</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                   <span class="n">variables</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">nan_value</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates BasicSource class and adds it to `Poet.sources`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : str</span>
+<span class="sd">            Name of the data source.</span>
+<span class="sd">        filename : str</span>
+<span class="sd">            Structure/convention of the file name.</span>
+<span class="sd">        filedate : dict</span>
+<span class="sd">            Position of date fields in filename, given as tuple.</span>
+<span class="sd">        temp_res : str</span>
+<span class="sd">            Temporal resolution of the source.</span>
+<span class="sd">        host : str</span>
+<span class="sd">            Link to data host.</span>
+<span class="sd">        protocol : str</span>
+<span class="sd">            Protocol for data transfer.</span>
+<span class="sd">        username : str, optional</span>
+<span class="sd">            Username for data access.</span>
+<span class="sd">        password : str, optional</span>
+<span class="sd">            Password for data access.</span>
+<span class="sd">        port : int, optional</span>
+<span class="sd">            Port to data host, defaults to 22.</span>
+<span class="sd">        directory : str, optional</span>
+<span class="sd">            Path to data on host.</span>
+<span class="sd">        dirstruct : list of strings</span>
+<span class="sd">            Structure of source directory, each list item represents a</span>
+<span class="sd">            subdirectory.</span>
+<span class="sd">        begin_date : datetime.date, optional</span>
+<span class="sd">            Date from which on data is available, defaults to 2000-01-01.</span>
+<span class="sd">        variables : string or list of strings, optional</span>
+<span class="sd">            Variables used from data source.</span>
+<span class="sd">        nan_value : int, float, optional</span>
+<span class="sd">            Nan value of the original data as given by the data provider.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">source</span> <span class="o">=</span> <span class="n">BasicSource</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">filedate</span><span class="p">,</span> <span class="n">temp_res</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rootpath</span><span class="p">,</span>
+                             <span class="n">host</span><span class="p">,</span> <span class="n">protocol</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span>
+                             <span class="n">directory</span><span class="p">,</span> <span class="n">dirstruct</span><span class="p">,</span> <span class="n">begin_date</span><span class="p">,</span> <span class="n">variables</span><span class="p">,</span>
+                             <span class="n">nan_value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nan_value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">regions</span><span class="p">,</span>
+                             <span class="bp">self</span><span class="o">.</span><span class="n">spatial_resolution</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">temporal_resolution</span><span class="p">,</span>
+                             <span class="bp">self</span><span class="o">.</span><span class="n">start_date</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">source</span>
+</div>
+<div class="viewcode-block" id="Poet.fetch_data"><a class="viewcode-back" href="../../poets.html#poets.poet.Poet.fetch_data">[docs]</a>    <span class="k">def</span> <span class="nf">fetch_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">begin</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">delete_rawdata</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Starts download and resampling of input data for sources as added</span>
+<span class="sd">        to `Poets.sources`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        begin : datetime, optional</span>
+<span class="sd">            Start date of data to download, defaults to start date as defined</span>
+<span class="sd">            in poets class.</span>
+<span class="sd">        end : datetime, optional</span>
+<span class="sd">            End date of data to download, defaults to current datetime.</span>
+<span class="sd">        delete_rawdata : bool, optional</span>
+<span class="sd">            Original files will be deleted from rawdata_path if set True.</span>
+<span class="sd">            Defaults to value of delete_rawdata attribute as set in Poet class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">delete_rawdata</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">delete_rawdata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">delete_rawdata</span>
+
+        <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">src</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="p">[</span><span class="n">source</span><span class="p">]</span>
+            <span class="k">print</span> <span class="s">&#39;[INFO] Download data for source &#39;</span> <span class="o">+</span> <span class="n">source</span>
+            <span class="n">src</span><span class="o">.</span><span class="n">download_and_resample</span><span class="p">(</span><span class="n">begin</span><span class="o">=</span><span class="n">begin</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="n">end</span><span class="p">,</span>
+                                      <span class="n">shapefile</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shapefile</span><span class="p">,</span>
+                                      <span class="n">delete_rawdata</span><span class="o">=</span><span class="n">delete_rawdata</span><span class="p">)</span>
+
+        <span class="k">print</span> <span class="s">&#39;[SUCCESS] Download and resampling complete!&#39;</span>
+</div>
+<div class="viewcode-block" id="Poet.get_gridpoints"><a class="viewcode-back" href="../../poets.html#poets.poet.Poet.get_gridpoints">[docs]</a>    <span class="k">def</span> <span class="nf">get_gridpoints</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns gridpoints from NetCDF file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        region : str</span>
+<span class="sd">            Identifier of the region in the NetCDF file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        gridpoints : dict of pandas.DataFrame</span>
+<span class="sd">            Dict containing Dataframes with gridpoint index as index,</span>
+<span class="sd">            longitutes and latitudes as columns for each region.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">gridpoints</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">regions</span> <span class="o">==</span> <span class="p">[</span><span class="s">&#39;global&#39;</span><span class="p">]:</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">regions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39;_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spatial_resolution</span><span class="p">)</span>
+                        <span class="o">+</span> <span class="s">&#39;_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temporal_resolution</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;.nc&#39;</span><span class="p">)</span>
+            <span class="n">ncfile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+
+            <span class="k">with</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">ncfile</span><span class="p">,</span> <span class="s">&#39;r+&#39;</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;NETCDF4&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">nc</span><span class="p">:</span>
+                <span class="n">gpis</span> <span class="o">=</span> <span class="n">nc</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s">&#39;gpi&#39;</span><span class="p">][:]</span>
+                <span class="n">lons</span> <span class="o">=</span> <span class="n">nc</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s">&#39;lon&#39;</span><span class="p">][:]</span>
+                <span class="n">lats</span> <span class="o">=</span> <span class="n">nc</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s">&#39;lat&#39;</span><span class="p">][:]</span>
+                <span class="n">gpis</span> <span class="o">=</span> <span class="n">gpis</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+                <span class="n">lons</span><span class="p">,</span> <span class="n">lats</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">lons</span><span class="p">,</span> <span class="n">lats</span><span class="p">)</span>
+                <span class="n">lons</span> <span class="o">=</span> <span class="n">lons</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+                <span class="n">lats</span> <span class="o">=</span> <span class="n">lats</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+            <span class="n">points</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">gpis</span><span class="p">)</span>
+            <span class="n">points</span><span class="p">[</span><span class="s">&#39;lon&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">lons</span>
+            <span class="n">points</span><span class="p">[</span><span class="s">&#39;lat&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">lats</span>
+            <span class="n">gridpoints</span><span class="p">[</span><span class="s">&#39;global&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">points</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">regions</span><span class="p">:</span>
+                <span class="n">grid</span> <span class="o">=</span> <span class="n">ShapeGrid</span><span class="p">(</span><span class="n">region</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">spatial_resolution</span><span class="p">)</span>
+                <span class="n">points</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">get_gridpoints</span><span class="p">()</span>
+                <span class="n">gridpoints</span><span class="p">[</span><span class="n">region</span><span class="p">]</span> <span class="o">=</span> <span class="n">points</span>
+
+        <span class="k">return</span> <span class="n">gridpoints</span>
+</div>
+<div class="viewcode-block" id="Poet.read_image"><a class="viewcode-back" href="../../poets.html#poets.poet.Poet.read_image">[docs]</a>    <span class="k">def</span> <span class="nf">read_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">region</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">variable</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets images from netCDF file for certain date</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        date : datetime</span>
+<span class="sd">            Date of the image.</span>
+<span class="sd">        source : str</span>
+<span class="sd">            Data source from which image should be read.</span>
+<span class="sd">        region : str, optional</span>
+<span class="sd">            Region of interest, set to first defined region if None.</span>
+<span class="sd">        variable : str, optional</span>
+<span class="sd">            Variable to display, set to first variable of source if None.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        img : numpy.ndarray</span>
+<span class="sd">            Image of selected date.</span>
+<span class="sd">        lon : numpy.array</span>
+<span class="sd">            Array with longitudes.</span>
+<span class="sd">        lat : numpy.array</span>
+<span class="sd">            Array with latitudes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">img</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="p">[</span><span class="n">source</span><span class="p">]</span><span class="o">.</span><span class="n">read_img</span><span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">variable</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">img</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span>
+</div>
+<div class="viewcode-block" id="Poet.read_timeseries"><a class="viewcode-back" href="../../poets.html#poets.poet.Poet.read_timeseries">[docs]</a>    <span class="k">def</span> <span class="nf">read_timeseries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">region</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">variable</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets timeseries from netCDF file for a gridpoint.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        source : str</span>
+<span class="sd">            Data source from which time series should be read.</span>
+<span class="sd">        location : int or tuple of floats</span>
+<span class="sd">            Either Grid point index as integer value or Longitude/Latitude</span>
+<span class="sd">            given as tuple.</span>
+<span class="sd">        region : str, optional</span>
+<span class="sd">            Region of interest, set to first defined region if None.</span>
+<span class="sd">        variable : str, optional</span>
+<span class="sd">            Variable to display, set to first variable of source if None.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ts : pd.DataFrame</span>
+<span class="sd">            Timeseries for the selected data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">ts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="p">[</span><span class="n">source</span><span class="p">]</span><span class="o">.</span><span class="n">read_ts</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">variable</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ts</span>
+</div></div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/Logo_blue_transparent_64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">poets 0.2.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Thomas Mistelbauer.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

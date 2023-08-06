@@ -1,0 +1,596 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>poets.io.download &mdash; poets 0.2.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
+    <link rel="top" title="poets 0.2.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">poets 0.2.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for poets.io.download</h1><div class="highlight"><pre>
+<span class="c"># Copyright (c) 2014, Vienna University of Technology (TU Wien), Department</span>
+<span class="c"># of Geodesy and Geoinformation (GEO).</span>
+<span class="c"># All rights reserved.</span>
+
+<span class="c"># Redistribution and use in source and binary forms, with or without</span>
+<span class="c"># modification, are permitted provided that the following conditions are met:</span>
+<span class="c">#</span>
+<span class="c"># * Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c">#   list of conditions and the following disclaimer.</span>
+<span class="c">#</span>
+<span class="c"># * Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c">#   this list of conditions and the following disclaimer in the documentation</span>
+<span class="c">#   and/or other materials provided with the distribution.</span>
+<span class="c">#</span>
+<span class="c"># * Neither the name of the Vienna University of Technology - Department of</span>
+<span class="c">#   Geodesy and Geoinformation nor the names of its contributors may be used to</span>
+<span class="c">#   endorse or promote products derived from this software without specific</span>
+<span class="c">#   prior written permission.</span>
+<span class="c">#</span>
+<span class="c"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;</span>
+<span class="c"># AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE</span>
+<span class="c"># IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE</span>
+<span class="c"># ARE DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY,</span>
+<span class="c"># DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY DIRECT, INDIRECT,</span>
+<span class="c"># INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT</span>
+<span class="c"># LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,</span>
+<span class="c"># OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF</span>
+<span class="c"># LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING</span>
+<span class="c"># NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,</span>
+<span class="c"># EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="c"># Author: Thomas Mistelbauer Thomas.Mistelbauer@geo.tuwien.ac.at</span>
+<span class="c"># Creation date: 2014-07-30</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Provides download functions for FTP/SFTP, HTTP and local data sources.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">calendar</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">from</span> <span class="nn">ftplib</span> <span class="kn">import</span> <span class="n">FTP</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">import</span> <span class="nn">paramiko</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">poets.timedate.dekad</span> <span class="kn">import</span> <span class="n">dekad2day</span>
+
+
+<div class="viewcode-block" id="download_ftp"><a class="viewcode-back" href="../../../poets.io.html#poets.io.download.download_ftp">[docs]</a><span class="k">def</span> <span class="nf">download_ftp</span><span class="p">(</span><span class="n">download_path</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">directory</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span>
+                 <span class="n">filedate</span><span class="p">,</span> <span class="n">dirstruct</span><span class="p">,</span> <span class="n">begin</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Download data via SFTP</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    download_path : str, optional</span>
+<span class="sd">        Path where to save the downloaded files.</span>
+<span class="sd">    host : str</span>
+<span class="sd">        Link to host.</span>
+<span class="sd">    directory : str</span>
+<span class="sd">        Path to data on host.</span>
+<span class="sd">    port : int</span>
+<span class="sd">        Port to host.</span>
+<span class="sd">    username : str</span>
+<span class="sd">        Username for source.</span>
+<span class="sd">    password : str</span>
+<span class="sd">        Passwor for source.</span>
+<span class="sd">    filedate : dict</span>
+<span class="sd">        Dict which points to the date fields in the filename</span>
+<span class="sd">    dirstruct : list of str</span>
+<span class="sd">        Folder structure on host, each list element represents a subdirectory</span>
+<span class="sd">    begin : datetime.datetime</span>
+<span class="sd">        Set either to first date of remote repository or date of</span>
+<span class="sd">        last file in local repository</span>
+<span class="sd">    end : datetime.datetime, optional</span>
+<span class="sd">        Entered in [years]. End year is not downloaded anymore, defaults to</span>
+<span class="sd">        datetime.date.today()</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        true if data is available, false if not</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">host</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;/&#39;</span><span class="p">:</span>
+        <span class="n">host</span> <span class="o">=</span> <span class="n">host</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">ftp</span> <span class="o">=</span> <span class="n">FTP</span><span class="p">(</span><span class="n">host</span><span class="p">)</span>
+    <span class="n">ftp</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">)</span>
+
+    <span class="n">ftp</span><span class="o">.</span><span class="n">cwd</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span>
+    <span class="n">subdirs</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">ftp</span><span class="o">.</span><span class="n">retrlines</span><span class="p">(</span><span class="s">&quot;NLST&quot;</span><span class="p">,</span> <span class="n">subdirs</span><span class="o">.</span><span class="n">append</span><span class="p">)</span>  <span class="c"># NLIST retrieves filename only</span>
+
+    <span class="k">if</span> <span class="n">end</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">download_path</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">download_path</span><span class="p">)</span>
+
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">download_path</span><span class="p">)</span>
+    <span class="k">print</span> <span class="s">&#39;[INFO] downloading data from &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">begin</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39; to &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">end</span><span class="p">),</span>
+
+    <span class="n">files</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="n">dirstruct</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">dirstruct</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">dirstruct</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;YYYY&#39;</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">year</span> <span class="ow">in</span> <span class="n">subdirs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">begin</span><span class="o">.</span><span class="n">year</span> <span class="o">&gt;</span> <span class="nb">int</span><span class="p">(</span><span class="n">year</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">end</span><span class="o">.</span><span class="n">year</span> <span class="o">&lt;</span> <span class="nb">int</span><span class="p">(</span><span class="n">year</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">year_filelist</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">ftp</span><span class="o">.</span><span class="n">cwd</span><span class="p">(</span><span class="n">directory</span> <span class="o">+</span> <span class="n">year</span><span class="p">)</span>
+            <span class="n">ftp</span><span class="o">.</span><span class="n">retrlines</span><span class="p">(</span><span class="s">&quot;NLST&quot;</span><span class="p">,</span> <span class="n">year_filelist</span><span class="o">.</span><span class="n">append</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dirstruct</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">dirstruct</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="p">[</span><span class="s">&#39;MM&#39;</span><span class="p">,</span> <span class="s">&#39;M&#39;</span><span class="p">]:</span>
+                <span class="n">mon_filelist</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">month</span> <span class="ow">in</span> <span class="n">year_filelist</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">begin</span><span class="o">.</span><span class="n">year</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">year</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="n">begin</span><span class="o">.</span><span class="n">month</span> <span class="o">&gt;</span> <span class="nb">int</span><span class="p">(</span><span class="n">month</span><span class="p">):</span>
+                            <span class="k">continue</span>
+                    <span class="k">if</span> <span class="n">end</span><span class="o">.</span><span class="n">year</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">year</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="n">end</span><span class="o">.</span><span class="n">month</span> <span class="o">&lt;</span> <span class="nb">int</span><span class="p">(</span><span class="n">month</span><span class="p">):</span>
+                            <span class="k">continue</span>
+                    <span class="n">ftp</span><span class="o">.</span><span class="n">cwd</span><span class="p">(</span><span class="n">directory</span> <span class="o">+</span> <span class="n">year</span> <span class="o">+</span> <span class="s">&#39;/&#39;</span> <span class="o">+</span> <span class="n">month</span><span class="p">)</span>
+                    <span class="n">ftp</span><span class="o">.</span><span class="n">retrlines</span><span class="p">(</span><span class="s">&quot;NLST&quot;</span><span class="p">,</span> <span class="n">mon_filelist</span><span class="o">.</span><span class="n">append</span><span class="p">)</span>
+                <span class="n">files</span> <span class="o">+=</span> <span class="n">mon_filelist</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">files</span> <span class="o">+=</span> <span class="n">year_filelist</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="n">subdirs</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">fname</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+            <span class="n">date</span> <span class="o">=</span> <span class="n">get_file_date</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">filedate</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">date</span> <span class="o">&gt;=</span> <span class="n">begin</span> <span class="ow">and</span> <span class="n">date</span> <span class="o">&lt;=</span> <span class="n">end</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">download_path</span><span class="p">,</span> <span class="n">fname</span><span class="p">)):</span>
+                    <span class="n">ftp</span><span class="o">.</span><span class="n">retrbinary</span><span class="p">(</span><span class="s">&quot;RETR &quot;</span> <span class="o">+</span> <span class="n">fname</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s">&quot;wb&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">)</span>
+                    <span class="k">print</span> <span class="s">&#39;.&#39;</span><span class="p">,</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">print</span> <span class="s">&#39; file exists, skipping download&#39;</span>
+        <span class="n">ftp</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">print</span> <span class="s">&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ftp</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">print</span> <span class="s">&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">return</span> <span class="bp">True</span>
+
+</div>
+<div class="viewcode-block" id="download_sftp"><a class="viewcode-back" href="../../../poets.io.html#poets.io.download.download_sftp">[docs]</a><span class="k">def</span> <span class="nf">download_sftp</span><span class="p">(</span><span class="n">download_path</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">directory</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span>
+                  <span class="n">filedate</span><span class="p">,</span> <span class="n">dirstruct</span><span class="p">,</span> <span class="n">begin</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Download data via SFTP</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    download_path : str, optional</span>
+<span class="sd">        Path where to save the downloaded files.</span>
+<span class="sd">    host : str</span>
+<span class="sd">        Link to host.</span>
+<span class="sd">    directory : str</span>
+<span class="sd">        Path to data on host.</span>
+<span class="sd">    port : int</span>
+<span class="sd">        Port to host.</span>
+<span class="sd">    username : str</span>
+<span class="sd">        Username for source.</span>
+<span class="sd">    password : str</span>
+<span class="sd">        Passwor for source.</span>
+<span class="sd">    filedate : dict</span>
+<span class="sd">        Dict which points to the date fields in the filename.</span>
+<span class="sd">    dirstruct : list of str</span>
+<span class="sd">        Folder structure on host, each list element represents a subdirectory.</span>
+<span class="sd">    begin : datetime.datetime</span>
+<span class="sd">        Set either to first date of remote repository or date of last file in </span>
+<span class="sd">        local repository.</span>
+<span class="sd">    end : datetime.datetime, optional</span>
+<span class="sd">        Entered in [years]. End year is not downloaded anymore, defaults to</span>
+<span class="sd">        datetime.datetime.now()</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True if data is available, false if not.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">download_path</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;[INFO] output path does not exist... creating path&#39;</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">download_path</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">end</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+
+    <span class="k">print</span> <span class="s">&#39;[INFO] downloading data from &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">begin</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39; - &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">end</span><span class="p">),</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">download_path</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">download_path</span><span class="p">)</span>
+
+    <span class="n">localpath</span> <span class="o">=</span> <span class="n">download_path</span>
+
+    <span class="c"># connect to ftp server</span>
+    <span class="k">if</span> <span class="n">host</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;/&#39;</span><span class="p">:</span>
+        <span class="n">host</span> <span class="o">=</span> <span class="n">host</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">transport</span> <span class="o">=</span> <span class="n">paramiko</span><span class="o">.</span><span class="n">Transport</span><span class="p">((</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">))</span>
+    <span class="n">transport</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="n">password</span><span class="p">)</span>
+
+    <span class="n">sftp</span> <span class="o">=</span> <span class="n">paramiko</span><span class="o">.</span><span class="n">SFTPClient</span><span class="o">.</span><span class="n">from_transport</span><span class="p">(</span><span class="n">transport</span><span class="p">)</span>
+
+    <span class="n">subdirs</span> <span class="o">=</span> <span class="n">sftp</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span>
+
+    <span class="n">files</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="n">dirstruct</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">dirstruct</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">dirstruct</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;YYYY&#39;</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">year</span> <span class="ow">in</span> <span class="n">subdirs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">begin</span><span class="o">.</span><span class="n">year</span> <span class="o">&gt;</span> <span class="nb">int</span><span class="p">(</span><span class="n">year</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">end</span><span class="o">.</span><span class="n">year</span> <span class="o">&lt;</span> <span class="nb">int</span><span class="p">(</span><span class="n">year</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">year_subdir</span> <span class="o">=</span> <span class="n">directory</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">year</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;/&#39;</span>
+            <span class="n">year_filelist</span> <span class="o">=</span> <span class="n">sftp</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">year_subdir</span><span class="p">)</span>
+            <span class="n">year_filelist</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dirstruct</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">year_filelist</span><span class="p">:</span>
+                    <span class="n">files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">year_subdir</span> <span class="o">+</span> <span class="n">f</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">dirstruct</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">dirstruct</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;MM&#39;</span><span class="p">,</span> <span class="s">&#39;M&#39;</span><span class="p">]:</span>
+                <span class="k">for</span> <span class="n">month</span> <span class="ow">in</span> <span class="n">year_filelist</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">begin</span><span class="o">.</span><span class="n">year</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">year</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="n">begin</span><span class="o">.</span><span class="n">month</span> <span class="o">&gt;</span> <span class="nb">int</span><span class="p">(</span><span class="n">month</span><span class="p">):</span>
+                            <span class="k">continue</span>
+                    <span class="k">if</span> <span class="n">end</span><span class="o">.</span><span class="n">year</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">year</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="n">end</span><span class="o">.</span><span class="n">month</span> <span class="o">&lt;</span> <span class="nb">int</span><span class="p">(</span><span class="n">month</span><span class="p">):</span>
+                            <span class="k">continue</span>
+                    <span class="n">mon_subdir</span> <span class="o">=</span> <span class="n">year_subdir</span> <span class="o">+</span> <span class="n">month</span> <span class="o">+</span> <span class="s">&#39;/&#39;</span>
+                    <span class="n">mon_filelist</span> <span class="o">=</span> <span class="n">sftp</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">mon_subdir</span><span class="p">)</span>
+                    <span class="n">mon_filelist</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dirstruct</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">mon_filelist</span><span class="p">:</span>
+                            <span class="n">files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mon_subdir</span> <span class="o">+</span> <span class="n">f</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="n">dirstruct</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;DD&#39;</span><span class="p">,</span> <span class="s">&#39;D&#39;</span><span class="p">]:</span>
+                        <span class="k">for</span> <span class="n">day</span> <span class="ow">in</span> <span class="n">mon_filelist</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">begin</span><span class="o">.</span><span class="n">year</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">year</span><span class="p">):</span>
+                                <span class="k">if</span> <span class="n">begin</span><span class="o">.</span><span class="n">month</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">month</span><span class="p">):</span>
+                                    <span class="k">if</span> <span class="n">begin</span><span class="o">.</span><span class="n">day</span> <span class="o">&gt;</span> <span class="nb">int</span><span class="p">(</span><span class="n">day</span><span class="p">):</span>
+                                        <span class="k">continue</span>
+                            <span class="k">if</span> <span class="n">end</span><span class="o">.</span><span class="n">year</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">year</span><span class="p">):</span>
+                                <span class="k">if</span> <span class="n">begin</span><span class="o">.</span><span class="n">month</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">month</span><span class="p">):</span>
+                                    <span class="k">if</span> <span class="n">end</span><span class="o">.</span><span class="n">day</span> <span class="o">&lt;</span> <span class="nb">int</span><span class="p">(</span><span class="n">day</span><span class="p">):</span>
+                                        <span class="k">continue</span>
+                            <span class="n">day_subdir</span> <span class="o">=</span> <span class="n">mon_subdir</span> <span class="o">+</span> <span class="n">day</span> <span class="o">+</span> <span class="s">&#39;/&#39;</span>
+                            <span class="n">day_filelist</span> <span class="o">=</span> <span class="n">sftp</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">day_subdir</span><span class="p">)</span>
+                            <span class="n">day_filelist</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+                            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dirstruct</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                                <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">day_filelist</span><span class="p">:</span>
+                                    <span class="n">files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">day_subdir</span> <span class="o">+</span> <span class="n">f</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="n">subdirs</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="n">fdate</span> <span class="o">=</span> <span class="n">get_file_date</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">filedate</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">fdate</span> <span class="o">&gt;=</span> <span class="n">begin</span> <span class="ow">and</span> <span class="n">fdate</span> <span class="o">&lt;=</span> <span class="n">end</span><span class="p">:</span>
+                <span class="k">print</span> <span class="s">&#39;.&#39;</span><span class="p">,</span>
+                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="n">filename</span><span class="p">))</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+                    <span class="n">sftp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="n">filename</span><span class="p">))</span>
+        <span class="n">sftp</span><span class="o">.</span><span class="n">close</span>
+        <span class="k">print</span> <span class="s">&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">sftp</span><span class="o">.</span><span class="n">close</span>
+        <span class="k">print</span> <span class="s">&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+</div>
+<div class="viewcode-block" id="download_http"><a class="viewcode-back" href="../../../poets.io.html#poets.io.download.download_http">[docs]</a><span class="k">def</span> <span class="nf">download_http</span><span class="p">(</span><span class="n">download_path</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">directory</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">filedate</span><span class="p">,</span>
+                  <span class="n">dirstruct</span><span class="p">,</span> <span class="n">begin</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Download data via HTTP</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    download_path : str, optional</span>
+<span class="sd">        Path where to save the downloaded files.</span>
+<span class="sd">    host : str</span>
+<span class="sd">        Link to host.</span>
+<span class="sd">    directory : str</span>
+<span class="sd">        Path to data on host.</span>
+<span class="sd">    filename : str</span>
+<span class="sd">        Structure/convention of the file name.</span>
+<span class="sd">    filedate : dict</span>
+<span class="sd">        Dict which points to the date fields in the filename.</span>
+<span class="sd">    dirstruct : list of str</span>
+<span class="sd">        Folder structure on host, each list element represents a subdirectory.</span>
+<span class="sd">    begin : datetime.date</span>
+<span class="sd">        Set either to first date of remote repository or date of last file in</span>
+<span class="sd">        local repository.</span>
+<span class="sd">    end : datetime.date, optional</span>
+<span class="sd">        Set to today if none given.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        true if data is available, false if not</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">end</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;[INFO] downloading data from &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">begin</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39; - &#39;</span>
+          <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">end</span><span class="p">)),</span>
+
+    <span class="c"># create daterange on monthly basis</span>
+    <span class="n">mon_from</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">(</span><span class="n">begin</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">begin</span><span class="o">.</span><span class="n">month</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">mon_to</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">(</span><span class="n">end</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">end</span><span class="o">.</span><span class="n">month</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">daterange</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="n">mon_from</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="n">mon_to</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s">&#39;MS&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s">&#39;{MM}&#39;</span> <span class="ow">in</span> <span class="n">filename</span><span class="p">:</span>
+        <span class="n">leading_month</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">leading_month</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="n">path</span> <span class="o">=</span> <span class="n">host</span> <span class="o">+</span> <span class="n">directory</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">download_path</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">download_path</span><span class="p">)</span>
+
+    <span class="c"># loop through daterange</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">dat</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">daterange</span><span class="p">):</span>
+        <span class="n">year</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">dat</span><span class="o">.</span><span class="n">year</span><span class="p">)</span>
+        <span class="n">month</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%02d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">dat</span><span class="o">.</span><span class="n">month</span><span class="p">,))</span>
+
+        <span class="k">if</span> <span class="n">dirstruct</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">dirstruct</span> <span class="o">==</span> <span class="p">[</span><span class="s">&#39;YYYY&#39;</span><span class="p">]:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">host</span> <span class="o">+</span> <span class="n">directory</span> <span class="o">+</span> <span class="n">year</span> <span class="o">+</span> <span class="s">&#39;/&#39;</span>
+        <span class="k">elif</span> <span class="n">dirstruct</span> <span class="o">==</span> <span class="p">[</span><span class="s">&#39;YYYY&#39;</span><span class="p">,</span> <span class="s">&#39;MM&#39;</span><span class="p">]:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">host</span> <span class="o">+</span> <span class="n">directory</span> <span class="o">+</span> <span class="n">year</span> <span class="o">+</span> <span class="s">&#39;/&#39;</span> <span class="o">+</span> <span class="n">month</span> <span class="o">+</span> <span class="s">&#39;/&#39;</span>
+        <span class="k">elif</span> <span class="n">dirstruct</span> <span class="o">==</span> <span class="p">[</span><span class="s">&#39;YYYY&#39;</span><span class="p">,</span> <span class="s">&#39;M&#39;</span><span class="p">]:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">host</span> <span class="o">+</span> <span class="n">directory</span> <span class="o">+</span> <span class="n">year</span> <span class="o">+</span> <span class="s">&#39;/&#39;</span> <span class="o">+</span> <span class="n">dat</span><span class="o">.</span><span class="n">month</span> <span class="o">+</span> <span class="s">&#39;/&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">host</span>
+
+        <span class="k">if</span> <span class="n">leading_month</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">month</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%02d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">dat</span><span class="o">.</span><span class="n">month</span><span class="p">,))</span>
+            <span class="n">fname</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;{YYYY}&#39;</span><span class="p">,</span> <span class="n">year</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;{MM}&#39;</span><span class="p">,</span> <span class="n">month</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fname</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;{YYYY}&#39;</span><span class="p">,</span> <span class="n">year</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;{M}&#39;</span><span class="p">,</span> <span class="n">month</span><span class="p">)</span>
+
+        <span class="n">files</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="s">&#39;{P}&#39;</span> <span class="ow">in</span> <span class="n">filename</span><span class="p">:</span>
+
+            <span class="n">dekads</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+            <span class="c"># get dekad of first and last interval based on input dates</span>
+            <span class="k">if</span> <span class="n">begin</span><span class="o">.</span><span class="n">year</span> <span class="o">==</span> <span class="n">end</span><span class="o">.</span><span class="n">year</span> <span class="ow">and</span> <span class="n">begin</span><span class="o">.</span><span class="n">month</span> <span class="o">==</span> <span class="n">end</span><span class="o">.</span><span class="n">month</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">begin</span><span class="o">.</span><span class="n">day</span> <span class="o">&lt;</span> <span class="mi">11</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">end</span><span class="o">.</span><span class="n">day</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">end</span><span class="o">.</span><span class="n">day</span> <span class="o">&gt;</span> <span class="mi">20</span><span class="p">:</span>
+                            <span class="n">dekads</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">dekads</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">dekads</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">elif</span> <span class="n">begin</span><span class="o">.</span><span class="n">day</span> <span class="o">&gt;</span> <span class="mi">10</span> <span class="ow">and</span> <span class="n">begin</span><span class="o">.</span><span class="n">day</span> <span class="o">&lt;</span> <span class="mi">21</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">end</span><span class="o">.</span><span class="n">day</span> <span class="o">&lt;</span> <span class="mi">21</span><span class="p">:</span>
+                        <span class="n">dekads</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="k">elif</span> <span class="n">end</span><span class="o">.</span><span class="n">day</span> <span class="o">&gt;</span> <span class="mi">20</span><span class="p">:</span>
+                        <span class="n">dekads</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">dekads</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">begin</span><span class="o">.</span><span class="n">day</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">begin</span><span class="o">.</span><span class="n">day</span> <span class="o">&lt;</span> <span class="mi">11</span><span class="p">:</span>
+                        <span class="n">dekads</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+                    <span class="k">elif</span> <span class="n">begin</span><span class="o">.</span><span class="n">day</span> <span class="o">&gt;=</span> <span class="mi">11</span> <span class="ow">and</span> <span class="n">begin</span><span class="o">.</span><span class="n">day</span> <span class="o">&lt;</span> <span class="mi">21</span><span class="p">:</span>
+                        <span class="n">dekads</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+                    <span class="k">elif</span> <span class="n">begin</span><span class="o">.</span><span class="n">day</span> <span class="o">==</span> <span class="mi">21</span><span class="p">:</span>
+                        <span class="n">dekads</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                <span class="k">elif</span> <span class="n">i</span> <span class="o">==</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">daterange</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">and</span> <span class="n">end</span><span class="o">.</span><span class="n">day</span> <span class="o">&lt;</span> <span class="mi">21</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">end</span><span class="o">.</span><span class="n">day</span> <span class="o">&lt;</span> <span class="mi">11</span><span class="p">:</span>
+                        <span class="n">dekads</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">dekads</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+
+            <span class="c"># loop through dekads</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">dekads</span><span class="p">:</span>
+                <span class="n">filepath</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="n">fname</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;{P}&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+                <span class="n">files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="s">&#39;{D}&#39;</span> <span class="ow">in</span> <span class="n">filename</span> <span class="ow">or</span> <span class="s">&#39;{DD}&#39;</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="s">&#39;{DD}&#39;</span> <span class="ow">in</span> <span class="n">filename</span><span class="p">:</span>
+                <span class="n">leading_day</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">leading_day</span> <span class="o">=</span> <span class="bp">False</span>
+
+            <span class="n">mr</span> <span class="o">=</span> <span class="n">calendar</span><span class="o">.</span><span class="n">monthrange</span><span class="p">(</span><span class="mi">2014</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
+            <span class="n">fday</span> <span class="o">=</span> <span class="n">mr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">lday</span> <span class="o">=</span> <span class="n">mr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+
+            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">begin</span><span class="o">.</span><span class="n">day</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">days</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">begin</span><span class="o">.</span><span class="n">day</span><span class="p">,</span> <span class="n">lday</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">i</span> <span class="o">==</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">daterange</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">and</span> <span class="n">end</span><span class="o">.</span><span class="n">day</span> <span class="o">&lt;</span> <span class="n">lday</span><span class="p">:</span>
+                <span class="n">days</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">fday</span><span class="p">,</span> <span class="n">end</span><span class="o">.</span><span class="n">day</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">days</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">fday</span><span class="p">,</span> <span class="n">lday</span><span class="p">)</span>
+
+            <span class="c"># loop through dekads</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">days</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">leading_day</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+                    <span class="n">day</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%02d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">j</span><span class="p">))</span>
+                    <span class="n">filepath</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="n">fname</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;{DD}&#39;</span><span class="p">,</span> <span class="n">day</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">filepath</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="n">fname</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;{D}&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+                <span class="n">files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">fp</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+            <span class="n">newfile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">download_path</span><span class="p">,</span> <span class="n">fp</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">newfile</span><span class="p">):</span>
+                <span class="k">print</span> <span class="s">&#39;&#39;</span>
+                <span class="k">print</span> <span class="s">&#39;[INFO] File already exists, nothing to download&#39;</span><span class="p">,</span>
+                <span class="k">continue</span>
+
+            <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+                <span class="c"># check if year folder is existing</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">download_path</span><span class="p">):</span>
+                    <span class="k">print</span><span class="p">(</span><span class="s">&#39;[INFO] output path does not exist...&#39;</span>
+                          <span class="s">&#39;creating path&#39;</span><span class="p">)</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">download_path</span><span class="p">)</span>
+
+                <span class="c"># download file</span>
+                <span class="n">newfile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">download_path</span><span class="p">,</span>
+                                       <span class="n">fp</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">newfile</span><span class="p">,</span> <span class="s">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+                    <span class="k">print</span> <span class="s">&#39;.&#39;</span><span class="p">,</span>
+
+    <span class="k">print</span> <span class="s">&#39;&#39;</span>
+    <span class="k">return</span> <span class="bp">True</span>
+
+</div>
+<div class="viewcode-block" id="get_file_date"><a class="viewcode-back" href="../../../poets.io.html#poets.io.download.get_file_date">[docs]</a><span class="k">def</span> <span class="nf">get_file_date</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">fdate</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gets the date from a file name.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fname : str</span>
+<span class="sd">        Filename</span>
+<span class="sd">    fdate : str</span>
+<span class="sd">        Structure of the date in filename, dict which points to the date fields</span>
+<span class="sd">        in the filename</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    datetime.datetime</span>
+<span class="sd">        Date and, if given, time from filename</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">fname</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s">&#39;YYYY&#39;</span> <span class="ow">in</span> <span class="n">fdate</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">year</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">fname</span><span class="p">[</span><span class="n">fdate</span><span class="p">[</span><span class="s">&#39;YYYY&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span>
+                         <span class="n">fdate</span><span class="p">[</span><span class="s">&#39;YYYY&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]])</span>
+
+    <span class="k">if</span> <span class="s">&#39;MM&#39;</span> <span class="ow">in</span> <span class="n">fdate</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">month</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">fname</span><span class="p">[</span><span class="n">fdate</span><span class="p">[</span><span class="s">&#39;MM&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span><span class="n">fdate</span><span class="p">[</span><span class="s">&#39;MM&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]])</span>
+
+    <span class="k">if</span> <span class="s">&#39;DD&#39;</span> <span class="ow">in</span> <span class="n">fdate</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">day</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">fname</span><span class="p">[</span><span class="n">fdate</span><span class="p">[</span><span class="s">&#39;DD&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span><span class="n">fdate</span><span class="p">[</span><span class="s">&#39;DD&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">day</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="s">&#39;P&#39;</span> <span class="ow">in</span> <span class="n">fdate</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">dekad</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">fname</span><span class="p">[</span><span class="n">fdate</span><span class="p">[</span><span class="s">&#39;P&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span><span class="n">fdate</span><span class="p">[</span><span class="s">&#39;P&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]])</span>
+        <span class="n">day</span> <span class="o">=</span> <span class="n">dekad2day</span><span class="p">(</span><span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">dekad</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s">&#39;hh&#39;</span> <span class="ow">in</span> <span class="n">fdate</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">hour</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">fname</span><span class="p">[</span><span class="n">fdate</span><span class="p">[</span><span class="s">&#39;hh&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span><span class="n">fdate</span><span class="p">[</span><span class="s">&#39;hh&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">hour</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="s">&#39;mm&#39;</span> <span class="ow">in</span> <span class="n">fdate</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">minute</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">fname</span><span class="p">[</span><span class="n">fdate</span><span class="p">[</span><span class="s">&#39;mm&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span><span class="n">fdate</span><span class="p">[</span><span class="s">&#39;mm&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">minute</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="s">&#39;ss&#39;</span> <span class="ow">in</span> <span class="n">fdate</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">second</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">fname</span><span class="p">[</span><span class="n">fdate</span><span class="p">[</span><span class="s">&#39;ss&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span><span class="n">fdate</span><span class="p">[</span><span class="s">&#39;ss&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">second</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="p">,</span> <span class="n">hour</span><span class="p">,</span> <span class="n">minute</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span>
+</div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/Logo_blue_transparent_64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">poets 0.2.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Thomas Mistelbauer.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

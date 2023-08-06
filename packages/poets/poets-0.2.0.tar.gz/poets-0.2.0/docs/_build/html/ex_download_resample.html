@@ -1,0 +1,165 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Download and resample data &mdash; poets 0.2.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="top" title="poets 0.2.0 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">poets 0.2.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="download-and-resample-data">
+<h1>Download and resample data<a class="headerlink" href="#download-and-resample-data" title="Permalink to this headline">¶</a></h1>
+<p>After <a href="#id1"><span class="problematic" id="id2">`Setting up a Poet base class`_</span></a> and adding some sources, we can now start downloading and resampling the data by calling the <a class="reference internal" href="poets.html#poets.poet.Poet.fetch_data" title="poets.poet.Poet.fetch_data"><tt class="xref py py-class docutils literal"><span class="pre">poets.poet.Poet.fetch_data</span></tt></a> method.</p>
+<p>In[3]:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">p</span><span class="o">.</span><span class="n">fetch_data</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>That&#8217;s it! The <a class="reference internal" href="poets.html#poets.poet.Poet.fetch_data" title="poets.poet.Poet.fetch_data"><tt class="xref py py-class docutils literal"><span class="pre">poets.poet.Poet.fetch_data</span></tt></a> method will now go through all defined sources and start downloading and resampling the data.
+The resampled NetCDF file will be saved to the <cite>DATA</cite> folder within the rootpath as defined above.</p>
+<p>The fetch_data method will download data starting from the begin_date as defined in the source up to the current date.
+If you want to download and resample only a specific time period, you can do so by calling the method with the parameters <cite>begin</cite> and <cite>end</cite>.</p>
+<p>In[4]:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Download and resample data for January 2000:</span>
+<span class="n">p</span><span class="o">.</span><span class="n">fetch_data</span><span class="p">(</span><span class="n">begin</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2000</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">end</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2000</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">31</span><span class="p">))</span>
+
+<span class="c"># Download and resample data from 2005 on:</span>
+<span class="n">p</span><span class="o">.</span><span class="n">fetch_data</span><span class="p">(</span><span class="n">begin</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2005</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+
+<span class="c"># Download and resample data until 2005:</span>
+<span class="n">p</span><span class="o">.</span><span class="n">fetch_data</span><span class="p">(</span><span class="n">end</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2004</span><span class="p">,</span><span class="mi">12</span><span class="p">,</span><span class="mi">13</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>By default, downloaded rawdata will be kept in the <cite>TMP</cite> folder. However, if you do not need this data you can delete it by setting the delete_rawdata flag as followed:</p>
+<p>In[5]:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Delete rawdata after resampling</span>
+<span class="n">p</span><span class="o">.</span><span class="n">fetch_data</span><span class="p">(</span><span class="n">delete_rawdata</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="section" id="download-and-resample-data-from-sources-individually">
+<h2>Download and resample data from sources individually<a class="headerlink" href="#download-and-resample-data-from-sources-individually" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="poets.html#poets.poet.Poet.fetch_data" title="poets.poet.Poet.fetch_data"><tt class="xref py py-class docutils literal"><span class="pre">poets.poet.Poet.fetch_data</span></tt></a> downloads and resamples data from all sources.
+However, if you want to fetch data from only one source, you can do so by calling the <tt class="xref py py-class docutils literal"><span class="pre">poets.io.source_base.download_and_resample</span></tt> method.
+This method can be called within the <a class="reference internal" href="poets.html#poets.poet.Poet" title="poets.poet.Poet"><tt class="xref py py-class docutils literal"><span class="pre">poets.poet.Poet</span></tt></a> class by accessing the source as followed:</p>
+<p>In[6]:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">p</span><span class="o">.</span><span class="n">sources</span><span class="p">[</span><span class="s">&#39;MODIS_LST&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">download_and_resample</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>You can use the parameters begin, end and delete_rawdata as described in <a class="reference internal" href="#download-and-resample-data">Download and resample data</a>.</p>
+</div>
+<div class="section" id="download-only">
+<h2>Download only<a class="headerlink" href="#download-only" title="Permalink to this headline">¶</a></h2>
+<p>If you only want to download the data without resampling it, you can do so by calling the <tt class="xref py py-class docutils literal"><span class="pre">poets.io.source_base.download</span></tt> method.
+You can use the parameters begin, end and delete_rawdata as described in <a class="reference internal" href="#download-and-resample-data">Download and resample data</a>.</p>
+<p>In[7]:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">p</span><span class="o">.</span><span class="n">sources</span><span class="p">[</span><span class="s">&#39;MODIS_LST&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">download</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="resampling-only">
+<h2>Resampling only<a class="headerlink" href="#resampling-only" title="Permalink to this headline">¶</a></h2>
+<p>If you already downloaded data manually and only want to resample it, you can do so by calling the <tt class="xref py py-class docutils literal"><span class="pre">poets.io.source_base.resample</span></tt> method.
+You can use the parameters begin, end and delete_rawdata as described in <a class="reference internal" href="#download-and-resample-data">Download and resample data</a>.</p>
+<p>In[8]:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">p</span><span class="o">.</span><span class="n">sources</span><span class="p">[</span><span class="s">&#39;MODIS_LST&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">resample</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/Logo_blue_transparent_64.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Download and resample data</a><ul>
+<li><a class="reference internal" href="#download-and-resample-data-from-sources-individually">Download and resample data from sources individually</a></li>
+<li><a class="reference internal" href="#download-only">Download only</a></li>
+<li><a class="reference internal" href="#resampling-only">Resampling only</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/ex_download_resample.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">poets 0.2.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Thomas Mistelbauer.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

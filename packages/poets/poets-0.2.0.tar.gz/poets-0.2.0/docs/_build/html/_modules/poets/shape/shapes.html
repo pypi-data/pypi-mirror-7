@@ -1,0 +1,233 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>poets.shape.shapes &mdash; poets 0.2.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
+    <link rel="top" title="poets 0.2.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">poets 0.2.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for poets.shape.shapes</h1><div class="highlight"><pre>
+<span class="c"># Copyright (c) 2014, Vienna University of Technology (TU Wien), Department</span>
+<span class="c"># of Geodesy and Geoinformation (GEO).</span>
+<span class="c"># All rights reserved.</span>
+
+<span class="c"># Redistribution and use in source and binary forms, with or without</span>
+<span class="c"># modification, are permitted provided that the following conditions are met:</span>
+<span class="c">#</span>
+<span class="c"># * Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c">#   list of conditions and the following disclaimer.</span>
+<span class="c">#</span>
+<span class="c"># * Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c">#   this list of conditions and the following disclaimer in the documentation</span>
+<span class="c">#   and/or other materials provided with the distribution.</span>
+<span class="c">#</span>
+<span class="c"># * Neither the name of the Vienna University of Technology - Department of</span>
+<span class="c">#   Geodesy and Geoinformation nor the names of its contributors may be used to</span>
+<span class="c">#   endorse or promote products derived from this software without specific</span>
+<span class="c">#   prior written permission.</span>
+<span class="c">#</span>
+<span class="c"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;</span>
+<span class="c"># AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE</span>
+<span class="c"># IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE</span>
+<span class="c"># ARE DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY,</span>
+<span class="c"># DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY DIRECT, INDIRECT,</span>
+<span class="c"># INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT</span>
+<span class="c"># LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,</span>
+<span class="c"># OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF</span>
+<span class="c"># LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING</span>
+<span class="c"># NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,</span>
+<span class="c"># EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="c"># Author: Thomas Mistelbauer Thomas.Mistelbauer@geo.tuwien.ac.at</span>
+<span class="c"># Creation date: 2014-06-04</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">shapefile</span>
+<span class="kn">from</span> <span class="nn">shapely.geometry</span> <span class="kn">import</span> <span class="n">MultiPolygon</span>
+
+
+<div class="viewcode-block" id="FipsError"><a class="viewcode-back" href="../../../poets.shape.html#poets.shape.shapes.FipsError">[docs]</a><span class="k">class</span> <span class="nc">FipsError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="Shape"><a class="viewcode-back" href="../../../poets.shape.html#poets.shape.shapes.Shape">[docs]</a><span class="k">class</span> <span class="nc">Shape</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Provides geography information of a region/country given as shapefile.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    code : str</span>
+<span class="sd">        Identifier of the records in the shapefile; uses the first argument</span>
+<span class="sd">        returned by shapefile.Reader as identifier, for the default shapefile,</span>
+<span class="sd">        this would be the FIPS country code.</span>
+<span class="sd">    shapefile : str, optional</span>
+<span class="sd">        Path to shape file, uses &quot;world country admin boundary shapefile&quot; by</span>
+<span class="sd">        default.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    code : str</span>
+<span class="sd">        Identifier of the selected record in the shapefile; uses the first</span>
+<span class="sd">        argument returned by shapefile.Reader as identifier, for the default</span>
+<span class="sd">        shapefile, this would be the FIPS country code.</span>
+<span class="sd">    name : str</span>
+<span class="sd">        Name of the selected record in the shapefile; uses the second argument</span>
+<span class="sd">        returned by shapefile.Reader as identifier, for the default shapefile,</span>
+<span class="sd">        this would be the FIPS country code.</span>
+<span class="sd">    shpfile : str</span>
+<span class="sd">        Path to the source shapefile.</span>
+<span class="sd">    bbox : tuple</span>
+<span class="sd">        Bounding box of the country.</span>
+<span class="sd">    polygon : list of tuples</span>
+<span class="sd">        Country boundary polygon.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="n">shapefile</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">code</span> <span class="o">=</span> <span class="n">code</span>
+        <span class="k">if</span> <span class="n">shapefile</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shpfile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">__file__</span><span class="p">),</span>
+                                        <span class="s">&#39;ancillary&#39;</span><span class="p">,</span>
+                                        <span class="s">&#39;world_country_admin_boundary_&#39;</span>
+                                        <span class="s">&#39;shapefile_with_fips_codes&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shpfile</span> <span class="o">=</span> <span class="n">shapefile</span>
+        <span class="n">rec</span><span class="p">,</span> <span class="n">bbox</span><span class="p">,</span> <span class="n">polygon</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_shape</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">rec</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bbox</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">bbox</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">polygon</span> <span class="o">=</span> <span class="n">polygon</span>
+
+    <span class="k">def</span> <span class="nf">_get_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fetches shape and record information from shapefile.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        record : list</span>
+<span class="sd">            Record of the country.</span>
+<span class="sd">        bbox : shapefile._Array</span>
+<span class="sd">            Bounding box of the country.</span>
+<span class="sd">        multipoly : shapely.geometry.MultiPolygon</span>
+<span class="sd">            Country boundary polygon.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        FipsError</span>
+<span class="sd">            If FIPS code does not exist.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">sf</span> <span class="o">=</span> <span class="n">shapefile</span><span class="o">.</span><span class="n">Reader</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shpfile</span><span class="p">)</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">rec</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sf</span><span class="o">.</span><span class="n">records</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="nb">str</span><span class="p">(</span><span class="n">rec</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">pos</span> <span class="o">=</span> <span class="n">i</span>
+                <span class="k">break</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">pos</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">FipsError</span><span class="p">(</span><span class="s">&quot;FIPS Code &#39;&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">code</span> <span class="o">+</span> <span class="s">&quot;&#39; does not exist&quot;</span><span class="p">)</span>
+
+        <span class="n">sh</span> <span class="o">=</span> <span class="n">sf</span><span class="o">.</span><span class="n">shapeRecord</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sh</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">multipoly</span> <span class="o">=</span> <span class="p">[[</span><span class="n">sh</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">points</span><span class="p">,</span> <span class="p">[]]]</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">points</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">sh</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sh</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">sh</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">parts</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                                              <span class="n">sh</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">parts</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]])</span>
+            <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sh</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">sh</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">parts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:])</span>
+            <span class="n">multipoly</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)):</span>
+                    <span class="n">multipoly</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">points</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="p">[]])</span>
+
+        <span class="n">multipoly</span> <span class="o">=</span> <span class="n">MultiPolygon</span><span class="p">(</span><span class="n">multipoly</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">sh</span><span class="o">.</span><span class="n">record</span><span class="p">,</span> <span class="n">sh</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">bbox</span><span class="p">,</span> <span class="n">multipoly</span>
+</div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/Logo_blue_transparent_64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">poets 0.2.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Thomas Mistelbauer.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

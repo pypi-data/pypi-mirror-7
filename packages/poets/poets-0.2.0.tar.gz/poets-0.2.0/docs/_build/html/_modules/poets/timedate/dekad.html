@@ -1,0 +1,309 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>poets.timedate.dekad &mdash; poets 0.2.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
+    <link rel="top" title="poets 0.2.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">poets 0.2.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for poets.timedate.dekad</h1><div class="highlight"><pre>
+<span class="c"># Copyright (c) 2014, Vienna University of Technology (TU Wien), Department</span>
+<span class="c"># of Geodesy and Geoinformation (GEO).</span>
+<span class="c"># All rights reserved.</span>
+
+<span class="c"># Redistribution and use in source and binary forms, with or without</span>
+<span class="c"># modification, are permitted provided that the following conditions are met:</span>
+<span class="c">#</span>
+<span class="c"># * Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c">#   list of conditions and the following disclaimer.</span>
+<span class="c">#</span>
+<span class="c"># * Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c">#   this list of conditions and the following disclaimer in the documentation</span>
+<span class="c">#   and/or other materials provided with the distribution.</span>
+<span class="c">#</span>
+<span class="c"># * Neither the name of the Vienna University of Technology - Department of</span>
+<span class="c">#   Geodesy and Geoinformation nor the names of its contributors may be used to</span>
+<span class="c">#   endorse or promote products derived from this software without specific</span>
+<span class="c">#   prior written permission.</span>
+<span class="c">#</span>
+<span class="c"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;</span>
+<span class="c"># AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE</span>
+<span class="c"># IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE</span>
+<span class="c"># ARE DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY,</span>
+<span class="c"># DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY DIRECT, INDIRECT,</span>
+<span class="c"># INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT</span>
+<span class="c"># LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,</span>
+<span class="c"># OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF</span>
+<span class="c"># LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING</span>
+<span class="c"># NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,</span>
+<span class="c"># EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="c"># Author: Thomas Mistelbauer thomas.mistelbauer@geo.tuwien.ac.at</span>
+<span class="c"># Creation date: 2014-08-05</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module provides functions for date manipulation on a dekadal basis.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">calendar</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+
+
+<div class="viewcode-block" id="dekad_index"><a class="viewcode-back" href="../../../poets.timedate.html#poets.timedate.dekad.dekad_index">[docs]</a><span class="k">def</span> <span class="nf">dekad_index</span><span class="p">(</span><span class="n">begin</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates a pandas datetime index on a decadal basis.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    begin : datetime</span>
+<span class="sd">        Datetime index start date.</span>
+<span class="sd">    end : datetime, optional</span>
+<span class="sd">        Datetime index end date, set to current date if None.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dtindex : pandas.DatetimeIndex</span>
+<span class="sd">        Dekadal datetime index.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">end</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+
+    <span class="n">mon_begin</span> <span class="o">=</span> <span class="n">datetime</span><span class="p">(</span><span class="n">begin</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">begin</span><span class="o">.</span><span class="n">month</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">mon_end</span> <span class="o">=</span> <span class="n">datetime</span><span class="p">(</span><span class="n">end</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">end</span><span class="o">.</span><span class="n">month</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">daterange</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="n">mon_begin</span><span class="p">,</span> <span class="n">mon_end</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s">&#39;MS&#39;</span><span class="p">)</span>
+
+    <span class="n">dates</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">dat</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">daterange</span><span class="p">):</span>
+        <span class="n">lday</span> <span class="o">=</span> <span class="n">calendar</span><span class="o">.</span><span class="n">monthrange</span><span class="p">(</span><span class="n">dat</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">dat</span><span class="o">.</span><span class="n">month</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">begin</span><span class="o">.</span><span class="n">day</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">begin</span><span class="o">.</span><span class="n">day</span> <span class="o">&lt;</span> <span class="mi">11</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">daterange</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">end</span><span class="o">.</span><span class="n">day</span> <span class="o">&lt;</span> <span class="mi">11</span><span class="p">:</span>
+                        <span class="n">dekads</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">]</span>
+                    <span class="k">elif</span> <span class="n">end</span><span class="o">.</span><span class="n">day</span> <span class="o">&gt;=</span> <span class="mi">11</span> <span class="ow">and</span> <span class="n">end</span><span class="o">.</span><span class="n">day</span> <span class="o">&lt;</span> <span class="mi">21</span><span class="p">:</span>
+                        <span class="n">dekads</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">dekads</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="n">lday</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">dekads</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="n">lday</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">begin</span><span class="o">.</span><span class="n">day</span> <span class="o">&gt;=</span> <span class="mi">11</span> <span class="ow">and</span> <span class="n">begin</span><span class="o">.</span><span class="n">day</span> <span class="o">&lt;</span> <span class="mi">21</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">daterange</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">end</span><span class="o">.</span><span class="n">day</span> <span class="o">&lt;</span> <span class="mi">21</span><span class="p">:</span>
+                        <span class="n">dekads</span> <span class="o">=</span> <span class="p">[</span><span class="mi">20</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">dekads</span> <span class="o">=</span> <span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="n">lday</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">dekads</span> <span class="o">=</span> <span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="n">lday</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">dekads</span> <span class="o">=</span> <span class="p">[</span><span class="n">lday</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">i</span> <span class="o">==</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">daterange</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">and</span> <span class="n">end</span><span class="o">.</span><span class="n">day</span> <span class="o">&lt;</span> <span class="mi">21</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">end</span><span class="o">.</span><span class="n">day</span> <span class="o">&lt;</span> <span class="mi">11</span><span class="p">:</span>
+                <span class="n">dekads</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">dekads</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dekads</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="n">lday</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">dekads</span><span class="p">:</span>
+            <span class="n">dates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="n">dat</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">dat</span><span class="o">.</span><span class="n">month</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
+
+    <span class="n">dtindex</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span><span class="p">(</span><span class="n">dates</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">dtindex</span>
+
+</div>
+<div class="viewcode-block" id="check_dekad"><a class="viewcode-back" href="../../../poets.timedate.html#poets.timedate.dekad.check_dekad">[docs]</a><span class="k">def</span> <span class="nf">check_dekad</span><span class="p">(</span><span class="n">date</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks the dekad of a date and returns the dekad date.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    date : datetime</span>
+<span class="sd">        Date to check.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    new_date : datetime</span>
+<span class="sd">        Date of the dekad.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">date</span><span class="o">.</span><span class="n">day</span> <span class="o">&lt;</span> <span class="mi">11</span><span class="p">:</span>
+        <span class="n">dekad</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="k">elif</span> <span class="n">date</span><span class="o">.</span><span class="n">day</span> <span class="o">&gt;</span> <span class="mi">10</span> <span class="ow">and</span> <span class="n">date</span><span class="o">.</span><span class="n">day</span> <span class="o">&lt;</span> <span class="mi">21</span><span class="p">:</span>
+        <span class="n">dekad</span> <span class="o">=</span> <span class="mi">20</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dekad</span> <span class="o">=</span> <span class="n">calendar</span><span class="o">.</span><span class="n">monthrange</span><span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">date</span><span class="o">.</span><span class="n">month</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">new_date</span> <span class="o">=</span> <span class="n">datetime</span><span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">date</span><span class="o">.</span><span class="n">month</span><span class="p">,</span> <span class="n">dekad</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">new_date</span>
+
+</div>
+<div class="viewcode-block" id="dekad2day"><a class="viewcode-back" href="../../../poets.timedate.html#poets.timedate.dekad.dekad2day">[docs]</a><span class="k">def</span> <span class="nf">dekad2day</span><span class="p">(</span><span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">dekad</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gets the day of a dekad.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    year : int</span>
+<span class="sd">        Year of the date.</span>
+<span class="sd">    month : int</span>
+<span class="sd">        Month of the date.</span>
+<span class="sd">    dekad : int</span>
+<span class="sd">        Dekad of the date.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    day : int</span>
+<span class="sd">        Day value for the dekad.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">dekad</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">day</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="k">elif</span> <span class="n">dekad</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">day</span> <span class="o">=</span> <span class="mi">20</span>
+    <span class="k">elif</span> <span class="n">dekad</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">day</span> <span class="o">=</span> <span class="n">calendar</span><span class="o">.</span><span class="n">monthrange</span><span class="p">(</span><span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">day</span>
+
+</div>
+<div class="viewcode-block" id="day2dekad"><a class="viewcode-back" href="../../../poets.timedate.html#poets.timedate.dekad.day2dekad">[docs]</a><span class="k">def</span> <span class="nf">day2dekad</span><span class="p">(</span><span class="n">day</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the dekad of a day.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    day : int</span>
+<span class="sd">        Day of the date.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dekad : int</span>
+<span class="sd">        Number of the dekad in a month.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">day</span> <span class="o">&lt;</span> <span class="mi">11</span><span class="p">:</span>
+        <span class="n">dekad</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">elif</span> <span class="n">day</span> <span class="o">&gt;</span> <span class="mi">10</span> <span class="ow">and</span> <span class="n">day</span> <span class="o">&lt;</span> <span class="mi">21</span><span class="p">:</span>
+        <span class="n">dekad</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dekad</span> <span class="o">=</span> <span class="mi">3</span>
+
+    <span class="k">return</span> <span class="n">dekad</span>
+
+</div>
+<div class="viewcode-block" id="get_dekad_period"><a class="viewcode-back" href="../../../poets.timedate.html#poets.timedate.dekad.get_dekad_period">[docs]</a><span class="k">def</span> <span class="nf">get_dekad_period</span><span class="p">(</span><span class="n">dates</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks number of the dekad in the current year for dates given as list.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dates : list of datetime</span>
+<span class="sd">        Dates to check.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    period : list of int</span>
+<span class="sd">        List of dekad periods.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">period</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">dat</span> <span class="ow">in</span> <span class="n">dates</span><span class="p">:</span>
+
+        <span class="n">d</span> <span class="o">=</span> <span class="n">check_dekad</span><span class="p">(</span><span class="n">dat</span><span class="p">)</span>
+        <span class="n">dekad</span> <span class="o">=</span> <span class="n">day2dekad</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">day</span><span class="p">)</span>
+        <span class="n">per</span> <span class="o">=</span> <span class="n">dekad</span> <span class="o">+</span> <span class="p">((</span><span class="n">d</span><span class="o">.</span><span class="n">month</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">period</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">per</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">period</span>
+
+</div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/Logo_blue_transparent_64.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">poets 0.2.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Thomas Mistelbauer.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
