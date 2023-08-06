@@ -1,0 +1,109 @@
+=========
+greptable
+=========
+
+
+Description
+-----------
+
+``greptable`` generates a plain-text list of your servers, databases and tables,
+so that you can easily find where the fuck that table is, with your favorite
+search tools, like ``grep``.
+
+This is especially useful if you are dealing with many servers and databases.
+
+
+Requirements
+------------
+
+``greptable`` works on both Python 2 and Python 3.
+
+The only dependency is ``SQLAlchemy``, and it should support the same databases.
+
+
+Usage
+-----
+
+For global options run ``greptable -h``.
+
+All commands need a configuration file; see the *Configuration* section below.
+
+Listing tables
+~~~~~~~~~~~~~~
+
+To list the tables, run ``greptable dump``.
+
+You can change the configuration file path with the ``-c``
+(also known as ``--config``).
+By default, it uses ``~/.config/greptable.conf`` if it exists,
+otherwise ``greptable.conf`` from the current directory.
+
+The tables are listed to the standard output by default.
+The ``-o`` (also known as ``--output``) option can dump in a file instead.
+
+Example: ``greptable -c greptable.conf dump -o tables.txt``
+
+For full help on options run ``greptable dump -h``.
+
+Opening tables
+~~~~~~~~~~~~~~
+
+``greptable`` lets you open a table or schema in your favorite admin interface,
+built from a configured URL template.
+
+This is thought for phpMyAdmin, but should work with other tools, even
+non-web (if not, please provide examples or patches).
+
+Using it is as simple as running ``greptable open`` followed
+by the selected output of a ``greptable dump``.
+You can even do ``greptable open $(greptable dump|grep mytable)``.
+
+The URL will be opened by ``xdg-open``. If it's not opening the wanted
+browser, you should set the ``BROWSER`` environment variable.
+
+If you only want to show the URL, and not open it automatically, use the
+``-s`` (also known as ``--show``) option.
+
+Configuration
+-------------
+
+The configuration is a standard INI file.
+Section headers are `SQLAlchemy URLs <http://docs.sqlalchemy.org/en/latest/core/engines.html>`_.
+
+For example::
+
+    [mysql://user:password@server1]
+    [sqlite:///db.sqlite]
+
+``greptable`` will try to prettify server URLs, but you can also force a name.
+
+For example::
+
+    [mysql://user:password@server1]
+    [sqlite:///db.sqlite]
+    name = db
+
+For the ``open`` subcommand, you can provide both a ``openschema`` and ``opentable``
+option. If the ``openschema`` option is not provided, ``opentable`` will be used,
+with the table parameter being an empty string.
+
+The variable substitution uses the Python ``format()`` syntax.
+
+For example::
+
+    [mysql://user:password@server1]
+    opentable = https://penguincorp.com/pma/index.php?server=0&db={schema}&table={table}
+
+    [mysql://user:password@server2]
+    opentable = https://penguincorp.com/pma/index.php?server=1&db={schema}&table={table}
+
+    [otherdb://user:password@server]
+    name = srv0
+    openschema = https://penguincorp.com/otherdb/{server}/tables/{schema}
+    opentable = https://penguincorp.com/otherdb/{server}/showtable/{schema}/{table}
+
+
+Development
+-----------
+
+Contributions can be sent in the form of git patches, to laurent@bachelier.name.
