@@ -1,0 +1,244 @@
+#!/usr/bin/env python
+from ansible.module_utils.basic import *
+
+from mist.client import MistClient
+
+DOCUMENTATION = '''
+---
+author: "Chris Loukas <commixon@gmail.com>"
+description:
+  - "Manage multi-cloud backends through mist.io service"
+  - "You can add/remove multiple backends from multiple providers through mist.io service."
+  - "Before you can provision, monitor etc machines through mist.io, you have to first add a backend to the mist.io service"
+  - "Mist.io supports"
+  - EC2
+  - Rackspace
+  - Openstack
+  - Linode
+  - "Google Compute Engine"
+  - SoftLayer
+  - "Digital Ocean"
+  - Nephoscale
+  - "Bare metal servers"
+  - "Docker containers"
+  - "HP Cloud"
+module: mist_backends
+options:
+  api_url:
+    description:
+      - "APIURL needed by Openstack and HP Cloud"
+    required: false
+  backend_key:
+    description:
+      - "This is either the username, api_key etc, depending on the provider"
+    required: false
+  backend_password:
+    description:
+      - "This is either the password, api_secret etc, depending on the provider"
+    required: false
+  compute_endpoint:
+    description:
+      - "Needed by some OpenStack installations"
+    required: false
+  machine_ip:
+    description:
+      - "Ip address needed when adding Bare Metal Server"
+    required: false
+  machine_key:
+    description:
+      - "Id of ssh key needed when adding Bare Metal Server. The key must have been added first to the mist.io service"
+    required: false
+  machine_port:
+    description:
+      - "Used when adding a Bare Metal Server"
+    required: false
+  machine_user:
+    description:
+      - "User for Bare Metal Server"
+    required: false
+  mist_email:
+    description:
+      - "Email to login to the mist.io service. Leave it blank in case you have a custom installation of mist.io that does not require login"
+    required: false
+  mist_password:
+    description:
+      - "Password to login to the mist.io service. Leave it blank in case you have a custom installation of mist.io that does not require login"
+    required: false
+  mist_uri:
+    default: "https://mist.io"
+    description:
+      - "Url of the mist.io service. By default https://mist.io. But if you have a custom installtion of mist.io you can provide the url here"
+    required: false
+  name:
+    description:
+      - "The title you want the backend to have"
+    required: false
+  provider:
+    default: all
+    description:
+      - "You can have a list of all supported providers using the mist_providers module."
+      - "From there you can select a provider and have mist_providers module handle it."
+    required: true
+  region:
+    description:
+      - "Necessary only if there is a custom Openstack region"
+    required: false
+  state:
+    choices:
+      - present
+      - absent
+    default: present
+    description:
+      - "Choose if a specific backend should be added or removed from the mist.io service"
+    required: true
+  tenant_name:
+    description:
+      - "In case of Openstack backend, it may have to be provided"
+    required: false
+requirements:
+  - mist.client
+short_description: "Handle backends in the mist.io service"
+version_added: "1.7.1"
+notes:
+  - "Add more backend functionality, like enable/disable backend, alongside backend state"
+'''
+
+EXAMPLES = '''
+- name: ADD EC2 AP NORTHEAST
+  mist_backends:
+    mist_email: your@email.com
+    mist_password: yourpassword
+    provider: ec2_ap_northeast
+    name: Northeast
+    state: present
+    backend_key: OPIKLJU9087087OLIU
+    backend_secret: jlsj09dpoid4wrjkh4hj45rjh
+
+- name: ADD RACKSPACE LONDON
+  mist_backends:
+    mist_email: your@email.com
+    mist_password: yourpassword
+    provider: rackspace:lon
+    name: Rackspace LON
+    state: present
+    backend_key: my_rack_username
+    backend_secret: jlsj09dpoid4wrjkh4hj45rjh
+
+- name: REMOVE OPENSTACK BACKEND
+  mist_providers:
+    mist_email: your@email.com
+    mist_password: yourpassword
+    provider: openstack
+    state: absent
+
+- name: ADD NEPHOSCALE BACKEND
+  mist_providers:
+    mist_email: your@email.com
+    mist_password: yourpassword
+    provider: nephoscale
+    state: present
+    backend_key: nepho_username
+    backend_secret: nepho_password
+'''
+
+
+def init_client(mist_uri="https://mist.io", email=None, password=None):
+    client = MistClient(mist_uri, email, password)
+    return client
+
+
+def check_state(provider, client):
+    backend_state = 'absent'
+
+    for key in client.backends:
+        backend = client.backends[key]
+        if backend.info['provider'] == provider:
+            backend_state = 'present'
+            break
+
+    return backend_state
+
+
+def remove_backend(provider, client):
+    for key in client.backends:
+        backend = client.backends[key]
+        if backend.info['provider'] == provider:
+            backend.delete()
+            return
+
+
+def add_backend(client, module):
+    title = module.params.get('name')
+    provider = module.params.get('provider')
+    key = module.params.get('backend_key')
+    secret = module.params.get('backend_secret')
+    tenant_name = module.params.get('tenant_name')
+    region = module.params.get('region')
+    apiurl = module.params.get('api_url')
+    machine_ip = module.params.get('machine_ip')
+    machine_key = module.params.get('machine_key')
+    machine_user = module.params.get('machine_user')
+    compute_endpoint = module.params.get('compute_endpoint')
+    machine_port = module.params.get('machine_port')
+
+    client.add_backend(title, provider, key, secret, tenant_name, region, apiurl, machine_ip, machine_key, machine_user,
+                       compute_endpoint, machine_port)
+
+    client.update_backends()
+
+    backend = client.backends[title]
+    return backend.info
+
+
+def main():
+    CHANGED = False
+
+    module = AnsibleModule(
+        argument_spec=dict(
+            provider=dict(required=True, type='str'),
+            state=dict(required=False, default='present', choices=['present', 'absent']),
+            # enabled=dict(required=False, default=True, type='bool'),
+            name=dict(required=False, type='str'),
+            backend_key=dict(required=False, type='str'),
+            backend_secret=dict(required=False, type='str'),
+            tenant_name=dict(required=False, type='str'),
+            region=dict(required=False, type='str'),
+            api_url=dict(required=False, type='str'),
+            compute_endpoint=dict(required=False, type='str'),
+            machine_ip=dict(required=False, type='str'),
+            machine_key=dict(required=False, type='str'),
+            machine_user=dict(required=False, type='str'),
+            machine_port=dict(required=False, type='str'),
+            mist_uri=dict(default='https://mist.io', type='str'),
+            mist_email=dict(required=False, type='str'),
+            mist_password=dict(required=False, type='str'),
+        )
+    )
+
+    mist_uri = module.params.get('mist_uri')
+    mist_email = module.params.get('mist_email')
+    mist_password = module.params.get('mist_password')
+
+    client = init_client(mist_uri, mist_email, mist_password)
+
+    provider = module.params.get('provider')
+    backend_state = check_state(provider, client)
+    state = module.params.get('state')
+    title = module.params.get('name')
+
+    if backend_state == "present" and state == "present":
+        CHANGED = False
+        module.exit_json(changed=CHANGED, backend=client.backends[title].info)
+    elif backend_state == "present" and state == "absent":
+        remove_backend(provider, client)
+        CHANGED = True
+        module.exit_json(changed=CHANGED)
+    elif backend_state == "absent" and state == "absent":
+        CHANGED = False
+        module.exit_json(changed=CHANGED)
+    elif backend_state == "absent" and state == "present":
+        CHANGED = True
+        backend_info = add_backend(client, module)
+        module.exit_json(changed=CHANGED, backend=backend_info)
+
+main()

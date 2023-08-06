@@ -1,0 +1,114 @@
+#!/usr/bin/env python
+from ansible.module_utils.basic import *
+
+from mist.client import MistClient
+
+DOCUMENTATION = '''
+---
+author: "Chris Loukas <commixon@gmail.com>"
+description:
+  - "Returns a list of all available providers that you can add and control through mist.io service"
+module: mist_providers
+options:
+  mist_email:
+    description:
+      - "Email to login to the mist.io service. Leave it blank in case you have a custom installation of mist.io that does not require login"
+    required: false
+  mist_password:
+    description:
+      - "Password to login to the mist.io service. Leave it blank in case you have a custom installation of mist.io that does not require login"
+    required: false
+  mist_uri:
+    default: "https://mist.io"
+    description:
+      - "Url of the mist.io service. By default https://mist.io. But if you have a custom installtion of mist.io you can provide the url here"
+    required: false
+  provider:
+    choices:
+      - ec2
+      - rackspace
+      - bare_metal
+      - gce
+      - openstack
+      - linode
+      - nephoscale
+      - digitalocean
+      - docker
+      - hpcloud
+      - softlayer
+      - all
+    default: all
+    description:
+      - "By default == \"all\", which returns all supported providers by the mist.io service."
+      - "You can explicitly set it to one of the choices to see only this provider-specific information"
+    required: false
+requirements:
+  - mist.client
+short_description: "Lists all available providers in the mist.io service"
+version_added: "1.7.1"
+
+'''
+
+EXAMPLES = '''
+- name: List supported providers, simple case
+  mist_providers:
+    mist_email: your@email.com
+    mist_password: yourpassword
+  register: providers
+
+- name: List supported providers from custom_url
+  mist_providers:
+    mist_uri: http://localhost:8000
+  register: providers
+
+- name: List only ec2 provider options
+  mist_providers:
+    mist_email: your@email.com
+    mist_password: yourpassword
+    provider: ec2
+  register: providers
+'''
+
+
+def init_client(mist_uri="https://mist.io", email=None, password=None):
+    client = MistClient(mist_uri, email, password)
+    return client
+
+
+def supported_providers(client, provider):
+    providers = client.supported_providers
+
+    if provider == "all":
+        return providers
+    else:
+        chosen_providers = []
+        for prov in providers:
+            if provider in prov['provider']:
+                chosen_providers.append(prov)
+        return chosen_providers
+
+
+def main():
+    module = AnsibleModule(
+        argument_spec=dict(
+            mist_uri=dict(default='https://mist.io', type='str'),
+            mist_email=dict(required=False, type='str'),
+            mist_password=dict(required=False, type='str'),
+            provider=dict(required=False, default='all', type='str', choices=['ec2', 'rackspace', 'bare_metal', 'gce',
+                                                                              'openstack', 'linode', 'nephoscale',
+                                                                              'digitalocean', 'docker', 'hpcloud',
+                                                                              'softlayer', 'all'])
+        )
+    )
+
+    mist_uri = module.params.get('mist_uri')
+    mist_email = module.params.get('mist_email')
+    mist_password = module.params.get('mist_password')
+    provider = module.params.get('provider')
+
+    client = init_client(mist_uri, mist_email, mist_password)
+
+    module.exit_json(changed=True, supported_providers=supported_providers(client, provider))
+
+
+main()
