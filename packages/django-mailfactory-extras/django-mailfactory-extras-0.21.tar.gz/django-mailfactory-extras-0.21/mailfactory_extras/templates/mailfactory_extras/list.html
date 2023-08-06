@@ -1,0 +1,39 @@
+{% extends "xadmin/views/model_list.html" %}
+{% load staticfiles %}
+{% load xadmin_tags %}
+{% block content %}
+    <div class="content-toolbar btn-toolbar pull-right clearfix">
+    {% view_block 'top_toolbar' %}
+    <ul class="pagination pagination-sm pagination-left pagination-inline">
+        {% view_block 'pagination' 'small' %}
+    </ul>
+    </div>
+    <div class="results table-responsive">
+        {% if mail_map %}
+            {% block result_grid %}
+            <table class="table table-bordered table-striped table-hover">
+            <thead>
+                <tr>
+                    <th scope="col">
+                        <div class="dropdown pull-left">Email name</div>
+                    </th>
+                    <th scope="col">
+                        <div class="dropdown pull-left">Template name</div>
+                    </th>
+                </tr>
+             </thead>
+             <tbody>
+                {% for template_name, mail_name in mail_map %}
+                    <tr class="grid-item {% if row.css_class %} {{ row.css_class}}{%endif%}">
+                        <td {{o.tagattrs}}>
+                            <a href="{% url "xadmin:mail_factory_form" template_name %}">{{ mail_name }}</a></td>
+                        <td>{{ template_name }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+            </table>
+            {% endblock %}
+        {% endif %}
+    </div>
+    </div>
+{% endblock %}
