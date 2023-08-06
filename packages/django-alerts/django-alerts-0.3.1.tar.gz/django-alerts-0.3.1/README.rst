@@ -1,0 +1,4 @@
+django-alerts
+=============
+
+Django alerts
