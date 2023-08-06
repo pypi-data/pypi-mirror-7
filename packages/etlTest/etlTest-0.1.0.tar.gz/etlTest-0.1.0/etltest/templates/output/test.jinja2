@@ -1,0 +1,61 @@
+{{ header }}
+# These tests are also run as part of the following suites:
+#
+{% for suite in tests.suites %}
+#    {{ suite.suite }}
+{% endfor %}
+#
+# The following processes are executed for these tests:
+#
+{% for proc in tests.processes %}
+#    {{ proc.tool }}:
+  {% for p in proc.processes %}
+#      {{ p.name }}
+  {% endfor %}
+{% endfor %}
+
+import unittest
+import datetime
+from os import path
+
+from etltest.data_connector import DataConnector
+from etltest.process_executor import ProcessExecutor
+from etltest.utilities.settings_manager import SettingsManager
+
+
+class {{ testGroup }}Test(unittest.TestCase):
+
+    def setUp(self):
+          # Queries for loading test data.
+      {% for set in tests.dataset %}
+            DataConnector("{{ set.source }}").insert_data("{{ set.table }}", {{ set.records }})
+      {% endfor %}
+
+      {% for tool in tests.processes %}
+            {{ tool.tool }}_settings = SettingsManager().get_tool("{{ tool.tool }}")
+            {{ tool.tool }}_code_path = SettingsManager().system_variable_replace({{ tool.tool }}_settings["code_path"])
+      {% for job in tool.processes %}
+            ProcessExecutor("{{ tool.tool }}").execute_process("{{ job.type }}",
+            path.join({{ tool.tool }}_code_path, "{{ job.name }}"))
+      {% endfor %}
+      {% endfor %}
+
+    def tearDown(self):
+       # Clean up testing environment.
+
+      {% for set in tests.dataset %}
+        DataConnector("{{ set.source }}").truncate_data("{{ set.table }}")
+      {% endfor %}
+
+{% for test in tests.tests %}
+    def {{ test.name }}(self):
+        # {{ test.desc }}
+
+        given_result = DataConnector("{{ test.query.source }}").select_data("{{ test.query.select }}",
+                        "{{ test.query.from }}", "{{ test.query.where }}")
+
+        expected_result = [{{ test.query.result }}]
+
+        self.assertEqual(given_result, expected_result)
+
+{% endfor %}
