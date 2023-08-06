@@ -1,0 +1,113 @@
+Metadata-Version: 1.1
+Name: superss
+Version: 0.2.0
+Summary: RSS parsing with batteries included
+Home-page: http://github.com/newslynx/superss
+Author: Brian Abelson
+Author-email: brian@newslynx.org
+License: MIT
+Description: |travis-img| superss ====== *RSS parsing with batteries included*
+        
+        ``feedparser`` is great, but sometimes it doesn't put things in the same
+        place. ``superss`` fixes this by finding all known candidates for urls,
+        content, images, tags, dates, and authors and intelligently picking the
+        best candidate. It also does some other cool things like author parsing
+        with `lauteur <http://github.com/newslynx/lauteur>`__, url
+        reconciliation with
+        `siegfried <http://github.com/newslynx/siegfried>`__, and pulling links
+        and images out of the article html.
+        
+        Another problem with RSS parsing is that feeds sometimes only include a
+        summary of the article. ``superss`` can also extract the article's full
+        text from the page itself with
+        `particle <http://github.com/newslynx/particle>`__ and merge this data
+        with the data from the RSS feed.
+        
+        Finally, some sites don't even have RSS feeds. In this case we combine
+        `pageone <http://github.com/newslynx/pageone>`__ and
+        `particle <http://github.com/newslynx/particle>`__ to create a feed of
+        articles from article urls on a site's homepage.
+        
+        Install
+        -------
+        
+        ::
+        
+            pip install superss
+        
+        Test
+        ----
+        
+        Requires ``nose``. (only currently tests full\_text rss feeds.)
+        
+        ::
+        
+            nosetests
+        
+        Usage
+        -----
+        
+        Full-Text Feeds
+        ~~~~~~~~~~~~~~~
+        
+        .. code:: python
+        
+            from superss import SupeRSS
+        
+            s = SupeRSS('http://feeds.feedburner.com/publici_rss')
+            for entry in s.run():
+              print entry
+        
+        Non Full-Text Feeds
+        ~~~~~~~~~~~~~~~~~~~
+        
+        .. code:: python
+        
+            from superss import SupeRSS
+        
+            s = SupeRSS('http://feeds.feedburner.com/publici_rss', is_full_text = False)
+            for entry in s.run():
+              print entry
+        
+        Feed from homepage
+        ~~~~~~~~~~~~~~~~~~
+        
+        **Experimental**: Build a feed from a homepage. You must install
+        `pageone <http://github.com/newslynx/pageone>`__ and
+        `particle <http://github.com/newslynx/particle>`__ to run this.
+        
+        .. code:: python
+        
+            from superss import SupeRSS
+        
+            s = SupeRSS(homepage = 'http://nytimes.com/')
+            for entry in s.run():
+              print entry
+        
+        Concurrency
+        ~~~~~~~~~~~
+        
+        Optionally run any function concurrently via ``gevent`` by passing in
+        the kwargs ``concurrent`` and ``num_workers``:
+        
+        .. code:: python
+        
+            from superss import SupeRSS
+        
+            s = SupeRSS(
+              'http://feeds.feedburner.com/publici_rss', 
+              is_full_text = False, 
+              concurrent=True, 
+              num_workers=10
+              )
+            for entry in s.run():
+              print entry
+        
+        .. |travis-img| image:: https://travis-ci.org/newslynx/superss.svg
+        
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
