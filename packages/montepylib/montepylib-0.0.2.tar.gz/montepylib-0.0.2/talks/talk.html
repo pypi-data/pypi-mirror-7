@@ -1,0 +1,335 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+	<title>Monte Carlo Business Case Analysis with pandas</title>
+	<meta name="description" content="Pandas is increasingly becoming a standard tool in scientific computing. Could it also have a role in the CFO's office?  CFOs regularly need to analyse the impact of different projects or business cases, and they almost universally do this using spreadsheets. Spreadsheets have many advantages - they have a low barrier to entry and are easy for most people to understand. However as they get more complicated, disadvantages start to appear; in particular, they can be inflexible and highly error-prone.  In this talk I will explain how business case analysis can be done using python and pandas. The python version has several advantages over spreadsheets: it is more flexible as the business structure changes; formulas only need to be changed in a single place, reducing the chance of error; and report-ready plots are quick to produce. I'll go through a way of structuring the problem for some simple business logic, and ways to visualise the results. The example I’ll discuss is made more interesting and useful by being 'Monte Carlo' analysis. Traditional business case analysis takes single point estimates of sales, costs and prices, and calculates a single profit forecast. Everybody knows the profit will not turn out to be exactly equal to the forecast. But it is not clear what the range of profits might be, or how likely a loss is. 'Monte Carlo' analysis solves this problem by allowing ranges or distributions on the assumptions; the forecast is then a range of outcomes. In short, I’ll demonstrate how you can use pandas to analyse high-impact business decisions, and dodge many of the problems of using spreadsheets.">
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=792, user-scalable=no">
+	<meta http-equiv="x-ua-compatible" content="ie=edge">
+	<link rel="stylesheet" href="shower/themes/ribbon/styles/screen.css">
+	<link rel="stylesheet" href="css/talk.css">
+	<style>
+
+	</style>
+</head>
+<body class="list">
+	<header class="caption">
+		<h1>Monte Carlo Business Case Analysis with pandas</h1>
+		<p>Arthur Street</p>
+	</header>
+
+
+	<section class="slide cover" id="Cover"><div>
+		<h2>Monte Carlo<br>Business Case Analysis<br>with pandas</h2>
+		<p class="byline">arthur@artana.com.au</p>
+		<img src="img/shutterstock_182874488.jpg" alt="" style="width:100%">
+		<footer>
+			Attempt 2 things: 
+			- introduce you to Monte Carlo business case analysis.
+			- plant the idea it is not crazy to use pandas for this purpose.
+			.
+			What is business case analysis?
+		</footer>
+		<style>
+			#Cover {
+				text-shadow: black .5px .5px;
+			}
+			#Cover h2 {
+				margin:-70px -100px -70px 260px;
+				color:#FFF;
+				text-align:center;
+				font-size:50px;
+				}
+			#Cover .byline {
+				text-align: center;
+				color:#FFF;
+				font-style:italic;
+				font-size:26px;
+				margin:100px -100px -70px 260px;
+			}
+		</style>
+	</div></section>
+
+
+	<section class="slide"><div>
+		<h2>Goal: Turn this...</h2>
+		<div style="text-align:center; margin: -30px 0; z-index:-999">
+			<img src="img/oneProfit.png" style="height:400px">
+		</div>
+	</div></section>
+
+
+	<section class="slide"><div>
+		<h2>...into this...</h2>
+		<div style="text-align:center; margin: -30px 0; z-index:-999">
+			<img src="img/goal.png" style="height:400px">
+		</div>
+		<footer>
+			Monte Carlo: put a distribution on the inputs and therefore the outputs.
+			See the range of possible outputs.
+		</footer>
+	</div></section>
+
+	<section class="slide"><div>
+		<h2>...and this...</h2>
+		<div style="text-align:center; margin: -30px 0; z-index:-999">
+			<img src="img/tornado.png" style="height:400px">
+		</div>
+		<footer>
+			And which inputs have uncertainties that matter.
+			An art to assessing.
+			Spreadsheets almost exclusively.
+			But while spreadsheets are very easy to write, they are extremely error-prone and so can be dangerous.
+			Repeat formulas.
+			Hard to test.
+			Logical flow.
+			Also, hard to extend (eg. add new units).
+		</footer>
+	</div></section>
+
+
+	<style>
+	.headlines img { padding-top: 50px; }
+	.headlines p { font-size:75%; color: gray; padding-top: 50px; }
+	.headlines p a { color: gray; }
+	</style>
+	<section class="slide headlines"><div>
+		<h2>without using a spreadsheet</h2>
+		<hr>
+		<img src="img/rogoff.png" style="float:right"><div class="spacer"></div>
+		<img src="img/whale.png">
+		<p style="float:right">More at the <a href="http://www.eusprig.org">European Spreadsheet Risks Interest Group</a></p>
+		<footer>
+			Rogoff: 2010 paper "Growth in a time of debt" - concluded growth lower if public debt over 90% annual GDP. 
+			Highly cited, "Intellectual foundation for austerity".
+			Three issues; one was spreadsheet range excluded 5 countries (Australia to Denmark). 
+			When fixed, turns a small neg growth rate into a small pos.
+			Whale: 2012 Credit Default Swap trade, several billion $ loss. 
+			Spreadsheet divided by sum not average...halved est. volatility and lowered VaR.
+			.
+			Can happen in python too - but python encourages better testing.
+		</footer>
+	</div></section>
+
+	<section class="slide twocol breakdown"><div>
+		<h2>Why pandas?</h2>
+		<ul class="col next">
+			<li class="ok">Index by name</li>
+		</ul>
+		<div class="col next">
+			<table>
+				<tr> <th scope="col">Crop</th> <th>Cost/kg</th> </tr>
+				<tr> <td scope="row" style="color: #4B6">apple</td> <td>0.15</td> </tr>
+				<tr> <td scope="row">pear</td> <td>0.20</td> </tr>
+				<tr> <td scope="row">orange</td> <td>0.22</td> </tr>
+			</table>
+			<table>
+				<tr> <th scope="col">Crop</th> <th>Price/kg</th> </tr>
+				<tr> <td scope="row">pear</td> <td>2.60</td> </tr>
+				<tr> <td scope="row" style="color: #4B6">apple</td> <td>3.10</td> </tr>
+				<tr> <td scope="row">orange</td> <td>2.80</td> </tr>
+			</table>
+		</div>
+		<footer>
+			People are using R for this - 2013 book by Robert Brown.
+			Excel python plugin PyXLL by Enthought (PC only).
+			And people are developing ways to make spreadsheets safer.
+			Pandas built on numpy.
+		</footer>
+	</div></section>
+
+	<section class="slide twocol breakdown"><div>
+		<h2>Why pandas?</h2>
+		<ul class="col">
+			<li>Index by name</li>
+			<li class="ok">Handle missing data</li>
+		</ul>
+		<div class="col next">
+			<table>
+				<tr> <th scope="col">Crop</th> <th>Cost/kg</th> </tr>
+				<tr> <td scope="row">apple</td> <td>0.15</td> </tr>
+				<tr> <td scope="row">pear</td> <td>0.20</td> </tr>
+				<tr> <td scope="row">orange</td> <td>0.22</td> </tr>
+			</table>
+			<table>
+				<tr> <th scope="col">Crop</th> <th>Price/kg</th> </tr>
+				<tr> <td scope="row">apple</td> <td>3.10</td> </tr>
+				<tr> <td scope="row">pear</td> <td>2.60</td> </tr>
+				<tr> <td scope="row">orange</td> <td>2.80</td> </tr>
+				<tr> <td scope="row" style="color: #4B6">banana</td> <td>1.50</td> </tr>
+			</table>
+		</div>
+	</div></section>
+
+	<section class="slide twocol breakdown"><div>
+		<h2>Why pandas?</h2>
+		<ul class="col">
+			<li>Index by name</li>
+			<li>Handle missing data</li>
+			<li class="ok">Broadcast dimensions</li>
+		</ul>
+		<div class="col next">
+			<table class="wide">
+				<tr> <th style="color: #4B6">Farm</th> <th>Crop</th> <th>Cost/kg</th> </tr>
+				<tr> <td style="color: #4B6">Farm A</td> <td>apple</td> <td>0.15</td> </tr>
+				<tr> <td style="color: #4B6"></td> <td>pear</td> <td>0.20</td> </tr>
+				<tr> <td style="color: #4B6"></td> <td>orange</td> <td>0.22</td> </tr>
+				<tr> <td style="color: #4B6">Farm B</td> <td>apple</td> <td>0.12</td> </tr>
+				<tr> <td style="color: #4B6"></td> <td>pear</td> <td>0.18</td> </tr>
+				<tr> <td style="color: #4B6"></td> <td>orange</td> <td>0.25</td> </tr>
+			</table>
+			<table>
+				<tr> <th>Crop</th> <th>Price/kg</th> </tr>
+				<tr> <td>pear</td> <td>2.60</td> </tr>
+				<tr> <td>apple</td> <td>3.10</td> </tr>
+				<tr> <td>orange</td> <td>2.80</td> </tr>
+			</table>
+		</div>
+	</div></section>
+
+
+	<section class="slide"><div>
+		<h2>Overview</h2>
+		<ol>
+			<li>Read data</li>
+			<li>Simulate</li>
+			<li>Calculate</li>
+			<li>Report</li>
+		</ol>
+	</div></section>
+
+
+	<section class="slide breakdown soft"><div>
+		<h2>Overview</h2>
+		<div style="float: left">
+			<ol>
+				<li class="ok">Read data <span class="tick">✓</span></li>
+				<li>Simulate</li>
+				<li>Calculate</li>
+				<li>Report</li>
+			</ol>
+		</div>
+		<pre style="padding-left: 250px; font-size:80%">
+			<code>costs = pd.read_csv('costs.csv')</code>
+			<span>or</span>
+			<code>costs = pd.read_excel('cashflows.xlsx')</code>
+		</pre>
+	</div></section>
+
+	<section class="slide breakdown soft"><div>
+		<h2>Overview</h2>
+		<div style="float: left">
+			<ol>
+				<li class="ok">Read data</li>
+				<li class="ok">Simulate <span class="tick">✓</span></li>
+				<li>Calculate</li>
+				<li>Report</li>
+			</ol>
+		</div>
+		<pre style="padding-left: 250px; font-size:80%">
+			<code>data.groupby(keys).apply(sim, N)</code>
+			<code style="line-height: 30px">def sim(g, size):</code>
+			<code style="line-height: 30px">   return DataFrame(normal(g.mean,g.sd,</code>
+			<code style="line-height: 30px">                           size=size))</code>
+		</pre>
+	</div></section>
+
+	<section class="slide breakdown soft"><div>
+		<h2>Overview</h2>
+		<div style="float: left">
+			<ol>
+				<li class="ok">Read data</li>
+				<li class="ok">Simulate</li>
+				<li class="ok">Calculate <span class="tick">✓</span></li>
+				<li>Report</li>
+			</ol>
+		</div>
+		<pre style="padding-left: 250px; font-size:80%">
+			<!-- <code>cashflows = pd.merge(costs, revenues, how='outer')</code> -->
+			<code>sim['revenue'] = sim['volume'] * sim['price']</code>
+		</pre>
+	</div></section>
+
+	<section class="slide breakdown soft"><div>
+		<h2>Overview</h2>
+		<div style="float: left">
+			<ol>
+				<li class="ok">Read data</li>
+				<li class="ok">Simulate</li>
+				<li class="ok">Calculate</li>
+				<li class="ok">Report <span class="tick">✓</span></li>
+			</ol>
+		</div>
+		<pre style="padding-left: 250px; font-size:80%">
+			<code>cashflows.hist()</code>
+			<code>cashflows.to_excel('report.xlsx')</code>
+		</pre>
+	</div></section>
+
+
+	<section class="slide cover"><div>
+		<h2 style="font-size:300%; text-shadow: black .5px .5px;">Demonstration</h2>
+	</div></section>
+
+
+	<section class="slide"><div>
+		<h2>Good things</h2>
+		<ul>
+			<li>Easy to add new farms, crops etc</li>
+			<li class="next">Easy to add whole new dimensions (eg. years)</li>
+			<li class="next">Easy to add tests</li>
+			<li class="next">Less error-prone</li>
+		</ul>
+		<footer>
+			Less error-prone: formulas not repeated with subtle changes.
+		</footer>
+	</div></section>
+
+
+	<section class="slide"><div>
+		<h2>Bad things</h2>
+		<ul>
+			<li>Spreadsheets are easy</li>
+			<li>Pandas can be non-intuitive</li>
+		</ul>
+		<footer>
+			Never going to replace spreadsheets - they have their role.
+			Few CFO offices will have python skills - expect only in specialist consulting, on big decisions.
+			Order of indexes - sometimes column, sometimes row first.
+			Hierarchical indexing - why not multi-dimensional?
+			Can make errors in python too.
+		</footer>
+	</div></section>
+
+	<section class="slide"><div>
+		<h2>Next steps...</h2>
+		<p><a href="https://bitbucket.org/artstr/montepylib">https://bitbucket.org/artstr/montepylib</a></p>
+		<ul>
+			<li>Draw from distribution based on parameters</li>
+			<li>Base case, simulation, sensitivity analysis all with the same code</li>
+			<li>Specialised IO</li>
+			<li>This talk, &amp; examples</li>
+		</ul>
+		<footer>
+			Very early days, welcome feedback.
+		</footer>
+	</div></section>
+
+
+	<section class="slide shout see-more" style="background-color: #171717"><div>
+		<div style="text-align: center">
+		</div>
+		<h2 style="color: #EEE">Questions?</h2>
+		<div style="text-align:center; padding-top: 350px; font-size: 40px">
+			<a href="https://bitbucket.org/artstr/montepylib">https://bitbucket.org/artstr/montepylib</a>
+		</div>
+	</div></section>
+
+	<!--
+		To hide progress bar from entire presentation
+		just remove “progress” element.
+		-->
+	<div class="progress"><div></div></div>
+	<script src="shower/shower.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+Metadata-Version: 1.0
+Name: montepylib
+Version: 0.0.2
+Summary: Tools and examples to analyse high-impact business decisions, and dodge many of the problems of using spreadsheets
+Home-page: https://bitbucket.org/artstr/montepylib
+Author: Arthur Street
+Author-email: arthur@artana.com.au
+License: LICENSE.txt
+Description: # Monte Carlo Business Case Analysis using pandas
+        
+        This package provides some tools and examples to analyse high-impact business decisions, and dodge many of the problems of using spreadsheets.
+        
+        ## Abstract
+        
+        Pandas is increasingly becoming a standard tool in scientific computing. Could it also have a role in the CFO's office?  CFOs regularly need to analyse the impact of different projects or business cases, and they almost universally do this using spreadsheets. Spreadsheets have many advantages - they have a low barrier to entry and are easy for most people to understand. However as they get more complicated, disadvantages start to appear; in particular, they can be inflexible and highly error-prone.  
+        
+        The application here is made more interesting and useful by being 'Monte Carlo' analysis. Traditional business case analysis takes single point estimates of sales, costs and prices, and calculates a single profit forecast. Everybody knows the profit will not turn out to be exactly equal to the forecast. But it is not clear what the range of profits might be, or how likely a loss is. 'Monte Carlo' analysis solves this problem by allowing ranges or distributions on the assumptions; the forecast is then a range of outcomes. 
+        
+        ## Package structure
+        
+        Slides and an ipython notebook are included in the `talks` directory. The talk, titled "Monte Carlo Business Case Analysis using pandas",  was presented at the Science and Data mini-conference for PyCon Australia (1 Aug 2014), as well as the Sydney Python group on 5 June 2014. It is an introduction to both Monte Carlo Business Case Analysis and pandas. You can find it online at [racingtadpole.com/blog/business-case-python-pandas](http://racingtadpole.com/blog/business-case-python-pandas/). The slides have been prepared using the html5 presentation engine [Shower](https://github.com/shower/shower).
+        
+        The `montepylib` directory includes: 
+        
+        - `io.py` - routines to simplify data input
+        - `manip.py` - routines to manipulate DataFrames
+        - `utils.py` - utility routines like `is_string_int`
+        - `sim.py` - the core simulation routines
+        - `extend.py` - adds some useful methods to `DataFrame`
+        
+        For more details, see the `examples` directory.
+        
+        
+        ## Quick start
+        
+        For an overview of the goals of this library, see the [talk](http://racingtadpole.com/blog/business-case-python-pandas/).
+        
+        To see how the library can help, in python try:
+        
+            from pandas import Series, DataFrame
+            import pandas as pd
+            from montepylib.sim import Simulator
+        
+            volume = DataFrame([['Factory A','Widget X',200,30.0],['Factory A','Widget Y',100,15.0],['Factory B','Widget X',300,50.0]], columns=['factory','widget','mean','sd'])
+            costs = DataFrame([['Factory A','Widget X',1,.2],['Factory A','Widget Y',.6,.1],['Factory B','Widget X',1.2,.25],['Factory B','Widget Y',.7,.12]], columns=['factory','widget','mean','sd'])
+            price = DataFrame([['Widget X',5,.5], ['Widget Y',3,.3]], columns=['widget','mean','sd'])
+        
+            mc = Simulator()
+            N = 5000
+            sim_vol = mc.sim_from_params(N, volume, 'volume')
+            sim_costs = mc.sim_from_params(N, costs, 'cost')
+            sim_price = mc.sim_from_params(N, price, 'price')
+        
+            sim = mc.merge(sim_vol, sim_costs, sim_price, how='left')
+            sim['margin'] = sim['price'] - sim['cost']
+            sim['profit'] = sim['volume'] * sim['margin']
+        
+            sim_factory = sim.groupby(['factory', 'iteration']).sum()[['profit','volume']]
+            total_per_iteration = sim_factory.groupby(level='iteration').sum()
+            total_per_iteration.hist(xrot=90);
+        
+            summary_per_factory = sim_factory.groupby(level='factory').describe().unstack(level=0)
+            summary_per_factory
+            #               profit                    volume             
+            # factory    Factory A    Factory B    Factory A    Factory B
+            # count    5000.000000  5000.000000  5000.000000  5000.000000
+            # mean     1041.392873  1142.445923   299.692542   300.461622
+            # std       167.320088   255.161823    33.146621    50.388224
+            # min       411.263495   370.741291   150.234686   127.378759
+            # 25%       929.578744   965.513249   277.282007   266.361845
+            # 50%      1032.065933  1129.047618   299.882982   300.278990
+            # 75%      1148.330681  1308.399140   321.756739   334.676815
+            # max      1808.573213  2167.622599   420.227083   478.421165
+        
+        For the base case, use `N = 0`:
+        
+            N = 0
+            # include the same code as above to calculate sim_factory
+            sim_factory
+            #                      profit  volume
+            # factory   iteration                
+            # Factory A base case    1040     300
+            # Factory B base case    1140     300
+        
+        For sensitivity analysis, use `N = -1`:
+        
+            N = -1
+            # include the same code as above to calculate total_per_iteration
+            total_per_iteration
+            #              profit  volume
+            # iteration                  
+            # base case      2180     600
+            # high cost      2055     600
+            # high price     2460     600
+            # high volume    2526     695
+            # low cost       2305     600
+            # low price      1900     600
+            # low volume     1834     505
+        
+        
+        ## Other implementations
+        
+        Pandas is not the only way to do this. For another approach, I have also explored using R - see [this post](http://racingtadpole.com/blog/monte-carlo-cashflow-modelling-in-r/) for some examples; also see the book ["Business Case Analysis with R"](http://leanpub.com/bizanalysiswithr) by Robert D. Brown, 2013. Or if you want to free yourself from using simulations and deal directly with mathematical distributions, you could even use [Mathematica](http://www.wolfram.com/mathematica/)...
+        
+        
+Keywords: business,cashflows,analysis,decision,spreadsheet,monte carlo,finance,corporate
+Platform: UNKNOWN
