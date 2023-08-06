@@ -1,0 +1,55 @@
+import unittest2 as unittest
+import jpype
+from jpype import JPackage, java
+import common
+import pickle
+import os
+import subprocess
+import sys
+
+
+def blah(filename):
+    from emma2.util.pystallone import stallone
+    f = stallone.io.NicelyCachedRandomAccessFile(filename)
+
+
+class IOTestCase(common.JPypeTestCase) :
+    
+    @classmethod
+    def setUpClass(cls):
+        n = 10**3
+        cls.largeList = range(n)
+        cls.testFileName = "pickled_list.bin"
+        pickle.dump(cls.largeList, open(cls.testFileName, "w+b"))
+        return cls
+    
+    @unittest.expectedFailure
+    def testRaiseExeptionWhileRead(self):
+        # TODO: perform as subprocess, which crashes, because of the unhandled exception
+        root = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
+        classpath_arg = '-Djava.class.path=%s'
+        classpath_arg %= os.path.join(root, 'classes')
+        
+        #print classpath_arg
+        cmd = """import jpype
+jvm_path = jpype.getDefaultJVMPath()
+jpype.startJVM(jpype.getDefaultJVMPath(), '-Xmx256M', '-Xms64M', '%s')
+assert jpype.isJVMStarted()
+cls = jpype.JPackage('jpype').io.ExceptionWhileIO('%s')
+cls.read()""" % (classpath_arg, self.testFileName)
+        print "\n\n\n", cmd
+        print subprocess.check_output([sys.executable, "-c", cmd])
+    
+    def testFileUnchanged(self):
+        obj = pickle.load(open(self.testFileName))
+        self.assertEqual(obj, self.largeList)
+        
+    @classmethod
+    def tearDownClass(cls):
+        pass
+        from runipy import notebook_runner
+        os.remove(cls.testFileName)
+        
+if __name__ == '__main__':
+    unittest.main()
+        
