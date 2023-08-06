@@ -1,0 +1,44 @@
+#!/usr/bin/env python
+
+import sys
+from datetime import datetime
+from stamper import DATETIME_FORMAT, Stamper
+
+
+def usage(name):
+    msg = """
+    Usage:
+
+    To start tracking time: %(name)s
+
+    To record time for a given task: %(name)s customer action
+    """ % {'name': name}
+    print(msg)
+
+
+if __name__ == '__main__':
+
+    s = Stamper()
+    s.load_stamps()
+
+    if len(sys.argv) == 1:
+        # stamp!
+        s.stamp(datetime.today().strftime(DATETIME_FORMAT), 
+                None, None, None)
+
+    elif len(sys.argv) >= 3:
+        # record!
+        last_stamp = s.last_stamp()
+        current_start = last_stamp['end']
+        if not current_start:
+            current_start = last_stamp['start']
+        customer = sys.argv[1]
+        description = ' '.join(sys.argv[2:])
+        s.stamp(current_start, datetime.today().strftime(DATETIME_FORMAT),
+                customer, description)
+
+    else:
+        usage(sys.argv[0])
+        sys.exit(1)
+
+    s.save_stamps()

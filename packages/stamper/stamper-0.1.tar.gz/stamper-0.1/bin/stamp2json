@@ -1,0 +1,83 @@
+#!/usr/bin/env python
+
+import json
+import sys
+from argparse import ArgumentParser
+from os.path import expanduser, isfile, isdir
+
+
+def args_cmd():
+    """Parse the command line arguments via argparse"""
+    parser = ArgumentParser(description='Convert tool from txt to json format')
+    parser.add_argument(
+        '--input', '-i', default=expanduser('~/.workstamps.txt'),
+        help='Input filename (default ~/.workstamps.txt')
+    parser.add_argument(
+        '--output', '-o', default=expanduser('~/.workstamps.json'),
+        help='Input filename (default: ~/.workstamps.json)')
+    return parser.parse_args()
+
+
+def itemify(line):
+    """Split a line, returning date and the rest of data"""
+    line = line.strip()
+    end_time = line[:16]
+    info = line[17:]
+    return(line[:16], line[17:])
+
+
+if __name__ == '__main__':
+    args = args_cmd()
+
+    stamps = []
+
+    with open(args.input, 'r') as infile:
+
+        for line in infile:
+            time, info = itemify(line)
+
+            if info == 'start':
+                customer = None
+                action = None
+                start_time = time
+                end_time = None
+
+            elif time == 'restarttotals':
+                continue
+
+            else:
+                info_items = info.split(' ', 1)
+                customer = info_items[0]
+                action = ''
+                if len(info_items) > 1:
+                    action = info_items[1].lstrip('- ')
+                # if the previous line was not a start line, took the previous
+                # line end time as start time
+                if end_time is not None:
+                    start_time = end_time
+                end_time = time
+
+            stamps.append({
+                'start': start_time,
+                'end': end_time,
+                'customer': customer,
+                'action': action,
+            })
+
+    if isfile(args.output):
+        print('[warning] %(out)s already exist'
+              % {'out': args.output})
+        confirm = raw_input('overwrite? (y/n) ')
+        while confirm not in ['y','n','Y','N']:
+            confirm = raw_input('overwrite? (y/n) ')
+        if confirm in ['n', 'N']:
+            print('[warning] exiting without converting')
+            sys.exit()
+
+    elif isdir(args.output):
+        print('[error] %(out)s is a directory, remove it first'
+              % {'out': args.output})
+        sys.exit(1)
+
+    with open(args.output, 'w') as stamps_file:
+        json.dump(stamps, stamps_file, indent=4)

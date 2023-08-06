@@ -1,0 +1,47 @@
+#!/usr/bin/env python
+
+import sys
+import time
+
+TIME_FORMAT= "%H:%M"
+HOURS_DAY = 8
+SECS_DAY = HOURS_DAY * 60 * 60
+
+def usage(name):
+    msg = """
+time_sum.py: Sum dates in proper hour time
+
+Params: Worked hours
+Syntax: $ ./time_sum 6:45 13:48 12:44 8:28 14:43
+56:28 min. = 7 days, remaining: 0:28 (8 hours/day)
+"""
+    print(msg)
+    exit(1)
+
+def isTimeFormat(input):
+    try:
+        time.strptime(input, TIME_FORMAT)
+        return True
+    except ValueError:
+        return False
+
+
+if __name__ == '__main__':
+
+    totalSecs = 0
+    for param in sys.argv[1:]:
+        if not isTimeFormat(param):
+            print("Invalid hour format: %s" % param)
+            help()
+            exit(1)
+        timeParts = [int(s) for s in param.split(':')]
+        totalSecs += (timeParts[0] * 60 + timeParts[1]) * 60
+
+    totalDays, remaining = divmod(totalSecs, SECS_DAY)
+    remainingMin, remainingSec = divmod(remaining, (60))
+    remainingHr, remainingMin = divmod(remainingMin, (60))
+
+    totalSecs, sec = divmod(totalSecs, 60)
+    hr, min = divmod(totalSecs, 60)
+    print "%d:%02d hours. = %d days, remaining: %d:%02d (%d hours/day)" % (
+        hr, min, totalDays, remainingHr, remainingMin, HOURS_DAY)
