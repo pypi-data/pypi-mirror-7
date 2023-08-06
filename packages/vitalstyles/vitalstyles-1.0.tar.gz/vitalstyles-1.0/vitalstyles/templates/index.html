@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>{% block title %}{{ settings.title }}{% endblock title %}</title>
+        {% block styleguide_styles %}
+            <link rel="stylesheet" type="text/css" href="styles.css?v={{ uniquestamp }}">
+        {% endblock styleguide_styles %}
+        {% block preview_styles %}
+            {% if settings.preview_cssfile %}
+                <link rel="stylesheet" type="text/css" href="{{ settings.get_preview_cssfilepath_relative_to_outdir() }}?v={{ uniquestamp }}">
+            {% endif %}
+        {% endblock preview_styles %}
+    </head>
+    <body>
+        <div class="vitalstyles-reset vitalstyles-header">
+            <h1>{{ settings.title }}</h1>
+        </div>
+        <div class="vitalstyles-reset vitalstyles-toc">
+            {% block toc %}
+                <h1>Table of contents</h1>
+                <ul>
+                    {% for file in files %}
+                        <li>
+                            <a href="#vitalstyles-file-{{ loop.index0 }}">
+                                {{ file.relfilepath }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endblock toc %}
+        </div>
+        {% for file in files %}
+            <div class="vitalstyles-reset vitalstyles-filename-block">
+                <h1 id="vitalstyles-file-{{ loop.index0 }}">{{ file.relfilepath }}</h1>
+            </div>
+            {% for comment in file.comments %}
+                {{ comment.to_html(settings) }}
+            {% endfor %}
+        {% endfor %}
+    </body>
+</html>
