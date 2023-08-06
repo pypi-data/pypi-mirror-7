@@ -1,0 +1,204 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Overview &mdash; Cosmic 0.4.2 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.4.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Cosmic 0.4.2 documentation" href="index.html" />
+    <link rel="next" title="Tutorial" href="tutorial.html" />
+    <link rel="prev" title="Cosmic in Python" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tutorial.html" title="Tutorial"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Cosmic in Python"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Cosmic 0.4.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="overview">
+<h1>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h1>
+<p>Before we dig in, here is a high-level overview of Cosmic.</p>
+<div class="section" id="rest-and-rpc">
+<h2>REST and RPC<a class="headerlink" href="#rest-and-rpc" title="Permalink to this headline">¶</a></h2>
+<p>The definition of <a class="reference external" href="http://en.wikipedia.org/wiki/Representational_state_transfer">REST</a> is a
+controversial subject. For our purposes, these are the key elements:</p>
+<ul class="simple">
+<li>Objects are assigned unique URLs.</li>
+<li>These URLs are used to link objects together.</li>
+<li>Objects are manipulated by a set of standard methods (<a class="reference external" href="http://en.wikipedia.org/wiki/Create,_read,_update_and_delete">CRUD</a>).</li>
+</ul>
+<p>It is fairly straightforward to create a REST API from a database table, but
+other kinds of information can be expressed with REST as well. In general it
+is a good idea to try, and fall back on <a class="reference external" href="http://en.wikipedia.org/wiki/Remote_procedure_call">RPC</a> only if REST is clearly
+a bad fit.</p>
+<p>RPC stands for &#8220;remote procedure call&#8221;. It is a simple interface where a
+client sends a request to call a remote function with certain parameters and
+gets the return value of the function in the response. You might find many
+discussions online that are framed as &#8220;REST vs RPC&#8221;, but in reality they are
+tools that complement each other.</p>
+</div>
+<div class="section" id="architecture">
+<h2>Architecture<a class="headerlink" href="#architecture" title="Permalink to this headline">¶</a></h2>
+<p>Cosmic is a layer that sits between business code and HTTP. The client and
+server component are perfectly symmetrical, so similar that they are
+represented by the same interface, <a class="reference internal" href="reference.html#cosmic.api.BaseAPI" title="cosmic.api.BaseAPI"><tt class="xref py py-class docutils literal"><span class="pre">BaseAPI</span></tt></a>. On the server,
+an instance of its subclass, <a class="reference internal" href="reference.html#cosmic.api.API" title="cosmic.api.API"><tt class="xref py py-class docutils literal"><span class="pre">API</span></tt></a>, gets populated with
+user-defined handler functions, bits of documentation and other metadata. On
+the client, another subclass, <tt class="xref py py-class docutils literal"><span class="pre">APIClient</span></tt> gets created
+automatically from a spec, the handler functions being HTTP calls.</p>
+<p>The API spec is represented in JSON and served from a standard location:
+<tt class="docutils literal"><span class="pre">/spec.json</span></tt>.</p>
+<p>Cosmic&#8217;s simplicity comes from treating HTTP as nothing more than an elaborate
+serialization scheme for function inputs and outputs. Because different types
+of REST calls require different HTTP methods and return calls, Cosmic defines
+several <em>endpoints</em>, subclasses of <tt class="xref py py-class docutils literal"><span class="pre">Endpoint</span></tt>.</p>
+<p>Each endpoint defines the methods <tt class="xref py py-meth docutils literal"><span class="pre">build_request()</span></tt>, <tt class="xref py py-meth docutils literal"><span class="pre">parse_request()</span></tt>,
+<tt class="xref py py-meth docutils literal"><span class="pre">build_response()</span></tt> and <tt class="xref py py-meth docutils literal"><span class="pre">parse_response()</span></tt>. These methods abstract away
+all HTTP nonsense so the rest of Cosmic (and, of course, your code) deals with
+purely native data.</p>
+</div>
+<div class="section" id="built-on-teleport">
+<h2>Built on Teleport<a class="headerlink" href="#built-on-teleport" title="Permalink to this headline">¶</a></h2>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">The <a class="reference external" href="/docs/teleport/python/latest/">Teleport documentation</a> is worth a
+look if you are getting started with Cosmic.</p>
+</div>
+<p>Teleport is our very own tiny library that is used for JSON serialization,
+validation, and generating documentation. At first this might seem like an odd
+set of features for a library, but they come quite naturally from the fact
+that Teleport is essentially a very simple static type system. All information
+that gets carried between Cosmic clients and servers is statically typed with
+the help of Teleport.</p>
+<p>Teleport is implemented as a collection of composable type objects. The
+composition of these objects mirrors the data it is meant to serialize and
+validate. One important feature of Teleport is that these type definitions, the
+schema, is also serializable. This makes it possible to use Teleport to
+serialize model properties, function definitions, and indeed, the whole API
+spec.</p>
+<p>Teleport makes it easy to define custom types, a feature used by Cosmic.</p>
+<p>The Teleport docs will teach you to import from the <tt class="xref py py-mod docutils literal"><span class="pre">teleport</span></tt> module:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">teleport</span> <span class="kn">import</span> <span class="o">*</span>
+</pre></div>
+</div>
+<p>In Cosmic, you should import from <tt class="xref py py-mod docutils literal"><span class="pre">cosmic.types</span></tt>:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">cosmic.types</span> <span class="kn">import</span> <span class="o">*</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="hypermedia-with-json-hal">
+<span id="hal"></span><h2>Hypermedia with JSON HAL<a class="headerlink" href="#hypermedia-with-json-hal" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="http://stateless.co/hal_specification.html">JSON HAL</a> is a compact
+specification for linking REST-ful resources as well as returning multiple
+embedded resources in one call (this is used by the <a class="reference internal" href="guide.html#get-list"><em>get_list</em></a> endpoint).
+Note that HAL recommends <tt class="docutils literal"><span class="pre">application/hal+json</span></tt> for the <em>Content-Type</em>
+header, but currently Cosmic responds only to <tt class="docutils literal"><span class="pre">application/json</span></tt>.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Overview</a><ul>
+<li><a class="reference internal" href="#rest-and-rpc">REST and RPC</a></li>
+<li><a class="reference internal" href="#architecture">Architecture</a></li>
+<li><a class="reference internal" href="#built-on-teleport">Built on Teleport</a></li>
+<li><a class="reference internal" href="#hypermedia-with-json-hal">Hypermedia with JSON HAL</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Cosmic in Python</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="tutorial.html"
+                        title="next chapter">Tutorial</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/overview.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tutorial.html" title="Tutorial"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Cosmic in Python"
+             >previous</a> |</li>
+        <li><a href="index.html">Cosmic 0.4.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, 8313547 Canada Inc..
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
