@@ -1,0 +1,1 @@
+django-admin.py startproject --template=/PATH_TO_TEMPLATE/django_newtemplate/project_template PROJECT_NAME
