@@ -1,0 +1,106 @@
+Metadata-Version: 2.0
+Name: mistral
+Version: 0.0.4
+Summary: Mistral Project
+Home-page: https://launchpad.net/mistral
+Author: Openstack Mistral Team
+Author-email: openstack-dev@lists.openstack.org
+License: Apache License, Version 2.0
+Platform: UNKNOWN
+Requires-Dist: pbr (>=0.6,!=0.7,<1.0)
+Requires-Dist: eventlet (>=0.13.0)
+Requires-Dist: PyYAML (>=3.1.0)
+Requires-Dist: pecan (>=0.4.5)
+Requires-Dist: WSME (>=0.6)
+Requires-Dist: amqplib (>=0.6.1)
+Requires-Dist: Babel (>=1.3)
+Requires-Dist: iso8601 (>=0.1.9)
+Requires-Dist: posix-ipc
+Requires-Dist: croniter (>=0.3.4)
+Requires-Dist: requests (>=1.1)
+Requires-Dist: kombu (>=2.4.8)
+Requires-Dist: oslo.config (>=1.2.0)
+Requires-Dist: oslo.messaging (>=1.3.0)
+Requires-Dist: oslotest
+Requires-Dist: paramiko (>=1.9.0)
+Requires-Dist: python-keystoneclient (>=0.7.0)
+Requires-Dist: networkx (>=1.8)
+Requires-Dist: six (>=1.6.0)
+Requires-Dist: SQLAlchemy (>=0.7.8,<=0.9.99)
+Requires-Dist: stevedore (>=0.14)
+Requires-Dist: yaql (==0.2.1)
+
+Mistral
+=======
+
+Task Orchestration and Scheduling service for OpenStack cloud
+
+
+Installation
+------------
+
+First of all, in a shell run:
+
+    tox
+
+This will install necessary virtual environments and run all the project tests. Installing virtual environments may take significant time (~10-15 mins).
+
+Running Mistral API server
+--------------------------
+
+To run Mistral API server perform the following command in a shell:
+
+    tox -evenv -- python mistral/cmd/launch.py --server api --config-file path_to_config*
+
+Note that an example configuration file can be found in etc/mistral.conf.sample.
+
+Running Mistral Engines
+-----------------------
+
+To run Mistral Engine perform the following command in a shell:
+
+    tox -evenv -- python mistral/cmd/launch.py --server engine --config-file path_to_config*
+
+Running Mistral Task Executors
+------------------------------
+To run Mistral Task Executor instance perform the following command in a shell:
+
+    tox -evenv -- python mistral/cmd/launch.py --server executor --config-file path_to_config
+
+Note that at least one Engine instance and one Executor instance should be running so that workflow tasks are processed by Mistral.
+
+Running Multiple Mistral Servers Under the Same Process
+-------------------------------------------------------
+To run more than one server (API, Engine, or Task Executor) on the same process, perform the following command in a shell:
+
+    tox -evenv -- python mistral/cmd/launch.py --server api,engine --config-file path_to_config
+
+The --server command line option can be a comma delimited list. The valid options are "all" (by default if not specified) or any combination of "api", "engine", and "executor". It's important to note that the "fake" transport for the rpc_backend defined in the config file should only be used if "all" the Mistral servers are launched on the same process. Otherwise, messages do not get delivered if the Mistral servers are launched on different processes because the "fake" transport is using an in process queue.
+
+Debugging
+---------
+
+To debug using a local engine and executor without dependencies such as RabbitMQ, create etc/mistral.conf with the following settings::
+
+    [DEFAULT]
+    rpc_backend = fake
+
+    [pecan]
+    auth_enable = False
+
+and run in pdb, PyDev or PyCharm::
+
+    mistral/cmd/launch.py --server all --config-file etc/mistral.conf --use-debugger
+
+Running examples
+----------------
+
+To run the examples find them in mistral-extra repository (https://github.com/stackforge/mistral-extra) and follow the instructions on each example.
+
+Tests
+-----
+
+Information about automated tests for Mistral can be found here: https://wiki.openstack.org/wiki/Mistral/Testing
+
+
+
