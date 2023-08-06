@@ -1,0 +1,166 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>antivirus.structures &mdash; edeposit.amqp.ftp 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="edeposit.amqp.ftp 0.1.1 documentation" href="../../index.html" />
+    <link rel="up" title="antivirus" href="../antivirus.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">edeposit.amqp.ftp 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../antivirus.html" accesskey="U">antivirus</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for antivirus.structures</h1><div class="highlight"><pre>
+<span class="c">#! /usr/bin/env python</span>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="c">#</span>
+<span class="c"># Interpreter version: python 2.7</span>
+<span class="c">#</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Definitions of the communication structures used in edeposit.amqp.antivirus</span>
+<span class="sd">project.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c"># Imports =====================================================================</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">namedtuple</span>
+
+
+<span class="c"># Requests ====================================================================</span>
+<div class="viewcode-block" id="ScanFile"><a class="viewcode-back" href="../../api/antivirus.structures.html#antivirus.structures.ScanFile">[docs]</a><span class="k">class</span> <span class="nc">ScanFile</span><span class="p">(</span><span class="n">namedtuple</span><span class="p">(</span><span class="s">&quot;ScanFile&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s">&quot;filename&quot;</span><span class="p">,</span> <span class="s">&quot;b64_data&quot;</span><span class="p">])):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Request to scan file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        filename (str): Path of the file at your system. It will be used in</span>
+<span class="sd">                 result structure.</span>
+<span class="sd">        b64_data (str): Base64 encoded content of the file.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        object: :class:`ScanResult`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="UpdateDatabase"><a class="viewcode-back" href="../../api/antivirus.structures.html#antivirus.structures.UpdateDatabase">[docs]</a><span class="k">class</span> <span class="nc">UpdateDatabase</span><span class="p">(</span><span class="n">namedtuple</span><span class="p">(</span><span class="s">&quot;UpdateDatabase&quot;</span><span class="p">,</span> <span class="p">[])):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Request to update clamav database (= to run ``freshclam`` program).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        object: :class:`DatabaseUpdated`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+
+<span class="c"># Responses ===================================================================</span></div>
+<div class="viewcode-block" id="ScanResult"><a class="viewcode-back" href="../../api/antivirus.structures.html#antivirus.structures.ScanResult">[docs]</a><span class="k">class</span> <span class="nc">ScanResult</span><span class="p">(</span><span class="n">namedtuple</span><span class="p">(</span><span class="s">&quot;ScanResult&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s">&quot;filename&quot;</span><span class="p">,</span> <span class="s">&quot;result&quot;</span><span class="p">])):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Result of the file scan.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        filename (str): Name of the file as was specified in :class:`ScanFile`</span>
+<span class="sd">                 request.</span>
+<span class="sd">        result (dict): Dictionary in following format:</span>
+
+<span class="sd">    ::</span>
+
+<span class="sd">        {</span>
+<span class="sd">            &quot;local_path&quot;: (&quot;RESULT&quot;, &quot;TYPE&quot;)</span>
+<span class="sd">        }</span>
+
+<span class="sd">    Where `RESULT` is &quot;FOUND&quot; or string like that and `TYPE` is name of the</span>
+<span class="sd">    malware.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        When no malware is found, :attr:`result` is blank dict.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="DatabaseUpdated"><a class="viewcode-back" href="../../api/antivirus.structures.html#antivirus.structures.DatabaseUpdated">[docs]</a><span class="k">class</span> <span class="nc">DatabaseUpdated</span><span class="p">(</span><span class="n">namedtuple</span><span class="p">(</span><span class="s">&quot;DatabaseUpdated&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s">&quot;log&quot;</span><span class="p">])):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Response to :class:`UpdateDatabase`.</span>
+
+<span class="sd">    Attr:</span>
+<span class="sd">        log (str): Log of the ``freshclam`` run.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">edeposit.amqp.ftp 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../antivirus.html" >antivirus</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014 E-deposit team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
