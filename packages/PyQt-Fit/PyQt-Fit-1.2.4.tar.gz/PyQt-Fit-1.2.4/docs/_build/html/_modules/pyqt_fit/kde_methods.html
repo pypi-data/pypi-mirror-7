@@ -1,0 +1,486 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pyqt_fit.kde_methods &mdash; PyQt-Fit 1.2.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.2.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyQt-Fit 1.2.3 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PyQt-Fit 1.2.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pyqt_fit.kde_methods</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">:Author: Pierre Barbier de Reuille &lt;pierre.barbierdereuille@gmail.com&gt;</span>
+
+<span class="sd">This module contains a set of methods to compute univariate KDEs. See the objects in the :py:mod:`pyqt_fit.kde` module </span>
+<span class="sd">for more details on these methods.</span>
+
+<span class="sd">References:</span>
+<span class="sd">``````````</span>
+<span class="sd">.. [1] Jones, M. C. 1993. Simple boundary correction for kernel density</span>
+<span class="sd">    estimation. Statistics and Computing 3: 135--146.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">fftpack</span>
+<span class="kn">from</span> <span class="nn">.compat</span> <span class="kn">import</span> <span class="n">irange</span>
+
+<div class="viewcode-block" id="generate_grid"><a class="viewcode-back" href="../../mod_kde_methods.html#pyqt_fit.kde_methods.generate_grid">[docs]</a><span class="k">def</span> <span class="nf">generate_grid</span><span class="p">(</span><span class="n">kde</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cut</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Helper method returning a regular grid on the domain of the KDE.</span>
+
+<span class="sd">    :param KDE1D kde: Object describing the KDE computation</span>
+<span class="sd">    :param int N: Number of points in the grid</span>
+<span class="sd">    :param float cut: for unbounded domains, how far past the maximum should the grid extend to, in term of KDE</span>
+<span class="sd">        bandwidth</span>
+
+<span class="sd">    :return: A vector of N regularly spaced points</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">N</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">10</span>
+    <span class="k">if</span> <span class="n">cut</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">cut</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="k">if</span> <span class="n">kde</span><span class="o">.</span><span class="n">lower</span> <span class="o">==</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+        <span class="n">lower</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">kde</span><span class="o">.</span><span class="n">xdata</span><span class="p">)</span> <span class="o">-</span> <span class="n">cut</span> <span class="o">*</span> <span class="n">kde</span><span class="o">.</span><span class="n">bandwidth</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">lower</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">lower</span>
+    <span class="k">if</span> <span class="n">kde</span><span class="o">.</span><span class="n">upper</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+        <span class="n">upper</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">kde</span><span class="o">.</span><span class="n">xdata</span><span class="p">)</span> <span class="o">+</span> <span class="n">cut</span> <span class="o">*</span> <span class="n">kde</span><span class="o">.</span><span class="n">bandwidth</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">upper</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">upper</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="n">lower</span><span class="p">:</span><span class="n">upper</span><span class="p">:</span><span class="n">N</span> <span class="o">*</span> <span class="mi">1j</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="KDE1DMethod"><a class="viewcode-back" href="../../mod_kde_methods.html#pyqt_fit.kde_methods.KDE1DMethod">[docs]</a><span class="k">class</span> <span class="nc">KDE1DMethod</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class providing a default grid method and a default method for unbounded evaluation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="KDE1DMethod.unbounded"><a class="viewcode-back" href="../../mod_kde_methods.html#pyqt_fit.kde_methods.KDE1DMethod.unbounded">[docs]</a>    <span class="k">def</span> <span class="nf">unbounded</span><span class="p">(</span><span class="n">kde</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method to use if there is, effectively, no bounds</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">xdata</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">xdata</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">points</span><span class="p">)[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+
+        <span class="n">bw</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">bandwidth</span> <span class="o">*</span> <span class="n">kde</span><span class="o">.</span><span class="n">lambdas</span>
+
+        <span class="n">z</span> <span class="o">=</span> <span class="p">(</span><span class="n">points</span> <span class="o">-</span> <span class="n">xdata</span><span class="p">)</span> <span class="o">/</span> <span class="n">bw</span>
+
+        <span class="n">kernel</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">kernel</span>
+
+        <span class="n">terms</span> <span class="o">=</span> <span class="n">kernel</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+
+        <span class="n">terms</span> <span class="o">*=</span> <span class="n">kde</span><span class="o">.</span><span class="n">weights</span> <span class="o">/</span> <span class="n">bw</span>
+
+        <span class="n">output</span> <span class="o">=</span> <span class="n">terms</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">output</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">/=</span> <span class="n">kde</span><span class="o">.</span><span class="n">total_weights</span>
+
+        <span class="k">return</span> <span class="n">output</span>
+</div>
+    <span class="n">__call__</span> <span class="o">=</span> <span class="n">unbounded</span>
+
+<div class="viewcode-block" id="KDE1DMethod.default_grid"><a class="viewcode-back" href="../../mod_kde_methods.html#pyqt_fit.kde_methods.KDE1DMethod.default_grid">[docs]</a>    <span class="k">def</span> <span class="nf">default_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kde</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cut</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate the method on a grid spanning the whole domain of the KDE and containing N points.</span>
+
+<span class="sd">        :param KDE1D kde: KDE object</span>
+<span class="sd">        :param int N: Number of points of the grid</span>
+<span class="sd">        :param float cut: Cutting points for the unbounded domain (see :py:func:`generate_grid`)</span>
+
+<span class="sd">        :returns: A tuple with the grid points and the estimated values on these points</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">generate_grid</span><span class="p">(</span><span class="n">kde</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">cut</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">g</span><span class="p">,</span> <span class="bp">self</span><span class="p">(</span><span class="n">kde</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">grid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kde</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cut</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_grid</span><span class="p">(</span><span class="n">kde</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">cut</span><span class="p">)</span>
+
+<div class="viewcode-block" id="KDE1DMethod.__str__"><a class="viewcode-back" href="../../mod_kde_methods.html#pyqt_fit.kde_methods.KDE1DMethod.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the name of the method</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+</div></div>
+<div class="viewcode-block" id="RenormalizationMethod"><a class="viewcode-back" href="../../mod_kde_methods.html#pyqt_fit.kde_methods.RenormalizationMethod">[docs]</a><span class="k">class</span> <span class="nc">RenormalizationMethod</span><span class="p">(</span><span class="n">KDE1DMethod</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    This method consists in using the normal kernel method, but renormalize</span>
+<span class="sd">    to only take into account the part of the kernel within the domain of</span>
+<span class="sd">    the density [1]_.</span>
+
+<span class="sd">    The kernel is then replaced with:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \hat{K}(x;X,h,L,U) \triangleq \frac{1}{a_0\left(\frac{L-x}{h},</span>
+<span class="sd">        \frac{U-x}{h}\right)} K\left(\frac{x-X}{h}\right)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;renormalization&#39;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="n">kde</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">kde</span><span class="o">.</span><span class="n">bounded</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">KDE1DMethod</span><span class="o">.</span><span class="n">unbounded</span><span class="p">(</span><span class="n">kde</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+
+        <span class="n">xdata</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">xdata</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">points</span><span class="p">)[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+
+        <span class="n">bw</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">bandwidth</span> <span class="o">*</span> <span class="n">kde</span><span class="o">.</span><span class="n">lambdas</span>
+
+        <span class="n">l</span> <span class="o">=</span> <span class="p">(</span><span class="n">kde</span><span class="o">.</span><span class="n">lower</span> <span class="o">-</span> <span class="n">points</span><span class="p">)</span> <span class="o">/</span> <span class="n">bw</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="p">(</span><span class="n">kde</span><span class="o">.</span><span class="n">upper</span> <span class="o">-</span> <span class="n">points</span><span class="p">)</span> <span class="o">/</span> <span class="n">bw</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="p">(</span><span class="n">points</span> <span class="o">-</span> <span class="n">xdata</span><span class="p">)</span> <span class="o">/</span> <span class="n">bw</span>
+
+        <span class="n">kernel</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">kernel</span>
+
+        <span class="n">a1</span> <span class="o">=</span> <span class="p">(</span><span class="n">kernel</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="o">-</span> <span class="n">kernel</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">l</span><span class="p">))</span>
+
+        <span class="n">terms</span> <span class="o">=</span> <span class="n">kernel</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">*</span> <span class="p">((</span><span class="n">kde</span><span class="o">.</span><span class="n">weights</span> <span class="o">/</span> <span class="n">bw</span><span class="p">)</span> <span class="o">/</span> <span class="n">a1</span><span class="p">)</span>
+
+        <span class="n">output</span> <span class="o">=</span> <span class="n">terms</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">output</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">/=</span> <span class="n">kde</span><span class="o">.</span><span class="n">total_weights</span>
+
+        <span class="k">return</span> <span class="n">output</span>
+</div>
+<span class="n">renormalization</span> <span class="o">=</span> <span class="n">RenormalizationMethod</span><span class="p">()</span>
+
+<div class="viewcode-block" id="ReflectionMethod"><a class="viewcode-back" href="../../mod_kde_methods.html#pyqt_fit.kde_methods.ReflectionMethod">[docs]</a><span class="k">class</span> <span class="nc">ReflectionMethod</span><span class="p">(</span><span class="n">KDE1DMethod</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    This method consist in simulating the reflection of the data left and</span>
+<span class="sd">    right of the boundaries. If one of the boundary is infinite, then the</span>
+<span class="sd">    data is not reflected in that direction. To this purpose, the kernel is</span>
+<span class="sd">    replaced with:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \hat{K}(x; X, h, L, U) = K\left(\frac{x-X}{h}\right)</span>
+<span class="sd">        + K\left(\frac{x+X-2L}{h}\right)</span>
+<span class="sd">        + K\left(\frac{x+X-2U}{h}\right)</span>
+
+<span class="sd">    When computing grids, if the bandwidth is constant, the result is</span>
+<span class="sd">    computing using CDT.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;reflection&#39;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="n">kde</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">kde</span><span class="o">.</span><span class="n">bounded</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">KDE1DMethod</span><span class="o">.</span><span class="n">unbounded</span><span class="p">(</span><span class="n">kde</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+
+        <span class="n">xdata</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">xdata</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">points</span><span class="p">)[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+
+        <span class="c"># Make sure points are between the bounds, with reflection if needed</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">points</span> <span class="o">&lt;</span> <span class="n">kde</span><span class="o">.</span><span class="n">lower</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="n">points</span> <span class="o">&gt;</span> <span class="n">kde</span><span class="o">.</span><span class="n">upper</span><span class="p">):</span>
+            <span class="n">span</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">upper</span> <span class="o">-</span> <span class="n">kde</span><span class="o">.</span><span class="n">lower</span>
+            <span class="n">points</span> <span class="o">=</span> <span class="n">points</span> <span class="o">-</span> <span class="p">(</span><span class="n">kde</span><span class="o">.</span><span class="n">lower</span> <span class="o">+</span> <span class="n">span</span><span class="p">)</span>
+            <span class="n">points</span> <span class="o">%=</span> <span class="mi">2</span><span class="o">*</span><span class="n">span</span>
+            <span class="n">points</span> <span class="o">-=</span> <span class="n">kde</span><span class="o">.</span><span class="n">lower</span> <span class="o">+</span> <span class="n">span</span>
+            <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+
+        <span class="n">bw</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">bandwidth</span> <span class="o">*</span> <span class="n">kde</span><span class="o">.</span><span class="n">lambdas</span>
+
+        <span class="n">z</span> <span class="o">=</span> <span class="p">(</span><span class="n">points</span> <span class="o">-</span> <span class="n">xdata</span><span class="p">)</span> <span class="o">/</span> <span class="n">bw</span>
+        <span class="n">z1</span> <span class="o">=</span> <span class="p">(</span><span class="n">points</span> <span class="o">+</span> <span class="n">xdata</span><span class="p">)</span> <span class="o">/</span> <span class="n">bw</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">lower</span>
+        <span class="n">U</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">upper</span>
+
+        <span class="n">kernel</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">kernel</span>
+
+        <span class="n">terms</span> <span class="o">=</span> <span class="n">kernel</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">L</span> <span class="o">&gt;</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+            <span class="n">terms</span> <span class="o">+=</span> <span class="n">kernel</span><span class="p">(</span><span class="n">z1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">L</span> <span class="o">/</span> <span class="n">bw</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">U</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+            <span class="n">terms</span> <span class="o">+=</span> <span class="n">kernel</span><span class="p">(</span><span class="n">z1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">U</span> <span class="o">/</span> <span class="n">bw</span><span class="p">))</span>
+
+        <span class="n">terms</span> <span class="o">*=</span> <span class="n">kde</span><span class="o">.</span><span class="n">weights</span> <span class="o">/</span> <span class="n">bw</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">terms</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">output</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">/=</span> <span class="n">kde</span><span class="o">.</span><span class="n">total_weights</span>
+
+        <span class="k">return</span> <span class="n">output</span>
+
+    <span class="k">def</span> <span class="nf">grid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kde</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cut</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        DCT-based estimation of KDE estimation, i.e. with reflection boundary</span>
+<span class="sd">        conditions. This works only for fixed bandwidth (i.e. lambdas = 1) and</span>
+<span class="sd">        gaussian kernel.</span>
+
+<span class="sd">        For open domains, the grid is taken with 3 times the bandwidth as extra</span>
+<span class="sd">        space to remove the boundary problems.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">kde</span><span class="o">.</span><span class="n">lambdas</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_grid</span><span class="p">(</span><span class="n">kde</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">cut</span><span class="p">)</span>
+
+        <span class="n">bw</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">bandwidth</span> <span class="o">*</span> <span class="n">kde</span><span class="o">.</span><span class="n">lambdas</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">xdata</span>
+        <span class="k">if</span> <span class="n">N</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">N</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">14</span>
+
+        <span class="k">if</span> <span class="n">kde</span><span class="o">.</span><span class="n">lower</span> <span class="o">==</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+            <span class="n">lower</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">-</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">kde</span><span class="o">.</span><span class="n">bandwidth</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">lower</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">lower</span>
+        <span class="k">if</span> <span class="n">kde</span><span class="o">.</span><span class="n">upper</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+            <span class="n">upper</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">kde</span><span class="o">.</span><span class="n">bandwidth</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">upper</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">upper</span>
+
+        <span class="n">R</span> <span class="o">=</span> <span class="n">upper</span> <span class="o">-</span> <span class="n">lower</span>
+
+        <span class="c"># Histogram the data to get a crude first approximation of the density</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">weights</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">weights</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+            <span class="n">weights</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">DataHist</span><span class="p">,</span> <span class="n">bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">N</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="p">(</span><span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">),</span>
+                                      <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">)</span>
+        <span class="n">DataHist</span> <span class="o">=</span> <span class="n">DataHist</span> <span class="o">/</span> <span class="n">kde</span><span class="o">.</span><span class="n">total_weights</span>
+        <span class="n">DCTData</span> <span class="o">=</span> <span class="n">fftpack</span><span class="o">.</span><span class="n">dct</span><span class="p">(</span><span class="n">DataHist</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">kde</span><span class="o">.</span><span class="n">kernel</span><span class="p">,</span> <span class="s">&#39;dct&#39;</span><span class="p">):</span>
+            <span class="n">t_star</span> <span class="o">=</span> <span class="n">bw</span> <span class="o">/</span> <span class="n">R</span>
+            <span class="n">gp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">t_star</span>
+            <span class="n">smth</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">dct</span><span class="p">(</span><span class="n">gp</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">gp</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">R</span> <span class="o">/</span> <span class="n">N</span>
+            <span class="n">smth</span> <span class="o">=</span> <span class="n">fftpack</span><span class="o">.</span><span class="n">dct</span><span class="p">(</span><span class="n">kde</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">gp</span> <span class="o">/</span> <span class="n">bw</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">gp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">gp</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="n">bw</span><span class="p">)</span>
+
+        <span class="c"># Smooth the DCTransformed data using t_star</span>
+        <span class="n">SmDCTData</span> <span class="o">=</span> <span class="n">DCTData</span> <span class="o">*</span> <span class="n">smth</span>
+        <span class="c"># Inverse DCT to get density</span>
+        <span class="n">density</span> <span class="o">=</span> <span class="n">fftpack</span><span class="o">.</span><span class="n">idct</span><span class="p">(</span><span class="n">SmDCTData</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">R</span><span class="p">)</span>
+        <span class="n">mesh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="n">bins</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">bins</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">irange</span><span class="p">(</span><span class="n">N</span><span class="p">)])</span>
+
+        <span class="k">return</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">density</span>
+</div>
+<span class="n">reflection</span> <span class="o">=</span> <span class="n">ReflectionMethod</span><span class="p">()</span>
+
+<div class="viewcode-block" id="LinearCombinationMethod"><a class="viewcode-back" href="../../mod_kde_methods.html#pyqt_fit.kde_methods.LinearCombinationMethod">[docs]</a><span class="k">class</span> <span class="nc">LinearCombinationMethod</span><span class="p">(</span><span class="n">KDE1DMethod</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    This method uses the linear combination correction published in [1]_.</span>
+
+<span class="sd">    The estimation is done with a modified kernel given by:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        K_r(x;X,h,L,U) = \frac{a_2(l,u) - a_1(-u, -l) z}{a_2(l,u)a_0(l,u)</span>
+<span class="sd">        - a_1(-u,-l)^2} K(z)</span>
+
+<span class="sd">        z = \frac{x-X}{h} \qquad l = \frac{L-x}{h} \qquad u = \frac{U-x}{h}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;linear combination&#39;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="n">kde</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">kde</span><span class="o">.</span><span class="n">bounded</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">KDE1DMethod</span><span class="o">.</span><span class="n">unbounded</span><span class="p">(</span><span class="n">kde</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+
+        <span class="n">xdata</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">xdata</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">points</span><span class="p">)[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+
+        <span class="n">bw</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">bandwidth</span> <span class="o">*</span> <span class="n">kde</span><span class="o">.</span><span class="n">lambdas</span>
+
+        <span class="n">l</span> <span class="o">=</span> <span class="p">(</span><span class="n">kde</span><span class="o">.</span><span class="n">lower</span> <span class="o">-</span> <span class="n">points</span><span class="p">)</span> <span class="o">/</span> <span class="n">bw</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="p">(</span><span class="n">kde</span><span class="o">.</span><span class="n">upper</span> <span class="o">-</span> <span class="n">points</span><span class="p">)</span> <span class="o">/</span> <span class="n">bw</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="p">(</span><span class="n">points</span> <span class="o">-</span> <span class="n">xdata</span><span class="p">)</span> <span class="o">/</span> <span class="n">bw</span>
+
+        <span class="n">kernel</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">kernel</span>
+
+        <span class="n">a0</span> <span class="o">=</span> <span class="n">kernel</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="o">-</span> <span class="n">kernel</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+        <span class="n">a1</span> <span class="o">=</span> <span class="n">kernel</span><span class="o">.</span><span class="n">pm1</span><span class="p">(</span><span class="o">-</span><span class="n">l</span><span class="p">)</span> <span class="o">-</span> <span class="n">kernel</span><span class="o">.</span><span class="n">pm1</span><span class="p">(</span><span class="o">-</span><span class="n">u</span><span class="p">)</span>
+        <span class="n">a2</span> <span class="o">=</span> <span class="n">kernel</span><span class="o">.</span><span class="n">pm2</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="o">-</span> <span class="n">kernel</span><span class="o">.</span><span class="n">pm2</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+
+        <span class="n">denom</span> <span class="o">=</span> <span class="n">a2</span> <span class="o">*</span> <span class="n">a0</span> <span class="o">-</span> <span class="n">a1</span> <span class="o">*</span> <span class="n">a1</span>
+        <span class="n">upper</span> <span class="o">=</span> <span class="n">a2</span> <span class="o">-</span> <span class="n">a1</span> <span class="o">*</span> <span class="n">z</span>
+
+        <span class="n">upper</span> <span class="o">/=</span> <span class="n">denom</span>
+        <span class="n">upper</span> <span class="o">*=</span> <span class="p">(</span><span class="n">kde</span><span class="o">.</span><span class="n">weights</span> <span class="o">/</span> <span class="n">bw</span><span class="p">)</span> <span class="o">*</span> <span class="n">kernel</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+
+        <span class="n">output</span> <span class="o">=</span> <span class="n">upper</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">output</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">/=</span> <span class="n">kde</span><span class="o">.</span><span class="n">total_weights</span>
+
+        <span class="k">return</span> <span class="n">output</span>
+</div>
+<span class="n">linear_combination</span> <span class="o">=</span> <span class="n">LinearCombinationMethod</span><span class="p">()</span>
+
+<div class="viewcode-block" id="CyclicMethod"><a class="viewcode-back" href="../../mod_kde_methods.html#pyqt_fit.kde_methods.CyclicMethod">[docs]</a><span class="k">class</span> <span class="nc">CyclicMethod</span><span class="p">(</span><span class="n">KDE1DMethod</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    This method assumes cyclic boundary conditions and works only for</span>
+<span class="sd">    closed boundaries.</span>
+
+<span class="sd">    The estimation is done with a modified kernel given by:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \hat{K}(x; X, h, L, U) = K\left(\frac{x-X}{h}\right)</span>
+<span class="sd">        + K\left(\frac{x-X-(U-L)}{h}\right)</span>
+<span class="sd">        + K\left(\frac{x-X+(U-L)}{h}\right)</span>
+
+<span class="sd">    When computing grids, if the bandwidth is constant, the result is</span>
+<span class="sd">    computing using FFT.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;cyclic&#39;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="n">kde</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">kde</span><span class="o">.</span><span class="n">closed</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Cyclic boundary conditions can only be used with &quot;</span>
+                             <span class="s">&quot;closed domains.&quot;</span><span class="p">)</span>
+
+        <span class="n">xdata</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">xdata</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">points</span><span class="p">)[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+
+        <span class="c"># Make sure points are between the bounds</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">points</span> <span class="o">&lt;</span> <span class="n">kde</span><span class="o">.</span><span class="n">lower</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="n">points</span> <span class="o">&gt;</span> <span class="n">kde</span><span class="o">.</span><span class="n">upper</span><span class="p">):</span>
+            <span class="n">points</span> <span class="o">=</span> <span class="n">points</span> <span class="o">-</span> <span class="n">kde</span><span class="o">.</span><span class="n">lower</span>
+            <span class="n">points</span> <span class="o">%=</span> <span class="n">kde</span><span class="o">.</span><span class="n">upper</span> <span class="o">-</span> <span class="n">kde</span><span class="o">.</span><span class="n">lower</span>
+            <span class="n">points</span> <span class="o">+=</span> <span class="n">kde</span><span class="o">.</span><span class="n">lower</span>
+
+        <span class="n">bw</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">bandwidth</span> <span class="o">*</span> <span class="n">kde</span><span class="o">.</span><span class="n">lambdas</span>
+
+        <span class="n">z</span> <span class="o">=</span> <span class="p">(</span><span class="n">points</span> <span class="o">-</span> <span class="n">xdata</span><span class="p">)</span> <span class="o">/</span> <span class="n">bw</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">lower</span>
+        <span class="n">U</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">upper</span>
+
+        <span class="n">span</span> <span class="o">=</span> <span class="n">U</span> <span class="o">-</span> <span class="n">L</span>
+
+        <span class="n">kernel</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">kernel</span>
+
+        <span class="n">terms</span> <span class="o">=</span> <span class="n">kernel</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+        <span class="n">terms</span> <span class="o">+=</span> <span class="n">kernel</span><span class="p">(</span><span class="n">z</span> <span class="o">-</span> <span class="p">(</span><span class="n">span</span> <span class="o">/</span> <span class="n">bw</span><span class="p">))</span>
+        <span class="n">terms</span> <span class="o">+=</span> <span class="n">kernel</span><span class="p">(</span><span class="n">z</span> <span class="o">+</span> <span class="p">(</span><span class="n">span</span> <span class="o">/</span> <span class="n">bw</span><span class="p">))</span>
+
+        <span class="n">terms</span> <span class="o">*=</span> <span class="n">kde</span><span class="o">.</span><span class="n">weights</span> <span class="o">/</span> <span class="n">bw</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">terms</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">output</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">/=</span> <span class="n">kde</span><span class="o">.</span><span class="n">total_weights</span>
+
+        <span class="k">return</span> <span class="n">output</span>
+
+    <span class="k">def</span> <span class="nf">grid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kde</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cut</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        FFT-based estimation of KDE estimation, i.e. with cyclic boundary</span>
+<span class="sd">        conditions. This works only for closed domains, fixed bandwidth</span>
+<span class="sd">        (i.e. lambdas = 1) and gaussian kernel.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">kde</span><span class="o">.</span><span class="n">lambdas</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_grid</span><span class="p">(</span><span class="n">kde</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">cut</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">kde</span><span class="o">.</span><span class="n">closed</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Error, cyclic boundary conditions require &quot;</span>
+                             <span class="s">&quot;a closed domain.&quot;</span><span class="p">)</span>
+        <span class="n">bw</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">bandwidth</span> <span class="o">*</span> <span class="n">kde</span><span class="o">.</span><span class="n">lambdas</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">xdata</span>
+        <span class="k">if</span> <span class="n">N</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">N</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">14</span>
+        <span class="n">lower</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">lower</span>
+        <span class="n">upper</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">upper</span>
+        <span class="n">R</span> <span class="o">=</span> <span class="n">upper</span> <span class="o">-</span> <span class="n">lower</span>
+        <span class="n">dN</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">N</span>
+        <span class="n">mesh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="n">lower</span><span class="p">:</span><span class="n">upper</span> <span class="o">+</span> <span class="n">dN</span><span class="p">:(</span><span class="n">N</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1j</span><span class="p">]</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">weights</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">weights</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+            <span class="n">weights</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">DataHist</span><span class="p">,</span> <span class="n">bin_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">mesh</span> <span class="o">-</span> <span class="n">dN</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+                                           <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">)</span>
+        <span class="n">DataHist</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">DataHist</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">DataHist</span> <span class="o">=</span> <span class="n">DataHist</span> <span class="o">/</span> <span class="n">kde</span><span class="o">.</span><span class="n">total_weights</span>
+        <span class="n">FFTData</span> <span class="o">=</span> <span class="n">fftpack</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">DataHist</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">kde</span><span class="o">.</span><span class="n">kernel</span><span class="p">,</span> <span class="s">&#39;fft&#39;</span><span class="p">):</span>
+            <span class="n">t_star</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">bw</span> <span class="o">/</span> <span class="n">R</span><span class="p">)</span>
+            <span class="n">gp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="o">-</span> <span class="n">N</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">t_star</span><span class="p">,</span> <span class="n">N</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">smth</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">gp</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">gp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="o">-</span> <span class="n">N</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">R</span> <span class="o">/</span> <span class="n">N</span><span class="p">,</span> <span class="n">N</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">smth</span> <span class="o">=</span> <span class="n">fftpack</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">kde</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">gp</span> <span class="o">/</span> <span class="n">bw</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">gp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">gp</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="n">bw</span><span class="p">)</span>
+        <span class="n">SmoothFFTData</span> <span class="o">=</span> <span class="n">FFTData</span> <span class="o">*</span> <span class="n">smth</span>
+        <span class="n">density</span> <span class="o">=</span> <span class="n">fftpack</span><span class="o">.</span><span class="n">ifft</span><span class="p">(</span><span class="n">SmoothFFTData</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">mesh</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">mesh</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">mesh</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="n">density</span><span class="o">.</span><span class="n">real</span>
+</div>
+<span class="n">cyclic</span> <span class="o">=</span> <span class="n">CyclicMethod</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PyQt-Fit 1.2.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Barbier de Reuille, Pierre.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

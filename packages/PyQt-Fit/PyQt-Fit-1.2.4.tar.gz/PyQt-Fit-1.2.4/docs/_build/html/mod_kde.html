@@ -1,0 +1,473 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Module pyqt_fit.kde &mdash; PyQt-Fit 1.2.3 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.2.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyQt-Fit 1.2.3 documentation" href="index.html" />
+    <link rel="up" title="Modules of PyQt-Fit" href="modules.html" />
+    <link rel="next" title="Module pyqt_fit.kde_methods" href="mod_kde_methods.html" />
+    <link rel="prev" title="Module pyqt_fit.kernel_smoothing" href="mod_kernel_smoothing.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="mod_kde_methods.html" title="Module pyqt_fit.kde_methods"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="mod_kernel_smoothing.html" title="Module pyqt_fit.kernel_smoothing"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">PyQt-Fit 1.2.3 documentation</a> &raquo;</li>
+          <li><a href="modules.html" accesskey="U">Modules of PyQt-Fit</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="math">
+\[\DeclareMathOperator{\erf}{erf}
+\DeclareMathOperator{\argmin}{argmin}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\n}{\boldsymbol{n}}\]</div>
+<div class="section" id="module-pyqt_fit.kde">
+<span id="module-pyqt-fit-kde"></span><h1>Module <a class="reference internal" href="#module-pyqt_fit.kde" title="pyqt_fit.kde"><tt class="xref py py-mod docutils literal"><span class="pre">pyqt_fit.kde</span></tt></a><a class="headerlink" href="#module-pyqt_fit.kde" title="Permalink to this headline">¶</a></h1>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Author:</th><td class="field-body">Pierre Barbier de Reuille &lt;<a class="reference external" href="mailto:pierre&#46;barbierdereuille&#37;&#52;&#48;gmail&#46;com">pierre<span>&#46;</span>barbierdereuille<span>&#64;</span>gmail<span>&#46;</span>com</a>&gt;</td>
+</tr>
+</tbody>
+</table>
+<p>Module implementing kernel-based estimation of density of probability.</p>
+<div class="section" id="kernel-density-estimation-methods">
+<h2>Kernel Density Estimation Methods<a class="headerlink" href="#kernel-density-estimation-methods" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pyqt_fit.kde.KDE1D">
+<em class="property">class </em><tt class="descclassname">pyqt_fit.kde.</tt><tt class="descname">KDE1D</tt><big>(</big><em>xdata</em>, <em>**kwords</em><big>)</big><a class="reference internal" href="_modules/pyqt_fit/kde.html#KDE1D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyqt_fit.kde.KDE1D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform a kernel based density estimation in 1D, possibly on a bounded
+domain <span class="math">\([L,U]\)</span>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>data</strong> (<em>ndarray</em>) &#8211; 1D array with the data points</td>
+</tr>
+</tbody>
+</table>
+<p>Any other named argument will be equivalent to setting the property
+after the fact. For example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">xs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">k</span> <span class="o">=</span> <span class="n">KDE1D</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>will be equivalent to:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">k</span> <span class="o">=</span> <span class="n">KDE1D</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">k</span><span class="o">.</span><span class="n">lower</span> <span class="o">=</span> <span class="mi">0</span>
+</pre></div>
+</div>
+<p>The method rely on an estimator of kernel density given by:</p>
+<div class="math">
+\[f(x) \triangleq \frac{1}{hW} \sum_{i=1}^n \frac{w_i}{\lambda_i}
+K\left(\frac{X-x}{h\lambda_i}\right)\]\[W = \sum_{i=1}^n w_i\]</div>
+<p>where <span class="math">\(h\)</span> is the bandwidth of the kernel (<a class="reference internal" href="#pyqt_fit.kde.KDE1D.bandwidth" title="pyqt_fit.kde.KDE1D.bandwidth"><tt class="xref py py-attr docutils literal"><span class="pre">bandwidth</span></tt></a>),
+and <span class="math">\(K\)</span> is the kernel used for the density estimation
+(<a class="reference internal" href="#pyqt_fit.kde.KDE1D.kernel" title="pyqt_fit.kde.KDE1D.kernel"><tt class="xref py py-attr docutils literal"><span class="pre">kernel</span></tt></a>), <span class="math">\(w_i\)</span> are the weights of the data points
+(<a class="reference internal" href="#pyqt_fit.kde.KDE1D.weights" title="pyqt_fit.kde.KDE1D.weights"><tt class="xref py py-attr docutils literal"><span class="pre">weights</span></tt></a>) and <span class="math">\(\lambda_i\)</span> are the adaptation factor
+of the kernel width (<a class="reference internal" href="#pyqt_fit.kde.KDE1D.lambdas" title="pyqt_fit.kde.KDE1D.lambdas"><tt class="xref py py-attr docutils literal"><span class="pre">lambdas</span></tt></a>). <span class="math">\(K\)</span> should be a function
+such that:</p>
+<div class="math">
+\[\begin{split}\begin{array}{rcl}
+\int_\mathbb{R} K(z) &amp;=&amp; 1 \\
+\int_\mathbb{R} zK(z)dz &amp;=&amp; 0 \\
+\int_\mathbb{R} z^2K(z) dz &amp;&lt;&amp; \infty \quad (\approx 1)
+\end{array}\end{split}\]</div>
+<p>Which translates into, the function should be of sum 1 (i.e.
+a valid density of probability), of average 0 (i.e. centered) and of finite
+variance. It is even recommanded that the variance is close to 1 to give
+a uniform meaning to the bandwidth.</p>
+<p>If the domain of the density estimation is bounded to the interval
+<span class="math">\([L,U]\)</span> (i.e. from <a class="reference internal" href="#pyqt_fit.kde.KDE1D.lower" title="pyqt_fit.kde.KDE1D.lower"><tt class="xref py py-attr docutils literal"><span class="pre">lower</span></tt></a> to <a class="reference internal" href="#pyqt_fit.kde.KDE1D.upper" title="pyqt_fit.kde.KDE1D.upper"><tt class="xref py py-attr docutils literal"><span class="pre">upper</span></tt></a>), the density
+is then estimated with:</p>
+<div class="math">
+\[f(x) \triangleq \frac{1}{hW} \sum_{i=1}^n \frac{w_i}{\lambda_i}
+\hat{K}(x;X,\lambda_i h,L,U)\]</div>
+<p>Where <span class="math">\(\hat{K}\)</span> is a modified kernel that depends on the exact method
+used.</p>
+<p>To express the various methods, we will refer to the following functions:</p>
+<div class="math">
+\[a_0(l,u) = \int_l^u K(z) dz\]\[a_1(l,u) = \int_l^u zK(z) dz\]\[a_2(l,u) = \int_l^u z^2K(z) dz\]</div>
+<p>The default methods are implemented in the <cite>kde_methods</cite> module.</p>
+<dl class="method">
+<dt id="pyqt_fit.kde.KDE1D.__call__">
+<tt class="descname">__call__</tt><big>(</big><em>points</em>, <em>output=None</em><big>)</big><a class="reference internal" href="_modules/pyqt_fit/kde.html#KDE1D.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyqt_fit.kde.KDE1D.__call__" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method is an alias for <tt class="xref py py-meth docutils literal"><span class="pre">BoundedKDE1D.evaluate()</span></tt></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyqt_fit.kde.KDE1D.bandwidth">
+<tt class="descname">bandwidth</tt><a class="reference internal" href="_modules/pyqt_fit/kde.html#KDE1D.bandwidth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyqt_fit.kde.KDE1D.bandwidth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bandwidth of the kernel.
+Can be set either as a fixed value or using a bandwidth calculator,
+that is a function of signature <tt class="docutils literal"><span class="pre">w(xdata)</span></tt> that returns a single
+value.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">A ndarray with a single value will be converted to a floating point
+value.</p>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyqt_fit.kde.KDE1D.closed">
+<tt class="descname">closed</tt><a class="reference internal" href="_modules/pyqt_fit/kde.html#KDE1D.closed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyqt_fit.kde.KDE1D.closed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns true if the density domain is closed (i.e. lower and upper
+are both finite)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqt_fit.kde.KDE1D.copy">
+<tt class="descname">copy</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pyqt_fit/kde.html#KDE1D.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyqt_fit.kde.KDE1D.copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shallow copy of the KDE object</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyqt_fit.kde.KDE1D.covariance">
+<tt class="descname">covariance</tt><a class="reference internal" href="_modules/pyqt_fit/kde.html#KDE1D.covariance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyqt_fit.kde.KDE1D.covariance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Covariance of the gaussian kernel.
+Can be set either as a fixed value or using a bandwidth calculator,
+that is a function of signature <tt class="docutils literal"><span class="pre">w(xdata)</span></tt> that returns a single
+value.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">A ndarray with a single value will be converted to a floating point
+value.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqt_fit.kde.KDE1D.evaluate">
+<tt class="descname">evaluate</tt><big>(</big><em>points</em>, <em>output=None</em><big>)</big><a class="reference internal" href="_modules/pyqt_fit/kde.html#KDE1D.evaluate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyqt_fit.kde.KDE1D.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate the kernel on the set of points <tt class="docutils literal"><span class="pre">points</span></tt></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqt_fit.kde.KDE1D.grid">
+<tt class="descname">grid</tt><big>(</big><em>N=None</em>, <em>cut=None</em><big>)</big><a class="reference internal" href="_modules/pyqt_fit/kde.html#KDE1D.grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyqt_fit.kde.KDE1D.grid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate the density on a grid of N points spanning the whole dataset.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a tuple with the mesh on which the density is evaluated and</td>
+</tr>
+</tbody>
+</table>
+<p>the density itself</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyqt_fit.kde.KDE1D.kernel">
+<tt class="descname">kernel</tt><a class="reference internal" href="_modules/pyqt_fit/kde.html#KDE1D.kernel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyqt_fit.kde.KDE1D.kernel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Kernel object. Should provide the following methods:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">kernel.pdf(xs)</span></tt></dt>
+<dd>Density of the kernel, denoted <span class="math">\(K(x)\)</span></dd>
+<dt><tt class="docutils literal"><span class="pre">kernel.cdf(z)</span></tt></dt>
+<dd>Cumulative density of probability, that is
+<span class="math">\(F^K(z) = \int_{-\infty}^z K(x) dx\)</span></dd>
+<dt><tt class="docutils literal"><span class="pre">kernel.pm1(z)</span></tt></dt>
+<dd>First partial moment, defined by
+<span class="math">\(\mathcal{M}^K_1(z) = \int_{-\infty}^z xK(x)dx\)</span></dd>
+<dt><tt class="docutils literal"><span class="pre">kernel.pm2(z)</span></tt></dt>
+<dd>Second partial moment, defined by
+<span class="math">\(\mathcal{M}^K_2(z) = \int_{-\infty}^z x^2K(x)dx\)</span></dd>
+<dt><tt class="docutils literal"><span class="pre">kernel.fft(z)</span></tt></dt>
+<dd>FFT of the kernel on the points of <tt class="docutils literal"><span class="pre">z</span></tt>. The points will always be
+provided as a grid with <span class="math">\(2^n\)</span> points, representing the whole
+frequency range to be explored. For convenience, the second half of
+the points will be provided as negative values.</dd>
+<dt><tt class="docutils literal"><span class="pre">kernel.dct(z)</span></tt></dt>
+<dd>DCT of the kernel on the points of <tt class="docutils literal"><span class="pre">z</span></tt>. The points will always be
+provided as a grid with <span class="math">\(2^n\)</span> points, representing the whole
+frequency range to be explored.</dd>
+</dl>
+<p>By default, the kernel is an instance of
+<tt class="xref py py-class docutils literal"><span class="pre">kernels.normal_kernel1d</span></tt></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyqt_fit.kde.KDE1D.lambdas">
+<tt class="descname">lambdas</tt><a class="reference internal" href="_modules/pyqt_fit/kde.html#KDE1D.lambdas"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyqt_fit.kde.KDE1D.lambdas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scaling of the bandwidth, per data point. It can be either a single
+value or an array with one value per data point.</p>
+<p>When deleted, the lamndas are reset to 1.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyqt_fit.kde.KDE1D.lower">
+<tt class="descname">lower</tt><a class="reference internal" href="_modules/pyqt_fit/kde.html#KDE1D.lower"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyqt_fit.kde.KDE1D.lower" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lower bound of the density domain. If deleted, becomes set to
+<span class="math">\(-\infty\)</span></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyqt_fit.kde.KDE1D.method">
+<tt class="descname">method</tt><a class="reference internal" href="_modules/pyqt_fit/kde.html#KDE1D.method"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyqt_fit.kde.KDE1D.method" title="Permalink to this definition">¶</a></dt>
+<dd><p>Select the method to use. Available methods in the <a class="reference internal" href="mod_kde_methods.html#module-pyqt_fit.kde_methods" title="pyqt_fit.kde_methods"><tt class="xref py py-mod docutils literal"><span class="pre">pyqt_fit.kde_methods</span></tt></a> sub-module.</p>
+<p>The method is an object that should provide the following:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">method(kde,</span> <span class="pre">points,</span> <span class="pre">output)</span></tt></dt>
+<dd>Evaluate the KDE defined by the <tt class="docutils literal"><span class="pre">kde</span></tt> object on the <tt class="docutils literal"><span class="pre">points</span></tt>. If <tt class="docutils literal"><span class="pre">output</span></tt> is provided, it should have 
+the right shape and the result should be written in it.</dd>
+<dt><tt class="docutils literal"><span class="pre">method.grid(kde,</span> <span class="pre">N,</span> <span class="pre">cut)</span></tt></dt>
+<dd>Evaluate the KDE defined by the <tt class="docutils literal"><span class="pre">kde</span></tt> object on a grid. See <a href="#id1"><span class="problematic" id="id2">:py:fct:`pyqt_fit.kde_methods.generate_grid`</span></a> 
+for a detailed explanation on how the grid is computed.</dd>
+<dt><tt class="docutils literal"><span class="pre">method.name</span></tt></dt>
+<dd>Return a user-readable name for the method</dd>
+<dt><tt class="docutils literal"><span class="pre">str(method)</span></tt></dt>
+<dd>Should return the method&#8217;s name</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqt_fit.kde.KDE1D.update_bandwidth">
+<tt class="descname">update_bandwidth</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pyqt_fit/kde.html#KDE1D.update_bandwidth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyqt_fit.kde.KDE1D.update_bandwidth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Re-compute the bandwidth if it was specified as a function.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyqt_fit.kde.KDE1D.upper">
+<tt class="descname">upper</tt><a class="reference internal" href="_modules/pyqt_fit/kde.html#KDE1D.upper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyqt_fit.kde.KDE1D.upper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Upper bound of the density domain. If deleted, becomes set to
+<span class="math">\(\infty\)</span></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyqt_fit.kde.KDE1D.weights">
+<tt class="descname">weights</tt><a class="reference internal" href="_modules/pyqt_fit/kde.html#KDE1D.weights"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyqt_fit.kde.KDE1D.weights" title="Permalink to this definition">¶</a></dt>
+<dd><p>Weigths associated to each data point. It can be either a single value,
+or an array with a value per data point. If a single value is provided,
+the weights will always be set to 1.</p>
+</dd></dl>
+
+</dd></dl>
+
+<div class="section" id="estimation-in-a-different-domain">
+<h3>Estimation in a Different Domain<a class="headerlink" href="#estimation-in-a-different-domain" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="pyqt_fit.kde.TransformKDE">
+<em class="property">class </em><tt class="descclassname">pyqt_fit.kde.</tt><tt class="descname">TransformKDE</tt><big>(</big><em>kde</em>, <em>trans</em>, <em>inv=None</em>, <em>Dinv=None</em><big>)</big><a class="reference internal" href="_modules/pyqt_fit/kde.html#TransformKDE"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyqt_fit.kde.TransformKDE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the Kernel Density Estimate of a dataset, transforming it first to
+a domain where distances are &#8220;more meaningful&#8221;.</p>
+<p>Often, KDE is best estimated in a different domain. This object takes a
+KDE1D object (or one compatible), and a transformation function.</p>
+<p>Given a random variable <span class="math">\(X\)</span> of distribution <span class="math">\(f_X\)</span>, the random
+variable <span class="math">\(Y = g(X)\)</span> has a distribution <span class="math">\(f_Y\)</span> given by:</p>
+<div class="math">
+\[f_Y(y) = \left| \frac{1}{g'(g^{-1}(y))} \right| \cdot f_X(g^{-1}(y))\]</div>
+<p>In our term, <span class="math">\(Y\)</span> is the random variable the user is interested in,
+and <span class="math">\(X\)</span> the random variable we can estimate using the KDE. In this
+case, <span class="math">\(g\)</span> is the transform from <span class="math">\(Y\)</span> to <span class="math">\(X\)</span>.</p>
+<p>So to estimate the distribution on a set of points given in <span class="math">\(x\)</span>, we
+need a total of three functions:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Direct function: transform from the original space to the one in
+which the KDE will be perform (i.e. <span class="math">\(g^{-1}: y \mapsto x\)</span>)</li>
+<li>Invert function: transform from the KDE space to the original one
+(i.e. <span class="math">\(g: x \mapsto y\)</span>)</li>
+<li>Derivative of the invert function</li>
+</ul>
+</div></blockquote>
+<p>If the derivative is not provided, it will be estimated numerically.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>kde</strong> &#8211; KDE evaluation object</li>
+<li><strong>trans</strong> &#8211; Either a simple function, or a function object with
+attributes <cite>inv</cite> and <cite>Dinv</cite> to use in case they are not provided
+as arguments.</li>
+<li><strong>inv</strong> &#8211; Invert of the function. If not provided, <cite>trans</cite> must have
+it as attribute.</li>
+<li><strong>Dinv</strong> &#8211; Derivative of the invert function.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Any unknown member is forwarded to the underlying KDE object.</p>
+<dl class="method">
+<dt id="pyqt_fit.kde.TransformKDE.__call__">
+<tt class="descname">__call__</tt><big>(</big><em>points</em>, <em>output=None</em><big>)</big><a class="reference internal" href="_modules/pyqt_fit/kde.html#TransformKDE.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyqt_fit.kde.TransformKDE.__call__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate the KDE on a set of points</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqt_fit.kde.TransformKDE.copy">
+<tt class="descname">copy</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/pyqt_fit/kde.html#TransformKDE.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyqt_fit.kde.TransformKDE.copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a shallow copy of the TransformKDE object</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqt_fit.kde.TransformKDE.evaluate">
+<tt class="descname">evaluate</tt><big>(</big><em>points</em>, <em>output=None</em><big>)</big><a class="reference internal" href="_modules/pyqt_fit/kde.html#TransformKDE.evaluate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyqt_fit.kde.TransformKDE.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate the KDE on a set of points</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyqt_fit.kde.TransformKDE.grid">
+<tt class="descname">grid</tt><big>(</big><em>N=None</em><big>)</big><a class="reference internal" href="_modules/pyqt_fit/kde.html#TransformKDE.grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyqt_fit.kde.TransformKDE.grid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate the KDE on a grid of points with N points.</p>
+<p>The grid is regular <em>in the transformed domain</em>, so as to use FFT or
+CDT methods when applicable.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="bandwidth-estimation-methods">
+<h2>Bandwidth Estimation Methods<a class="headerlink" href="#bandwidth-estimation-methods" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="pyqt_fit.kde.variance_bandwidth">
+<tt class="descclassname">pyqt_fit.kde.</tt><tt class="descname">variance_bandwidth</tt><big>(</big><em>factor</em>, <em>xdata</em><big>)</big><a class="headerlink" href="#pyqt_fit.kde.variance_bandwidth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the covariance matrix:</p>
+<div class="math">
+\[\mathcal{C} = \tau^2 cov(X)\]</div>
+<p>where <span class="math">\(\tau\)</span> is a correcting factor that depends on the method.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyqt_fit.kde.silverman_covariance">
+<tt class="descclassname">pyqt_fit.kde.</tt><tt class="descname">silverman_covariance</tt><big>(</big><em>xdata</em>, <em>ydata=None</em>, <em>model=None</em><big>)</big><a class="headerlink" href="#pyqt_fit.kde.silverman_covariance" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Silverman bandwidth is defined as a variance bandwidth with factor:</p>
+<div class="math">
+\[\tau = \left( n \frac{d+2}{4} \right)^\frac{-1}{d+4}\]</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyqt_fit.kde.scotts_covariance">
+<tt class="descclassname">pyqt_fit.kde.</tt><tt class="descname">scotts_covariance</tt><big>(</big><em>xdata</em>, <em>ydata=None</em>, <em>model=None</em><big>)</big><a class="headerlink" href="#pyqt_fit.kde.scotts_covariance" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Scotts bandwidth is defined as a variance bandwidth with factor:</p>
+<div class="math">
+\[\tau = n^\frac{-1}{d+4}\]</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyqt_fit.kde.botev_bandwidth">
+<tt class="descclassname">pyqt_fit.kde.</tt><tt class="descname">botev_bandwidth</tt><big>(</big><em>N=None</em>, <em>**kword</em><big>)</big><a class="headerlink" href="#pyqt_fit.kde.botev_bandwidth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implementation of the KDE bandwidth selection method outline in:</p>
+<p>Z. I. Botev, J. F. Grotowski, and D. P. Kroese. Kernel density
+estimation via diffusion. The Annals of Statistics, 38(5):2916-2957, 2010.</p>
+<p>Based on the implementation of Daniel B. Smith, PhD.</p>
+<p>The object is a callable returning the bandwidth for a 1D kernel.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Module <tt class="docutils literal"><span class="pre">pyqt_fit.kde</span></tt></a><ul>
+<li><a class="reference internal" href="#kernel-density-estimation-methods">Kernel Density Estimation Methods</a><ul>
+<li><a class="reference internal" href="#estimation-in-a-different-domain">Estimation in a Different Domain</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bandwidth-estimation-methods">Bandwidth Estimation Methods</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="mod_kernel_smoothing.html"
+                        title="previous chapter">Module <tt class="docutils literal"><span class="pre">pyqt_fit.kernel_smoothing</span></tt></a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="mod_kde_methods.html"
+                        title="next chapter">Module <tt class="docutils literal"><span class="pre">pyqt_fit.kde_methods</span></tt></a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/mod_kde.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="mod_kde_methods.html" title="Module pyqt_fit.kde_methods"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="mod_kernel_smoothing.html" title="Module pyqt_fit.kernel_smoothing"
+             >previous</a> |</li>
+        <li><a href="index.html">PyQt-Fit 1.2.3 documentation</a> &raquo;</li>
+          <li><a href="modules.html" >Modules of PyQt-Fit</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Barbier de Reuille, Pierre.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
