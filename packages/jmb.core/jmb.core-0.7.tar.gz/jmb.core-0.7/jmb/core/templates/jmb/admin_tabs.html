@@ -1,0 +1,45 @@
+{% load i18n  admin_tabs %}
+
+{% if tabs %}
+
+<div class="container">
+  <ul class="nav admintab nav-tabs {%if adminform.model_admin.tabs_sticky_on_top %} stickytab {% endif %}">
+  {% for tab in tabs %}
+    <li class="{{tab.css}}" >
+      <a {% if tab.enabled %} data-toggle="tab" href="#tabs-{{ forloop.counter0 }}" {% else %} class="tabdisabled" {% endif %} >{{ tab.name }}</a>
+    </li>
+  {% endfor %}
+  </ul>
+</div>
+
+<div class="tab-content admintab-content">
+{% for tab in tabs %}
+	{% if tab.enabled %}
+	   <div class="tab-pane {{tab.css}}" id="tabs-{{forloop.counter0 }}">
+	   {% for item in tab.items %}
+	       <!-- fieldsets -->
+	       {% if item.is_fieldset %}
+		   {% with fieldset=item.fieldset %}
+			  {% include "admin/includes/fieldset.html" %}
+		   {% endwith %}
+	
+	       <!-- ajax_inline -->
+	       {% elif item.is_ajax_inline %}
+	               {{ item.render }}
+	
+	       <!-- tabular/staked inline -->
+	       {% else %}
+		   {% with inline_admin_formset=item.formset %}
+		      {% if inline_admin_formset %}
+			   {% include inline_admin_formset.opts.template %}
+		      {% endif %}
+		   {% endwith %}
+	
+	      {% endif %}
+	
+	    {% endfor %}
+	    </div>
+	  	{% endif %}
+  {% endfor %}
+</div>
+{% endif %}

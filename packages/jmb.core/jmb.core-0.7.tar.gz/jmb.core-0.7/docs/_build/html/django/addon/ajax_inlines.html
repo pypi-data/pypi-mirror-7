@@ -1,0 +1,416 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>AjaxInline &mdash; jmb.core 0.7 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/cloud.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="../../_static/cloud.js"></script>
+    <link rel="top" title="jmb.core 0.7 documentation" href="../../index.html" />
+    <link rel="up" title="Addon &amp; layout" href="content.html" />
+    <link rel="next" title="Admin actions" href="admin_actions.html" />
+    <link rel="prev" title="Admin Tabs in change form" href="admin_tabs.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="relbar-top">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../contents.html" title="Table Of Contents"
+             accesskey="C">toc</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="admin_actions.html" title="Admin actions"
+             accesskey="N">next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="admin_tabs.html" title="Admin Tabs in change form"
+             accesskey="P">previous</a> &nbsp; &nbsp;</li>
+    <li><a href="../../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="../content.html" >Django: aggiunte e standardizzazioni.</a> &raquo;</li>
+          <li><a href="content.html" accesskey="U">Addon &amp; layout</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <span class="target" id="module-jmb.core.admin.ajax_inlines"></span><div class="section" id="ajaxinline">
+<span id="ajax-inline"></span><h1>AjaxInline<a class="headerlink" href="#ajaxinline" title="Permalink to this headline">¶</a></h1>
+<img alt="../../_images/ajax_inlines.png" class="align-right" src="../../_images/ajax_inlines.png" />
+<p>This is a very powerfull way to display children rows of a parent. It&#8217;s use can be alternative 
+to that of TabularInline but differs in many details:</p>
+<ol class="arabic">
+<li><p class="first">Rows can be added only when the parent has already been saved. If you
+want to abort the creation of the father if the children are not created,
+this is not the correct tool.</p>
+</li>
+<li><p class="first">Add/Change/Delete is done via iframe/ajax, that make it fast and 
+user-friendly. On the other hand <tt class="docutils literal"><span class="pre">Tabular/StakedInline</span></tt> use a single huge form.</p>
+</li>
+<li><p class="first">Any row is displayed using official django result_list templatetag, the same used in
+changelist, the <tt class="xref py py-class docutils literal"><span class="pre">ChangeList</span></tt> object used has a modified 
+<tt class="xref py py-meth docutils literal"><span class="pre">ChangeList.get_query_set()</span></tt> to filter children of a parent. You can customize it or
+simply customize <a class="reference internal" href="#jmb.core.admin.ajax_inlines.AjaxInline.get_queryset" title="jmb.core.admin.ajax_inlines.AjaxInline.get_queryset"><tt class="xref py py-meth docutils literal"><span class="pre">AjaxInline.get_queryset()</span></tt></a> method.</p>
+<p>All fields defined in <tt class="docutils literal"><span class="pre">AjaxInline</span></tt>&#8216;s <tt class="docutils literal"><span class="pre">list_display</span></tt> attribute will be
+treated in the standard way for <tt class="docutils literal"><span class="pre">list_display</span></tt> on <tt class="docutils literal"><span class="pre">ModelForm</span></tt> i.e.:
+you can define functions and the like.</p>
+</li>
+<li><p class="first">Layout can only be controlled via tabs</p>
+</li>
+<li><p class="first">You need to register a ModelAdmin separately for the Child Model you want to edit
+See below for <a class="reference internal" href="#row-customization"><em>Row customization</em></a>.</p>
+</li>
+<li><p class="first">DataTable jQuery plugin, take care of presenting data in an effective way, sorting is 
+done locally, searching is done by default on any field.</p>
+</li>
+<li><p class="first">Only one ajax_inline can be registered for each model, that means that 
+you cannot use 2 different ajax_inlines to edit/delete records</p>
+</li>
+</ol>
+<p>To add AjaxInline to your ModelAdmin, resulting in something similar to what
+is shown in the figure can be accomplished as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">django.contrib</span> <span class="kn">import</span> <span class="n">admin</span>
+
+<span class="kn">from</span> <span class="nn">jmb.core.admin</span> <span class="kn">import</span> <span class="n">AjaxInline</span><span class="p">,</span> <span class="n">ConstrainedModelForm</span><span class="p">,</span> <span class="n">register_inline</span>
+<span class="kn">from</span> <span class="nn">jmb.core.admin.options</span> <span class="kn">import</span> <span class="n">ExtendibleModelAdmin</span>
+
+<span class="k">class</span> <span class="nc">ContactAjaxInline</span><span class="p">(</span><span class="n">AjaxInline</span><span class="p">):</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">Contact</span>
+    <span class="n">fk_name</span> <span class="o">=</span> <span class="s">&#39;company&#39;</span>  
+    <span class="n">list_display</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;title&#39;</span><span class="p">,</span> <span class="s">&#39;first_name&#39;</span><span class="p">,</span> <span class="s">&#39;role&#39;</span><span class="p">,</span><span class="s">&#39;user&#39;</span><span class="p">,</span> <span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">CompanyModelAdmin</span><span class="p">(</span><span class="n">ExtendibleModelAdmin</span><span class="p">):</span>
+    <span class="o">...</span>
+    <span class="n">tabs</span> <span class="o">=</span> <span class="p">(</span>
+         <span class="p">(</span><span class="s">&#39;main&#39;</span><span class="p">,</span> <span class="p">{}),</span>
+         <span class="p">(</span><span class="s">&#39;contacts&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;items&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="n">ContactAjaxInline</span><span class="p">]}),</span>
+         <span class="o">...</span>
+    <span class="p">)</span>
+
+ <span class="k">class</span> <span class="nc">ContactForm</span><span class="p">(</span><span class="n">ConstrainedModelForm</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">Contact</span>      
+    <span class="n">hidden_fields</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;organization&#39;</span><span class="p">,)</span> <span class="c"># ALTERNATIVELY you can use get_form below</span>
+
+ <span class="k">class</span> <span class="nc">ContactModelAdmin</span><span class="p">(</span><span class="n">ExtendibleModelAdmin</span><span class="p">):</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">Contact</span>
+    <span class="c"># form = ContactForm</span>
+    <span class="k">def</span> <span class="nf">get_form</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">obj</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Return a form that forces all fields in the GET as not changeable</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c"># Alternative to declaring hidden_fields in the ConstraintForm</span>
+        <span class="n">hidden_fields</span> <span class="o">=</span> <span class="p">[</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;_&#39;</span><span class="p">)]</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">Form&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">__name__</span>
+
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="n">ContactForm</span><span class="p">,),</span> <span class="p">{</span>
+            <span class="s">&#39;hidden_fields&#39;</span> <span class="p">:</span> <span class="n">hidden_fields</span><span class="p">,</span>
+        <span class="p">})</span>
+
+
+
+ <span class="n">register_inline</span><span class="p">(</span><span class="n">ContactAjaxInline</span><span class="p">)</span>
+ <span class="n">admin</span><span class="o">.</span><span class="n">site</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">Contact</span><span class="p">,</span> <span class="n">ContactModelAdmin</span><span class="p">)</span>
+ <span class="n">admin</span><span class="o">.</span><span class="n">site</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">Company</span><span class="p">,</span> <span class="n">CompanyModelAdmin</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You need to use <a class="reference internal" href="#jmb.core.admin.ajax_inlines.ConstrainedModelForm" title="jmb.core.admin.ajax_inlines.ConstrainedModelForm"><tt class="xref py py-class docutils literal"><span class="pre">ConstrainedModelForm</span></tt></a> to make sure foreign keys to 
+the parent are not writeble</p>
+</div>
+<div class="section" id="row-customization">
+<span id="id1"></span><h1>Row customization<a class="headerlink" href="#row-customization" title="Permalink to this headline">¶</a></h1>
+<p><tt class="docutils literal"><span class="pre">ajax_inline.html</span></tt> uses Django&#8217;s <tt class="docutils literal"><span class="pre">result_list</span></tt> templatetag to render
+the single object, so any standard way to customize the changelist can be used:
+field_names in <tt class="docutils literal"><span class="pre">list_display</span></tt> can be functions defined on the ModelAdmin or 
+on the model as described in django documentation.</p>
+<p>When you add/modify a record you use the standard ModleAdmin called in an
+iframe. After saving the obj the object itself is rendered in the same
+way it would be in the chagelist, that implies you need to register which
+AjaxInlines will be used so that redsponse_add/change can use it. This is
+solved by registering the inlines via <tt class="xref py py-func docutils literal"><span class="pre">register_inline()</span></tt></p>
+</div>
+<div class="section" id="constraintform">
+<h1>ConstraintForm<a class="headerlink" href="#constraintform" title="Permalink to this headline">¶</a></h1>
+<p>When editing an inline you want to hide the foreign_key field: it simply isn&#8217;t 
+usefull and you want to prevent the used to change it. But it must be present in 
+the form as HiddenField as it&#8217;s needed when saving the record.</p>
+<p>You can use set the widget to Hidden using a <tt class="xref py py-class docutils literal"><span class="pre">CostrainedForm</span></tt> and declaring 
+it as hidden in the class. If you plan to use the same form both as AjaxInlien and 
+in a standard change_form, you can set hidden fields dinamically as shown in 
+the example above</p>
+</div>
+<div class="section" id="api">
+<h1>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="jmb.core.admin.ajax_inlines.AjaxParentModelAdmin">
+<em class="property">class </em><tt class="descclassname">jmb.core.admin.ajax_inlines.</tt><tt class="descname">AjaxParentModelAdmin</tt><big>(</big><em>model</em>, <em>admin_site</em><big>)</big><a class="reference internal" href="../../_modules/jmb/core/admin/ajax_inlines.html#AjaxParentModelAdmin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.admin.ajax_inlines.AjaxParentModelAdmin" title="Permalink to this definition">¶</a></dt>
+<dd><p>A ModelAdmin that provides handling for <tt class="docutils literal"><span class="pre">_hjson</span></tt> parameter that
+returns the object formatted according to a registered AjaxInline</p>
+<dl class="method">
+<dt id="jmb.core.admin.ajax_inlines.AjaxParentModelAdmin.delete_view">
+<tt class="descname">delete_view</tt><big>(</big><em>request</em>, <em>object_id</em>, <em>extra_context=None</em><big>)</big><a class="reference internal" href="../../_modules/jmb/core/admin/ajax_inlines.html#AjaxParentModelAdmin.delete_view"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.admin.ajax_inlines.AjaxParentModelAdmin.delete_view" title="Permalink to this definition">¶</a></dt>
+<dd><p>The &#8216;delete&#8217; admin view for this model.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="jmb.core.admin.ajax_inlines.ConstrainedModelForm">
+<em class="property">class </em><tt class="descclassname">jmb.core.admin.ajax_inlines.</tt><tt class="descname">ConstrainedModelForm</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../_modules/jmb/core/admin/ajax_inlines.html#ConstrainedModelForm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.admin.ajax_inlines.ConstrainedModelForm" title="Permalink to this definition">¶</a></dt>
+<dd><p>A ModelForm that forces HiddenInput on fields declared in <tt class="xref py py-attr docutils literal"><span class="pre">hidden_fields</span></tt></p>
+<p>It&#8217;s main goal is to be used when a child is edited and the parent must be forced
+without giving the user the opportunity to alter it.</p>
+<p>It&#8217;s <tt class="xref py py-meth docutils literal"><span class="pre">__init__()</span></tt> calls hide_field() for any field declared in
+<tt class="xref py py-attr docutils literal"><span class="pre">hidden_fields</span></tt>.  If you need to implement more logic in your
+<tt class="docutils literal"><span class="pre">__init__</span></tt> you can simply call <tt class="xref py py-meth docutils literal"><span class="pre">hide_field()</span></tt> by youself.</p>
+<p>We use it along with a javascript code (<tt class="docutils literal"><span class="pre">jmb.hide_input()</span></tt>) that hide the
+label of the relative fields called from within <tt class="docutils literal"><span class="pre">change_form.html</span></tt></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="jmb.core.admin.ajax_inlines.ChildrenChangeList">
+<em class="property">class </em><tt class="descclassname">jmb.core.admin.ajax_inlines.</tt><tt class="descname">ChildrenChangeList</tt><big>(</big><em>request</em>, <em>parent=None</em>, <em>fk_name=None</em>, <em>model=None</em>, <em>list_display=()</em>, <em>list_display_links=()</em>, <em>list_filter=None</em>, <em>date_hierarchy=None</em>, <em>search_fields=()</em>, <em>list_select_related=True</em>, <em>list_per_page=200</em>, <em>list_max_show_all=200</em>, <em>list_editable=None</em>, <em>model_admin=None</em>, <em>ajax_inline=None</em><big>)</big><a class="reference internal" href="../../_modules/jmb/core/admin/ajax_inlines.html#ChildrenChangeList"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.admin.ajax_inlines.ChildrenChangeList" title="Permalink to this definition">¶</a></dt>
+<dd><p>A ChangeList that has as queryset the children of a parent</p>
+<p>This is used to represent all children of a parent using the same
+features used in a normal changelist but when using AjaxInline</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="jmb.core.admin.ajax_inlines.AjaxInline">
+<em class="property">class </em><tt class="descclassname">jmb.core.admin.ajax_inlines.</tt><tt class="descname">AjaxInline</tt><big>(</big><em>parent_model=None</em>, <em>admin_site=None</em>, <em>parent=None</em><big>)</big><a class="reference internal" href="../../_modules/jmb/core/admin/ajax_inlines.html#AjaxInline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.admin.ajax_inlines.AjaxInline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Options for inline editing of <tt class="docutils literal"><span class="pre">model</span></tt> instances.</p>
+<p>This is an <tt class="docutils literal"><span class="pre">inline</span></tt> whose editing happens via separate iframes
+but that are displayed along with normal ones.</p>
+<dl class="method">
+<dt id="jmb.core.admin.ajax_inlines.AjaxInline.clean_table_headers">
+<tt class="descname">clean_table_headers</tt><big>(</big><em>html</em><big>)</big><a class="reference internal" href="../../_modules/jmb/core/admin/ajax_inlines.html#AjaxInline.clean_table_headers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.admin.ajax_inlines.AjaxInline.clean_table_headers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a table with js stripped from headers
+:arg html: the output of th template</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="jmb.core.admin.ajax_inlines.AjaxInline.fk_name">
+<tt class="descname">fk_name</tt><em class="property"> = None</em><a class="headerlink" href="#jmb.core.admin.ajax_inlines.AjaxInline.fk_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>the field that links to the parent</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="jmb.core.admin.ajax_inlines.AjaxInline.get_queryset">
+<tt class="descname">get_queryset</tt><big>(</big><em>request</em><big>)</big><a class="reference internal" href="../../_modules/jmb/core/admin/ajax_inlines.html#AjaxInline.get_queryset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.admin.ajax_inlines.AjaxInline.get_queryset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a queryset of all the objects to represrnt in this run</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>request</strong> &#8211; HttpRequest</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="jmb.core.admin.ajax_inlines.AjaxInline.get_rows">
+<tt class="descname">get_rows</tt><big>(</big><em>obj</em><big>)</big><a class="reference internal" href="../../_modules/jmb/core/admin/ajax_inlines.html#AjaxInline.get_rows"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.admin.ajax_inlines.AjaxInline.get_rows" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return all the rows that should be displayed by this AjaxInLine</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> &#8211; the object whose row we want to fetch</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="jmb.core.admin.ajax_inlines.AjaxInline.line_template">
+<tt class="descname">line_template</tt><em class="property"> = 'line_render.html'</em><a class="headerlink" href="#jmb.core.admin.ajax_inlines.AjaxInline.line_template" title="Permalink to this definition">¶</a></dt>
+<dd><p>the basename of the template used to render the single row
+the search path follows the reuls of change_form</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="jmb.core.admin.ajax_inlines.AjaxInline.model">
+<tt class="descname">model</tt><em class="property"> = None</em><a class="headerlink" href="#jmb.core.admin.ajax_inlines.AjaxInline.model" title="Permalink to this definition">¶</a></dt>
+<dd><p>the model the ajax_inline refers to, similarly to what happens with tabular_inline</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="jmb.core.admin.ajax_inlines.AjaxInline.render">
+<tt class="descname">render</tt><big>(</big><em>parent=None</em><big>)</big><a class="reference internal" href="../../_modules/jmb/core/admin/ajax_inlines.html#AjaxInline.render"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.admin.ajax_inlines.AjaxInline.render" title="Permalink to this definition">¶</a></dt>
+<dd><p>Render the whole section using <tt class="docutils literal"><span class="pre">self.template</span></tt> (default: <tt class="docutils literal"><span class="pre">ajax_inline.html</span></tt>)
+The search path follows the same rules as <tt class="docutils literal"><span class="pre">change_form.html</span></tt> &amp; similar.</p>
+<p><tt class="docutils literal"><span class="pre">ajax_inline.html</span></tt> uses standard <tt class="docutils literal"><span class="pre">result_list</span></tt> used in <tt class="docutils literal"><span class="pre">change_list.html</span></tt></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="jmb.core.admin.ajax_inlines.AjaxInline.render_row">
+<tt class="descname">render_row</tt><big>(</big><em>obj</em><big>)</big><a class="reference internal" href="../../_modules/jmb/core/admin/ajax_inlines.html#AjaxInline.render_row"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.admin.ajax_inlines.AjaxInline.render_row" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the single row inside a <tt class="docutils literal"><span class="pre">return_list</span></tt> output
+We know there is just one <tt class="docutils literal"><span class="pre">tr</span></tt> in this <tt class="docutils literal"><span class="pre">tbody</span></tt></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="jmb.core.admin.ajax_inlines.AjaxInline.render_row_old">
+<tt class="descname">render_row_old</tt><big>(</big><em>obj</em><big>)</big><a class="reference internal" href="../../_modules/jmb/core/admin/ajax_inlines.html#AjaxInline.render_row_old"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.admin.ajax_inlines.AjaxInline.render_row_old" title="Permalink to this definition">¶</a></dt>
+<dd><p>Render the single line using <tt class="docutils literal"><span class="pre">self.line_render</span></tt> (default: <tt class="docutils literal"><span class="pre">line_render.html</span></tt>)
+The search path follows the same rules as <tt class="docutils literal"><span class="pre">change_form.html</span></tt> &amp; similar.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> &#8211; the obj to be rendered. If not present self.obj will be used</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="jmb.core.admin.ajax_inlines.AjaxInline.set_changelist">
+<tt class="descname">set_changelist</tt><big>(</big><em>request</em>, <em>obj=None</em><big>)</big><a class="reference internal" href="../../_modules/jmb/core/admin/ajax_inlines.html#AjaxInline.set_changelist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.admin.ajax_inlines.AjaxInline.set_changelist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a changelist to the inline so that rendering can occurre</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>request</strong> &#8211; An HttpRequest</li>
+<li><strong>obj</strong> &#8211; the only object that should be returned by this changelist</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="jmb.core.admin.ajax_inlines.AjaxInline.template">
+<tt class="descname">template</tt><em class="property"> = 'ajax_inline.html'</em><a class="headerlink" href="#jmb.core.admin.ajax_inlines.AjaxInline.template" title="Permalink to this definition">¶</a></dt>
+<dd><p>basename of the template used to rendere the whole section
+the search path follows the reuls of change_form</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="jmb.core.admin.ajax_inlines.AjaxInline.width">
+<tt class="descname">width</tt><em class="property"> = 700</em><a class="headerlink" href="#jmb.core.admin.ajax_inlines.AjaxInline.width" title="Permalink to this definition">¶</a></dt>
+<dd><p>width of the iframe</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <div class="sphinxlocaltoc">
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">AjaxInline</a></li>
+<li><a class="reference internal" href="#row-customization">Row customization</a></li>
+<li><a class="reference internal" href="#constraintform">ConstraintForm</a></li>
+<li><a class="reference internal" href="#api">API</a></li>
+</ul>
+
+  </div>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="admin_tabs.html"
+                        title="previous chapter">Admin Tabs in change form</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="admin_actions.html"
+                        title="next chapter">Admin actions</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/django/addon/ajax_inlines.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../contents.html" title="Table Of Contents"
+             >toc</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="admin_actions.html" title="Admin actions"
+             >next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="admin_tabs.html" title="Admin Tabs in change form"
+             >previous</a> &nbsp; &nbsp;</li>
+    <li><a href="../../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="../content.html" >Django: aggiunte e standardizzazioni.</a> &raquo;</li>
+          <li><a href="content.html" >Addon &amp; layout</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2013, Thunder Systems.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>

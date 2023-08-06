@@ -1,0 +1,258 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Admin Tabs in change form &mdash; jmb.core 0.7 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/cloud.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="../../_static/cloud.js"></script>
+    <link rel="top" title="jmb.core 0.7 documentation" href="../../index.html" />
+    <link rel="up" title="Addon &amp; layout" href="content.html" />
+    <link rel="next" title="AjaxInline" href="ajax_inlines.html" />
+    <link rel="prev" title="Addon &amp; layout" href="content.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="relbar-top">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../contents.html" title="Table Of Contents"
+             accesskey="C">toc</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="ajax_inlines.html" title="AjaxInline"
+             accesskey="N">next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="content.html" title="Addon &amp; layout"
+             accesskey="P">previous</a> &nbsp; &nbsp;</li>
+    <li><a href="../../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="../content.html" >Django: aggiunte e standardizzazioni.</a> &raquo;</li>
+          <li><a href="content.html" accesskey="U">Addon &amp; layout</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <span class="target" id="module-jmb.core.templatetags.admin_tabs"></span><div class="section" id="admin-tabs-in-change-form">
+<span id="admin-tabs"></span><h1>Admin Tabs in change form<a class="headerlink" href="#admin-tabs-in-change-form" title="Permalink to this headline">¶</a></h1>
+<p>A templatetag to create a tabbed layout in a change_form.
+It looks in ModelAdmin for method <a class="reference internal" href="#get-tabs"><em>get_tabs</em></a>.</p>
+<p>that means you can just set <tt class="xref py py-attr docutils literal"><span class="pre">tabs</span></tt> in you ModelAdmin.</p>
+<p>Tabs is a tuple of tuples. An example of a hypothetical 
+Company model whose Inlines are <tt class="docutils literal"><span class="pre">Contacts</span></tt> and <tt class="docutils literal"><span class="pre">Banks</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">tabs</span> <span class="o">=</span> <span class="p">(</span>
+  <span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&#39;Company&#39;</span><span class="p">),</span> <span class="p">{</span><span class="s">&#39;items&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">_</span><span class="p">(</span><span class="s">&#39;general_info&#39;</span><span class="p">)]}),</span>
+  <span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&#39;Contacts&#39;</span><span class="p">),</span> <span class="p">{</span><span class="s">&#39;items&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">Contact</span><span class="p">,</span> <span class="p">],</span> <span class="s">&#39;active&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">}),</span>
+  <span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&#39;Addresses&#39;</span><span class="p">),</span> <span class="p">{</span><span class="s">&#39;items&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">AddressInline</span><span class="p">,</span> <span class="n">Banks</span><span class="p">],</span> <span class="s">&#39;active&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">}),</span>
+  <span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&#39;Banks&#39;</span><span class="p">),</span> <span class="p">{</span><span class="s">&#39;items&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">BankInline</span><span class="p">],</span> <span class="s">&#39;active&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">}),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<img alt="../../_images/admin_tabs.png" class="align-right" src="../../_images/admin_tabs.png" />
+<p>Resulting in 4 tabs with labels  as shown in the figure. 
+Each element of tabs is a tuple composed of:</p>
+<ul>
+<li><p class="first">a label</p>
+</li>
+<li><p class="first">a list of elements (possibly empty). Each element can be eather a</p>
+<ul>
+<li><table class="first docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">string:</th><td class="field-body">that will be interpreted as the name of a fieldset declared in
+fieldsets</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li><table class="first docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">(django) Inline:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">whose inline must be declared in the standard way. 
+(In this case a models can also be used)</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li><table class="first docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">AjaxInline:</th><td class="field-body">whose inline must be declared as defined ref:<cite>here &lt;ajax_inline&gt;</cite></td>
+</tr>
+</tbody>
+</table>
+</li>
+<li><table class="first docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">empty list:</th><td class="field-body"><p class="first">the first one that is left as an
+empty <strong>list</strong> will be filled with all fieldsets as in:</p>
+<div class="last highlight-python"><div class="highlight"><pre><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&#39;Author&#39;</span><span class="p">),</span> <span class="p">{}),</span>
+</pre></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+</li>
+</ul>
+<p>This grants the ability to place all peaces in any fancy way</p>
+<div class="section" id="get-tabs">
+<span id="id1"></span><h2>get_tabs<a class="headerlink" href="#get-tabs" title="Permalink to this headline">¶</a></h2>
+<p>The signature if function <tt class="xref py py-func docutils literal"><span class="pre">get_tabs()</span></tt> is as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">get_tabs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+   <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabs</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>to use <tt class="docutils literal"><span class="pre">get_tabs</span></tt> returning different tabs depending on 
+obj requires you also create inlines with the same logic.</p>
+<p class="last">That means you have at least django 1.5 when kw <tt class="docutils literal"><span class="pre">obj</span></tt> was added to 
+<tt class="docutils literal"><span class="pre">get_inline_instances</span></tt>!!</p>
+</div>
+<p>Note that if your <tt class="docutils literal"><span class="pre">get_tabs</span></tt> changes the number of Inlines used you need to 
+prepare a similar <tt class="docutils literal"><span class="pre">get_inline_instances</span></tt> that must on turn call super as in:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">get_tabs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">obj</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">obj</span> <span class="ow">and</span> <span class="n">obj</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
+        <span class="n">tabs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabs</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">tabs</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">(</span><span class="s">&#39;Contratto&#39;</span> <span class="p">,</span> <span class="p">{}),</span>
+            <span class="p">)</span>
+    <span class="k">return</span> <span class="n">tabs</span>
+
+<span class="k">def</span> <span class="nf">get_inline_instances</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">obj</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+
+    <span class="k">if</span> <span class="n">obj</span> <span class="ow">and</span> <span class="n">obj</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inlines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inlines</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inlines</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">get_inline_instances</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">obj</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <div class="sphinxlocaltoc">
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Admin Tabs in change form</a><ul>
+<li><a class="reference internal" href="#get-tabs">get_tabs</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="content.html"
+                        title="previous chapter">Addon &amp; layout</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="ajax_inlines.html"
+                        title="next chapter">AjaxInline</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/django/addon/admin_tabs.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../contents.html" title="Table Of Contents"
+             >toc</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="ajax_inlines.html" title="AjaxInline"
+             >next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="content.html" title="Addon &amp; layout"
+             >previous</a> &nbsp; &nbsp;</li>
+    <li><a href="../../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="../content.html" >Django: aggiunte e standardizzazioni.</a> &raquo;</li>
+          <li><a href="content.html" >Addon &amp; layout</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2013, Thunder Systems.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>

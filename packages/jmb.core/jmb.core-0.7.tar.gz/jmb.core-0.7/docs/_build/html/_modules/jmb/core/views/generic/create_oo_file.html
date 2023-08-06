@@ -1,0 +1,184 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>jmb.core.views.generic.create_oo_file &mdash; jmb.core 0.7 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../../_static/cloud.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../../',
+        VERSION:     '0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../../_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="../../../../../_static/cloud.js"></script>
+    <link rel="top" title="jmb.core 0.7 documentation" href="../../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../../index.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="relbar-top">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../../../../contents.html" title="Table Of Contents"
+             accesskey="C">toc</a> &nbsp; &nbsp;</li>
+    <li><a href="../../../../../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="../../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for jmb.core.views.generic.create_oo_file</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. _oo-create-file:</span>
+
+<span class="sd">Utilizzo</span>
+<span class="sd">========</span>
+
+<span class="sd">Un esempio semplice di utilizzo::</span>
+
+<span class="sd">  from jmb.core.views.generic.create_oo_file import create_file</span>
+<span class="sd">  extra_context = {&#39;to_company&#39; : self.get_to_company, }</span>
+<span class="sd">  str_oofile = create_file(None, file_name=pdf_cover_name, </span>
+<span class="sd">                           file_model=&#39;admin/fax/fax/cover.odt&#39;,</span>
+<span class="sd">                           file_type=&quot;pdf&quot;, save_in=&quot;/tmp/&quot;, extra_context=extra_context)</span>
+
+<span class="sd">.. autofunction: create_file</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+
+<span class="kn">from</span> <span class="nn">django.utils.translation</span> <span class="kn">import</span> <span class="n">ugettext_lazy</span> <span class="k">as</span> <span class="n">_</span>
+<span class="kn">from</span> <span class="nn">django.shortcuts</span> <span class="kn">import</span> <span class="n">render_to_response</span>
+
+<span class="kn">from</span> <span class="nn">jmb.core.utils.ooutils</span> <span class="kn">import</span> <span class="n">OOUtils</span>
+
+<div class="viewcode-block" id="create_file"><a class="viewcode-back" href="../../../../../misc/misc.html#jmb.core.views.generic.create_oo_file.create_file">[docs]</a><span class="k">def</span> <span class="nf">create_file</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">obj_id</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">queryset</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                <span class="n">file_model</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">get_raw_string</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">language</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                <span class="n">save_in</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">extra_context</span><span class="o">=</span><span class="p">{}):</span>
+    <span class="sd">&quot;&quot;&quot;Return an HttpResponse with an attachment that is the pdf/odt file</span>
+
+<span class="sd">    it uses :attr:`OOUtils.save_odt` and :attr:`OOUtils.save_pdf`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># Creazione di un file OpenOffice</span>
+    <span class="k">if</span> <span class="n">obj_id</span> <span class="ow">and</span> <span class="n">queryset</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">render_to_response</span><span class="p">(</span><span class="s">&#39;jmb/generic_error.html&#39;</span><span class="p">,</span> <span class="n">error</span><span class="o">=</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;Error: ambiguos&quot;</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">obj_id</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">model</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">render_to_response</span><span class="p">(</span><span class="s">&#39;jmb/generic_error.html&#39;</span><span class="p">,</span> <span class="n">error</span><span class="o">=</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;Model param is required.&quot;</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">model</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">file_model</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">render_to_response</span><span class="p">(</span><span class="s">&#39;jmb/generic_error.html&#39;</span><span class="p">,</span> <span class="n">error</span><span class="o">=</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;File Model param is required if model param is not set.&quot;</span><span class="p">))</span>
+
+    <span class="n">obj</span> <span class="o">=</span> <span class="n">queryset</span>
+    <span class="k">if</span> <span class="n">obj_id</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pk</span><span class="o">=</span><span class="n">obj_id</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">model</span><span class="o">.</span><span class="n">DoesNotExists</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">render_to_response</span><span class="p">(</span><span class="s">&#39;jmb/generic_error.html&#39;</span><span class="p">,</span> <span class="n">error</span><span class="o">=</span><span class="n">_</span><span class="p">(</span><span class="s">&quot;The object does not exists.&quot;</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">file_type</span><span class="p">:</span>
+        <span class="n">file_type</span> <span class="o">=</span> <span class="s">&#39;odt&#39;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">file_name</span><span class="p">:</span>
+        <span class="n">file_name</span> <span class="o">=</span> <span class="s">&quot;default_name&quot;</span>
+        <span class="k">if</span> <span class="n">model</span><span class="p">:</span>
+            <span class="n">file_name</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">object_name</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">file_model</span><span class="p">:</span>
+        <span class="n">file_model</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">.</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">app_label</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">object_name</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">file_type</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">request</span> <span class="ow">and</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="p">:</span>
+        <span class="n">extra_context</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="p">)</span>
+    <span class="n">o</span> <span class="o">=</span> <span class="n">OOUtils</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s">&#39;odt&#39;</span><span class="p">:</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">save_odt</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">file_model</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">obj</span><span class="o">=</span><span class="n">obj</span><span class="p">,</span> <span class="n">get_raw_string</span><span class="o">=</span><span class="n">get_raw_string</span><span class="p">,</span> <span class="n">language</span><span class="o">=</span><span class="n">language</span><span class="p">,</span> <span class="n">save_in</span><span class="o">=</span><span class="n">save_in</span><span class="p">,</span> <span class="n">extra_context</span><span class="o">=</span><span class="n">extra_context</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s">&#39;ods&#39;</span><span class="p">:</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">save_ods</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">file_model</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">obj</span><span class="o">=</span><span class="n">obj</span><span class="p">,</span> <span class="n">get_raw_string</span><span class="o">=</span><span class="n">get_raw_string</span><span class="p">,</span> <span class="n">language</span><span class="o">=</span><span class="n">language</span><span class="p">,</span> <span class="n">save_in</span><span class="o">=</span><span class="n">save_in</span><span class="p">,</span> <span class="n">extra_context</span><span class="o">=</span><span class="n">extra_context</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s">&#39;pdf&#39;</span><span class="p">:</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">save_pdf</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">file_model</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">obj</span><span class="o">=</span><span class="n">obj</span><span class="p">,</span> <span class="n">get_raw_string</span><span class="o">=</span><span class="n">get_raw_string</span><span class="p">,</span> <span class="n">language</span><span class="o">=</span><span class="n">language</span><span class="p">,</span> <span class="n">save_in</span><span class="o">=</span><span class="n">save_in</span><span class="p">,</span> <span class="n">extra_context</span><span class="o">=</span><span class="n">extra_context</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">response</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../../../../contents.html" title="Table Of Contents"
+             >toc</a> &nbsp; &nbsp;</li>
+    <li><a href="../../../../../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="../../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2013, Thunder Systems.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>

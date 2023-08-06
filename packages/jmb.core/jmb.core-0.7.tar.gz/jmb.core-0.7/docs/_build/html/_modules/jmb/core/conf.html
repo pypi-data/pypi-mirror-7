@@ -1,0 +1,183 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>jmb.core.conf &mdash; jmb.core 0.7 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/cloud.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="../../../_static/cloud.js"></script>
+    <link rel="top" title="jmb.core 0.7 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="relbar-top">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../../contents.html" title="Table Of Contents"
+             accesskey="C">toc</a> &nbsp; &nbsp;</li>
+    <li><a href="../../../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for jmb.core.conf</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Default settings</span>
+<span class="sd">================</span>
+
+
+<span class="sd">All default setting must be set in a module called &#39;settings&#39; inside the</span>
+<span class="sd">application. Application&#39;s ``__init__.py`` must contain the lines::</span>
+
+<span class="sd">  from jmb.core.conf import inject_app_defaults</span>
+
+<span class="sd">  inject_app_defaults(__name__)</span>
+
+
+<span class="sd">So that all variables (*UPPER CASE ONLY*) get copied to settings singleton.</span>
+
+<span class="sd">NOTE: in order to make this all work the module must not have been imported</span>
+<span class="sd">      before the settings module. This means we should put ``tsettings`` out</span>
+<span class="sd">      of the module to be sure it will work for applications</span>
+
+<span class="sd">.. autofunction:: inject_app_defaults</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">jmb.core.monkey.conf</span> <span class="kn">import</span> <span class="n">patch_cms_page_not_to_overwrite_jquery</span>
+
+
+<div class="viewcode-block" id="inject_app_defaults"><a class="viewcode-back" href="../../../management/settings.html#jmb.core.conf.inject_app_defaults">[docs]</a><span class="k">def</span> <span class="nf">inject_app_defaults</span><span class="p">(</span><span class="n">application</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Inject an application&#39;s default settings</span>
+
+<span class="sd">    :param application: the application whose settings must be injected. E.g: ``jmb.fax``</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># https://github.com/thsutton/django-application-settings</span>
+
+    <span class="c"># importante per garantire che sys.module abbia global_settings</span>
+    <span class="kn">from</span> <span class="nn">django.conf</span> <span class="kn">import</span> <span class="n">global_settings</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="nb">__import__</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">.settings&#39;</span> <span class="o">%</span> <span class="n">application</span><span class="p">)</span>
+        <span class="kn">import</span> <span class="nn">sys</span>
+        
+        <span class="c"># Import our defaults, project defaults, and project settings</span>
+        <span class="n">_app_settings</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">.settings&#39;</span> <span class="o">%</span> <span class="n">application</span><span class="p">]</span>
+        <span class="n">_def_settings</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="s">&#39;django.conf.global_settings&#39;</span><span class="p">]</span>
+        <span class="n">_settings</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="s">&#39;django.conf&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">settings</span>
+
+        <span class="c"># Add the values from the application.settings module</span>
+        <span class="k">for</span> <span class="n">_k</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">_app_settings</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">_k</span><span class="o">.</span><span class="n">isupper</span><span class="p">():</span>
+                <span class="c"># Add the value to the default settings module</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="n">_def_settings</span><span class="p">,</span> <span class="n">_k</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">_app_settings</span><span class="p">,</span> <span class="n">_k</span><span class="p">))</span>
+
+                <span class="c"># Add the value to the settings, if not already present</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">_settings</span><span class="p">,</span> <span class="n">_k</span><span class="p">):</span>
+<span class="c">#                    _settings</span>
+                    <span class="nb">setattr</span><span class="p">(</span><span class="n">_settings</span><span class="p">,</span> <span class="n">_k</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">_app_settings</span><span class="p">,</span> <span class="n">_k</span><span class="p">))</span>
+
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="c"># Silently skip failing settings modules</span>
+        <span class="k">pass</span>
+</div>
+<span class="k">def</span> <span class="nf">set_interactive_user</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="s">&#39;admin&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Implementa ThreadUser anche da shell interattiva::</span>
+
+<span class="sd">         from jumbo import conf</span>
+<span class="sd">         conf.set_interactive_user()</span>
+<span class="sd">       </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">django.conf</span> <span class="kn">import</span> <span class="n">settings</span>
+    <span class="kn">from</span> <span class="nn">django.contrib.auth.models</span> <span class="kn">import</span> <span class="n">User</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="s">&#39;INTERACTIVE_USER&#39;</span><span class="p">,</span> <span class="n">User</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="n">username</span><span class="p">))</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../../contents.html" title="Table Of Contents"
+             >toc</a> &nbsp; &nbsp;</li>
+    <li><a href="../../../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2013, Thunder Systems.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>

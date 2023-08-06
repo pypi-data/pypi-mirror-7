@@ -1,0 +1,39 @@
+{% load i18n  admin_tabs %}
+
+{% if tabs %}
+<div class="container">
+  <ul class="nav nav-tabs">
+  {% for tab_name, item_dict in tabs %}
+    <li class="{{item_dict.active|to_class}}" >
+      <a data-toggle="tab" href="#tabs-{{ forloop.counter0 }}">{{ tab_name }}</a>
+    </li>
+  {% endfor %}
+  </ul>
+</div>
+<div class="tab-content">
+{% for tab_name, item_dict in tabs %}
+   <div class="tab-pane {{item_dict.active|to_class}}" id="tabs-{{forloop.counter0 }}">
+   {% for item in item_dict.items %}
+       {% if item|is_fieldset %}
+	   {% with fieldset=adminform|get_fieldset_by_name:item %}
+		  {% include "admin/includes/fieldset.html" %}
+	   {% endwith %}
+
+       {% elif item|is_ajax_inline %}
+	   {% with ajax_inline=item %}
+		  {% include ajax_inline.template %}
+	   {% endwith %}
+       {% else %}
+	   {% with inline_admin_formset=inline_admin_formsets|get_inline_formset_by_model:item %}
+	      {% if inline_admin_formset %}
+		   {% include inline_admin_formset.opts.template %}
+	      {% endif %}
+	   {% endwith %}
+
+      {% endif %}
+
+    {% endfor %}
+    </div>
+  {% endfor %}
+</div>
+{% endif %}

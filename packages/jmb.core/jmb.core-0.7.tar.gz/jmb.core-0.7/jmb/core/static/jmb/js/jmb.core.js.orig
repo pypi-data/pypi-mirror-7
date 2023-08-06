@@ -1,0 +1,129 @@
+if (window.jmb == undefined) window.jmb = {};
+
+
+jmb.hide_input = function () {
+    $(function(){
+        $(".form-row div input[type=hidden]").parent("div").hide()
+    });
+}
+
+jmb.error_tab = function () {
+     $(function(){
+        $(".admintab-content .tab-pane").each(function(){
+            var errors = $(this).find(".errors").length
+            var errorslist = $(this).find(".errorlist li").length
+            if(errors || errorslist){ 
+                $("a[href='#"+  $(this).attr("id")+"']").addClass("taberror")
+                $("a[href='#"+  $(this).attr("id")+"']").append('<span class="badge badge-important">'+ (errors + errorslist) +'</span>')
+            }
+        })
+     });
+    
+}
+jmb.stickytab = function () {
+    $(function(){
+        //https://github.com/garand/sticky
+        $(".stickytab").sticky({topSpacing:1, bottomSpacing:1});
+    });
+}
+
+
+jmb.iframe_hjson_link = function () {
+    $(document).on("click", ".iframe", function () {
+        link = $(this).attr("href")
+	if (link.indexOf('?') < 0) {
+           link += '?'
+        } else {
+           link += '&'
+        }
+        if ($(this).hasClass("hjson")) link += "_hjson=1&_popup=1";
+        jmb.show_in_popup(link)
+        return false;
+    });
+
+}
+
+jmb.autocomplete_filterby_patch = function () {
+
+    yourlabs.Autocomplete.prototype.makeXhr = function () {
+        if (this.filterBy) {
+            filters = this.filterBy.split("||")
+            autocomplete = this
+            $(filters).each(function (k, v) {
+                filter_key = v.split("|")[0]
+                filter_value = $(v.split("|")[1]).val()
+                if (filter_value && typeof (filter_value) == "object") filter_value = filter_value[0]
+                if (filter_value) {
+                    autocomplete.data[filter_key] = filter_value
+                }
+            })
+        }
+        this.xhr = $.ajax(this.url, {
+            type: "GET",
+            data: this.data,
+            complete: $.proxy(this.fetchComplete, this)
+        });
+    }
+
+}
+
+jmb.auto_popup = function () {
+    jQuery(document).ready(function($) {
+	    $('a.iframe')
+		    .click(
+			    function() {
+			        var src = $(this).attr("href")
+			        suffix = (src.indexOf("?") !=-1) ?"&_popup=1" : "?_popup=1"
+				    src+=  suffix
+				    var title = $(this).attr("title")
+				    var width = $(this).attr("width")
+				    var height = $(this).attr("height")
+				    jmb.show_in_popup(src, title, width, height)
+				    return false;
+			    })
+    })
+}
+
+
+jmb.show_in_popup = function (src, title, width, height) {
+    if (!(src)) return false;
+    var title = title || " "
+    var width = width || 1000
+    var height = height || 500
+    var iframe = $('<iframe frameborder="0" marginwidth="0" marginheight="0" 					allowfullscreen></iframe>');
+
+    dialog = $("<div></div>").append(iframe).appendTo("body")
+    $(dialog).dialog({
+        autoOpen: false,
+        modal: true,
+        resizable: true,
+        width: "auto",
+        height: "auto",
+        close: function () {
+            iframe.attr("src", "");
+        },
+        open: function (event, ui) {
+            iframe.attr({
+                width: '100%',
+                height: '100%'
+            });
+            iframe.parents(".ui-dialog").css(
+                'width', width);
+            $(".ui-dialog-content").css('overflow', 'hidden');
+                
+                
+            $(".ui-dialog-titlebar-close").html("X")
+            dialog.parent().height(height + 30)
+            dialog.height(height)
+        }
+    });
+    iframe.attr({
+        width: +width,
+        height: +height,
+        src: src
+    });
+    $(dialog).dialog("option", "title", title)
+    $(dialog).dialog("open");
+
+    return true;
+}

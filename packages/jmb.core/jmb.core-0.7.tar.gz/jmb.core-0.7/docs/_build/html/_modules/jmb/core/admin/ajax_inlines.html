@@ -1,0 +1,823 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>jmb.core.admin.ajax_inlines &mdash; jmb.core 0.7 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/cloud.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="../../../../_static/cloud.js"></script>
+    <link rel="top" title="jmb.core 0.7 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="relbar-top">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../../../contents.html" title="Table Of Contents"
+             accesskey="C">toc</a> &nbsp; &nbsp;</li>
+    <li><a href="../../../../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for jmb.core.admin.ajax_inlines</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="sd">&quot;&quot;&quot;.. _ajax_inline:</span>
+
+<span class="sd">AjaxInline</span>
+<span class="sd">==========</span>
+
+<span class="sd">.. image:: ../../images/ajax_inlines.png</span>
+<span class="sd">   :align: right </span>
+
+<span class="sd">This is a very powerfull way to display children rows of a parent. It&#39;s use can be alternative </span>
+<span class="sd">to that of TabularInline but differs in many details:</span>
+
+<span class="sd">1. Rows can be added only when the parent has already been saved. If you</span>
+<span class="sd">   want to abort the creation of the father if the children are not created,</span>
+<span class="sd">   this is not the correct tool.</span>
+
+<span class="sd">2. Add/Change/Delete is done via iframe/ajax, that make it fast and </span>
+<span class="sd">   user-friendly. On the other hand ``Tabular/StakedInline`` use a single huge form.</span>
+
+<span class="sd">3. Any row is displayed using official django result_list templatetag, the same used in</span>
+<span class="sd">   changelist, the :class:`ChangeList` object used has a modified </span>
+<span class="sd">   :meth:`ChangeList.get_query_set` to filter children of a parent. You can customize it or</span>
+<span class="sd">   simply customize :meth:`AjaxInline.get_queryset` method.</span>
+
+<span class="sd">   All fields defined in ``AjaxInline``&#39;s ``list_display`` attribute will be</span>
+<span class="sd">   treated in the standard way for ``list_display`` on ``ModelForm`` i.e.:</span>
+<span class="sd">   you can define functions and the like.</span>
+
+<span class="sd">4. Layout can only be controlled via tabs</span>
+
+<span class="sd">5. You need to register a ModelAdmin separately for the Child Model you want to edit</span>
+<span class="sd">   See below for :ref:`row-customization`. </span>
+
+<span class="sd">6. DataTable jQuery plugin, take care of presenting data in an effective way, sorting is </span>
+<span class="sd">   done locally, searching is done by default on any field.</span>
+
+<span class="sd">7. Only one ajax_inline can be registered for each model, that means that </span>
+<span class="sd">   you cannot use 2 different ajax_inlines to edit/delete records</span>
+
+<span class="sd">To add AjaxInline to your ModelAdmin, resulting in something similar to what</span>
+<span class="sd">is shown in the figure can be accomplished as follows:</span>
+
+<span class="sd">.. code-block:: python</span>
+
+<span class="sd">   from django.contrib import admin</span>
+
+<span class="sd">   from jmb.core.admin import AjaxInline, ConstrainedModelForm, register_inline</span>
+<span class="sd">   from jmb.core.admin.options import ExtendibleModelAdmin</span>
+
+<span class="sd">   class ContactAjaxInline(AjaxInline):</span>
+<span class="sd">       model = Contact</span>
+<span class="sd">       fk_name = &#39;company&#39;  </span>
+<span class="sd">       list_display = (&#39;title&#39;, &#39;first_name&#39;, &#39;role&#39;,&#39;user&#39;, )</span>
+
+<span class="sd">   class CompanyModelAdmin(ExtendibleModelAdmin):</span>
+<span class="sd">       ...</span>
+<span class="sd">       tabs = (</span>
+<span class="sd">            (&#39;main&#39;, {}),</span>
+<span class="sd">            (&#39;contacts&#39;, {&#39;items&#39; : [ContactAjaxInline]}),</span>
+<span class="sd">            ...</span>
+<span class="sd">       )</span>
+
+<span class="sd">    class ContactForm(ConstrainedModelForm):</span>
+<span class="sd">       class Meta:</span>
+<span class="sd">           model = Contact      </span>
+<span class="sd">       hidden_fields = (&#39;organization&#39;,) # ALTERNATIVELY you can use get_form below</span>
+
+<span class="sd">    class ContactModelAdmin(ExtendibleModelAdmin):</span>
+<span class="sd">       model = Contact</span>
+<span class="sd">       # form = ContactForm</span>
+<span class="sd">       def get_form(self, request, obj=None, **kwargs):</span>
+<span class="sd">           &#39;&#39;&#39;</span>
+<span class="sd">           Return a form that forces all fields in the GET as not changeable</span>
+<span class="sd">           &#39;&#39;&#39;</span>
+<span class="sd">           # Alternative to declaring hidden_fields in the ConstraintForm</span>
+<span class="sd">           hidden_fields = [key for key in request.GET.keys() if not key.startswith(&#39;_&#39;)]</span>
+<span class="sd">           name = &quot;%sForm&quot; % self.model.__name__</span>
+
+<span class="sd">           return type(name, (ContactForm,), {</span>
+<span class="sd">               &#39;hidden_fields&#39; : hidden_fields,</span>
+<span class="sd">           })</span>
+
+
+
+<span class="sd">    register_inline(ContactAjaxInline)</span>
+<span class="sd">    admin.site.register(Contact, ContactModelAdmin)</span>
+<span class="sd">    admin.site.register(Company, CompanyModelAdmin)</span>
+
+
+<span class="sd">You need to use :class:`ConstrainedModelForm` to make sure foreign keys to </span>
+<span class="sd">the parent are not writeble</span>
+
+<span class="sd">.. _row-customization:</span>
+
+<span class="sd">Row customization</span>
+<span class="sd">===================</span>
+
+<span class="sd">``ajax_inline.html`` uses Django&#39;s ``result_list`` templatetag to render</span>
+<span class="sd">the single object, so any standard way to customize the changelist can be used:</span>
+<span class="sd">field_names in ``list_display`` can be functions defined on the ModelAdmin or </span>
+<span class="sd">on the model as described in django documentation.</span>
+
+<span class="sd">When you add/modify a record you use the standard ModleAdmin called in an</span>
+<span class="sd">iframe. After saving the obj the object itself is rendered in the same</span>
+<span class="sd">way it would be in the chagelist, that implies you need to register which</span>
+<span class="sd">AjaxInlines will be used so that redsponse_add/change can use it. This is</span>
+<span class="sd">solved by registering the inlines via :func:`register_inline`</span>
+
+<span class="sd">ConstraintForm</span>
+<span class="sd">==============</span>
+
+<span class="sd">When editing an inline you want to hide the foreign_key field: it simply isn&#39;t </span>
+<span class="sd">usefull and you want to prevent the used to change it. But it must be present in </span>
+<span class="sd">the form as HiddenField as it&#39;s needed when saving the record.</span>
+
+<span class="sd">You can use set the widget to Hidden using a :class:`CostrainedForm` and declaring </span>
+<span class="sd">it as hidden in the class. If you plan to use the same form both as AjaxInlien and </span>
+<span class="sd">in a standard change_form, you can set hidden fields dinamically as shown in </span>
+<span class="sd">the example above</span>
+
+<span class="sd">API</span>
+<span class="sd">===</span>
+
+<span class="sd">.. autoclass:: AjaxParentModelAdmin</span>
+<span class="sd">   :members:</span>
+
+<span class="sd">.. autoclass:: ConstrainedModelForm</span>
+<span class="sd">   :members:</span>
+
+<span class="sd">.. autoclass:: ChildrenChangeList</span>
+<span class="sd">   :members:</span>
+
+<span class="sd">.. autoclass:: AjaxInline</span>
+<span class="sd">   :members:</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+<span class="kn">from</span> <span class="nn">django.utils.safestring</span> <span class="kn">import</span> <span class="n">mark_safe</span>
+<span class="kn">from</span> <span class="nn">django</span> <span class="kn">import</span> <span class="n">forms</span>
+<span class="kn">from</span> <span class="nn">django.contrib.admin</span> <span class="kn">import</span> <span class="n">site</span>
+<span class="kn">from</span> <span class="nn">django.db.models</span> <span class="kn">import</span> <span class="n">ForeignKey</span>
+<span class="kn">from</span> <span class="nn">django.contrib.admin</span> <span class="kn">import</span> <span class="n">options</span>
+<span class="kn">from</span> <span class="nn">django.contrib</span> <span class="kn">import</span> <span class="n">admin</span>
+<span class="kn">from</span> <span class="nn">django.core.urlresolvers</span> <span class="kn">import</span> <span class="n">reverse</span>
+<span class="kn">from</span> <span class="nn">django.template.response</span> <span class="kn">import</span> <span class="n">SimpleTemplateResponse</span>
+<span class="kn">from</span> <span class="nn">django.template</span> <span class="kn">import</span> <span class="n">Context</span><span class="p">,</span> <span class="n">Template</span><span class="p">,</span> <span class="n">loader</span>
+<span class="kn">from</span> <span class="nn">django.template.loader</span> <span class="kn">import</span> <span class="n">get_template</span>
+<span class="kn">from</span> <span class="nn">django_filters.admin.options</span> <span class="kn">import</span> <span class="n">AdvancedSearchModelAdmin</span>
+<span class="kn">from</span> <span class="nn">django.contrib.admin.views.main</span> <span class="kn">import</span> <span class="n">ChangeList</span>
+<span class="kn">from</span> <span class="nn">django.forms.models</span> <span class="kn">import</span> <span class="n">_get_foreign_key</span>
+<span class="kn">from</span> <span class="nn">django.utils.translation</span> <span class="kn">import</span> <span class="n">ugettext_lazy</span> <span class="k">as</span> <span class="n">_</span>
+<span class="kn">from</span> <span class="nn">django.utils.translation</span> <span class="kn">import</span> <span class="n">ugettext</span> <span class="k">as</span> <span class="n">ugt</span>
+<span class="kn">from</span> <span class="nn">django.contrib.admin.util</span> <span class="kn">import</span> <span class="n">unquote</span><span class="p">,</span> <span class="n">get_deleted_objects</span>
+<span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span><span class="p">,</span> <span class="n">transaction</span><span class="p">,</span> <span class="n">router</span>
+<span class="kn">from</span> <span class="nn">django.utils.encoding</span> <span class="kn">import</span> <span class="n">force_text</span>
+<span class="kn">from</span> <span class="nn">pyquery</span> <span class="kn">import</span> <span class="n">PyQuery</span> <span class="k">as</span> <span class="n">pq</span>
+<span class="kn">from</span> <span class="nn">django.conf</span> <span class="kn">import</span> <span class="n">settings</span>
+
+<span class="kn">from</span> <span class="nn">jmb.core.middleware.thread_local</span> <span class="kn">import</span> <span class="n">get_request</span>
+
+<span class="n">inlines_registry</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="k">def</span> <span class="nf">register_inline</span><span class="p">(</span><span class="n">inline</span><span class="p">):</span>
+    <span class="s">&quot;Register an Inline for a specific model&quot;</span>
+    <span class="n">inlines_registry</span><span class="p">[</span><span class="n">inline</span><span class="o">.</span><span class="n">model</span><span class="p">]</span> <span class="o">=</span> <span class="n">inline</span>
+
+<span class="k">class</span> <span class="nc">ConfigurationError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span> <span class="k">pass</span>
+
+<div class="viewcode-block" id="AjaxParentModelAdmin"><a class="viewcode-back" href="../../../../django/addon/ajax_inlines.html#jmb.core.admin.ajax_inlines.AjaxParentModelAdmin">[docs]</a><span class="k">class</span> <span class="nc">AjaxParentModelAdmin</span><span class="p">(</span><span class="n">AdvancedSearchModelAdmin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A ModelAdmin that provides handling for ``_hjson`` parameter that</span>
+<span class="sd">    returns the object formatted according to a registered AjaxInline</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+
+    <span class="k">def</span> <span class="nf">response_add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">post_url_continue</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span>  <span class="s">&quot;_hjson&quot;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="p">:</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="s">&#39;_json_continue&#39;</span> <span class="k">if</span>  <span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;_json_continue&quot;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span> <span class="k">else</span> <span class="n">method</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="s">&#39;_json&#39;</span> <span class="k">if</span>  <span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;_json&quot;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span> <span class="k">else</span> <span class="n">method</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="s">&#39;_saveasnew&#39;</span> <span class="k">if</span>  <span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;_saveasnew&quot;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span> <span class="k">else</span> <span class="n">method</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="s">&#39;_addanother&#39;</span> <span class="k">if</span>  <span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;_addanother&quot;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span> <span class="k">else</span> <span class="n">method</span>
+            <span class="n">opts</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">_meta</span>
+            <span class="n">msg_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="n">force_text</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">verbose_name</span><span class="p">),</span> <span class="s">&#39;obj&#39;</span><span class="p">:</span> <span class="n">force_text</span><span class="p">(</span><span class="n">obj</span><span class="p">)}</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="n">_</span><span class="p">(</span><span class="s">&#39;The </span><span class="si">%(name)s</span><span class="s"> &quot;</span><span class="si">%(obj)s</span><span class="s">&quot; was added successfully.&#39;</span><span class="p">)</span> <span class="o">%</span> <span class="n">msg_dict</span>
+            <span class="n">inline</span> <span class="o">=</span> <span class="n">inlines_registry</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">](</span><span class="n">admin_site</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">admin_site</span><span class="p">)</span>
+            <span class="n">inline</span><span class="o">.</span><span class="n">set_changelist</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">obj</span><span class="p">)</span>
+            <span class="n">html</span> <span class="o">=</span> <span class="n">inline</span><span class="o">.</span><span class="n">render_row</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+            <span class="n">pk_value</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">_get_pk_val</span><span class="p">()</span>
+            <span class="n">serialized</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;model&#39;</span><span class="p">:</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="s">&quot;pk&quot;</span><span class="p">:</span> <span class="n">pk_value</span><span class="p">,</span> <span class="s">&quot;fields&quot;</span><span class="p">:</span> <span class="n">html</span> <span class="p">}</span>
+            <span class="k">return</span> <span class="n">SimpleTemplateResponse</span><span class="p">(</span><span class="s">&#39;jmb/iframe.html&#39;</span><span class="p">,</span> <span class="p">{</span> 
+                <span class="s">&#39;action&#39;</span><span class="p">:</span> <span class="s">&#39;add&#39;</span><span class="p">,</span>
+                <span class="s">&#39;method&#39;</span><span class="p">:</span> <span class="n">method</span><span class="p">,</span>
+                <span class="s">&#39;message&#39;</span><span class="p">:</span> <span class="n">message</span><span class="p">,</span>
+                <span class="s">&#39;json&#39;</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">serialized</span><span class="p">])</span>
+            <span class="p">})</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">AjaxParentModelAdmin</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">response_add</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">post_url_continue</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">response_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+
+        <span class="k">if</span>  <span class="s">&quot;_hjson&quot;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="p">:</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="s">&#39;_json_continue&#39;</span> <span class="k">if</span>  <span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;_json_continue&quot;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span> <span class="k">else</span> <span class="n">method</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="s">&#39;_json&#39;</span> <span class="k">if</span>  <span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;_json&quot;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span> <span class="k">else</span> <span class="n">method</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="s">&#39;_saveasnew&#39;</span> <span class="k">if</span>  <span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;_saveasnew&quot;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span> <span class="k">else</span> <span class="n">method</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="s">&#39;_addanother&#39;</span> <span class="k">if</span>  <span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;_addanother&quot;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span> <span class="k">else</span> <span class="n">method</span>
+            <span class="n">opts</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">_meta</span>
+            <span class="n">msg_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="n">force_text</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">verbose_name</span><span class="p">),</span> <span class="s">&#39;obj&#39;</span><span class="p">:</span> <span class="n">force_text</span><span class="p">(</span><span class="n">obj</span><span class="p">)}</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="n">_</span><span class="p">(</span><span class="s">&#39;The </span><span class="si">%(name)s</span><span class="s"> &quot;</span><span class="si">%(obj)s</span><span class="s">&quot; was changed successfully.&#39;</span><span class="p">)</span> <span class="o">%</span> <span class="n">msg_dict</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">inline</span> <span class="o">=</span> <span class="n">inlines_registry</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">](</span><span class="n">admin_site</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">admin_site</span><span class="p">)</span>
+                <span class="n">inline</span><span class="o">.</span><span class="n">set_changelist</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">obj</span><span class="p">)</span>
+                <span class="n">html</span> <span class="o">=</span> <span class="n">inline</span><span class="o">.</span><span class="n">render_row</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="n">html</span> <span class="o">=</span> <span class="s">&quot;not ajax inline&quot;</span>
+            <span class="n">pk_value</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">_get_pk_val</span><span class="p">()</span>
+            <span class="n">serialized</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;model&#39;</span><span class="p">:</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="s">&quot;pk&quot;</span><span class="p">:</span> <span class="n">pk_value</span><span class="p">,</span> <span class="s">&quot;fields&quot;</span><span class="p">:</span> <span class="n">html</span> <span class="p">}</span>
+            <span class="k">return</span> <span class="n">SimpleTemplateResponse</span><span class="p">(</span><span class="s">&#39;jmb/iframe.html&#39;</span><span class="p">,</span> <span class="p">{</span>
+                <span class="s">&#39;action&#39;</span><span class="p">:</span> <span class="s">&#39;change&#39;</span><span class="p">,</span>
+                <span class="s">&#39;message&#39;</span><span class="p">:</span> <span class="n">message</span><span class="p">,</span>
+                <span class="s">&#39;method&#39;</span><span class="p">:</span> <span class="n">method</span><span class="p">,</span>
+                <span class="s">&#39;json&#39;</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">serialized</span><span class="p">])</span>
+            <span class="p">})</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">AjaxParentModelAdmin</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">response_change</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">obj</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AjaxParentModelAdmin.delete_view"><a class="viewcode-back" href="../../../../django/addon/ajax_inlines.html#jmb.core.admin.ajax_inlines.AjaxParentModelAdmin.delete_view">[docs]</a>    <span class="k">def</span> <span class="nf">delete_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">object_id</span><span class="p">,</span> <span class="n">extra_context</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="s">&quot;The &#39;delete&#39; admin view for this model.&quot;</span>
+
+        <span class="n">extra_context</span> <span class="o">=</span> <span class="p">(</span><span class="n">extra_context</span> <span class="ow">or</span> <span class="p">{})</span>
+        <span class="n">extra_context</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+             <span class="s">&#39;is_popup&#39;</span><span class="p">:</span> <span class="s">&quot;_popup&quot;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">REQUEST</span><span class="p">,})</span>
+    
+        <span class="c"># The user has already confirmed the deletion.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">request</span><span class="o">.</span><span class="n">POST</span> <span class="ow">or</span> <span class="ow">not</span> <span class="p">(</span><span class="s">&quot;_hjson&quot;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="p">):</span> 
+            <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">AjaxParentModelAdmin</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">delete_view</span><span class="p">(</span>
+                <span class="n">request</span><span class="p">,</span> <span class="n">object_id</span><span class="p">,</span> <span class="n">extra_context</span><span class="p">)</span>
+
+        <span class="n">opts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">_meta</span>
+        <span class="n">app_label</span> <span class="o">=</span> <span class="n">opts</span><span class="o">.</span><span class="n">app_label</span>
+
+        <span class="n">obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_object</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">unquote</span><span class="p">(</span><span class="n">object_id</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_delete_permission</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">PermissionDenied</span>
+
+        <span class="k">if</span> <span class="n">obj</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">Http404</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%(name)s</span><span class="s"> object with primary key </span><span class="si">%(key)r</span><span class="s"> does not exist.&#39;</span><span class="p">)</span> <span class="o">%</span> <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="n">force_text</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">verbose_name</span><span class="p">),</span> <span class="s">&#39;key&#39;</span><span class="p">:</span> <span class="n">escape</span><span class="p">(</span><span class="n">object_id</span><span class="p">)})</span>
+
+        <span class="n">using</span> <span class="o">=</span> <span class="n">router</span><span class="o">.</span><span class="n">db_for_write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+
+        <span class="c"># Populate deleted_objects, a data structure of all related objects that</span>
+        <span class="c"># will also be deleted.</span>
+        <span class="p">(</span><span class="n">deleted_objects</span><span class="p">,</span> <span class="n">perms_needed</span><span class="p">,</span> <span class="n">protected</span><span class="p">)</span> <span class="o">=</span> <span class="n">get_deleted_objects</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">obj</span><span class="p">],</span> <span class="n">opts</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">admin_site</span><span class="p">,</span> <span class="n">using</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="p">:</span> <span class="c"># The user has already confirmed the deletion.</span>
+            <span class="k">if</span> <span class="n">perms_needed</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">PermissionDenied</span>
+            <span class="n">obj_display</span> <span class="o">=</span> <span class="n">force_text</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log_deletion</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">obj_display</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">delete_model</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">obj</span><span class="p">)</span>
+
+            <span class="n">message</span> <span class="o">=</span> <span class="n">_</span><span class="p">(</span><span class="s">&#39;The </span><span class="si">%(name)s</span><span class="s"> &quot;</span><span class="si">%(obj)s</span><span class="s">&quot; was deleted successfully.&#39;</span><span class="p">)</span> <span class="o">%</span> <span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="n">force_text</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">verbose_name</span><span class="p">),</span> <span class="s">&#39;obj&#39;</span><span class="p">:</span> <span class="n">force_text</span><span class="p">(</span><span class="n">obj_display</span><span class="p">)}</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_change_permission</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">HttpResponseRedirect</span><span class="p">(</span><span class="n">reverse</span><span class="p">(</span><span class="s">&#39;admin:index&#39;</span><span class="p">,</span>
+                                                    <span class="n">current_app</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">admin_site</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+
+            <span class="k">return</span> <span class="n">SimpleTemplateResponse</span><span class="p">(</span><span class="s">&#39;jmb/iframe.html&#39;</span><span class="p">,</span> <span class="p">{</span>
+                <span class="s">&#39;action&#39;</span><span class="p">:</span> <span class="s">&#39;delete&#39;</span><span class="p">,</span>
+                <span class="s">&#39;message&#39;</span><span class="p">:</span> <span class="n">message</span>
+            <span class="p">})</span>
+    </div>
+    <span class="k">def</span> <span class="nf">get_delete_icon</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="n">opts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">_meta</span>
+        <span class="n">can_be_delete</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="c"># Se il modello ha la funzione can_be_modified la chiamo per fare</span>
+        <span class="c"># i controlli relativi a quel modello</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s">&quot;can_be_delete&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="n">can_be_delete</span><span class="p">():</span>
+                <span class="n">can_be_delete</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="c"># Se non ce l&#39;ha non faccio controlli e visualizzo l&#39;icona</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">can_be_delete</span> <span class="o">=</span> <span class="bp">True</span>
+
+        <span class="k">if</span> <span class="n">can_be_delete</span><span class="p">:</span>
+            <span class="n">param</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_fancybox</span><span class="p">:</span>
+                <span class="n">param</span><span class="o">=</span><span class="s">&#39;?_popup=1&amp;nobuttons=1&#39;</span>
+            <span class="k">return</span> <span class="s">&quot;&lt;a name=&#39;delete&#39; href=</span><span class="si">%(reverse_url)s%(param)s</span><span class="s">&gt;&lt;img src=&#39;</span><span class="si">%(url)s</span><span class="s">jmb/images/del.gif&#39; alt=&#39;</span><span class="si">%(window_title)s</span><span class="s">&#39; title=&#39;</span><span class="si">%(window_title)s</span><span class="s">&#39;/&gt;&lt;/a&gt;&quot;</span> <span class="o">%</span> <span class="p">{</span>
+                <span class="s">&#39;reverse_url&#39;</span><span class="p">:</span><span class="n">reverse</span><span class="p">(</span><span class="s">&#39;admin:</span><span class="si">%s</span><span class="s">_</span><span class="si">%s</span><span class="s">_delete&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">app_label</span><span class="p">,</span> <span class="n">opts</span><span class="o">.</span><span class="n">object_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()),</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">pk</span><span class="p">,)),</span>
+                <span class="s">&#39;param&#39;</span><span class="p">:</span> <span class="n">param</span><span class="p">,</span>
+                <span class="s">&#39;url&#39;</span><span class="p">:</span><span class="n">settings</span><span class="o">.</span><span class="n">STATIC_URL</span><span class="p">,</span>
+                <span class="s">&#39;window_title&#39;</span><span class="p">:</span><span class="n">ugt</span><span class="p">(</span><span class="s">&quot;Delete </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">opts</span><span class="o">.</span><span class="n">object_name</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+            <span class="p">}</span>
+        <span class="k">return</span> <span class="s">&quot;&quot;</span>
+    <span class="n">get_delete_icon</span><span class="o">.</span><span class="n">short_description</span> <span class="o">=</span> <span class="n">_</span><span class="p">(</span><span class="s">&quot;D&quot;</span><span class="p">)</span>
+    <span class="n">get_delete_icon</span><span class="o">.</span><span class="n">allow_tags</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">get_edit_icon</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">querystring</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">):</span>
+
+        <span class="n">opts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">_meta</span>
+        <span class="n">can_be_modified</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="c"># Se il modello ha la funzione can_be_modified la chiamo per fare</span>
+        <span class="c"># i controlli relativi a quel modello</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s">&quot;can_be_modified&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="n">can_be_modified</span><span class="p">():</span>
+                <span class="n">can_be_modified</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="c"># Se non ce l&#39;ha, non faccio controlli e visualizzo l&#39;icona</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">can_be_modified</span> <span class="o">=</span> <span class="bp">True</span>
+
+        <span class="n">request</span> <span class="o">=</span> <span class="n">get_request</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="n">can_be_modified</span><span class="p">:</span>
+            <span class="n">dj_reverse_url</span> <span class="o">=</span> <span class="n">reverse</span><span class="p">(</span><span class="s">&#39;admin:</span><span class="si">%s</span><span class="s">_</span><span class="si">%s</span><span class="s">_change&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">app_label</span><span class="p">,</span> <span class="n">opts</span><span class="o">.</span><span class="n">object_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()),</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">pk</span><span class="p">,))</span>
+            <span class="k">if</span> <span class="n">querystring</span><span class="p">:</span>
+                <span class="n">dj_reverse_url</span> <span class="o">+=</span> <span class="s">&quot;?</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">querystring</span>
+            <span class="k">return</span> <span class="s">&quot;&lt;a name=&#39;edit&#39; href=</span><span class="si">%(reverse_url)s</span><span class="s">&gt;&lt;img src=&#39;</span><span class="si">%(url)s</span><span class="s">jmb/images/edit.gif&#39; alt=&#39;</span><span class="si">%(window_title)s</span><span class="s">&#39; title=&#39;</span><span class="si">%(window_title)s</span><span class="s">&#39;/&gt;&lt;/a&gt;&quot;</span> <span class="o">%</span> <span class="p">{</span>
+            <span class="s">&#39;reverse_url&#39;</span><span class="p">:</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">dj_reverse_url</span><span class="p">,</span> <span class="p">),</span>
+            <span class="s">&#39;url&#39;</span><span class="p">:</span><span class="n">settings</span><span class="o">.</span><span class="n">STATIC_URL</span><span class="p">,</span>
+            <span class="s">&#39;window_title&#39;</span><span class="p">:</span><span class="n">ugt</span><span class="p">(</span><span class="s">&quot;Edit </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">opts</span><span class="o">.</span><span class="n">object_name</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="s">&quot;&quot;</span>
+    <span class="n">get_edit_icon</span><span class="o">.</span><span class="n">short_description</span> <span class="o">=</span> <span class="n">_</span><span class="p">(</span><span class="s">&quot;E&quot;</span><span class="p">)</span>
+    <span class="n">get_edit_icon</span><span class="o">.</span><span class="n">allow_tags</span> <span class="o">=</span> <span class="bp">True</span>
+
+
+    <span class="k">def</span> <span class="nf">get_edit_icon_iframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="c"># FIXME: this way to get the inline limits to 1 ajax_inline per model!!!</span>
+
+        <span class="n">inline</span> <span class="o">=</span> <span class="n">inlines_registry</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">](</span><span class="n">admin_site</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">admin_site</span><span class="p">)</span>
+        <span class="n">querystring</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">=</span><span class="si">%s</span><span class="s">&quot;</span>  <span class="o">%</span> <span class="p">(</span><span class="n">inline</span><span class="o">.</span><span class="n">fk_name</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">pk</span><span class="p">)</span>
+        <span class="n">txt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_edit_icon</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">querystring</span><span class="o">=</span><span class="n">querystring</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;href=&#39;</span><span class="p">,</span> <span class="s">&#39;class=&quot;iframe hjson edit &quot; width=&quot;</span><span class="si">%s</span><span class="s">&quot; height=&quot;</span><span class="si">%s</span><span class="s">&quot; href=&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                      <span class="n">inline</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">inline</span><span class="o">.</span><span class="n">height</span><span class="p">),</span> <span class="n">txt</span><span class="p">)</span>
+
+    <span class="n">get_edit_icon_iframe</span><span class="o">.</span><span class="n">short_description</span> <span class="o">=</span> <span class="n">_</span><span class="p">(</span><span class="s">&quot;E&quot;</span><span class="p">)</span>
+    <span class="n">get_edit_icon_iframe</span><span class="o">.</span><span class="n">allow_tags</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">get_delete_icon_iframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="n">txt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_delete_icon</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;href=&#39;</span><span class="p">,</span> <span class="s">&#39;class=&quot;iframe hjson delete&quot; href=&#39;</span><span class="p">,</span> <span class="n">txt</span><span class="p">)</span>
+
+    <span class="n">get_delete_icon_iframe</span><span class="o">.</span><span class="n">short_description</span> <span class="o">=</span> <span class="n">_</span><span class="p">(</span><span class="s">&quot;X&quot;</span><span class="p">)</span>
+    <span class="n">get_delete_icon_iframe</span><span class="o">.</span><span class="n">allow_tags</span> <span class="o">=</span> <span class="bp">True</span>
+</div>
+<div class="viewcode-block" id="ConstrainedModelForm"><a class="viewcode-back" href="../../../../django/addon/ajax_inlines.html#jmb.core.admin.ajax_inlines.ConstrainedModelForm">[docs]</a><span class="k">class</span> <span class="nc">ConstrainedModelForm</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">ModelForm</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A ModelForm that forces HiddenInput on fields declared in :attr:`hidden_fields`</span>
+<span class="sd">    </span>
+<span class="sd">    It&#39;s main goal is to be used when a child is edited and the parent must be forced </span>
+<span class="sd">    without giving the user the opportunity to alter it.</span>
+
+<span class="sd">    It&#39;s :meth:`__init__` calls hide_field() for any field declared in</span>
+<span class="sd">    :attr:`hidden_fields`.  If you need to implement more logic in your</span>
+<span class="sd">    ``__init__`` you can simply call :meth:`hide_field` by youself.</span>
+
+<span class="sd">    We use it along with a javascript code (``jmb.hide_input()``) that hide the</span>
+<span class="sd">    label of the relative fields called from within ``change_form.html``</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">hidden_fields</span> <span class="o">=</span> <span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ConstrainedModelForm</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">field_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hidden_fields</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hide_field</span><span class="p">(</span><span class="n">field_name</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">hide_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field_name</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+            <span class="n">hidden_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field_name</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+            
+        <span class="k">if</span>  <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field_name</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+            <span class="n">contratto_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field_name</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">field_name</span><span class="p">:</span>
+            <span class="n">field</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Meta</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">get_field_by_name</span><span class="p">(</span><span class="n">field_name</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">):</span>
+                <span class="k">return</span>
+                <span class="c"># msg = (&quot;Hiding only implemented for ForeignKey (here: %s)&quot; % field_name)</span>
+                <span class="c"># return NotImplementedError(msg)</span>
+
+            <span class="n">related_model</span> <span class="o">=</span> <span class="n">field</span><span class="o">.</span><span class="n">rel</span><span class="o">.</span><span class="n">get_related_field</span><span class="p">()</span><span class="o">.</span><span class="n">model</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span>  <span class="o">=</span> <span class="n">forms</span><span class="o">.</span><span class="n">ModelChoiceField</span><span class="p">(</span>
+                <span class="n">queryset</span><span class="o">=</span><span class="n">related_model</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">(),</span> <span class="n">required</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                <span class="n">widget</span><span class="o">=</span><span class="n">forms</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">HiddenInput</span><span class="p">()</span>
+            <span class="p">)</span>
+        
+</div>
+<div class="viewcode-block" id="ChildrenChangeList"><a class="viewcode-back" href="../../../../django/addon/ajax_inlines.html#jmb.core.admin.ajax_inlines.ChildrenChangeList">[docs]</a><span class="k">class</span> <span class="nc">ChildrenChangeList</span><span class="p">(</span><span class="n">ChangeList</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A ChangeList that has as queryset the children of a parent</span>
+<span class="sd">    </span>
+<span class="sd">    This is used to represent all children of a parent using the same</span>
+<span class="sd">    features used in a normal changelist but when using AjaxInline</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">fk_name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
+                 <span class="n">model</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">list_display</span><span class="o">=</span><span class="p">(),</span>
+                 <span class="n">list_display_links</span><span class="o">=</span><span class="p">(),</span> <span class="n">list_filter</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
+                 <span class="n">date_hierarchy</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">search_fields</span><span class="o">=</span><span class="p">(),</span> <span class="n">list_select_related</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                 <span class="n">list_per_page</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">list_max_show_all</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> 
+                 <span class="n">list_editable</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">model_admin</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">ajax_inline</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ajax_inline</span> <span class="o">=</span> <span class="n">ajax_inline</span>  <span class="c"># needed fo get the queryset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">parent</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fk_name</span> <span class="o">=</span> <span class="n">fk_name</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">opts</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">_meta</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lookup_opts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_admin</span> <span class="o">=</span> <span class="n">model_admin</span> <span class="ow">or</span> <span class="n">site</span><span class="o">.</span><span class="n">_registry</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">root_query_set</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_admin</span><span class="o">.</span><span class="n">queryset</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>  <span class="c"># django &gt;= 1.6</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">root_queryset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_admin</span><span class="o">.</span><span class="n">queryset</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">list_display</span> <span class="o">=</span> <span class="n">list_display</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_edit_delete_icons</span><span class="p">()</span>  <span class="c"># TO_DOC</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">list_display_links</span> <span class="o">=</span> <span class="n">list_display_links</span> <span class="ow">or</span> <span class="p">(</span><span class="s">&#39;get_edit_icon_iframe&#39;</span><span class="p">,)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">list_filter</span> <span class="o">=</span> <span class="n">list_filter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">date_hierarchy</span> <span class="o">=</span> <span class="n">date_hierarchy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">search_fields</span> <span class="o">=</span> <span class="n">search_fields</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">list_select_related</span> <span class="o">=</span> <span class="n">list_select_related</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">list_per_page</span> <span class="o">=</span> <span class="n">list_per_page</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">list_max_show_all</span> <span class="o">=</span> <span class="n">list_max_show_all</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">formset</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="c"># # Get search parameters from the query string.</span>
+        <span class="c"># try:</span>
+        <span class="c">#     self.page_num = int(request.GET.get(PAGE_VAR, 0))</span>
+        <span class="c"># except ValueError:</span>
+        <span class="c">#     self.page_num = 0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">show_all</span> <span class="o">=</span> <span class="bp">False</span>   <span class="c"># ALL_VAR in request.GET</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_popup</span> <span class="o">=</span> <span class="bp">False</span>   <span class="c"># IS_POPUP_VAR in request.GET</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">to_field</span> <span class="o">=</span> <span class="bp">None</span>   <span class="c"># request.GET.get(TO_FIELD_VAR)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="p">{}</span>       <span class="c"># dict(request.GET.items())</span>
+        <span class="c"># if PAGE_VAR in self.params:</span>
+        <span class="c">#     del self.params[PAGE_VAR]</span>
+        <span class="c"># if ERROR_FLAG in self.params:</span>
+        <span class="c">#     del self.params[ERROR_FLAG]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">list_editable</span> <span class="o">=</span> <span class="p">()</span>
+        <span class="c"># if self.is_popup:</span>
+        <span class="c">#     self.list_editable = ()</span>
+        <span class="c"># else:</span>
+        <span class="c">#     self.list_editable = list_editable</span>
+        <span class="c"># self.query = request.GET.get(SEARCH_VAR, &#39;&#39;)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">query_set</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_query_set</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">queryset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_queryset</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">preserved_filters</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_results</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+
+        <span class="c"># if self.is_popup:</span>
+        <span class="c">#     title = ugettext(&#39;Select %s&#39;)</span>
+        <span class="c"># else:</span>
+        <span class="c">#     title = ugettext(&#39;Select %s to change&#39;)</span>
+        <span class="c"># self.title = title % force_text(self.opts.verbose_name)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pk_attname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lookup_opts</span><span class="o">.</span><span class="n">pk</span><span class="o">.</span><span class="n">attname</span>
+
+
+        <span class="c"># super(ChildrenChangeList, self).__init__(request, **kw)</span>
+
+        
+    <span class="k">def</span> <span class="nf">get_query_set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_queryset</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+     
+    <span class="k">def</span> <span class="nf">get_queryset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ajax_inline</span><span class="o">.</span><span class="n">get_queryset</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+     
+    <span class="k">def</span> <span class="nf">add_edit_delete_icons</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;get_edit_icon_iframe&#39;</span><span class="p">,</span> <span class="s">&#39;get_delete_icon_iframe&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_display</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">list_display</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">list_display</span> <span class="ow">or</span> <span class="p">[])</span> <span class="o">+</span> <span class="p">[</span><span class="n">name</span><span class="p">]</span>
+    
+        </div>
+<div class="viewcode-block" id="AjaxInline"><a class="viewcode-back" href="../../../../django/addon/ajax_inlines.html#jmb.core.admin.ajax_inlines.AjaxInline">[docs]</a><span class="k">class</span> <span class="nc">AjaxInline</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Options for inline editing of ``model`` instances.</span>
+
+<span class="sd">    This is an ``inline`` whose editing happens via separate iframes</span>
+<span class="sd">    but that are displayed along with normal ones.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c">#: the model the ajax_inline refers to, similarly to what happens with tabular_inline</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="bp">None</span>
+    
+    <span class="c">#: the field that links to the parent </span>
+    <span class="n">fk_name</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="n">verbose_name</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">verbose_name_plural</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="c">#: basename of the template used to rendere the whole section</span>
+    <span class="c">#: the search path follows the reuls of change_form</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="s">&#39;ajax_inline.html&#39;</span>
+
+    <span class="c">#: the basename of the template used to render the single row</span>
+    <span class="c">#: the search path follows the reuls of change_form</span>
+    <span class="n">line_template</span> <span class="o">=</span> <span class="s">&#39;line_render.html&#39;</span>
+    <span class="n">list_display</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;__str__&#39;</span><span class="p">,)</span>
+    <span class="n">list_display_links</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">list_per_page</span> <span class="o">=</span> <span class="mi">200</span>
+    <span class="n">list_max_show_all</span> <span class="o">=</span> <span class="mi">200</span>
+    <span class="n">single_child</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="c">#: width of the iframe</span>
+    <span class="n">width</span> <span class="o">=</span> <span class="mi">700</span>
+    <span class="n">height</span> <span class="o">=</span> <span class="mi">700</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent_model</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">admin_site</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :arg parent_model: needed to get the foreign key</span>
+<span class="sd">        :arg admin_site: the admin_site, needed to get the ModelAdmin (?)</span>
+<span class="sd">        :arg parent: needed to get all children when rendering the changelist</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">admin_site</span> <span class="o">=</span> <span class="n">admin_site</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent_model</span> <span class="o">=</span> <span class="n">parent_model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">opts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">_meta</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">parent</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_model</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">fk_name</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fk_name</span> <span class="o">=</span> <span class="n">_get_foreign_key</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose_name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">verbose_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">verbose_name</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose_name_plural</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">verbose_name_plural</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">verbose_name_plural</span>
+
+<div class="viewcode-block" id="AjaxInline.set_changelist"><a class="viewcode-back" href="../../../../django/addon/ajax_inlines.html#jmb.core.admin.ajax_inlines.AjaxInline.set_changelist">[docs]</a>    <span class="k">def</span> <span class="nf">set_changelist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">obj</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add a changelist to the inline so that rendering can occurre</span>
+
+<span class="sd">        :arg request: An HttpRequest</span>
+<span class="sd">        :arg obj: the only object that should be returned by this changelist</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">kw</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">list_display</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">list_display</span><span class="p">,</span>
+            <span class="n">list_display_links</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">list_display_links</span><span class="p">,</span> <span class="n">list_filter</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
+            <span class="n">date_hierarchy</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">search_fields</span><span class="o">=</span><span class="p">(),</span> <span class="n">list_select_related</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+            <span class="n">list_per_page</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">list_per_page</span><span class="p">,</span> <span class="n">list_max_show_all</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">list_max_show_all</span><span class="p">,</span> 
+                  <span class="n">list_editable</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">model_admin</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">ajax_inline</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">single_child</span> <span class="o">=</span> <span class="n">obj</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cl</span> <span class="o">=</span> <span class="n">ChildrenChangeList</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fk_name</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cl</span><span class="o">.</span><span class="n">ajax_inline</span> <span class="o">=</span> <span class="bp">self</span>
+        </div>
+<div class="viewcode-block" id="AjaxInline.get_queryset"><a class="viewcode-back" href="../../../../django/addon/ajax_inlines.html#jmb.core.admin.ajax_inlines.AjaxInline.get_queryset">[docs]</a>    <span class="k">def</span> <span class="nf">get_queryset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a queryset of all the objects to represrnt in this run</span>
+<span class="sd">        </span>
+<span class="sd">        :arg request: HttpRequest</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">single_child</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">pk</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">single_child</span><span class="o">.</span><span class="n">pk</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">fk_name</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="p">})</span>
+        </div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">add_link</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># I only use this when self.parent is set</span>
+        <span class="n">link</span> <span class="o">=</span> <span class="n">reverse</span><span class="p">(</span><span class="s">&#39;admin:</span><span class="si">%s</span><span class="s">_</span><span class="si">%s</span><span class="s">_add&#39;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">app_label</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">object_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()))</span>
+        <span class="k">return</span> <span class="n">link</span> <span class="o">+</span> <span class="s">&quot;?</span><span class="si">%s</span><span class="s">=</span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fk_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">pk</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_delete_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="c"># used in line_render</span>
+        <span class="k">return</span> <span class="n">reverse</span><span class="p">(</span><span class="s">&#39;admin:</span><span class="si">%s</span><span class="s">_</span><span class="si">%s</span><span class="s">_delete&#39;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">app_label</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">object_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()),</span>
+                       <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">pk</span><span class="p">,))</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_edit_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="c"># used in line_render</span>
+        <span class="k">return</span> <span class="n">reverse</span><span class="p">(</span><span class="s">&#39;admin:</span><span class="si">%s</span><span class="s">_</span><span class="si">%s</span><span class="s">_change&#39;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">app_label</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">object_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()),</span> 
+                       <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">pk</span><span class="p">,))</span>
+
+<div class="viewcode-block" id="AjaxInline.get_rows"><a class="viewcode-back" href="../../../../django/addon/ajax_inlines.html#jmb.core.admin.ajax_inlines.AjaxInline.get_rows">[docs]</a>    <span class="k">def</span> <span class="nf">get_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return all the rows that should be displayed by this AjaxInLine</span>
+
+<span class="sd">        :arg obj: the object whose row we want to fetch</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c">## This works correctly also with multi-table inherintance </span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">fk_name</span> <span class="p">:</span><span class="n">obj</span><span class="p">})</span>
+</div>
+    <span class="k">def</span> <span class="nf">get_rows_from_parent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_rows</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">has_add_permission</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">auto_created</span><span class="p">:</span>
+            <span class="c"># We&#39;re checking the rights to an auto-created intermediate model,</span>
+            <span class="c"># which doesn&#39;t have its own individual permissions. The user needs</span>
+            <span class="c"># to have the change permission for the related model in order to</span>
+            <span class="c"># be able to do anything with the intermediate model.</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_change_permission</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">has_perm</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">app_label</span> <span class="o">+</span> <span class="s">&#39;.&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">get_add_permission</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">has_view_permission</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="c">## FIXME chiarire con vittorino</span>
+        <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">has_change_permission</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">obj</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">opts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span>
+        <span class="k">if</span> <span class="n">opts</span><span class="o">.</span><span class="n">auto_created</span><span class="p">:</span>
+            <span class="c"># The model was auto-created as intermediary for a</span>
+            <span class="c"># ManyToMany-relationship, find the target model</span>
+            <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">opts</span><span class="o">.</span><span class="n">fields</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">field</span><span class="o">.</span><span class="n">rel</span> <span class="ow">and</span> <span class="n">field</span><span class="o">.</span><span class="n">rel</span><span class="o">.</span><span class="n">to</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_model</span><span class="p">:</span>
+                    <span class="n">opts</span> <span class="o">=</span> <span class="n">field</span><span class="o">.</span><span class="n">rel</span><span class="o">.</span><span class="n">to</span><span class="o">.</span><span class="n">_meta</span>
+                    <span class="k">break</span>
+        <span class="k">return</span> <span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">has_perm</span><span class="p">(</span>
+            <span class="n">opts</span><span class="o">.</span><span class="n">app_label</span> <span class="o">+</span> <span class="s">&#39;.&#39;</span> <span class="o">+</span> <span class="n">opts</span><span class="o">.</span><span class="n">get_change_permission</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">has_delete_permission</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">obj</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">auto_created</span><span class="p">:</span>
+            <span class="c"># We&#39;re checking the rights to an auto-created intermediate model,</span>
+            <span class="c"># which doesn&#39;t have its own individual permissions. The user needs</span>
+            <span class="c"># to have the change permission for the related model in order to</span>
+            <span class="c"># be able to do anything with the intermediate model.</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_change_permission</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">obj</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">has_perm</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">app_label</span> <span class="o">+</span> <span class="s">&#39;.&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">opts</span><span class="o">.</span><span class="n">get_delete_permission</span><span class="p">())</span>
+
+<div class="viewcode-block" id="AjaxInline.render_row"><a class="viewcode-back" href="../../../../django/addon/ajax_inlines.html#jmb.core.admin.ajax_inlines.AjaxInline.render_row">[docs]</a>    <span class="k">def</span> <span class="nf">render_row</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the single row inside a ``return_list`` output</span>
+<span class="sd">        We know there is just one ``tr`` in this ``tbody``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">html</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">pq</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">d</span><span class="p">(</span><span class="s">&#39;tbody&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">html</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="AjaxInline.render_row_old"><a class="viewcode-back" href="../../../../django/addon/ajax_inlines.html#jmb.core.admin.ajax_inlines.AjaxInline.render_row_old">[docs]</a>    <span class="k">def</span> <span class="nf">render_row_old</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Render the single line using ``self.line_render`` (default: ``line_render.html``) </span>
+<span class="sd">        The search path follows the same rules as ``change_form.html`` &amp; similar.</span>
+
+<span class="sd">        :arg obj: the obj to be rendered. If not present self.obj will be used</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">opts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">_meta</span>
+        <span class="n">app_label</span> <span class="o">=</span> <span class="n">opts</span><span class="o">.</span><span class="n">app_label</span>
+        <span class="n">template_list</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s">&quot;admin/</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">app_label</span><span class="p">,</span> <span class="n">opts</span><span class="o">.</span><span class="n">object_name</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">line_template</span><span class="p">),</span>
+            <span class="s">&quot;admin/</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">app_label</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">line_template</span><span class="p">),</span>
+            <span class="s">&quot;admin/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">line_template</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="n">context</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s">&#39;row&#39;</span> <span class="p">:</span> <span class="n">obj</span><span class="p">,</span>
+            <span class="s">&#39;ajax_inline&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="n">loader</span><span class="o">.</span><span class="n">render_to_string</span><span class="p">(</span><span class="n">template_list</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="AjaxInline.clean_table_headers"><a class="viewcode-back" href="../../../../django/addon/ajax_inlines.html#jmb.core.admin.ajax_inlines.AjaxInline.clean_table_headers">[docs]</a>    <span class="k">def</span> <span class="nf">clean_table_headers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">html</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a table with js stripped from headers</span>
+<span class="sd">        :arg html: the output of th template</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">pq</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">pq</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;.sorted&quot;</span><span class="p">):</span>
+            <span class="n">pq</span><span class="p">(</span><span class="n">link</span><span class="p">)</span><span class="o">.</span><span class="n">removeClass</span><span class="p">(</span><span class="s">&quot;sorted&quot;</span><span class="p">)</span>
+            
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pq</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;.sortable&quot;</span><span class="p">)):</span>
+            <span class="n">pq</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="o">.</span><span class="n">removeClass</span><span class="p">(</span><span class="s">&quot;sortable&quot;</span><span class="p">)</span>
+            <span class="n">pq</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="o">.</span><span class="n">removeClass</span><span class="p">(</span><span class="s">&quot;sorting&quot;</span><span class="p">)</span>
+            
+        <span class="c">#import ipdb; ipdb.set_trace()  </span>
+        <span class="n">d</span><span class="p">(</span><span class="s">&quot;.sortoptions&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replaceWith</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">d</span><span class="p">(</span><span class="s">&quot;a.toggle&quot;</span><span class="p">):</span>
+            <span class="n">pq</span><span class="p">(</span><span class="n">link</span><span class="p">)</span><span class="o">.</span><span class="n">replaceWith</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">d</span><span class="p">(</span><span class="s">&quot;th .text a&quot;</span><span class="p">):</span>
+            <span class="n">pq</span><span class="p">(</span><span class="n">link</span><span class="p">)</span><span class="o">.</span><span class="n">removeAttr</span><span class="p">(</span><span class="s">&#39;href&#39;</span><span class="p">)</span>
+            <span class="n">pq</span><span class="p">(</span><span class="n">link</span><span class="p">)</span><span class="o">.</span><span class="n">replaceWith</span><span class="p">(</span><span class="s">&#39;&lt;div&gt;&#39;</span><span class="o">+</span><span class="n">pq</span><span class="p">(</span><span class="n">link</span><span class="p">)</span><span class="o">.</span><span class="n">html</span><span class="p">()</span><span class="o">+</span><span class="s">&#39;&lt;/div&gt;&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">mark_safe</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">d</span><span class="p">))</span>
+        </div>
+<div class="viewcode-block" id="AjaxInline.render"><a class="viewcode-back" href="../../../../django/addon/ajax_inlines.html#jmb.core.admin.ajax_inlines.AjaxInline.render">[docs]</a>    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Render the whole section using ``self.template`` (default: ``ajax_inline.html``) </span>
+<span class="sd">        The search path follows the same rules as ``change_form.html`` &amp; similar.</span>
+
+<span class="sd">        ``ajax_inline.html`` uses standard ``result_list`` used in ``change_list.html``</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">opts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">_meta</span>
+        <span class="n">app_label</span> <span class="o">=</span> <span class="n">opts</span><span class="o">.</span><span class="n">app_label</span>
+        <span class="n">template_list</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s">&quot;admin/</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">app_label</span><span class="p">,</span> <span class="n">opts</span><span class="o">.</span><span class="n">object_name</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="p">),</span>
+            <span class="s">&quot;admin/</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">app_label</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="p">),</span>
+            <span class="s">&quot;admin/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="n">context</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s">&#39;ajax_inline&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="p">,</span>
+        <span class="p">}</span>
+        
+        <span class="n">t</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">select_template</span><span class="p">(</span><span class="n">template_list</span><span class="p">)</span>
+
+        <span class="n">table</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">render_to_string</span><span class="p">(</span><span class="n">template_list</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span> 
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">clean_table_headers</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+        
+        </div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../../../contents.html" title="Table Of Contents"
+             >toc</a> &nbsp; &nbsp;</li>
+    <li><a href="../../../../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2013, Thunder Systems.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>

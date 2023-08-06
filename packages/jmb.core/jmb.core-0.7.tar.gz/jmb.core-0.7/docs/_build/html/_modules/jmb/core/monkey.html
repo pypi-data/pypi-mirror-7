@@ -1,0 +1,204 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>jmb.core.monkey &mdash; jmb.core 0.7 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/cloud.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="../../../_static/cloud.js"></script>
+    <link rel="top" title="jmb.core 0.7 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="relbar-top">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../../contents.html" title="Table Of Contents"
+             accesskey="C">toc</a> &nbsp; &nbsp;</li>
+    <li><a href="../../../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for jmb.core.monkey</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Jumbo relies on some patches to the official django version that can be applied using the </span>
+<span class="sd">function :func:`jmb.core.monkey.patch` in ``settings/__init__.py``::</span>
+
+<span class="sd">   # place these lines after any other code!!!</span>
+<span class="sd">   from jmb.core import monkey</span>
+<span class="sd">   monkey.patch()</span>
+
+
+<span class="sd">.. autofunction:: patch</span>
+
+<span class="sd">.. automodule:: jmb.core.monkey.management</span>
+
+<span class="sd">.. automodule:: jmb.core.monkey.conf</span>
+
+<span class="sd">.. automodule:: jmb.core.monkey.errors_in_forms</span>
+
+
+<span class="sd">.. _timepicker_patch:</span>
+
+<span class="sd">timepicker</span>
+<span class="sd">==========</span>
+
+<span class="sd">Datetime and time widgets in Django are pretty poor ones.</span>
+
+<span class="sd">Html widgets used by admin are defined in ``django.contrib.admin.options`` </span>
+<span class="sd">in a dict named ``FORMFIELD_FOR_DBFIELD_DEFAULTS``.</span>
+
+<span class="sd">We overwrite it in ``jmb.core.admin.options`` and define a widget that is</span>
+<span class="sd">derived from ``jQuery.ui``&#39;s default one.</span>
+
+<span class="sd">.. _monkey-autocomplete:</span>
+
+<span class="sd">autocomplete_light</span>
+<span class="sd">===================</span>
+
+<span class="sd">A monkey patch vs autocomplete_light (rel 1.4.9) is applied from within our</span>
+<span class="sd">``change_form.html`` so that :ref:`dynamic-autocompletion` capabilities are added</span>
+<span class="sd">to standard autocomplete_light.</span>
+
+<span class="sd">It&#39;s called from *extrahead block*.</span>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">django.conf</span> <span class="kn">import</span> <span class="n">settings</span>
+
+<span class="kn">from</span> <span class="nn">.management</span> <span class="kn">import</span> <span class="n">fix_find_namespaces</span>
+<span class="kn">from</span> <span class="nn">.conf</span> <span class="kn">import</span> <span class="n">patch_cms_page_not_to_overwrite_jquery</span>
+<span class="kn">from</span> <span class="nn">.errors_in_forms</span> <span class="kn">import</span> <span class="n">fix_error_list</span>
+
+<span class="n">MONKEY_PATCHES</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;namespaces&#39;</span><span class="p">,</span> <span class="s">&#39;widgets&#39;</span><span class="p">,</span> <span class="s">&#39;jquery&#39;</span><span class="p">,</span> <span class="s">&#39;form_errors&#39;</span><span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">patch_widgets_mapping</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Modify options.FORMFIELD_FOR_DBFIELD_DEFAULTS to use :ref:`timepicker`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">from</span> <span class="nn">jmb.core.forms</span> <span class="kn">import</span> <span class="n">widgets</span>
+    <span class="kn">from</span> <span class="nn">django.contrib.admin</span> <span class="kn">import</span> <span class="n">options</span>
+    <span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+    <span class="n">options</span><span class="o">.</span><span class="n">FORMFIELD_FOR_DBFIELD_DEFAULTS</span><span class="p">[</span><span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;widget&#39;</span><span class="p">:</span> <span class="n">widgets</span><span class="o">.</span><span class="n">DateTimePicker</span><span class="p">}</span>
+    <span class="n">options</span><span class="o">.</span><span class="n">FORMFIELD_FOR_DBFIELD_DEFAULTS</span><span class="p">[</span><span class="n">models</span><span class="o">.</span><span class="n">TimeField</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;widget&#39;</span><span class="p">:</span> <span class="n">widgets</span><span class="o">.</span><span class="n">TimePicker</span><span class="p">}</span>
+    <span class="n">options</span><span class="o">.</span><span class="n">FORMFIELD_FOR_DBFIELD_DEFAULTS</span><span class="p">[</span><span class="n">models</span><span class="o">.</span><span class="n">DateField</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;widget&#39;</span><span class="p">:</span> <span class="n">widgets</span><span class="o">.</span><span class="n">DatePicker</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="patch"><a class="viewcode-back" href="../../../django/conf/conf.html#jmb.core.monkey.patch">[docs]</a><span class="k">def</span> <span class="nf">patch</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Apply all patches Jumbo relyes on. Currently :ref:`namespaces`, :ref:`jquery &lt;jquery_cms&gt;`,</span>
+<span class="sd">    and :ref:`timepicker &lt;timepicker_patch&gt;`</span>
+
+<span class="sd">    :arg exclude: a list of strings naming the patches that will not be applied.</span>
+<span class="sd">       &#39;jquery&#39; patch will only be applied if ``cms`` is in ``INSTALLED_APPS``</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">MONKEY_PATCHES</span>  <span class="c"># non dovrebbe essere necessaria...</span>
+
+    <span class="n">MONKEY_PATCHES</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">MONKEY_PATCHES</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">item</span> <span class="ow">in</span> <span class="p">(</span><span class="n">exclude</span> <span class="ow">or</span> <span class="p">[])]</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">MONKEY_PATCHES</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">item</span> <span class="o">==</span> <span class="s">&#39;namespaces&#39;</span><span class="p">:</span>
+            <span class="n">fix_find_namespaces</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">item</span> <span class="o">==</span> <span class="s">&#39;widgets&#39;</span><span class="p">:</span>
+            <span class="n">patch_widgets_mapping</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">item</span> <span class="o">==</span> <span class="s">&#39;jquery&#39;</span> <span class="ow">and</span> <span class="s">&#39;cms&#39;</span> <span class="ow">in</span> <span class="n">settings</span><span class="o">.</span><span class="n">INSTALLED_APPS</span><span class="p">:</span>
+            <span class="n">patch_cms_page_not_to_overwrite_jquery</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">item</span> <span class="o">==</span> <span class="s">&#39;form_errors&#39;</span><span class="p">:</span>
+            <span class="n">fix_error_list</span><span class="p">()</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../../contents.html" title="Table Of Contents"
+             >toc</a> &nbsp; &nbsp;</li>
+    <li><a href="../../../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2013, Thunder Systems.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>

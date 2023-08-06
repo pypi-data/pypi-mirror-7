@@ -1,0 +1,194 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>jmb.core.admin.dashboard &mdash; jmb.core 0.7 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/cloud.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="../../../../_static/cloud.js"></script>
+    <link rel="top" title="jmb.core 0.7 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="relbar-top">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../../../contents.html" title="Table Of Contents"
+             accesskey="C">toc</a> &nbsp; &nbsp;</li>
+    <li><a href="../../../../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for jmb.core.admin.dashboard</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Dashboard</span>
+<span class="sd">=========</span>
+
+<span class="sd">utility to register a dashboard to be used when creating the *main* project</span>
+<span class="sd">dashboard. This dashboard needs to be a DashboardGroup</span>
+
+<span class="sd">.. note::</span>
+
+<span class="sd">   Note that the application dashboard is registered via a different mechanism, </span>
+<span class="sd">   i.e.: the registration of admin_tools. That register function needs a </span>
+<span class="sd">   DashboardAppIndex class. Both are registered within app&#39;``dashboars.py`` </span>
+<span class="sd">   that will be read only if ``urs.py`` starts an autodiscovery:</span>
+
+<span class="sd">      import admin_tools.dashboard</span>
+<span class="sd">      admin_tools.dashboard.autodiscover()</span>
+
+<span class="sd">registry</span>
+<span class="sd">--------</span>
+
+<span class="sd">Info are kept in a dict named registry than can be accessed to loop on </span>
+<span class="sd">registered applications::</span>
+
+<span class="sd">  from jmb.core.adm import dashboard</span>
+<span class="sd">  for appname, dash in dashboard.registry.iteritems():</span>
+<span class="sd">      ...</span>
+
+<span class="sd">The whole dahboard machinery is fired from the variables:</span>
+
+<span class="sd">:ADMIN_TOOLS_DASHMOARD: whose default is set as ``../dashboard.JumboDashboard`` </span>
+<span class="sd">            by ``jmb-start`` skel</span>
+<span class="sd">:ADMIN_TOOLS_MENU: whose default is set as ``../menu.JumboMenu`` by ``jmb-start`` </span>
+<span class="sd">            skel</span>
+
+<span class="sd">.. note::</span>
+
+<span class="sd">   the menu is triggered from a templatetag withing ``admin/base_site.html``</span>
+
+
+<span class="sd">It&#39;s up to aplication authors to correctly set it up, so that out default </span>
+<span class="sd">``dashboard.py``, present in out Skeleton will find and display it. </span>
+
+<span class="sd">.. autofunction:: register_group</span>
+
+<span class="sd">.. autofunction:: unregister_group</span>
+
+<span class="sd">.. autofunction:: get_group</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">admin_tools.dashboard</span>  <span class="kn">import</span> <span class="n">modules</span>
+
+<span class="n">registry</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="register_group"><a class="viewcode-back" href="../../../../django/misc/dashboard.html#jmb.core.admin.dashboard.register_group">[docs]</a><span class="k">def</span> <span class="nf">register_group</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">app_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Register a :class:`admin_tools.dashboard.modules.Group` group to be </span>
+
+<span class="sd">    :param app_name: the application name, e.g.: jmb.fax</span>
+<span class="sd">    :param group: an instance of a :class:`modules.Group`. It can also be </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="s">&quot;group must be DashboardModule or Group, found </span><span class="si">%s</span><span class="s">&quot;</span> 
+    <span class="k">assert</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">modules</span><span class="o">.</span><span class="n">DashboardModule</span><span class="p">),</span> <span class="n">msg</span> <span class="o">%</span> <span class="n">group</span>
+    <span class="n">registry</span><span class="p">[</span><span class="n">app_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">group</span>
+</div>
+<div class="viewcode-block" id="unregister_group"><a class="viewcode-back" href="../../../../django/misc/dashboard.html#jmb.core.admin.dashboard.unregister_group">[docs]</a><span class="k">def</span> <span class="nf">unregister_group</span><span class="p">(</span><span class="n">app_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Unregister a :class:`admin_tools.dashboard.modules.Group` group to be  </span>
+
+<span class="sd">    :param app_name: the application name, e.g.: jmb.fax</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">del</span> <span class="n">registry</span><span class="p">[</span><span class="n">app_name</span><span class="p">]</span> 
+</div>
+<div class="viewcode-block" id="get_group"><a class="viewcode-back" href="../../../../django/misc/dashboard.html#jmb.core.admin.dashboard.get_group">[docs]</a><span class="k">def</span> <span class="nf">get_group</span><span class="p">(</span><span class="n">app_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;return a :class:`modules.Group` for app_name or None</span>
+<span class="sd">    </span>
+<span class="sd">    :param app_name: the application name, e.g.: jmb.fax</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">registry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">app_name</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+
+
+    </div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../../../contents.html" title="Table Of Contents"
+             >toc</a> &nbsp; &nbsp;</li>
+    <li><a href="../../../../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2013, Thunder Systems.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>

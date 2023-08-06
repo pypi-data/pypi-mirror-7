@@ -1,0 +1,465 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Data Import &mdash; jmb.core 0.7 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/cloud.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="../_static/cloud.js"></script>
+    <link rel="top" title="jmb.core 0.7 documentation" href="../index.html" />
+    <link rel="up" title="Misc: info ed utilità varie" href="content.html" />
+    <link rel="next" title="Send a calendar event" href="ics.html" />
+    <link rel="prev" title="Postgresql" href="pg-reset-sequence.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="relbar-top">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../contents.html" title="Table Of Contents"
+             accesskey="C">toc</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="ics.html" title="Send a calendar event"
+             accesskey="N">next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="pg-reset-sequence.html" title="Postgresql"
+             accesskey="P">previous</a> &nbsp; &nbsp;</li>
+    <li><a href="../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="content.html" accesskey="U">Misc: info ed utilità varie</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-jmb.core.utils.data_import">
+<span id="data-import"></span><h1>Data Import<a class="headerlink" href="#module-jmb.core.utils.data_import" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="importare-dati">
+<span id="id1"></span><h2>Importare dati<a class="headerlink" href="#importare-dati" title="Permalink to this headline">¶</a></h2>
+<p>Questo modulo fornisce alcune classi per facilitare l&#8217;importazione di dati da file excel e csv
+Si suppone che ogni file sia composto da fogli <a class="reference internal" href="#jmb.core.utils.data_import.Sheet" title="jmb.core.utils.data_import.Sheet"><tt class="xref py py-class docutils literal"><span class="pre">Sheet</span></tt></a></p>
+<p>Un esempio di importazione sarà:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">jmb.organization.models</span> <span class="kn">import</span> <span class="n">Contact</span>
+<span class="kn">from</span> <span class="nn">jmb.core.utils.data_import</span> <span class="kn">import</span> <span class="n">XlsFile</span>
+
+<span class="k">class</span> <span class="nc">Anagrafiche</span><span class="p">(</span><span class="n">XlsFile</span><span class="p">):</span>
+    <span class="n">fields_map</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;code&#39;</span> <span class="p">:</span> <span class="s">&#39;ancodice&#39;</span><span class="p">,</span>
+        <span class="s">&#39;description&#39;</span> <span class="p">:</span> <span class="s">&#39;andescri&#39;</span><span class="p">,</span>
+        <span class="s">&#39;foo&#39;</span> <span class="p">:</span> <span class="s">&#39;antipcon&#39;</span><span class="p">,</span>
+      <span class="p">}</span>
+    <span class="k">def</span> <span class="nf">do</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">kw</span><span class="p">):</span>
+         <span class="c"># modi alternativi di referenziare i dati</span>
+         <span class="n">Contact</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get_or_create</span><span class="p">(</span><span class="n">code</span><span class="o">=</span><span class="n">row</span><span class="o">.</span><span class="n">ancodice</span><span class="p">,</span> <span class="n">defaults</span><span class="o">=</span><span class="n">kw</span><span class="p">)</span>
+         <span class="c">#Contact.objects.get_or_create(code=kw[&#39;code&#39;], defaults=kw)</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">Anagrafiche</span><span class="p">(</span><span class="s">&#39;anagrafiche.xls&#39;</span><span class="p">,</span> <span class="n">auto</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">x</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="section" id="field-list">
+<h3>field_list<a class="headerlink" href="#field-list" title="Permalink to this headline">¶</a></h3>
+<p>un metodo semplice di dare il nome alle colonne è di impostarlo con 
+l&#8217;attributo <a class="reference internal" href="#jmb.core.utils.data_import.Sheet.field_list" title="jmb.core.utils.data_import.Sheet.field_list"><tt class="xref py py-attr docutils literal"><span class="pre">Sheet.field_list</span></tt></a>, le colonne possono poi essere mappate 
+in field names tramite <a class="reference internal" href="#jmb.core.utils.data_import.Sheet.fields_map" title="jmb.core.utils.data_import.Sheet.fields_map"><tt class="xref py py-attr docutils literal"><span class="pre">Sheet.fields_map</span></tt></a></p>
+<dl class="class">
+<dt id="jmb.core.utils.data_import.Sheet">
+<em class="property">class </em><tt class="descclassname">jmb.core.utils.data_import.</tt><tt class="descname">Sheet</tt><a class="reference internal" href="../_modules/jmb/core/utils/data_import.html#Sheet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.utils.data_import.Sheet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract sheet</p>
+<dl class="method">
+<dt id="jmb.core.utils.data_import.Sheet.do">
+<tt class="descname">do</tt><big>(</big><em>row</em>, <em>kw</em>, <em>j</em><big>)</big><a class="reference internal" href="../_modules/jmb/core/utils/data_import.html#Sheet.do"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.utils.data_import.Sheet.do" title="Permalink to this definition">¶</a></dt>
+<dd><p>implement here your import</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>row</strong> &#8211; a namedtuple. Names are the names in the original columns</li>
+<li><strong>kw</strong> &#8211; <p>a dict suitable to feed <tt class="docutils literal"><span class="pre">defaults</span></tt> keyword attribute of
+<tt class="docutils literal"><span class="pre">get_or_create</span></tt> if fields_map is provided:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">do</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">kw</span><span class="p">):</span>
+    <span class="n">Contact</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get_or_create</span><span class="p">(</span><span class="n">cod</span><span class="o">=</span><span class="n">row</span><span class="o">.</span><span class="n">cod</span><span class="p">,</span> <span class="n">defaults</span><span class="o">=</span><span class="n">kw</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><strong>j</strong> &#8211; integer 1-based counting read rows</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="jmb.core.utils.data_import.Sheet.field_list">
+<tt class="descname">field_list</tt><em class="property"> = None</em><a class="headerlink" href="#jmb.core.utils.data_import.Sheet.field_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>a list of field names. Optional. When present it will be used
+to name each column instead of looking at the column header.
+Field name here is the row attribute (eg: row.first_name)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="jmb.core.utils.data_import.Sheet.fields_map">
+<tt class="descname">fields_map</tt><em class="property"> = None</em><a class="headerlink" href="#jmb.core.utils.data_import.Sheet.fields_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>a dict mapping field names to column headers, as an example, if field_name
+has {&#8216;first_name&#8217; : &#8216;Nome&#8217;} it means that <a class="reference internal" href="#jmb.core.utils.data_import.Sheet.read" title="jmb.core.utils.data_import.Sheet.read"><tt class="xref py py-meth docutils literal"><span class="pre">read()</span></tt></a> will set:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">kw</span><span class="p">[</span><span class="s">&#39;first_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">Nome</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="jmb.core.utils.data_import.Sheet.handle_exception">
+<tt class="descname">handle_exception</tt><big>(</big><em>e</em>, <em>row</em>, <em>kw</em>, <em>j</em><big>)</big><a class="reference internal" href="../_modules/jmb/core/utils/data_import.html#Sheet.handle_exception"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.utils.data_import.Sheet.handle_exception" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle exception of the execution of <a class="reference internal" href="#jmb.core.utils.data_import.Sheet.do" title="jmb.core.utils.data_import.Sheet.do"><tt class="xref py py-meth docutils literal"><span class="pre">do()</span></tt></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="jmb.core.utils.data_import.Sheet.read">
+<tt class="descname">read</tt><big>(</big><em>limit=0</em>, <em>start=0</em><big>)</big><a class="reference internal" href="../_modules/jmb/core/utils/data_import.html#Sheet.read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.utils.data_import.Sheet.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loop on all rows of a sheet</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>start</strong> &#8211; start reading at line nr. <tt class="docutils literal"><span class="pre">start</span></tt></li>
+<li><strong>limit</strong> &#8211; limit number of rows to read to <tt class="docutils literal"><span class="pre">limit</span></tt></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="xls">
+<h3>xls<a class="headerlink" href="#xls" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="jmb.core.utils.data_import.XlsFile">
+<em class="property">class </em><tt class="descclassname">jmb.core.utils.data_import.</tt><tt class="descname">XlsFile</tt><big>(</big><em>filename=None</em>, <em>file_contents=None</em>, <em>auto=False</em>, <em>sheet_index=0</em><big>)</big><a class="reference internal" href="../_modules/jmb/core/utils/data_import.html#XlsFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.utils.data_import.XlsFile" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="jmb.core.utils.data_import.XlsFile.get_cell_value">
+<tt class="descname">get_cell_value</tt><big>(</big><em>cell</em><big>)</big><a class="reference internal" href="../_modules/jmb/core/utils/data_import.html#XlsFile.get_cell_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.utils.data_import.XlsFile.get_cell_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the best guess for the correct value</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="jmb.core.utils.data_import.XlsFile.get_rows">
+<tt class="descname">get_rows</tt><big>(</big><em>sheet_index=0</em>, <em>sheet=None</em><big>)</big><a class="reference internal" href="../_modules/jmb/core/utils/data_import.html#XlsFile.get_rows"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.utils.data_import.XlsFile.get_rows" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>sheet_index</strong> &#8211; the index of the sheet to read</li>
+<li><strong>sheet</strong> &#8211; a possible sheet object as returned by sheet_by_index</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="jmb.core.utils.data_import.XlsFile.get_sheet_as_list">
+<tt class="descname">get_sheet_as_list</tt><big>(</big><em>sheet_name=None</em>, <em>all_sheets=True</em><big>)</big><a class="reference internal" href="../_modules/jmb/core/utils/data_import.html#XlsFile.get_sheet_as_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.utils.data_import.XlsFile.get_sheet_as_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>get  named sheet or all sheets</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="jmb.core.utils.data_import.XlsFile.get_tuples_from_row">
+<tt class="descname">get_tuples_from_row</tt><big>(</big><em>Row</em>, <em>row</em><big>)</big><a class="reference internal" href="../_modules/jmb/core/utils/data_import.html#XlsFile.get_tuples_from_row"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.utils.data_import.XlsFile.get_tuples_from_row" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>Row</strong> &#8211; typename</li>
+<li><strong>row</strong> &#8211; iterable</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="jmb.core.utils.data_import.XlsFile.xldate2date">
+<tt class="descname">xldate2date</tt><big>(</big><em>cell</em><big>)</big><a class="reference internal" href="../_modules/jmb/core/utils/data_import.html#XlsFile.xldate2date"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.utils.data_import.XlsFile.xldate2date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returna un datetime.date dal valore della cella</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="jmb.core.utils.data_import.XlsFile.xls2csv">
+<tt class="descname">xls2csv</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/jmb/core/utils/data_import.html#XlsFile.xls2csv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.utils.data_import.XlsFile.xls2csv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Really poor version of csv file</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="csv">
+<h3>csv<a class="headerlink" href="#csv" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="jmb.core.utils.data_import.CsvFile">
+<em class="property">class </em><tt class="descclassname">jmb.core.utils.data_import.</tt><tt class="descname">CsvFile</tt><big>(</big><em>filename</em>, <em>auto=False</em>, <em>delimiter=';'</em><big>)</big><a class="reference internal" href="../_modules/jmb/core/utils/data_import.html#CsvFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.utils.data_import.CsvFile" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="jmb.core.utils.data_import.CsvFile.get_tuples_from_row">
+<tt class="descname">get_tuples_from_row</tt><big>(</big><em>Row</em>, <em>row</em><big>)</big><a class="reference internal" href="../_modules/jmb/core/utils/data_import.html#CsvFile.get_tuples_from_row"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.utils.data_import.CsvFile.get_tuples_from_row" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>Row</strong> &#8211; typename</li>
+<li><strong>row</strong> &#8211; iterable</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><tt class="descclassname">jmb.core.utils.data_import.</tt><tt class="descname">Sheet</tt><a class="reference internal" href="../_modules/jmb/core/utils/data_import.html#Sheet"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Abstract sheet</p>
+<dl class="method">
+<dt id="jmb.core.utils.data_import.Sheet.clean_field_name">
+<tt class="descname">clean_field_name</tt><big>(</big><em>value</em><big>)</big><a class="reference internal" href="../_modules/jmb/core/utils/data_import.html#Sheet.clean_field_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.utils.data_import.Sheet.clean_field_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clean each column heading to make it a suitable field_name.
+By default strip empty spaces, non ascii chars, parenthesis
+:param value: the column header</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">do</tt><big>(</big><em>row</em>, <em>kw</em>, <em>j</em><big>)</big><a class="reference internal" href="../_modules/jmb/core/utils/data_import.html#Sheet.do"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>implement here your import</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>row</strong> &#8211; a namedtuple. Names are the names in the original columns</li>
+<li><strong>kw</strong> &#8211; <p>a dict suitable to feed <tt class="docutils literal"><span class="pre">defaults</span></tt> keyword attribute of
+<tt class="docutils literal"><span class="pre">get_or_create</span></tt> if fields_map is provided:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">do</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">kw</span><span class="p">):</span>
+    <span class="n">Contact</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get_or_create</span><span class="p">(</span><span class="n">cod</span><span class="o">=</span><span class="n">row</span><span class="o">.</span><span class="n">cod</span><span class="p">,</span> <span class="n">defaults</span><span class="o">=</span><span class="n">kw</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><strong>j</strong> &#8211; integer 1-based counting read rows</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<tt class="descname">field_list</tt><em class="property"> = None</em></dt>
+<dd><p>a list of field names. Optional. When present it will be used
+to name each column instead of looking at the column header.
+Field name here is the row attribute (eg: row.first_name)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<tt class="descname">fields_map</tt><em class="property"> = None</em></dt>
+<dd><p>a dict mapping field names to column headers, as an example, if field_name
+has {&#8216;first_name&#8217; : &#8216;Nome&#8217;} it means that <a class="reference internal" href="#jmb.core.utils.data_import.Sheet.read" title="jmb.core.utils.data_import.Sheet.read"><tt class="xref py py-meth docutils literal"><span class="pre">read()</span></tt></a> will set:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">kw</span><span class="p">[</span><span class="s">&#39;first_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">Nome</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="jmb.core.utils.data_import.Sheet.get_fk_as_dict">
+<tt class="descname">get_fk_as_dict</tt><big>(</big><em>model</em>, <em>value='id'</em>, <em>key='name'</em><big>)</big><a class="reference internal" href="../_modules/jmb/core/utils/data_import.html#Sheet.get_fk_as_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.utils.data_import.Sheet.get_fk_as_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a dict of all values of a (possible) fk as dict</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>model</strong> &#8211; the django db model</li>
+<li><strong>value</strong> &#8211; the field to use as value of the dict (default <tt class="docutils literal"><span class="pre">id</span></tt>)
+Note: will be lowered</li>
+<li><strong>key</strong> &#8211; the field to use as key of the dict (defaykt <tt class="docutils literal"><span class="pre">name</span></tt>)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">handle_exception</tt><big>(</big><em>e</em>, <em>row</em>, <em>kw</em>, <em>j</em><big>)</big><a class="reference internal" href="../_modules/jmb/core/utils/data_import.html#Sheet.handle_exception"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Handle exception of the execution of <a class="reference internal" href="#jmb.core.utils.data_import.Sheet.do" title="jmb.core.utils.data_import.Sheet.do"><tt class="xref py py-meth docutils literal"><span class="pre">do()</span></tt></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="jmb.core.utils.data_import.Sheet.nullable_field_list">
+<tt class="descname">nullable_field_list</tt><em class="property"> = None</em><a class="headerlink" href="#jmb.core.utils.data_import.Sheet.nullable_field_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fields listed in this list will be set None if empty
+specifically needed to prevent unique problems</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">read</tt><big>(</big><em>limit=0</em>, <em>start=0</em><big>)</big><a class="reference internal" href="../_modules/jmb/core/utils/data_import.html#Sheet.read"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Loop on all rows of a sheet</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>start</strong> &#8211; start reading at line nr. <tt class="docutils literal"><span class="pre">start</span></tt></li>
+<li><strong>limit</strong> &#8211; limit number of rows to read to <tt class="docutils literal"><span class="pre">limit</span></tt></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="jmb.core.utils.data_import.Sheet.setup">
+<tt class="descname">setup</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/jmb/core/utils/data_import.html#Sheet.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.utils.data_import.Sheet.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setup env possibly used in self.do</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <div class="sphinxlocaltoc">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Data Import</a><ul>
+<li><a class="reference internal" href="#importare-dati">Importare dati</a><ul>
+<li><a class="reference internal" href="#field-list">field_list</a></li>
+<li><a class="reference internal" href="#xls">xls</a></li>
+<li><a class="reference internal" href="#csv">csv</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="pg-reset-sequence.html"
+                        title="previous chapter">Postgresql</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="ics.html"
+                        title="next chapter">Send a calendar event</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/misc/data_import.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../contents.html" title="Table Of Contents"
+             >toc</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="ics.html" title="Send a calendar event"
+             >next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="pg-reset-sequence.html" title="Postgresql"
+             >previous</a> &nbsp; &nbsp;</li>
+    <li><a href="../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="content.html" >Misc: info ed utilità varie</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2013, Thunder Systems.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>

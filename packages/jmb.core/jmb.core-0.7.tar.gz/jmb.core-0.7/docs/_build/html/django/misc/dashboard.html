@@ -1,0 +1,243 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Dashboard &mdash; jmb.core 0.7 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/cloud.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="../../_static/cloud.js"></script>
+    <link rel="top" title="jmb.core 0.7 documentation" href="../../index.html" />
+    <link rel="up" title="Misc" href="content.html" />
+    <link rel="next" title="detail" href="views.html" />
+    <link rel="prev" title="DB Utils" href="db.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="relbar-top">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../contents.html" title="Table Of Contents"
+             accesskey="C">toc</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="views.html" title="detail"
+             accesskey="N">next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="db.html" title="DB Utils"
+             accesskey="P">previous</a> &nbsp; &nbsp;</li>
+    <li><a href="../../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="../content.html" >Django: aggiunte e standardizzazioni.</a> &raquo;</li>
+          <li><a href="content.html" accesskey="U">Misc</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <span class="target" id="module-jmb.core.admin.dashboard"></span><div class="section" id="dashboard">
+<h1>Dashboard<a class="headerlink" href="#dashboard" title="Permalink to this headline">¶</a></h1>
+<p>utility to register a dashboard to be used when creating the <em>main</em> project
+dashboard. This dashboard needs to be a DashboardGroup</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Note that the application dashboard is registered via a different mechanism, 
+i.e.: the registration of admin_tools. That register function needs a 
+DashboardAppIndex class. Both are registered within app&#8217;<tt class="docutils literal"><span class="pre">dashboars.py</span></tt> 
+that will be read only if <tt class="docutils literal"><span class="pre">urs.py</span></tt> starts an autodiscovery:</p>
+<blockquote class="last">
+<div>import admin_tools.dashboard
+admin_tools.dashboard.autodiscover()</div></blockquote>
+</div>
+<div class="section" id="registry">
+<h2>registry<a class="headerlink" href="#registry" title="Permalink to this headline">¶</a></h2>
+<p>Info are kept in a dict named registry than can be accessed to loop on 
+registered applications:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">jmb.core.adm</span> <span class="kn">import</span> <span class="n">dashboard</span>
+<span class="k">for</span> <span class="n">appname</span><span class="p">,</span> <span class="n">dash</span> <span class="ow">in</span> <span class="n">dashboard</span><span class="o">.</span><span class="n">registry</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>The whole dahboard machinery is fired from the variables:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">ADMIN_TOOLS_DASHMOARD:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">whose default is set as <tt class="docutils literal"><span class="pre">../dashboard.JumboDashboard</span></tt> 
+by <tt class="docutils literal"><span class="pre">jmb-start</span></tt> skel</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">ADMIN_TOOLS_MENU:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body">whose default is set as <tt class="docutils literal"><span class="pre">../menu.JumboMenu</span></tt> by <tt class="docutils literal"><span class="pre">jmb-start</span></tt> 
+skel</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">the menu is triggered from a templatetag withing <tt class="docutils literal"><span class="pre">admin/base_site.html</span></tt></p>
+</div>
+<p>It&#8217;s up to aplication authors to correctly set it up, so that out default 
+<tt class="docutils literal"><span class="pre">dashboard.py</span></tt>, present in out Skeleton will find and display it.</p>
+<dl class="function">
+<dt id="jmb.core.admin.dashboard.register_group">
+<tt class="descclassname">jmb.core.admin.dashboard.</tt><tt class="descname">register_group</tt><big>(</big><em>group</em>, <em>app_name</em><big>)</big><a class="reference internal" href="../../_modules/jmb/core/admin/dashboard.html#register_group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.admin.dashboard.register_group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register a <tt class="xref py py-class docutils literal"><span class="pre">admin_tools.dashboard.modules.Group</span></tt> group to be</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>app_name</strong> &#8211; the application name, e.g.: jmb.fax</li>
+<li><strong>group</strong> &#8211; an instance of a <tt class="xref py py-class docutils literal"><span class="pre">modules.Group</span></tt>. It can also be</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="jmb.core.admin.dashboard.unregister_group">
+<tt class="descclassname">jmb.core.admin.dashboard.</tt><tt class="descname">unregister_group</tt><big>(</big><em>app_name</em><big>)</big><a class="reference internal" href="../../_modules/jmb/core/admin/dashboard.html#unregister_group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.admin.dashboard.unregister_group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unregister a <tt class="xref py py-class docutils literal"><span class="pre">admin_tools.dashboard.modules.Group</span></tt> group to be</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>app_name</strong> &#8211; the application name, e.g.: jmb.fax</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="jmb.core.admin.dashboard.get_group">
+<tt class="descclassname">jmb.core.admin.dashboard.</tt><tt class="descname">get_group</tt><big>(</big><em>app_name</em><big>)</big><a class="reference internal" href="../../_modules/jmb/core/admin/dashboard.html#get_group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.admin.dashboard.get_group" title="Permalink to this definition">¶</a></dt>
+<dd><p>return a <tt class="xref py py-class docutils literal"><span class="pre">modules.Group</span></tt> for app_name or None</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>app_name</strong> &#8211; the application name, e.g.: jmb.fax</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <div class="sphinxlocaltoc">
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Dashboard</a><ul>
+<li><a class="reference internal" href="#registry">registry</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="db.html"
+                        title="previous chapter">DB Utils</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="views.html"
+                        title="next chapter">detail</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/django/misc/dashboard.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../contents.html" title="Table Of Contents"
+             >toc</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="views.html" title="detail"
+             >next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="db.html" title="DB Utils"
+             >previous</a> &nbsp; &nbsp;</li>
+    <li><a href="../../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="../content.html" >Django: aggiunte e standardizzazioni.</a> &raquo;</li>
+          <li><a href="content.html" >Misc</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2013, Thunder Systems.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>

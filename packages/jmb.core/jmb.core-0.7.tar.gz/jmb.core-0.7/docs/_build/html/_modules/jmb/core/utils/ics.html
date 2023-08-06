@@ -1,0 +1,279 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>jmb.core.utils.ics &mdash; jmb.core 0.7 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/cloud.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="../../../../_static/cloud.js"></script>
+    <link rel="top" title="jmb.core 0.7 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="relbar-top">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../../../contents.html" title="Table Of Contents"
+             accesskey="C">toc</a> &nbsp; &nbsp;</li>
+    <li><a href="../../../../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for jmb.core.utils.ics</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. _ics:</span>
+
+<span class="sd">Send a calendar event</span>
+<span class="sd">=====================</span>
+
+<span class="sd">There are many different types of calendar events, distinguished by the </span>
+<span class="sd">method:</span>
+
+<span class="sd">:PUBLISH_: when you just want to inform people of an event</span>
+<span class="sd">:REQUEST_: when you require a response</span>
+
+
+<span class="sd">example::</span>
+
+<span class="sd">    info = dict(</span>
+<span class="sd">       location=&#39;My location&#39;,</span>
+<span class="sd">       dtstart=datetime(2008, 6, 2, 15, 30),</span>
+<span class="sd">       dtend=datetime(2008, 6, 2, 24, 00),</span>
+<span class="sd">       organizer=(&#39;adentella@thundersystems.it&#39;, &#39;Sandro Dentella&#39;)</span>
+<span class="sd">    )</span>
+<span class="sd"> </span>
+<span class="sd">    msg = EmailMessageCalendar(title, summary, from_email, recipient_list)</span>
+<span class="sd">    event = msg.get_event(info)</span>
+<span class="sd">    msg.set_attendee(event, email2, full_name) # Required for ``REQUEST``</span>
+<span class="sd">    msg.attach_calendar(event, &#39;PUBLISH&#39;)</span>
+<span class="sd">    msg.send()</span>
+<span class="sd"> </span>
+
+<span class="sd">.. autoclass:: EmailMessageCalendar</span>
+<span class="sd">   :members: get_event, attach_calendar, set_attendee, set_organizer</span>
+
+
+<span class="sd">.. _PUBLISH: http://tools.ietf.org/html/rfc2446#section-3.2.1</span>
+<span class="sd">.. _REQUEST: http://tools.ietf.org/html/rfc2446#section-3.2.2</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">uuid</span>
+<span class="kn">import</span> <span class="nn">email</span>
+<span class="kn">from</span> <span class="nn">email</span> <span class="kn">import</span> <span class="n">MIMEText</span><span class="p">,</span> <span class="n">MIMEBase</span>
+<span class="kn">from</span> <span class="nn">email.MIMEMultipart</span> <span class="kn">import</span> <span class="n">MIMEMultipart</span>
+<span class="kn">import</span> <span class="nn">datetime</span> <span class="kn">as</span> <span class="nn">dt</span>
+<span class="kn">import</span> <span class="nn">icalendar</span>
+<span class="kn">import</span> <span class="nn">pytz</span> 
+ 
+<span class="kn">from</span> <span class="nn">django.core.mail.message</span> <span class="kn">import</span> <span class="n">EmailMessage</span>
+
+<div class="viewcode-block" id="EmailMessageCalendar"><a class="viewcode-back" href="../../../../misc/ics.html#jmb.core.utils.ics.EmailMessageCalendar">[docs]</a><span class="k">class</span> <span class="nc">EmailMessageCalendar</span><span class="p">(</span><span class="n">EmailMessage</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An EmailMessage capable of creating a correct Ics attachment</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="s">&quot;meeting.ics&quot;</span>
+    <span class="c"># default properties for the event</span>
+
+<div class="viewcode-block" id="EmailMessageCalendar.set_organizer"><a class="viewcode-back" href="../../../../misc/ics.html#jmb.core.utils.ics.EmailMessageCalendar.set_organizer">[docs]</a>    <span class="k">def</span> <span class="nf">set_organizer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">email</span><span class="p">,</span> <span class="n">full_name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the organizer of the meeting</span>
+
+<span class="sd">        :arg email: the email</span>
+<span class="sd">        :arg full_name: the full name</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">organizer</span> <span class="o">=</span> <span class="n">icalendar</span><span class="o">.</span><span class="n">vCalAddress</span><span class="p">(</span><span class="s">&#39;MAILTO:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">email</span><span class="p">)</span>
+        <span class="n">organizer</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s">&#39;cn&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">icalendar</span><span class="o">.</span><span class="n">vText</span><span class="p">(</span><span class="n">full_name</span><span class="p">)</span>
+        <span class="n">event</span><span class="p">[</span><span class="s">&#39;organizer&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">organizer</span>
+
+        </div>
+<div class="viewcode-block" id="EmailMessageCalendar.set_attendee"><a class="viewcode-back" href="../../../../misc/ics.html#jmb.core.utils.ics.EmailMessageCalendar.set_attendee">[docs]</a>    <span class="k">def</span> <span class="nf">set_attendee</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">email</span><span class="p">,</span> <span class="n">full_name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set an attendee of the meeting. Required if method is ``REQUEST``</span>
+
+<span class="sd">        :arg email: the email</span>
+<span class="sd">        :arg full_name: the full name</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">attendee</span> <span class="o">=</span> <span class="n">icalendar</span><span class="o">.</span><span class="n">vCalAddress</span><span class="p">(</span><span class="s">&#39;MAILTO:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">email</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">full_name</span><span class="p">:</span>
+            <span class="n">attendee</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s">&#39;cn&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">icalendar</span><span class="o">.</span><span class="n">vText</span><span class="p">(</span><span class="n">full_name</span><span class="p">)</span>
+        <span class="n">attendee</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s">&#39;ROLE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">icalendar</span><span class="o">.</span><span class="n">vText</span><span class="p">(</span><span class="s">&#39;REQ-PARTICIPANT&#39;</span><span class="p">)</span>
+        <span class="n">event</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;attendee&#39;</span><span class="p">,</span> <span class="n">attendee</span><span class="p">,</span> <span class="n">encode</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        </div>
+<div class="viewcode-block" id="EmailMessageCalendar.get_event"><a class="viewcode-back" href="../../../../misc/ics.html#jmb.core.utils.ics.EmailMessageCalendar.get_event">[docs]</a>    <span class="k">def</span> <span class="nf">get_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">props</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">meth</span><span class="o">=</span><span class="s">&#39;PUBLISH&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a basic event to be added to a calendar event.</span>
+<span class="sd">        ``uuid`` and ``dtstamp`` are added by default if not present.</span>
+<span class="sd">        ``attendee and `organizer`` can be eather email or tuple (email, common_name)</span>
+<span class="sd">        and will be correctly adde using :meth:`set_organizer` and </span>
+<span class="sd">        meth:`set_attendee`.</span>
+<span class="sd">        </span>
+<span class="sd">        :arg props: a dict of properties to be added to the event.</span>
+<span class="sd">           read rfc_ to get more info on usable params</span>
+
+<span class="sd">        :arg meth: the method of the calendar that will be created. Default: ``PUBLISH``</span>
+
+<span class="sd">        .. _rfc: http://tools.ietf.org/html/rfc2446#section-3.2.2</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">props</span> <span class="ow">or</span> <span class="n">event</span><span class="p">,</span> <span class="s">&quot;An event or a dict of properties must be provided&quot;</span>
+        <span class="n">tz</span> <span class="o">=</span> <span class="n">pytz</span><span class="o">.</span><span class="n">timezone</span><span class="p">(</span><span class="s">&quot;Europe/Rome&quot;</span><span class="p">)</span>
+        <span class="n">event</span> <span class="o">=</span> <span class="n">icalendar</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;uuid&#39;</span> <span class="ow">in</span> <span class="n">props</span><span class="p">:</span>
+            <span class="n">props</span><span class="p">[</span><span class="s">&#39;uuid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid1</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;dtstamp&#39;</span> <span class="ow">in</span> <span class="n">props</span><span class="p">:</span>
+            <span class="n">props</span><span class="p">[</span><span class="s">&#39;dtstamp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tz</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">props</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;organizer&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">set_organizer</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">set_organizer</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">value</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">&gt;</span><span class="mi">1</span> <span class="k">else</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">key</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;attendee&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">set_attendee</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">set_attendee</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">value</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">&gt;</span><span class="mi">1</span> <span class="k">else</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>    
+                <span class="n">event</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">event</span>
+</div>
+    <span class="k">def</span> <span class="nf">create_ics_attachment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cal</span><span class="p">):</span>
+        <span class="n">part</span> <span class="o">=</span> <span class="n">email</span><span class="o">.</span><span class="n">MIMEBase</span><span class="o">.</span><span class="n">MIMEBase</span><span class="p">(</span><span class="s">&#39;text&#39;</span><span class="p">,</span> <span class="s">&quot;calendar&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s">&quot;REQUEST&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">part</span><span class="o">.</span><span class="n">set_payload</span><span class="p">(</span> <span class="n">cal</span><span class="o">.</span><span class="n">to_ical</span><span class="p">()</span> <span class="p">)</span>
+        <span class="c">#email.Encoders.encode_base64(part)</span>
+        <span class="n">email</span><span class="o">.</span><span class="n">Encoders</span><span class="o">.</span><span class="n">encode_7or8bit</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
+        <span class="n">part</span><span class="o">.</span><span class="n">add_header</span><span class="p">(</span><span class="s">&#39;Content-Description&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">part</span><span class="o">.</span><span class="n">add_header</span><span class="p">(</span><span class="s">&quot;Content-class&quot;</span><span class="p">,</span> <span class="s">&quot;urn:content-classes:calendarmessage&quot;</span><span class="p">)</span>
+        <span class="n">part</span><span class="o">.</span><span class="n">add_header</span><span class="p">(</span><span class="s">&quot;Filename&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">part</span><span class="o">.</span><span class="n">add_header</span><span class="p">(</span><span class="s">&quot;Path&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">part</span>
+
+
+    <span class="k">def</span> <span class="nf">get_calendar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">meth</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return an icalendar.Calendar containing event</span>
+<span class="sd">        You may wish to customize this to add alarms or other events</span>
+
+<span class="sd">        :arg event: the icalendar.Event</span>
+<span class="sd">        :arg meth: the method declared in the calendar. Defaults to &#39;PUBLISH&#39;, </span>
+<span class="sd">           You may prefere &#39;REQUEST&#39; if you want a reply. It you use ``REQUEST``</span>
+<span class="sd">           you must add attendee</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cal</span> <span class="o">=</span> <span class="n">icalendar</span><span class="o">.</span><span class="n">Calendar</span><span class="p">()</span>
+        <span class="n">cal</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;prodid&#39;</span><span class="p">,</span> <span class="s">&#39;-//Jumbo framework//&#39;</span><span class="p">)</span>
+        <span class="n">cal</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;version&#39;</span><span class="p">,</span> <span class="s">&#39;2.0&#39;</span><span class="p">)</span>
+        <span class="n">cal</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;method&#39;</span><span class="p">,</span> <span class="n">meth</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cal</span>
+    
+
+<div class="viewcode-block" id="EmailMessageCalendar.attach_calendar"><a class="viewcode-back" href="../../../../misc/ics.html#jmb.core.utils.ics.EmailMessageCalendar.attach_calendar">[docs]</a>    <span class="k">def</span> <span class="nf">attach_calendar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">events</span><span class="p">,</span> <span class="n">meth</span><span class="o">=</span><span class="s">&#39;PUBLISH&#39;</span><span class="p">,</span> <span class="n">calendar</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set a calendar </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">calendar</span> <span class="o">=</span> <span class="n">calendar</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_calendar</span><span class="p">(</span><span class="n">meth</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">events</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">set</span><span class="p">)):</span>
+            <span class="n">events</span> <span class="o">=</span> <span class="p">[</span><span class="n">events</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">events</span><span class="p">:</span>
+            <span class="n">calendar</span><span class="o">.</span><span class="n">add_component</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+
+        <span class="n">part</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_ics_attachment</span><span class="p">(</span><span class="n">calendar</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attach</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
+        </div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../../../contents.html" title="Table Of Contents"
+             >toc</a> &nbsp; &nbsp;</li>
+    <li><a href="../../../../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2013, Thunder Systems.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>

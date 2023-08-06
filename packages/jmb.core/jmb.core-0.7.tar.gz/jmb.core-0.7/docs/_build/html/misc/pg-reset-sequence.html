@@ -1,0 +1,189 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Postgresql &mdash; jmb.core 0.7 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/cloud.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="../_static/cloud.js"></script>
+    <link rel="top" title="jmb.core 0.7 documentation" href="../index.html" />
+    <link rel="up" title="Misc: info ed utilità varie" href="content.html" />
+    <link rel="next" title="Data Import" href="data_import.html" />
+    <link rel="prev" title="OpenOffice utils" href="misc.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="relbar-top">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../contents.html" title="Table Of Contents"
+             accesskey="C">toc</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="data_import.html" title="Data Import"
+             accesskey="N">next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="misc.html" title="OpenOffice utils"
+             accesskey="P">previous</a> &nbsp; &nbsp;</li>
+    <li><a href="../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="content.html" accesskey="U">Misc: info ed utilità varie</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="postgresql">
+<h1>Postgresql<a class="headerlink" href="#postgresql" title="Permalink to this headline">¶</a></h1>
+<p>Nella copia di un db, ed in generale quando si manipolano i dati imponendo
+l&#8217;ID è possibile che le &#8216;sequence&#8217; collegate all&#8217;incremento automatico di un
+dato non siano più impostate correttamente.</p>
+<p>È possibile lanciare una funzione che resetta al valore massimo utilizzato.</p>
+<p>Suggerisco questo metodo, rubato da <a class="reference external" href="http://stackoverflow.com/a/14633145/555236">stackoverflow</a></p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>aggiungere una funzione nel db chiamata reset_sequence</li>
+<li>eseguire una select che richiama questa funzione</li>
+</ol>
+</div></blockquote>
+<div class="section" id="reset-sequence">
+<h2>reset_sequence<a class="headerlink" href="#reset-sequence" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><div class="highlight"><pre>CREATE OR REPLACE FUNCTION &quot;reset_sequence&quot; (tablename text, columnname text)
+RETURNS &quot;pg_catalog&quot;.&quot;void&quot; AS
+$body$
+DECLARE
+BEGIN
+    EXECUTE &#39;SELECT setval( pg_get_serial_sequence(&#39;&#39;&#39; || tablename || &#39;&#39;&#39;, &#39;&#39;&#39; || columnname || &#39;&#39;&#39;),
+    (SELECT COALESCE(MAX(id)+1,1) FROM &#39; || tablename || &#39;), false)&#39;;
+END;
+$body$  LANGUAGE &#39;plpgsql&#39;;
+</pre></div>
+</div>
+</div>
+<div class="section" id="eseguirla">
+<h2>Eseguirla<a class="headerlink" href="#eseguirla" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><div class="highlight"><pre>SELECT table_name || &#39;_&#39; || column_name , reset_sequence(table_name,   column_name)
+FROM information_schema.columns where column_default like &#39;nextval%&#39;;
+</pre></div>
+</div>
+<p>Dovendo fixare una singola tabella, la riga è:</p>
+<div class="highlight-python"><div class="highlight"><pre>SELECT setval(&#39;your_table_id_seq&#39;, (SELECT MAX(id) FROM your_table_name))
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <div class="sphinxlocaltoc">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Postgresql</a><ul>
+<li><a class="reference internal" href="#reset-sequence">reset_sequence</a></li>
+<li><a class="reference internal" href="#eseguirla">Eseguirla</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="misc.html"
+                        title="previous chapter">OpenOffice utils</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="data_import.html"
+                        title="next chapter">Data Import</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/misc/pg-reset-sequence.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../contents.html" title="Table Of Contents"
+             >toc</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="data_import.html" title="Data Import"
+             >next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="misc.html" title="OpenOffice utils"
+             >previous</a> &nbsp; &nbsp;</li>
+    <li><a href="../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="content.html" >Misc: info ed utilità varie</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2013, Thunder Systems.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>

@@ -1,0 +1,99 @@
+.. _jumbo:
+
+===================
+Jumbo framework
+===================
+
+Il framework Jumbo è costituito di molti pacchetti interconnessi e da alcune
+script che ne facilitano l'uso. Tutti i pacchetti fatti per django >= 1.4
+appartengono al namespace ``jmb``. Altri namespace vengono invece usati per
+pacchetti usati per clienti.
+
+:jmb.core_: è il pacchetto principale da cui dipende ogni altro
+  pacchetto. In questo pacchetto c'è la spiegazione di come creare
+  l'ambiente virtuale usando :ref:`buildout <buildout-env>`, la nostra classe 
+  :class:`ExtendibleModelAdmin <jmb.core.admin.ExtendibleModelAdmin>`,
+  l':ref:`advanced-search` utilizzata in ogni nostra ``ChangeList`` e molto
+  altro. La conoscenza approfondita è necessaria.		   
+
+:jmb.fax_: È il pacchetto che fornisce l'interfaccia per inviare, ricevere
+  ed archiviare fax
+
+:jmb.organization_: è il pacchetto che contiene il modello di azienda e
+  contatto. La comprensione di cosa offra questo è necessario per la maggior
+  parte delle applicazioni che facciamo
+
+:jmb.proxy_: interfaccia grafica a squidguard
+
+:jmb.webposte_: è il nuovo pacchetto che permette di inviare lettere e
+  raccomandate usando il servizio online di Poste Italiane
+
+:poste_: è il modulo base, indipendente dal framework jumbo che implementa
+  la connessione con il servizio di Poste Italiane
+
+Esiste poi una serie di pacchetti vecchi, ancora in uso in molte situazioni
+basate su ``jumbo-core``:
+
+:jumbo-proxy_: interfaccia grafica a squidguard_
+
+:jmb.async_: modello ed admin per visualizzare la progressione di tasks
+	     lanciati in background. Uses celery.
+
+
+Dipendenze
+----------
+
+Il framework Jumbo è basato in modo molto esplicito sull'admin di Django,
+avendo avuto cura di potenziare/configurare alcune parti. Le dipendenze
+attuali sono frutto di scelte ragionate. 
+
+:Django: sono supportate per versioni *1.4*, *1.5*, ed *1.6*
+
+:autocomplete_light_: per i widget di autocompletamento. Una patch viene
+		      applicata automaticameente alla versione 1.4.9 per
+		      rendere :ref:`dinamici gli autocompletamenti <dynamic-autocompletion>`
+		      
+:django-filter_: versione molto modificata da Sandro per implementare la
+		 ricerca avanzata nell'admin
+
+:admin-tools_: per menu e dashboard
+
+:south: per l'aggiornamento dei modelli
+
+:dajax-dajaxice_: per l'interazione ajax
+
+:jQuery_: come framework javascript. Usiamo la versione 1.9
+
+:sphinx_: per la documentazione
+
+:bootstrap_: per i css. Al momento una vecchia versione 1.4
+
+:buildout_: per la creazione dell'environment e configurazione
+
+
+Repository
+----------
+
+Usiamo mercurial come sistema di DVCS ed i repository sono disponibili qui_.
+
+
+.. _jmb.core: http://docs.thux.it/jmb.core
+.. _jmb.fax:  http://docs.thux.it/jmb.fax
+.. _jmb.organization: http://docs.thux.it/jmb.organization
+.. _jmb.newsletter: http://docs.thux.it/jmb.newsletter
+.. _jmb.webposte: http://docs.thux.it/jmb.webposte
+.. _jmb.proxy: http://docs.thux.it/jmb.proxy
+.. _jmb.async: http://docs.thux.it/jmb.async
+.. _jumbo-proxy: http://docs.thux.it/jumbo-proxy
+.. _poste: http://docs.thux.it/poste-online
+
+.. _dajax-dajaxice: http://www.dajaxproject.com/
+.. _autocomplete_light: https://github.com/yourlabs/django-autocomplete-light
+.. _django-filter: https://github.com/alex/django-filter
+.. _admin-tools: https://bitbucket.org/izi/django-admin-tools/wiki/Home
+.. _sphinx: http://sphinx-doc.org/
+.. _jQuery: http://jquery.com/
+.. _bootstrap: http://getbootstrap.com/2.3.2/
+.. _buildout: http://www.buildout.org/
+.. _qui: http://hg.thundersystems.it
+.. _squidguard: http://www.squidguard.org

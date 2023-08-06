@@ -1,0 +1,199 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>jmb.core.utils.autocomplete &mdash; jmb.core 0.7 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/cloud.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="../../../../_static/cloud.js"></script>
+    <link rel="top" title="jmb.core 0.7 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="relbar-top">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../../../contents.html" title="Table Of Contents"
+             accesskey="C">toc</a> &nbsp; &nbsp;</li>
+    <li><a href="../../../../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for jmb.core.utils.autocomplete</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">===============</span>
+<span class="sd">Autocompletion</span>
+<span class="sd">===============</span>
+
+<span class="sd">Autocompletion is obtained throught autocomplete_light_ package.</span>
+
+<span class="sd">A :ref:`patch is applied &lt;monkey-autocomplete&gt;` to the js code of the widget</span>
+<span class="sd">to add the capability of filtering in a dynamic way, i.e. passing to the</span>
+<span class="sd">function also the id of other elements in the page that have already being</span>
+<span class="sd">selected.</span>
+
+<span class="sd">.. _dynamic-autocompletion:</span>
+
+<span class="sd">Dynamic Autocompletion</span>
+<span class="sd">=======================</span>
+
+<span class="sd">This module provides :class:`DynamicAutocompleteModelBase` a class that</span>
+<span class="sd">inherits from ``autocomplete_light.AutocompleteModelBase``.</span>
+
+<span class="sd">You can define a dictionary called ``filters`` whose keys are queryset filter </span>
+<span class="sd">keywords and whose values are dom id. The js widget will retrieve the values </span>
+<span class="sd">of the ids and send them along with the string used in the autocompletion::</span>
+
+<span class="sd">    from jmb.core.utils.autocomplete import DynamicAutocompleteModelBase</span>
+
+<span class="sd">    class MyAutocomplete(DynamicAutocompleteModelBase):</span>
+<span class="sd">        filters = {</span>
+<span class="sd">             &#39;organization_id&#39; : &#39;#id_organization&#39;,</span>
+<span class="sd">             &#39;project_id&#39;  : &#39;#id_project&#39;,</span>
+<span class="sd">        }</span>
+
+
+<span class="sd">In this situation the widget will call the url::</span>
+
+<span class="sd">    /ticket/autocomplete/MyAutocomplete/?q=san&amp;organization_id=1530&amp;project_id=10</span>
+
+<span class="sd">that will be handled automatically by ``choices_for_request``</span>
+
+
+<span class="sd">.. autoclass:: DynamicAutocompleteModelBase</span>
+<span class="sd">   :members: filters, choices_for_request, get_filters</span>
+
+<span class="sd">.. _autocomplete_light: http://django-autocomplete-light.readthedocs.org/en/latest/</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">autocomplete_light</span>
+
+<div class="viewcode-block" id="DynamicAutocompleteModelBase"><a class="viewcode-back" href="../../../../django/misc/autocompletion.html#jmb.core.utils.autocomplete.DynamicAutocompleteModelBase">[docs]</a><span class="k">class</span> <span class="nc">DynamicAutocompleteModelBase</span><span class="p">(</span><span class="n">autocomplete_light</span><span class="o">.</span><span class="n">AutocompleteModelBase</span><span class="p">):</span>
+    <span class="c">#: a dict. *Keys* must be keywords to filter a quesryset, e.g.: organization_id, </span>
+    <span class="c">#: organization__address__country_id, and the *values* must be id in the html page</span>
+    <span class="c">#: whose value will be retrieved by javascript and sent along (e.g.: #organization_id)</span>
+    <span class="n">filters</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="c"># &#39;organization_id&#39; : &#39;#id_organization&#39;,</span>
+    <span class="p">}</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">autocomplete_js_attributes</span><span class="p">[</span><span class="s">&#39;filter_by&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;||&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="p">[</span><span class="s">&quot;</span><span class="si">%s</span><span class="s">|</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>  <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">filters</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()])</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">DynamicAutocompleteModelBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        
+
+<div class="viewcode-block" id="DynamicAutocompleteModelBase.choices_for_request"><a class="viewcode-back" href="../../../../django/misc/autocompletion.html#jmb.core.utils.autocomplete.DynamicAutocompleteModelBase.choices_for_request">[docs]</a>    <span class="k">def</span> <span class="nf">choices_for_request</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return all choices taking into account all dynamic filters</span>
+
+<span class="sd">        you may need to customize this </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">choices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="n">filters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_filters</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">choices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">choices</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="o">**</span><span class="n">filters</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">DynamicAutocompleteModelBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">choices_for_request</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="DynamicAutocompleteModelBase.get_filters"><a class="viewcode-back" href="../../../../django/misc/autocompletion.html#jmb.core.utils.autocomplete.DynamicAutocompleteModelBase.get_filters">[docs]</a>    <span class="k">def</span> <span class="nf">get_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s">&quot;Return  a dictionary suitable to filter self.choices using self.filters&quot;</span>
+        <span class="n">filters</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">filters</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
+                <span class="n">filters</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">return</span> <span class="n">filters</span>
+</pre></div></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../../../contents.html" title="Table Of Contents"
+             >toc</a> &nbsp; &nbsp;</li>
+    <li><a href="../../../../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2013, Thunder Systems.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>

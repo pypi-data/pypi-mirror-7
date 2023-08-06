@@ -1,0 +1,217 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>javascript &mdash; jmb.core 0.7 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/cloud.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="../../_static/cloud.js"></script>
+    <link rel="top" title="jmb.core 0.7 documentation" href="../../index.html" />
+    <link rel="up" title="Javascript" href="content.html" />
+    <link rel="next" title="Popup via iframe" href="popup.html" />
+    <link rel="prev" title="Javascript" href="content.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="relbar-top">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../contents.html" title="Table Of Contents"
+             accesskey="C">toc</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="popup.html" title="Popup via iframe"
+             accesskey="N">next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="content.html" title="Javascript"
+             accesskey="P">previous</a> &nbsp; &nbsp;</li>
+    <li><a href="../../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="../content.html" >Django: aggiunte e standardizzazioni.</a> &raquo;</li>
+          <li><a href="content.html" accesskey="U">Javascript</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="javascript">
+<span id="jmb-javascript"></span><h1>javascript<a class="headerlink" href="#javascript" title="Permalink to this headline">¶</a></h1>
+<p>Si utilizza jquery 1.9 e jquery.ui 1.10, da locale e non da remoto, per
+le esigenze di alcuni clienti.  le librerie sono fornite da jmb.core e
+sono richieste all&#8217;interno del template del <tt class="file docutils literal"><span class="pre">base_site.html</span></tt>.</p>
+<p><tt class="docutils literal"><span class="pre">jmb.core</span></tt> fornisce una liberia <tt class="file docutils literal"><span class="pre">jmb.core.js</span></tt> che ha le seguente
+funzionalità</p>
+<div class="section" id="jmb-hide-input">
+<h2>jmb.hide_input()<a class="headerlink" href="#jmb-hide-input" title="Permalink to this headline">¶</a></h2>
+<p>Solo nella <tt class="docutils literal"><span class="pre">change_form</span></tt> al caricamento della pagina vengono nascosti i
+fields con type hidden ovvero con widget HiddenInput, utile sia nell&#8217;EDIT
+che nell&#8217;ADD passando l&#8217;attributo tra gli initial.</p>
+<p>Un esempio in cogema.contratto admin.py:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s">&#39;contratto&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="n">forms</span><span class="o">.</span><span class="n">ModelChoiceField</span><span class="p">(</span>
+            <span class="n">queryset</span><span class="o">=</span><span class="n">Contratto</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">(),</span> <span class="n">required</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+            <span class="n">widget</span><span class="o">=</span><span class="n">forms</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">HiddenInput</span><span class="p">()</span>
+       <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="jmb-show-in-popup-classe-callback">
+<h2>jmb.show_in_popup(classe, callback)<a class="headerlink" href="#jmb-show-in-popup-classe-callback" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">show_in_popup(src, title, width, height, callback)</p>
+<p>funzione per mostrare un URL nell iframe sfrutta le modali di
+<tt class="docutils literal"><span class="pre">jquery.ui</span></tt>, usa il resize, si adatta alla dimensione dell&#8217;iframe.
+<tt class="docutils literal"><span class="pre">URL</span></tt> è l&#8217;url da aprire esempio:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">jmb</span><span class="o">.</span><span class="n">show_in_popup</span><span class="p">(</span><span class="s">&quot;http://google.it&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>la callback predefinta è vuota, viene chiamata alla chiusura della modale
+per esempio si può usare:</p>
+<div class="highlight-python"><div class="highlight"><pre>show_in_popup(src, title, width, height, function(){ parent.chiusura() })
+</pre></div>
+</div>
+</li>
+</ul>
+<p>vedi documentazione completa <a class="reference internal" href="popup.html#show-in-popup"><em>Popup via iframe</em></a></p>
+</div>
+<div class="section" id="jmb-stickytab">
+<h2>jmb.stickytab()<a class="headerlink" href="#jmb-stickytab" title="Permalink to this headline">¶</a></h2>
+<p>Aggiunge il position fixed allo scroll della pagina.
+per utilizzarlo aggiungere la classe stickytab all&#8217;elemento
+.. <a class="reference external" href="https://github.com/garand/sticky">https://github.com/garand/sticky</a></p>
+</div>
+<div class="section" id="jmb-iframe-hjson-link-callback">
+<h2>jmb.iframe_hjson_link(callback)<a class="headerlink" href="#jmb-iframe-hjson-link-callback" title="Permalink to this headline">¶</a></h2>
+<p>Ai link con classe iframe, hsjon e popup, aggiunge come suffisso
+il parametro _hjson=1&amp;_popup=1, e apre il link in un iframe
+la modalità hjson, funziona solo nei casi di change e di add e delete
+al save la pagina viene rediretta su un template iframe che chiama
+la iframe_callback del parent ovvero della pagina che ha
+chiamato l&#8217;iframe, questa funzione va implementata sempre</p>
+<ul class="simple">
+<li>iframe_callback(action, model, pk, html, message)</li>
+</ul>
+<p>la callback predefinta è vuota, viene chiamata alla chiusura della modale
+esempio:</p>
+<div class="highlight-python"><div class="highlight"><pre>jmb.iframe_hjson_link(function(){ parent.chiusura() })
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <div class="sphinxlocaltoc">
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">javascript</a><ul>
+<li><a class="reference internal" href="#jmb-hide-input">jmb.hide_input()</a></li>
+<li><a class="reference internal" href="#jmb-show-in-popup-classe-callback">jmb.show_in_popup(classe, callback)</a></li>
+<li><a class="reference internal" href="#jmb-stickytab">jmb.stickytab()</a></li>
+<li><a class="reference internal" href="#jmb-iframe-hjson-link-callback">jmb.iframe_hjson_link(callback)</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="content.html"
+                        title="previous chapter">Javascript</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="popup.html"
+                        title="next chapter">Popup via iframe</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/django/javascript/javascript.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../contents.html" title="Table Of Contents"
+             >toc</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="popup.html" title="Popup via iframe"
+             >next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="content.html" title="Javascript"
+             >previous</a> &nbsp; &nbsp;</li>
+    <li><a href="../../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="../content.html" >Django: aggiunte e standardizzazioni.</a> &raquo;</li>
+          <li><a href="content.html" >Javascript</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2013, Thunder Systems.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>

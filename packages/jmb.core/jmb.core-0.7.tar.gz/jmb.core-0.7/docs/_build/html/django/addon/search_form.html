@@ -1,0 +1,345 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Search_form &mdash; jmb.core 0.7 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/cloud.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="../../_static/cloud.js"></script>
+    <link rel="top" title="jmb.core 0.7 documentation" href="../../index.html" />
+    <link rel="up" title="Addon &amp; layout" href="content.html" />
+    <link rel="next" title="Javascript" href="../javascript/content.html" />
+    <link rel="prev" title="Admin actions" href="admin_actions.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="relbar-top">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../contents.html" title="Table Of Contents"
+             accesskey="C">toc</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../javascript/content.html" title="Javascript"
+             accesskey="N">next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="admin_actions.html" title="Admin actions"
+             accesskey="P">previous</a> &nbsp; &nbsp;</li>
+    <li><a href="../../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="../content.html" >Django: aggiunte e standardizzazioni.</a> &raquo;</li>
+          <li><a href="content.html" accesskey="U">Addon &amp; layout</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="search-form">
+<span id="advanced-search"></span><h1>Search_form<a class="headerlink" href="#search-form" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="scopo">
+<h2>Scopo<a class="headerlink" href="#scopo" title="Permalink to this headline">¶</a></h2>
+<p>Rimpiazzare la ricerca semplice dell&#8217;admin di Django con una ricerca
+selettiva per campi.</p>
+</div>
+<div class="section" id="scenario">
+<h2>Scenario<a class="headerlink" href="#scenario" title="Permalink to this headline">¶</a></h2>
+<p>una patch di <a class="reference external" href="https://github.com/django/django/commit/732198ed5c">sicurezza</a> del 23/12/2010 ha aggiunto un metodo di ModelAdmin
+<tt class="docutils literal"><span class="pre">lookup_allowed()</span></tt> che prende un lookup (eg.: <tt class="docutils literal"><span class="pre">user__username</span></tt>) e
+ritorna un booleano per sapere se può essere utilizzato o meno.</p>
+<p>Questa patch influenza sicuramente django 1.4+ che aggiunge molte modifiche
+al sistema di filtri di admin.</p>
+<p><a class="reference external" href="http://www.hoboes.com/Mimsy/hacks/fixing-django-124s-suspiciousoperation-filtering/lookup_allowed-gets-new-parameter-value/">Qui</a> c&#8217;è un blog sul modo di bypassarlo e tanti riferimenti al problema.
+Djangosnippets, riporta uno <a class="reference external" href="http://djangosnippets.org/snippets/2322">snippet</a> che affronta la questione in modo analogo.</p>
+<p>In sintesi i filtri ammessi per default sono solo quelli inseriti nella lista
+<tt class="docutils literal"><span class="pre">list_filters</span></tt>, in altenativa si può modificare lookup_allowed().</p>
+</div>
+<div class="section" id="componenti">
+<h2>Componenti<a class="headerlink" href="#componenti" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">Un oggetto ChangeList e la sua derivata
+<tt class="xref py py-class docutils literal"><span class="pre">jmb.core.admin.main.JmbChangeList</span></tt></p>
+<p>Questa classe ha 2 metodi rilevanti per noi:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">get_filters:</th><td class="field-body">che prepara tutti i filtri. Noi prima di questa chiamata
+modifichiamo la copia dei parametri in GET in modo che siano già stati
+puliti dai metodi clean_* della form</td>
+</tr>
+<tr class="field-even field"><th class="field-name">get_query_set:</th><td class="field-body">ritorna il queryset applicando i filtri</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li><p class="first">La form necessaria per creare il link che verrà usato in GET. Questa form
+viene creata automaticamente a partire dal campo
+<tt class="docutils literal"><span class="pre">ModelAdmin.advanced_search_fields</span></tt></p>
+</li>
+<li><p class="first">Un inclusion templatetag (<tt class="docutils literal"><span class="pre">advanced_search_form</span></tt>) che renderizza la form
+e che a sua volta utilizza il template <tt class="docutils literal"><span class="pre">advanced_search_form.html</span></tt> e viene
+chiamato così:</p>
+<div class="highlight-python"><div class="highlight"><pre>{% block advanced_search %}{% advanced_search_form cl %}{% endblock %}
+</pre></div>
+</div>
+<p>Il tag riceve quindi l&#8217;oggetto <tt class="docutils literal"><span class="pre">ChangeList</span></tt> in argomento ed utilizza il
+suo metodo <tt class="docutils literal"><span class="pre">.cl.model_admin.get_search_form</span></tt> per trovare la
+<tt class="docutils literal"><span class="pre">search_form</span></tt> idonea.</p>
+</li>
+<li><p class="first">:attr:<tt class="docutils literal"><span class="pre">jmb.core.admin.options.ExtendedModelAdmin.lookup_allowed</span></tt></p>
+</li>
+</ul>
+</div>
+<div class="section" id="utilizzo">
+<h2>Utilizzo<a class="headerlink" href="#utilizzo" title="Permalink to this headline">¶</a></h2>
+<p>Nella implementazione più semplice basta creare l&#8217;attributo
+<tt class="docutils literal"><span class="pre">ModelAdmin.advanced_search_fields</span></tt> come tupla di tuple con field_names:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">CertificateAdmin</span><span class="p">(</span><span class="n">ExtendedModelAdmin</span><span class="p">):</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">Certificates</span>
+    <span class="n">advanced_search_fields</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">(</span><span class="s">&#39;start_date__gte&#39;</span><span class="p">,</span><span class="s">&#39;user&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s">&#39;user__username__icontains&#39;</span><span class="p">,</span> <span class="s">&#39;user__last_name__icontains&#39;</span><span class="p">,</span> <span class="p">),</span>
+            <span class="p">(</span><span class="s">&#39;status&#39;</span><span class="p">,</span> <span class="s">&#39;description__icontains&#39;</span><span class="p">,),</span>
+            <span class="p">)</span>
+</pre></div>
+</div>
+<p>Nel caso serva una personalizzazione più ricca è possibile utilizzare il
+metodo <tt class="docutils literal"><span class="pre">ModelAdmin.get_filterset</span></tt> e fare ritornare una classe che eredita
+da :class:<tt class="docutils literal"><span class="pre">django_filters.Filterset</span></tt>.</p>
+</div>
+<div class="section" id="django-filters">
+<h2>django-filters<a class="headerlink" href="#django-filters" title="Permalink to this headline">¶</a></h2>
+<p>Rispetto al pacchetto originario di <tt class="docutils literal"><span class="pre">django-filters</span></tt> le nostre aggiunte
+permettono di:</p>
+<ul class="simple">
+<li>dichiarare il lookup_type nel nome del campo. È quindi possibile
+srivere <tt class="docutils literal"><span class="pre">start__date__gte</span></tt> per impostare come lookup_type <tt class="docutils literal"><span class="pre">gte</span></tt>. In
+questo modo non è necessario dichiarare il filter in modo dichiarativo solo
+per l&#8217;impostazione del <tt class="docutils literal"><span class="pre">lookup_type</span></tt></li>
+<li>riempire i campi con <em>choices</em> secondo il field dichiarato nel modello</li>
+<li>aggiunge ai booleani l&#8217;opzione nulla (<tt class="docutils literal"><span class="pre">-----</span></tt>)</li>
+<li>quando il <tt class="docutils literal"><span class="pre">lookup_type</span></tt> è <tt class="docutils literal"><span class="pre">in</span></tt> viene usato il widget di scelta
+multipla</li>
+<li>quando una data ha il <tt class="docutils literal"><span class="pre">lookup_type</span></tt> <tt class="docutils literal"><span class="pre">range</span></tt> viene usato un widget che
+permette di scegliere fra oggi, ieri, ultimi 7 giorni, ultimo mese, mese
+precedente, anno in corso, anno precedente.</li>
+</ul>
+</div>
+<div class="section" id="altri-filtri">
+<h2>Altri filtri<a class="headerlink" href="#altri-filtri" title="Permalink to this headline">¶</a></h2>
+<p>Nella change list compaiono i bottoni per ricerca semplice, ricerca avanzata
+e filtri secondo questa logica:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">ricerca semplice:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">se definito l&#8217;attributo <tt class="docutils literal"><span class="pre">search_fields</span></tt></td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">ricerca avanzata:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body">se definito <tt class="docutils literal"><span class="pre">advanced_search_fields</span></tt> in
+modeladmin o l&#8217;attributo <tt class="docutils literal"><span class="pre">filterset_class</span></tt></td>
+</tr>
+<tr class="field-odd field"><th class="field-name">filtri:</th><td class="field-body">se definito l&#8217;attributo <a class="reference external" href="https://docs.djangoproject.com/en/dev/ref/contrib/admin/#django.contrib.admin.ModelAdmin.list_filter">list_filter</a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="personalizzazioni">
+<h2>Personalizzazioni<a class="headerlink" href="#personalizzazioni" title="Permalink to this headline">¶</a></h2>
+<p>Jumbo (per Django 1.2.7) utilizzava una JChangeList preparata per manipolare
+le date utilizzando <tt class="xref py py-func docutils literal"><span class="pre">django.utils.translation.get_format_date`()</span></tt> che
+ora è soppiantato da <tt class="docutils literal"><span class="pre">django.utils.format_date</span></tt>.</p>
+<p>Con l&#8217;attuale sistema le date vengono interpretate come localizzate.</p>
+</div>
+<div class="section" id="implementazione">
+<h2>Implementazione<a class="headerlink" href="#implementazione" title="Permalink to this headline">¶</a></h2>
+<p>L&#8217;attuale implementazione di basa su questi elementi:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">django-filters:</th><td class="field-body"><p class="first">modificata da noi, vedi sopra</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">change_list.html:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><dl class="first docutils">
+<dt>il template usato è quello contenuto in <tt class="docutils literal"><span class="pre">jmb.core</span></tt></dt>
+<dd><p class="first last">È importante che <tt class="docutils literal"><span class="pre">admin/change_list.html</span></tt> di <tt class="docutils literal"><span class="pre">jmb.core</span></tt>
+venga usato al posto di quello di <tt class="docutils literal"><span class="pre">django.contrib.admin</span></tt>,
+questo è ottenuto impostando nelle <tt class="docutils literal"><span class="pre">installed_apps</span></tt>
+<tt class="docutils literal"><span class="pre">jmb.core</span></tt> al primo posto (il
+template.loader.app_directories usa INSTALLED_APPS ): qui
+vengono messi 2 nuovi templatetags</p>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">advanced_search_form:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">un templatetag che implementa la ricerca avanzata</td>
+</tr>
+<tr class="field-even field"><th class="field-name">jsearch_form:</th><td class="field-body">un template tag che implementa la toolbar della
+ricerca</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">ExtendibleModelAdmin.setup_advanced_search:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><p class="first">crea il filterset a partire da
+<tt class="docutils literal"><span class="pre">advanced_search_fields</span></tt> o
+<tt class="docutils literal"><span class="pre">search_filterset_class</span></tt> o <tt class="docutils literal"><span class="pre">get_filterset__class</span></tt></p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">ExtendibleModelAdmin.lookup_allowed:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first">permette ogni <tt class="docutils literal"><span class="pre">search_field</span></tt></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">ExtendibleModelAdminget.changelist:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><p class="first">return JmbChangeList</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">ExtendibleModelAdminget.queryset:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first">Se c&#8217;è un filtro, qui viene restituito il
+qs generato da search_filterset.qs</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">JmbChangeList.get_filters:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><p class="first">All&#8217;interno di questo metodo pulisco self.params</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">advanced_search.js:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><ul class="first last simple">
+<li>gestione di visibilità advanced_search_form</li>
+<li>serialize dei soli campi non vuoti</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <div class="sphinxlocaltoc">
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Search_form</a><ul>
+<li><a class="reference internal" href="#scopo">Scopo</a></li>
+<li><a class="reference internal" href="#scenario">Scenario</a></li>
+<li><a class="reference internal" href="#componenti">Componenti</a></li>
+<li><a class="reference internal" href="#utilizzo">Utilizzo</a></li>
+<li><a class="reference internal" href="#django-filters">django-filters</a></li>
+<li><a class="reference internal" href="#altri-filtri">Altri filtri</a></li>
+<li><a class="reference internal" href="#personalizzazioni">Personalizzazioni</a></li>
+<li><a class="reference internal" href="#implementazione">Implementazione</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="admin_actions.html"
+                        title="previous chapter">Admin actions</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../javascript/content.html"
+                        title="next chapter">Javascript</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/django/addon/search_form.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../contents.html" title="Table Of Contents"
+             >toc</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../javascript/content.html" title="Javascript"
+             >next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="admin_actions.html" title="Admin actions"
+             >previous</a> &nbsp; &nbsp;</li>
+    <li><a href="../../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="../content.html" >Django: aggiunte e standardizzazioni.</a> &raquo;</li>
+          <li><a href="content.html" >Addon &amp; layout</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2013, Thunder Systems.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>

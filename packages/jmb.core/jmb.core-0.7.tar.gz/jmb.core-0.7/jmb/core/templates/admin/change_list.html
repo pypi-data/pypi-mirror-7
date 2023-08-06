@@ -1,0 +1,38 @@
+{% extends "django_filters:admin/change_list.html" %}
+{% load result_list admin_static i18n %}
+{% load url from future %}
+{% load admin_urls %}
+
+
+{% block bodyclass %}change-list {{ module_name }}{% endblock %}
+{% block extrahead %}
+{{ block.super }}
+<script>
+	//fix width cols edit and delete
+	jmb.fix_width_edit_delete()
+	//jmb iframe & hjson
+	jmb.iframe_hjson_link()
+</script>
+{% endblock %}
+{% block object-tools %}
+{% if has_add_permission %}
+<ul class="object-tools">
+    {% block object-tools-items %}
+    <li>
+        {% if add_url %}
+        <a href="{% url add_url %}{% if is_popup %}?_popup=1{% endif %}" class="addlink">
+            {% blocktrans with cl.opts.verbose_name as name %}Add {{ name }}{% endblocktrans %}
+        </a>
+        {% else %}
+        <a href="{% url cl.opts|admin_urlname:'add' %}{% if is_popup %}?_popup=1{% endif %}" class="addlink">
+            {% blocktrans with cl.opts.verbose_name as name %}Add {{ name }}{% endblocktrans %}
+        </a>
+        {% endif %}
+    </li>
+    {% endblock %}
+</ul>
+{% endif %}
+{% endblock %}
+
+
+

@@ -1,0 +1,270 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Configurazione &mdash; jmb.core 0.7 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/cloud.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="../../_static/cloud.js"></script>
+    <link rel="top" title="jmb.core 0.7 documentation" href="../../index.html" />
+    <link rel="up" title="Configurazioni" href="content.html" />
+    <link rel="next" title="Middlewares" href="middleware.html" />
+    <link rel="prev" title="Configurazioni" href="content.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="relbar-top">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../contents.html" title="Table Of Contents"
+             accesskey="C">toc</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="middleware.html" title="Middlewares"
+             accesskey="N">next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="content.html" title="Configurazioni"
+             accesskey="P">previous</a> &nbsp; &nbsp;</li>
+    <li><a href="../../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="../content.html" >Django: aggiunte e standardizzazioni.</a> &raquo;</li>
+          <li><a href="content.html" accesskey="U">Configurazioni</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="configurazione">
+<span id="conf"></span><h1>Configurazione<a class="headerlink" href="#configurazione" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="urls-py">
+<h2>urls.py<a class="headerlink" href="#urls-py" title="Permalink to this headline">¶</a></h2>
+<p>in urls.py devono essere avviati i vari autodiscover:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">dajaxice_autodiscover</span><span class="p">()</span>
+<span class="n">autocomplete_light</span><span class="o">.</span><span class="n">autodiscover</span><span class="p">()</span>
+<span class="n">admin</span><span class="o">.</span><span class="n">autodiscover</span><span class="p">()</span>
+<span class="n">admin_tools</span><span class="o">.</span><span class="n">dashboard</span><span class="o">.</span><span class="n">autodiscover</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>in aggiunta devono essere aggiunti i pattern per la localizzazione.
+<a class="reference internal" href="../../management/buildout.html#jmb-start"><em>jmb-start</em></a> dovrebbe fare questo in automatico.</p>
+</div>
+</div>
+<div class="section" id="module-jmb.core.monkey">
+<span id="monkey-patch"></span><span id="monkey"></span><h1>Monkey Patch<a class="headerlink" href="#module-jmb.core.monkey" title="Permalink to this headline">¶</a></h1>
+<p>Jumbo relies on some patches to the official django version that can be applied using the 
+function <a class="reference internal" href="#jmb.core.monkey.patch" title="jmb.core.monkey.patch"><tt class="xref py py-func docutils literal"><span class="pre">jmb.core.monkey.patch()</span></tt></a> in <tt class="docutils literal"><span class="pre">settings/__init__.py</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># place these lines after any other code!!!</span>
+<span class="kn">from</span> <span class="nn">jmb.core</span> <span class="kn">import</span> <span class="n">monkey</span>
+<span class="n">monkey</span><span class="o">.</span><span class="n">patch</span><span class="p">()</span>
+</pre></div>
+</div>
+<dl class="function">
+<dt id="jmb.core.monkey.patch">
+<tt class="descclassname">jmb.core.monkey.</tt><tt class="descname">patch</tt><big>(</big><em>exclude=None</em><big>)</big><a class="reference internal" href="../../_modules/jmb/core/monkey.html#patch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.monkey.patch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply all patches Jumbo relyes on. Currently <a class="reference internal" href="#namespaces"><em>management commands</em></a>, <a class="reference internal" href="#jquery-cms"><em>jquery</em></a>,
+and <a class="reference internal" href="#timepicker-patch"><em>timepicker</em></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>exclude</strong> &#8211; a list of strings naming the patches that will not be applied.
+&#8216;jquery&#8217; patch will only be applied if <tt class="docutils literal"><span class="pre">cms</span></tt> is in <tt class="docutils literal"><span class="pre">INSTALLED_APPS</span></tt></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<span class="target" id="module-jmb.core.monkey.management"></span><div class="section" id="management-commands">
+<span id="namespaces"></span><h2>management commands<a class="headerlink" href="#management-commands" title="Permalink to this headline">¶</a></h2>
+<p>Django <tt class="docutils literal"><span class="pre">find_management_module</span></tt> fails at finding modules when namespaces are used.</p>
+<p>This version of <tt class="docutils literal"><span class="pre">find_management_module</span></tt> tries a real <tt class="docutils literal"><span class="pre">import</span></tt> when
+django fails to find the module. The difference is that django only uses:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">imp</span><span class="o">.</span><span class="n">find_module</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>that doesn&#8217;t implement full module search algorithm.
+We&#8217;re going to place this code in <tt class="file docutils literal"><span class="pre">settings/__init__.py,</span> <span class="pre">the</span> <span class="pre">older</span>
+<span class="pre">way</span> <span class="pre">to</span> <span class="pre">place</span> <span class="pre">it</span> <span class="pre">in</span> <span class="pre">:file:`urls.py</span></tt> doesn&#8217;t work as is not found when calling
+from command line as <tt class="file docutils literal"><span class="pre">urls.py</span></tt> is not called:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">jmb.core</span> <span class="kn">import</span> <span class="n">monkey</span>
+<span class="n">monkey</span><span class="o">.</span><span class="n">patch</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>At the moment there&#8217;s an open <a class="reference external" href="https://code.djangoproject.com/ticket/14087">ticket</a></p>
+</div>
+<span class="target" id="module-jmb.core.monkey.conf"></span><div class="section" id="django-and-jquery">
+<span id="jquery-cms"></span><h2>Django and jQuery<a class="headerlink" href="#django-and-jquery" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="jmb.core.monkey.conf.patch_cms_page_not_to_overwrite_jquery">
+<tt class="descclassname">jmb.core.monkey.conf.</tt><tt class="descname">patch_cms_page_not_to_overwrite_jquery</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/jmb/core/monkey/conf.html#patch_cms_page_not_to_overwrite_jquery"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.monkey.conf.patch_cms_page_not_to_overwrite_jquery" title="Permalink to this definition">¶</a></dt>
+<dd><p>MonkeyPatch django-cms not to overwrite jquery.</p>
+<p>While django make attention to use djangojQuery and not to overwite
+standard $(), so different versions can coexist, PageAdmin and
+PluginEditor overwrite it with <tt class="docutils literal"><span class="pre">django.jQuery</span></tt>. Utilizzata in urls.py
+cosi:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">jmb.core</span> <span class="kn">import</span> <span class="n">monkey</span>
+
+<span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">CMS_ENABLED</span><span class="p">:</span>
+    <span class="n">urlpatterns</span> <span class="o">+=</span> <span class="n">patterns</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">,</span>
+        <span class="n">url</span><span class="p">(</span><span class="s">r&#39;^&#39;</span><span class="p">,</span> <span class="n">include</span><span class="p">(</span><span class="s">&#39;cms.urls&#39;</span><span class="p">)),</span>
+    <span class="p">)</span>
+    <span class="n">monkey</span><span class="o">.</span><span class="n">patch_cms_page_not_to_overwrite_jquery</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<span class="target" id="module-jmb.core.monkey.errors_in_forms"></span><div class="section" id="errors-in-forms">
+<span id="monkey-errors"></span><h2>Errors in forms<a class="headerlink" href="#errors-in-forms" title="Permalink to this headline">¶</a></h2>
+<p>When running the development server, print in the console which errors have been 
+raised when saveing an object. This in necessary when not all fields are used
+in a form and Django just says &#8220;Fix errors below&#8221;</p>
+<p>This will work if you have a variable called RUNNING_DEVSERVER that can be 
+initialized as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">sys</span>
+<span class="k">try</span><span class="p">:</span>
+   <span class="n">RUNNING_DEVSERVER</span> <span class="o">=</span> <span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;runserver&#39;</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+   <span class="n">RUNNING_DEVSERVER</span> <span class="o">=</span> <span class="bp">False</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="timepicker">
+<span id="timepicker-patch"></span><h2>timepicker<a class="headerlink" href="#timepicker" title="Permalink to this headline">¶</a></h2>
+<p>Datetime and time widgets in Django are pretty poor ones.</p>
+<p>Html widgets used by admin are defined in <tt class="docutils literal"><span class="pre">django.contrib.admin.options</span></tt> 
+in a dict named <tt class="docutils literal"><span class="pre">FORMFIELD_FOR_DBFIELD_DEFAULTS</span></tt>.</p>
+<p>We overwrite it in <tt class="docutils literal"><span class="pre">jmb.core.admin.options</span></tt> and define a widget that is
+derived from <tt class="docutils literal"><span class="pre">jQuery.ui</span></tt>&#8216;s default one.</p>
+</div>
+<div class="section" id="autocomplete-light">
+<span id="monkey-autocomplete"></span><h2>autocomplete_light<a class="headerlink" href="#autocomplete-light" title="Permalink to this headline">¶</a></h2>
+<p>A monkey patch vs autocomplete_light (rel 1.4.9) is applied from within our
+<tt class="docutils literal"><span class="pre">change_form.html</span></tt> so that <a class="reference internal" href="../misc/autocompletion.html#dynamic-autocompletion"><em>Dynamic Autocompletion</em></a> capabilities are added
+to standard autocomplete_light.</p>
+<p>It&#8217;s called from <em>extrahead block</em>.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <div class="sphinxlocaltoc">
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Configurazione</a><ul>
+<li><a class="reference internal" href="#urls-py">urls.py</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-jmb.core.monkey">Monkey Patch</a><ul>
+<li><a class="reference internal" href="#management-commands">management commands</a></li>
+<li><a class="reference internal" href="#django-and-jquery">Django and jQuery</a></li>
+<li><a class="reference internal" href="#errors-in-forms">Errors in forms</a></li>
+<li><a class="reference internal" href="#timepicker">timepicker</a></li>
+<li><a class="reference internal" href="#autocomplete-light">autocomplete_light</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="content.html"
+                        title="previous chapter">Configurazioni</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="middleware.html"
+                        title="next chapter">Middlewares</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/django/conf/conf.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../contents.html" title="Table Of Contents"
+             >toc</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="middleware.html" title="Middlewares"
+             >next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="content.html" title="Configurazioni"
+             >previous</a> &nbsp; &nbsp;</li>
+    <li><a href="../../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="../content.html" >Django: aggiunte e standardizzazioni.</a> &raquo;</li>
+          <li><a href="content.html" >Configurazioni</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2013, Thunder Systems.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>

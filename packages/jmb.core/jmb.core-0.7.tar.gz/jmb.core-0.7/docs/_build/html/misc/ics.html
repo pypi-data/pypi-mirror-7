@@ -1,0 +1,240 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Send a calendar event &mdash; jmb.core 0.7 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/cloud.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="../_static/cloud.js"></script>
+    <link rel="top" title="jmb.core 0.7 documentation" href="../index.html" />
+    <link rel="up" title="Misc: info ed utilità varie" href="content.html" />
+    <link rel="next" title="Mail Backend for testing" href="mail_backend.html" />
+    <link rel="prev" title="Data Import" href="data_import.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="relbar-top">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../contents.html" title="Table Of Contents"
+             accesskey="C">toc</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="mail_backend.html" title="Mail Backend for testing"
+             accesskey="N">next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="data_import.html" title="Data Import"
+             accesskey="P">previous</a> &nbsp; &nbsp;</li>
+    <li><a href="../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="content.html" accesskey="U">Misc: info ed utilità varie</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <span class="target" id="module-jmb.core.utils.ics"></span><div class="section" id="send-a-calendar-event">
+<span id="ics"></span><h1>Send a calendar event<a class="headerlink" href="#send-a-calendar-event" title="Permalink to this headline">¶</a></h1>
+<p>There are many different types of calendar events, distinguished by the 
+method:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name"><a class="reference external" href="http://tools.ietf.org/html/rfc2446#section-3.2.1">PUBLISH</a>:</th><td class="field-body">when you just want to inform people of an event</td>
+</tr>
+<tr class="field-even field"><th class="field-name"><a class="reference external" href="http://tools.ietf.org/html/rfc2446#section-3.2.2">REQUEST</a>:</th><td class="field-body">when you require a response</td>
+</tr>
+</tbody>
+</table>
+<p>example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">info</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+   <span class="n">location</span><span class="o">=</span><span class="s">&#39;My location&#39;</span><span class="p">,</span>
+   <span class="n">dtstart</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2008</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">30</span><span class="p">),</span>
+   <span class="n">dtend</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2008</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mo">00</span><span class="p">),</span>
+   <span class="n">organizer</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;adentella@thundersystems.it&#39;</span><span class="p">,</span> <span class="s">&#39;Sandro Dentella&#39;</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">msg</span> <span class="o">=</span> <span class="n">EmailMessageCalendar</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">summary</span><span class="p">,</span> <span class="n">from_email</span><span class="p">,</span> <span class="n">recipient_list</span><span class="p">)</span>
+<span class="n">event</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">get_event</span><span class="p">(</span><span class="n">info</span><span class="p">)</span>
+<span class="n">msg</span><span class="o">.</span><span class="n">set_attendee</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">email2</span><span class="p">,</span> <span class="n">full_name</span><span class="p">)</span> <span class="c"># Required for ``REQUEST``</span>
+<span class="n">msg</span><span class="o">.</span><span class="n">attach_calendar</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="s">&#39;PUBLISH&#39;</span><span class="p">)</span>
+<span class="n">msg</span><span class="o">.</span><span class="n">send</span><span class="p">()</span>
+</pre></div>
+</div>
+<dl class="class">
+<dt id="jmb.core.utils.ics.EmailMessageCalendar">
+<em class="property">class </em><tt class="descclassname">jmb.core.utils.ics.</tt><tt class="descname">EmailMessageCalendar</tt><big>(</big><em>subject=u''</em>, <em>body=u''</em>, <em>from_email=None</em>, <em>to=None</em>, <em>bcc=None</em>, <em>connection=None</em>, <em>attachments=None</em>, <em>headers=None</em>, <em>cc=None</em><big>)</big><a class="reference internal" href="../_modules/jmb/core/utils/ics.html#EmailMessageCalendar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.utils.ics.EmailMessageCalendar" title="Permalink to this definition">¶</a></dt>
+<dd><p>An EmailMessage capable of creating a correct Ics attachment</p>
+<dl class="method">
+<dt id="jmb.core.utils.ics.EmailMessageCalendar.attach_calendar">
+<tt class="descname">attach_calendar</tt><big>(</big><em>events</em>, <em>meth='PUBLISH'</em>, <em>calendar=None</em><big>)</big><a class="reference internal" href="../_modules/jmb/core/utils/ics.html#EmailMessageCalendar.attach_calendar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.utils.ics.EmailMessageCalendar.attach_calendar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set a calendar</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="jmb.core.utils.ics.EmailMessageCalendar.get_event">
+<tt class="descname">get_event</tt><big>(</big><em>props=None</em>, <em>meth='PUBLISH'</em><big>)</big><a class="reference internal" href="../_modules/jmb/core/utils/ics.html#EmailMessageCalendar.get_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.utils.ics.EmailMessageCalendar.get_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a basic event to be added to a calendar event.
+<tt class="docutils literal"><span class="pre">uuid</span></tt> and <tt class="docutils literal"><span class="pre">dtstamp</span></tt> are added by default if not present.
+<tt class="docutils literal"><span class="pre">attendee</span> <span class="pre">and</span> <span class="pre">`organizer</span></tt> can be eather email or tuple (email, common_name)
+and will be correctly adde using <a class="reference internal" href="#jmb.core.utils.ics.EmailMessageCalendar.set_organizer" title="jmb.core.utils.ics.EmailMessageCalendar.set_organizer"><tt class="xref py py-meth docutils literal"><span class="pre">set_organizer()</span></tt></a> and
+meth:<cite>set_attendee</cite>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>props</strong> &#8211; a dict of properties to be added to the event.
+read <a class="reference external" href="http://tools.ietf.org/html/rfc2446#section-3.2.2">rfc</a> to get more info on usable params</li>
+<li><strong>meth</strong> &#8211; the method of the calendar that will be created. Default: <tt class="docutils literal"><span class="pre">PUBLISH</span></tt></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="jmb.core.utils.ics.EmailMessageCalendar.set_attendee">
+<tt class="descname">set_attendee</tt><big>(</big><em>event</em>, <em>email</em>, <em>full_name=None</em><big>)</big><a class="reference internal" href="../_modules/jmb/core/utils/ics.html#EmailMessageCalendar.set_attendee"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.utils.ics.EmailMessageCalendar.set_attendee" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set an attendee of the meeting. Required if method is <tt class="docutils literal"><span class="pre">REQUEST</span></tt></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>email</strong> &#8211; the email</li>
+<li><strong>full_name</strong> &#8211; the full name</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="jmb.core.utils.ics.EmailMessageCalendar.set_organizer">
+<tt class="descname">set_organizer</tt><big>(</big><em>event</em>, <em>email</em>, <em>full_name=None</em><big>)</big><a class="reference internal" href="../_modules/jmb/core/utils/ics.html#EmailMessageCalendar.set_organizer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jmb.core.utils.ics.EmailMessageCalendar.set_organizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the organizer of the meeting</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>email</strong> &#8211; the email</li>
+<li><strong>full_name</strong> &#8211; the full name</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="data_import.html"
+                        title="previous chapter">Data Import</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="mail_backend.html"
+                        title="next chapter">Mail Backend for testing</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/misc/ics.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../contents.html" title="Table Of Contents"
+             >toc</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="mail_backend.html" title="Mail Backend for testing"
+             >next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="data_import.html" title="Data Import"
+             >previous</a> &nbsp; &nbsp;</li>
+    <li><a href="../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="content.html" >Misc: info ed utilità varie</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2013, Thunder Systems.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>

@@ -1,0 +1,161 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>jmb.core.monkey.conf &mdash; jmb.core 0.7 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/cloud.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="../../../../_static/cloud.js"></script>
+    <link rel="top" title="jmb.core 0.7 documentation" href="../../../../index.html" />
+    <link rel="up" title="jmb.core.monkey" href="../monkey.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="relbar-top">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../../../contents.html" title="Table Of Contents"
+             accesskey="C">toc</a> &nbsp; &nbsp;</li>
+    <li><a href="../../../../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../monkey.html" accesskey="U">jmb.core.monkey</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for jmb.core.monkey.conf</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. _jquery_cms:</span>
+
+<span class="sd">Django and jQuery</span>
+<span class="sd">==================</span>
+
+<span class="sd">.. autofunction:: patch_cms_page_not_to_overwrite_jquery</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="patch_cms_page_not_to_overwrite_jquery"><a class="viewcode-back" href="../../../../django/conf/conf.html#jmb.core.monkey.conf.patch_cms_page_not_to_overwrite_jquery">[docs]</a><span class="k">def</span> <span class="nf">patch_cms_page_not_to_overwrite_jquery</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;MonkeyPatch django-cms not to overwrite jquery.</span>
+
+<span class="sd">    While django make attention to use djangojQuery and not to overwite</span>
+<span class="sd">    standard $(), so different versions can coexist, PageAdmin and</span>
+<span class="sd">    PluginEditor overwrite it with ``django.jQuery``. Utilizzata in urls.py</span>
+<span class="sd">    cosi::</span>
+
+<span class="sd">      from jmb.core import monkey</span>
+
+<span class="sd">      if settings.CMS_ENABLED:</span>
+<span class="sd">          urlpatterns += patterns(&#39;&#39;,</span>
+<span class="sd">              url(r&#39;^&#39;, include(&#39;cms.urls&#39;)),</span>
+<span class="sd">          )</span>
+<span class="sd">          monkey.patch_cms_page_not_to_overwrite_jquery()</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">cms.utils</span> <span class="kn">import</span> <span class="n">cms_static_url</span>
+    <span class="kn">from</span> <span class="nn">cms.admin</span> <span class="kn">import</span> <span class="n">pageadmin</span>
+    <span class="kn">from</span> <span class="nn">cms.forms</span> <span class="kn">import</span> <span class="n">widgets</span>
+
+    <span class="n">pageadmin</span><span class="o">.</span><span class="n">PageAdmin</span><span class="o">.</span><span class="n">Media</span><span class="o">.</span><span class="n">js</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">cms_static_url</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="p">[</span>
+            <span class="s">&#39;js/libs/jquery.query.js&#39;</span><span class="p">,</span>
+            <span class="s">&#39;js/libs/jquery.ui.dialog.js&#39;</span><span class="p">,</span>
+        <span class="p">]</span>
+    <span class="p">]</span>
+    
+    <span class="n">widgets</span><span class="o">.</span><span class="n">PluginEditor</span><span class="o">.</span><span class="n">Media</span><span class="o">.</span><span class="n">js</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">cms_static_url</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="p">[</span>
+            <span class="s">&#39;js/plugin_editor.js&#39;</span><span class="p">,</span>
+        <span class="p">]</span>
+    <span class="p">]</span>
+    </div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../../../contents.html" title="Table Of Contents"
+             >toc</a> &nbsp; &nbsp;</li>
+    <li><a href="../../../../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../monkey.html" >jmb.core.monkey</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2013, Thunder Systems.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>

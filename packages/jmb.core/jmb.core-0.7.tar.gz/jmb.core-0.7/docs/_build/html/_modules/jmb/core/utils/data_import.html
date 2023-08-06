@@ -1,0 +1,459 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>jmb.core.utils.data_import &mdash; jmb.core 0.7 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/cloud.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="../../../../_static/cloud.js"></script>
+    <link rel="top" title="jmb.core 0.7 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="relbar-top">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../../../contents.html" title="Table Of Contents"
+             accesskey="C">toc</a> &nbsp; &nbsp;</li>
+    <li><a href="../../../../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for jmb.core.utils.data_import</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. _data_import:</span>
+
+<span class="sd">Importare dati</span>
+<span class="sd">==============</span>
+
+<span class="sd">Questo modulo fornisce alcune classi per facilitare l&#39;importazione di dati da file excel e csv</span>
+<span class="sd">Si suppone che ogni file sia composto da fogli :class:`.Sheet`</span>
+
+<span class="sd">Un esempio di importazione sarà::</span>
+
+
+<span class="sd">    from jmb.organization.models import Contact</span>
+<span class="sd">    from jmb.core.utils.data_import import XlsFile</span>
+
+<span class="sd">    class Anagrafiche(XlsFile):</span>
+<span class="sd">        fields_map = {</span>
+<span class="sd">            &#39;code&#39; : &#39;ancodice&#39;,</span>
+<span class="sd">            &#39;description&#39; : &#39;andescri&#39;,</span>
+<span class="sd">            &#39;foo&#39; : &#39;antipcon&#39;,</span>
+<span class="sd">          }</span>
+<span class="sd">        def do(self, row, kw):</span>
+<span class="sd">             # modi alternativi di referenziare i dati</span>
+<span class="sd">             Contact.objects.get_or_create(code=row.ancodice, defaults=kw)</span>
+<span class="sd">             #Contact.objects.get_or_create(code=kw[&#39;code&#39;], defaults=kw)</span>
+
+<span class="sd">    x = Anagrafiche(&#39;anagrafiche.xls&#39;, auto=True)</span>
+<span class="sd">    x.read()</span>
+
+<span class="sd">field_list</span>
+<span class="sd">-----------</span>
+
+<span class="sd">un metodo semplice di dare il nome alle colonne è di impostarlo con </span>
+<span class="sd">l&#39;attributo :attr:`Sheet.field_list`, le colonne possono poi essere mappate </span>
+<span class="sd">in field names tramite :attr:`Sheet.fields_map`</span>
+
+
+
+<span class="sd">.. autoclass:: Sheet</span>
+<span class="sd">   :members: field_list, fields_map, read, do, handle_exception</span>
+
+<span class="sd">xls</span>
+<span class="sd">----</span>
+
+<span class="sd">.. autoclass:: XlsFile</span>
+<span class="sd">   :members:</span>
+
+<span class="sd">csv</span>
+<span class="sd">----</span>
+
+<span class="sd">.. autoclass:: CsvFile</span>
+<span class="sd">   :members:</span>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">namedtuple</span>
+<span class="c">#import csv</span>
+
+<span class="kn">import</span> <span class="nn">unicodecsv</span> <span class="kn">as</span> <span class="nn">csv</span>
+
+<span class="c"># Ogg = namedtuple(&#39;Ogg&#39;, &quot;,&quot;.join(attributes))</span>
+<span class="kn">import</span> <span class="nn">xlrd</span>
+
+<div class="viewcode-block" id="Sheet"><a class="viewcode-back" href="../../../../misc/data_import.html#jmb.core.utils.data_import.Sheet">[docs]</a><span class="k">class</span> <span class="nc">Sheet</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract sheet</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c">#: a list of field names. Optional. When present it will be used</span>
+    <span class="c">#: to name each column instead of looking at the column header.</span>
+    <span class="c">#: Field name here is the row attribute (eg: row.first_name)</span>
+    <span class="n">field_list</span> <span class="o">=</span> <span class="bp">None</span>
+    
+    <span class="c">#: a dict mapping field names to column headers, as an example, if field_name</span>
+    <span class="c">#: has {&#39;first_name&#39; : &#39;Nome&#39;} it means that :meth:`read` will set::</span>
+    <span class="c">#:</span>
+    <span class="c">#:   kw[&#39;first_name&#39;] = row.Nome</span>
+
+
+    <span class="n">fields_map</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="c">#: Fields listed in this list will be set None if empty</span>
+    <span class="c">#: specifically needed to prevent unique problems</span>
+    <span class="n">nullable_field_list</span> <span class="o">=</span> <span class="bp">None</span>
+
+<div class="viewcode-block" id="Sheet.read"><a class="viewcode-back" href="../../../../misc/data_import.html#jmb.core.utils.data_import.Sheet.read">[docs]</a>    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Loop on all rows of a sheet</span>
+
+<span class="sd">        :param start: start reading at line nr. ``start``</span>
+<span class="sd">        :param limit: limit number of rows to read to ``limit``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">Row</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s">&#39;Row&#39;</span><span class="p">,</span> <span class="s">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">field_list</span><span class="p">))</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_rows</span><span class="p">():</span>
+            <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">start</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">limit</span> <span class="ow">and</span> <span class="n">j</span> <span class="o">&gt;=</span> <span class="n">limit</span> <span class="o">+</span> <span class="n">start</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_tuples_from_row</span><span class="p">(</span><span class="n">Row</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+            <span class="n">kw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_new_dict</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">do</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">kw</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">handle_exception</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">kw</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Sheet.handle_exception"><a class="viewcode-back" href="../../../../misc/data_import.html#jmb.core.utils.data_import.Sheet.handle_exception">[docs]</a>    <span class="k">def</span> <span class="nf">handle_exception</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">kw</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Handle exception of the execution of :meth:`do`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">print</span> <span class="s">&quot;ERROR: row: </span><span class="si">%s</span><span class="s"> - error: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="Sheet.setup"><a class="viewcode-back" href="../../../../misc/data_import.html#jmb.core.utils.data_import.Sheet.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Setup env possibly used in self.do&quot;&quot;&quot;</span>
+        <span class="k">return</span>
+</div>
+<div class="viewcode-block" id="Sheet.get_fk_as_dict"><a class="viewcode-back" href="../../../../misc/data_import.html#jmb.core.utils.data_import.Sheet.get_fk_as_dict">[docs]</a>    <span class="k">def</span> <span class="nf">get_fk_as_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s">&#39;name&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a dict of all values of a (possible) fk as dict</span>
+<span class="sd">        </span>
+<span class="sd">        :param model: the django db model</span>
+<span class="sd">        :param value: the field to use as value of the dict (default ``id``)</span>
+<span class="sd">                      Note: will be lowered</span>
+<span class="sd">        :param key: the field to use as key of the dict (defaykt ``name``)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">qs</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="k">for</span> <span class="nb">id</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">qs</span><span class="o">.</span><span class="n">values_list</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+            <span class="n">values</span><span class="p">[</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="o">=</span> <span class="nb">id</span>
+        <span class="k">return</span> <span class="n">values</span>
+
+</div>
+    <span class="k">def</span> <span class="nf">get_new_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields_map</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{}</span>
+        <span class="n">row_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields_map</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">row_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s">&quot;&#39;</span><span class="si">%s</span><span class="s">&#39; is not a correct value, choices are: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">vars</span><span class="p">(</span><span class="n">row</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+                <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">field_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">nullable_field_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">row_dict</span><span class="p">[</span><span class="n">field_name</span><span class="p">]:</span>
+                <span class="n">row_dict</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">return</span> <span class="n">row_dict</span>
+
+    <span class="k">def</span> <span class="nf">get_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">sheet_index</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">sheet</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ne">NotImplementedError</span>
+
+<div class="viewcode-block" id="Sheet.do"><a class="viewcode-back" href="../../../../misc/data_import.html#jmb.core.utils.data_import.Sheet.do">[docs]</a>    <span class="k">def</span> <span class="nf">do</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">kw</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;implement here your import</span>
+
+<span class="sd">        :param row: a namedtuple. Names are the names in the original columns</span>
+<span class="sd">        :param kw: a dict suitable to feed ``defaults`` keyword attribute of</span>
+<span class="sd">                   ``get_or_create`` if fields_map is provided::</span>
+
+<span class="sd">                     def do(self, row, kw):</span>
+<span class="sd">                         Contact.objects.get_or_create(cod=row.cod, defaults=kw)</span>
+
+<span class="sd">        :param j: integer 1-based counting read rows</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">print</span> <span class="n">values</span>
+
+</div>
+<div class="viewcode-block" id="Sheet.clean_field_name"><a class="viewcode-back" href="../../../../misc/data_import.html#jmb.core.utils.data_import.Sheet.clean_field_name">[docs]</a>    <span class="k">def</span> <span class="nf">clean_field_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Clean each column heading to make it a suitable field_name.</span>
+<span class="sd">        By default strip empty spaces, non ascii chars, parenthesis</span>
+<span class="sd">        :param value: the column header</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;[\s\(\)\.\W]&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+</div></div>
+<div class="viewcode-block" id="XlsFile"><a class="viewcode-back" href="../../../../misc/data_import.html#jmb.core.utils.data_import.XlsFile">[docs]</a><span class="k">class</span> <span class="nc">XlsFile</span><span class="p">(</span><span class="n">Sheet</span><span class="p">):</span>
+
+    <span class="n">data_rows_index</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">file_contents</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">auto</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">sheet_index</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param filename: the cvs file to open</span>
+<span class="sd">        :param auto_fields: (boolean) se True, i nomi delle colonne saranno </span>
+<span class="sd">                         desunti dalla prima riga</span>
+<span class="sd">        :param sheet_index: indice del foglio da usare (default: 0)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">filename</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">book</span> <span class="o">=</span> <span class="n">xlrd</span><span class="o">.</span><span class="n">open_workbook</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">file_contents</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">book</span> <span class="o">=</span> <span class="n">xlrd</span><span class="o">.</span><span class="n">open_workbook</span><span class="p">(</span><span class="n">file_contents</span><span class="o">=</span><span class="n">file_contents</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">IOError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">print</span> <span class="n">e</span>
+            <span class="k">raise</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sheet</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">book</span><span class="o">.</span><span class="n">sheet_by_index</span><span class="p">(</span><span class="n">sheet_index</span><span class="p">)</span>
+            
+        <span class="k">if</span> <span class="n">auto</span><span class="p">:</span>
+            <span class="n">sheet</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">book</span><span class="o">.</span><span class="n">sheet_by_index</span><span class="p">(</span><span class="n">sheet_index</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">field_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_field_list</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">row</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_rows_index</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nullable_field_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nullable_field_list</span> <span class="ow">or</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="XlsFile.xls2csv"><a class="viewcode-back" href="../../../../misc/data_import.html#jmb.core.utils.data_import.XlsFile.xls2csv">[docs]</a>    <span class="k">def</span> <span class="nf">xls2csv</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s">&quot;Really poor version of csv file&quot;</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sheets_as_list</span><span class="p">():</span>
+            <span class="n">output</span> <span class="o">+=</span> <span class="p">[</span><span class="s">&quot;;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">unicode</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">i</span><span class="p">])]</span>
+        <span class="k">return</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="XlsFile.get_sheet_as_list"><a class="viewcode-back" href="../../../../misc/data_import.html#jmb.core.utils.data_import.XlsFile.get_sheet_as_list">[docs]</a>    <span class="k">def</span> <span class="nf">get_sheet_as_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sheet_name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">all_sheets</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="s">&quot;get  named sheet or all sheets&quot;</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">sheet_name</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">sheet</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">book</span><span class="o">.</span><span class="n">sheet_by_name</span><span class="p">(</span><span class="n">sheet_name</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span>
+
+            <span class="n">rows</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_rows</span><span class="p">(</span><span class="n">sheet</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">all_sheets</span> <span class="ow">is</span> <span class="bp">True</span> <span class="ow">and</span> <span class="n">sheet_name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">book</span><span class="o">.</span><span class="n">nsheets</span><span class="p">):</span>
+                <span class="n">sheet</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">book</span><span class="o">.</span><span class="n">sheet_by_index</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+                <span class="n">rows</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_rows</span><span class="p">(</span><span class="n">sheet</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sheet</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">book</span><span class="o">.</span><span class="n">sheet_by_index</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">rows</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_rows</span><span class="p">(</span><span class="n">sheet</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">rows</span>
+</div>
+<div class="viewcode-block" id="XlsFile.get_rows"><a class="viewcode-back" href="../../../../misc/data_import.html#jmb.core.utils.data_import.XlsFile.get_rows">[docs]</a>    <span class="k">def</span> <span class="nf">get_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sheet_index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sheet</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param sheet_index: the index of the sheet to read</span>
+<span class="sd">        :param sheet: a possible sheet object as returned by sheet_by_index</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sheet</span><span class="p">:</span>
+            <span class="n">sheet</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">book</span><span class="o">.</span><span class="n">sheet_by_index</span><span class="p">(</span><span class="n">sheet_index</span><span class="p">)</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">nrow</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_rows_index</span><span class="p">,</span> <span class="n">sheet</span><span class="o">.</span><span class="n">nrows</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">sheet</span><span class="o">.</span><span class="n">row</span><span class="p">(</span><span class="n">nrow</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="XlsFile.xldate2date"><a class="viewcode-back" href="../../../../misc/data_import.html#jmb.core.utils.data_import.XlsFile.xldate2date">[docs]</a>    <span class="k">def</span> <span class="nf">xldate2date</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cell</span><span class="p">):</span>
+        <span class="s">&quot;Returna un datetime.date dal valore della cella&quot;</span>
+        <span class="k">assert</span> <span class="n">cell</span><span class="o">.</span><span class="n">ctype</span> <span class="o">==</span> <span class="mi">3</span>
+        <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">(</span><span class="o">*</span><span class="n">xlrd</span><span class="o">.</span><span class="n">xldate_as_tuple</span><span class="p">(</span><span class="n">cell</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">])</span>
+        </div>
+<div class="viewcode-block" id="XlsFile.get_tuples_from_row"><a class="viewcode-back" href="../../../../misc/data_import.html#jmb.core.utils.data_import.XlsFile.get_tuples_from_row">[docs]</a>    <span class="k">def</span> <span class="nf">get_tuples_from_row</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Row</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param Row: typename</span>
+<span class="sd">        :param row: iterable</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Row</span><span class="o">.</span><span class="n">_make</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_cell_value</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span> <span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="n">row</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="XlsFile.get_cell_value"><a class="viewcode-back" href="../../../../misc/data_import.html#jmb.core.utils.data_import.XlsFile.get_cell_value">[docs]</a>    <span class="k">def</span> <span class="nf">get_cell_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cell</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the best guess for the correct value&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">cell</span><span class="o">.</span><span class="n">ctype</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>    <span class="c"># empty cell</span>
+            <span class="k">return</span> <span class="s">&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">cell</span><span class="o">.</span><span class="n">ctype</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>    <span class="c"># string</span>
+            <span class="k">return</span> <span class="n">cell</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> 
+        <span class="k">elif</span> <span class="n">cell</span><span class="o">.</span><span class="n">ctype</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>  <span class="c"># float</span>
+            <span class="k">return</span> <span class="n">cell</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">elif</span> <span class="n">cell</span><span class="o">.</span><span class="n">ctype</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>  <span class="c"># date/datetime</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">xldate2date</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">cell</span><span class="o">.</span><span class="n">ctype</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>  
+            <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">cell</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">get_field_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">field_list</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">field_list</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">clean_field_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_cell_value</span><span class="p">(</span><span class="n">cell</span><span class="p">))</span> <span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="n">row</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="CsvFile"><a class="viewcode-back" href="../../../../misc/data_import.html#jmb.core.utils.data_import.CsvFile">[docs]</a><span class="k">class</span> <span class="nc">CsvFile</span><span class="p">(</span><span class="n">Sheet</span><span class="p">):</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">auto</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s">&quot;;&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param filename: the cvs file to open</span>
+<span class="sd">        :param auto_fields: (boolean) se True, i nomi delle colonne saranno </span>
+<span class="sd">                         desunti dalla prima riga</span>
+<span class="sd">        :param delimiter: delimitatore di campi (default ``,``)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&quot;rb&quot;</span><span class="p">),</span> <span class="n">delimiter</span><span class="o">=</span><span class="n">delimiter</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">auto</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">field_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_field_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">next</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nullable_field_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nullable_field_list</span> <span class="ow">or</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="CsvFile.get_tuples_from_row"><a class="viewcode-back" href="../../../../misc/data_import.html#jmb.core.utils.data_import.CsvFile.get_tuples_from_row">[docs]</a>    <span class="k">def</span> <span class="nf">get_tuples_from_row</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Row</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param Row: typename</span>
+<span class="sd">        :param row: iterable</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Row</span><span class="o">.</span><span class="n">_make</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">get_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">reader</span>
+
+    <span class="k">def</span> <span class="nf">get_field_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">field_list</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">field_list</span>
+        <span class="n">field_list</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">clean_field_name</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">row</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">field_list</span>
+        
+</div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+
+    
+    <span class="n">simple</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;&quot;nome&quot;, &quot;cognome&quot;, &quot;eta&quot;</span>
+<span class="s">    mario, rossi, 1</span>
+<span class="s">    nicola, di bari, 2</span>
+<span class="s">    eufrasio, nibionno</span>
+<span class="s">    manca, il campo, </span>
+<span class="s">    &#39;&#39;&#39;</span>
+    <span class="n">tab</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;nome	 cognome	 eta</span>
+<span class="s">    mario	 rossi	 1</span>
+<span class="s">    nicola	 di bari	 2</span>
+<span class="s">    eufrasio	 nibionno</span>
+<span class="s">    manca	 il campo	 </span>
+<span class="s">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">sys</span>
+    <span class="kn">import</span> <span class="nn">os</span>
+
+    <span class="k">def</span> <span class="nf">get_file</span><span class="p">(</span><span class="n">txt</span><span class="p">):</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="s">&quot;/tmp/k.csv&quot;</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">filename</span>
+    
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span><span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">class</span> <span class="nc">MyPage</span><span class="p">(</span><span class="n">Page</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">do</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">values</span><span class="p">):</span>
+            <span class="k">print</span> <span class="n">values</span><span class="p">[</span><span class="s">&#39;eta&#39;</span><span class="p">]</span>
+            
+<span class="c">#     p = MyPage(filename=get_file(simple), delimiter=&quot;,&quot;, auto=True)</span>
+<span class="c">#     p.read()</span>
+    
+    <span class="n">p</span> <span class="o">=</span> <span class="n">MyPage</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">get_file</span><span class="p">(</span><span class="n">tab</span><span class="p">),</span> <span class="n">delimiter</span><span class="o">=</span><span class="s">&quot;</span><span class="se">\t</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">auto</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    
+    
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../../../contents.html" title="Table Of Contents"
+             >toc</a> &nbsp; &nbsp;</li>
+    <li><a href="../../../../index.html">jmb.core 0.7 documentation</a> &raquo;</li>
+
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2013, Thunder Systems.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>
