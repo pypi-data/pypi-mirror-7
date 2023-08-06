@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+   <body>
+      <h1>Hello WAMP</h1>
+      <p>Open JavaScript console to watch output.</p>
+      <script>AUTOBAHN_DEBUG = true;</script>
+      <script src="autobahn.min.js"></script>
+
+      <script>
+         // the URL of the WAMP Router (Crossbar.io)
+         var wsuri;
+         if (document.location.origin == "file://") {
+            wsuri = "ws://127.0.0.1:8080/ws";
+
+         } else {
+            wsuri = (document.location.protocol === "http:" ? "ws:" : "wss:") + "//" +
+                        document.location.host + "/ws";
+         }
+
+         var connection = new autobahn.Connection({
+            url: wsuri,
+            realm: "realm1"
+         });
+
+         connection.onopen = function (session) {
+
+            console.log("Connected");
+
+            session.publish('com.myapp.hello', ["Hello from JavaScript"]);
+
+            session.call('com.myapp.add2', [4, 11]).then(
+               function (res) {
+                  console.log(res);
+               },
+               function (err) {
+                  console.log(err);
+               }
+            );
+         };
+
+         connection.onclose = function () {
+            console.log("Connection lost", arguments);
+         }
+
+         connection.open();
+      </script>
+   </body>
+</html>
