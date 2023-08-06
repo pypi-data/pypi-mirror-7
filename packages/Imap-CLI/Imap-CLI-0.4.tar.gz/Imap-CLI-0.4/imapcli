@@ -1,0 +1,54 @@
+#!/bin/bash
+
+
+eval "$(docopts -V - -h - : "$@" <<EOF
+Imap-CLI.
+
+Usage: imapcli [options] <command> [<args>]
+
+Available commands are:
+    status      List unseen, recent and total number of mail per directory in IMAP account
+    list        List mail within a specified directory
+    search      Search for mail
+    read        Display Header and Body of specified mail(s)
+    flag        Set or unset flag on specified mail(s)
+
+Options:
+    -v, --verbose           Generate verbose messages
+    -h, --help              Show help options
+    --version               Print program version
+
+See 'imapcli help <command>' to get further information about specified command
+
+----
+imap-cli 0.4
+Copyright (C) 2014 Romain Soufflet
+License MIT
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+EOF
+)"
+
+
+if [ $verbose = "true" ]; then
+    verbose="-v"
+else
+    verbose=""
+fi
+
+if [ $command = "help" ]; then
+    help="--help"
+    command=${args[0]}
+else
+    help=""
+fi
+
+case ${command} in
+    "status" ) imap-cli-status ${verbose} ${help} ${args} ;;
+    "list" ) imap-cli-list ${verbose} ${help} ${args} ;;
+    "search" ) imap-cli-search ${verbose} ${help} ${args} ;;
+    "read" ) imap-cli-read ${verbose} ${help} ${args} ;;
+    "flag" ) imap-cli-flag ${verbose} ${help} ${args} ;;
+esac
+
+exit $?
