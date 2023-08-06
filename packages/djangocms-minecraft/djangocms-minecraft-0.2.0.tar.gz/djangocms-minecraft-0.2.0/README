@@ -1,0 +1,95 @@
+===================
+djangocms-minecraft
+===================
+
+This is a simple set of plugins intended for use with Django-CMS, designed to aid in retrieving data from the servers.
+uch of this code comes from Dinnerbone's amazing source (..thank you dude!) that he has graciously left as "fully open".
+
+See the plugins in action here_! 
+
+.. _here: http://www.thenetyeti.com/status/
+
+Protocol documentation_ is available as well, thanks to Dinnerbone.
+
+.. _documentation: http://dinnerbone.com/blog/2011/10/14/minecraft-19-has-rcon-and-query/
+
+IMPORTANT CHANGES from 0.0.1
+----------------------------
+
+In 0.0.1 there was an issue with the plugin regarding socket timeout - this has been fixed in 0.1.0 - as well as quite a
+few other additions and changes.  However, these changes also resulted in requiring your plugins to be reconfigured in 
+edit mode after you have migrated the changes into your project from the update. Until you do this, they will be blank.
+
+Installation
+------------
+
+Install with pip:
+
+``pip install djangocms-minecraft``
+    
+Or, optionally, install the development version:
+    
+``pip install git+https://git@bitbucket.org/oddotterco/djangocms-minecraft.git#egg=djangocms-minecraft``
+
+Then, in your project's settings.py file, add 'djangocms_minecraft' to the INSTALLED_APPS like so:
+
+``INSTALLED_APPS += ('djangocms_minecraft',)``
+    
+Finally, perform syncdb and migrate on your project, as well as collectstatic to get all the supplied css and images
+for this plugin.
+
+A note on CACHEing
+~~~~~~~~~~~~~~~~~~
+
+It is recommended that you configure caching on your server when using this plugin (and in general, really).  It really
+is not too complicated to set up basic caching.  The following is a *very basic* config example, just add it to your
+settings.py project file to use your existing database backend as a cache server as well.::
+
+    # Enable plugin and content caching
+    # Don't forget to: ./manage.py createcachetable cache_data
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+            'LOCATION': 'cache_data',
+        },
+    }
+
+inecraft Server Config
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Don't forget to make sure that your web server has access to the ports that your Minecraft server is going to be
+answering these queries on.  Typically this will be the same as the Minecraft game port (which is default 25565) for the
+status, query and plugins-list plugins.  For the RCON plugins, make sure that port (default is usually 25575) is open to
+the web server from the game server as well.  Also, for all but the basic status plugin, you will need to configure the
+inecraft server to enable those services.  Query and RCON are both off by default ().  Look for details in the
+inecraft `Server.properties`_ wiki entry.
+
+.. _Server.properties: http://minecraft.gamepedia.com/Server.properties
+
+Usage
+-----
+
+Simply add the plugins to pages as desired. They will show up in both a text plugin's plugins-list as well as the
+page plugins-list, under the header "Minecraft".
+
+Also included, for your use, is the commandline client provided by Dinnerbone. To use it, simply issue the command
+`mcquery` and help-text will guide you.  Typical usage might be `mcquery my_minecraft.server.net`.  Keep in mind that
+the Minecraft server port needs to be accessible by the client issuing the command, *and* for the full query response,
+you will also need to enable query mode on your Minecraft server.
+
+
+Support
+-------
+
+If you have questions or ideas, or encounter bugs, add an entry to our
+`issue tracker`_.
+
+.. _issue tracker: https://bitbucket.org/oddotterco/djangocms-minecraft/issues
+
+License
+-------
+
+As with Dinerbone's original code - Fully open. Go wild.  Let us know what you do with it and PLEASE feel free to fork_
+and pull-request!
+
+.. _fork: https://bitbucket.org/oddotterco/djangocms-minecraft/fork
