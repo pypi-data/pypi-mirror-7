@@ -1,0 +1,24 @@
+{%extends 'base.html'%}
+{%load forms%}
+{%block breadcrumb%}
+  <li><a href="{%url 'ifaces'%}">Iface list</a></li>
+{%endblock%}
+{%block middle_col%}
+<table class="table"><tr><th>IP</th><th>VLAN</th><th>Machines</th><th>Action</th></tr>
+   {%for obj in listado%}
+      <tr i="{{obj.pk}}">
+         <td><a href="{%url "iface" obj.pk%}">{{obj|truncatechars:25}}</a></td>
+         <td>{{obj.vlan}}</td>
+         <td>{{obj.machines.all|join:" | "}}</td>
+         <td><a href="javascript:void(0)" onclick="del_iface({{obj.pk}})"><span class="glyphicon glyphicon-trash"></span></a></td>
+      </tr>
+   {%empty%}
+      <p class="lead text-warning">No results</p>
+   {%endfor%}
+</table>
+{%endblock%}
+{%block right_col%}{%paginator listado "" referer %}{%endblock%}
+{%block script%}{%endblock%}
+{%block document_ready%}
+   load_dom_script_once("{%url 'iface_js'%}")
+   {%endblock%}

@@ -1,0 +1,33 @@
+{%extends 'base.html'%}
+{%load forms%}
+
+{%block breadcrumb%}
+  <li><a href="{%url "machine" obj.pk%}">Edit iface</a></li>
+{%endblock%}
+
+{%block middle_col%}
+    <div class="col-md-6">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+              <h3 class="panel-title">Info about ip address {{ip}}</h3>
+            </div>
+            <div class="panel-body">
+                <p>IP is free, belongs to vlan <strong>{{vlan}}</strong></p>
+                {%if eirs|length > 1%}<p class="text-warning">Excluded in ranges:</p><ul class="text-warning">{%endif%}
+
+                {%for eir in eirs%}
+                    <li>Range of {{eir}}</li>
+                {%empty%}
+                    <p class="text-success">Not excluded</p>
+                {%endfor%}
+                {%if eirs|length > 1%}</ul>{%endif%}
+                {%if conflicts%}
+                    <p class="text-danger">IP is found as conflicting, <a href="/admin/core/conflictingip/{{conflicts.0.pk}}">go</a></p>
+                {%endif%}
+            </div>
+        </div>
+
+    </div>
+{%endblock%}
+{%block script%}{%endblock%}
+{%block document_ready%}{%endblock%}

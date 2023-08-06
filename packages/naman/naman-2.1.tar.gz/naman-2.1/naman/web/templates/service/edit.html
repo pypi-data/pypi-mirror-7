@@ -1,0 +1,53 @@
+{%extends 'base.html'%}
+{%load forms%}
+
+{%block breadcrumb%}
+  <li><a href="{%url "service" obj.pk%}">{%if id == None%}New{%else%}Edit{%endif%} service</a></li>
+{%endblock%}
+
+{%block middle_col%}
+    <div id="obj_id" i="{{id}}"></div>
+    {%if id != None%}
+        <form action="{%url "service" id%}" method="POST" role="form" id="fservice" class="form-horizontal">
+    {%else%}
+        <form action="{%url "service"%}" method="POST" role="form" id="fservice" class="form-horizontal">
+    {%endif%}
+    {% csrf_token %}
+    {%if id != None%}
+    <div class="panel-group" id="accordion">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h6 class="panel-title">
+              <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#collapse1">
+                <strong>{{obj}}</strong>
+              </a>
+            </h6>
+          </div>
+          <div id="collapse1" class="panel-collapse collapse">
+            <div class="panel-body">
+    {%endif%}
+                <div class="row">
+                    <div class="col-md-10">
+                        {% for field in form %}
+                            {%bootstrap_field field "col-md-6" "col-lg-3 col-md-2" "col-lg-9 col-md-4"%}
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-1">
+                        <a href="javascript:void(0)" onclick="$('#fservice').submit()" class="btn btn-primary">Accept</a>
+                        <a href="javascript:void(0)" onclick="del_service_form({{obj.pk}})" class="btn btn-warning">Delete</a>
+                    </div>
+                </div>
+    {%if id != None%}
+            </div>
+          </div>
+        </div>
+    {%endif%}
+    </form>
+
+
+{%endblock%}
+{%block script%}
+
+
+    {%endblock%}
+{%block document_ready%}{%endblock%}

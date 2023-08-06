@@ -1,0 +1,50 @@
+{%extends 'base.html'%}
+{%load forms%}
+
+{%block breadcrumb%}
+  <li><a href="{%url "iface" obj.pk%}">{%if id == None%}New{%else%}Edit{%endif%} iface</a></li>
+{%endblock%}
+
+{%block middle_col%}
+
+    <div class="panel-group" id="accordion">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h6 class="panel-title">
+              <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#collapse1">
+                <trong>{{obj}}</trong>
+              </a>
+            </h6>
+          </div>
+          <div id="collapse1" class="panel-collapse collapse in">
+            <div class="panel-body">
+                <div class="row">
+                    {%if id != None%}
+                    <form action="{%url "iface" id%}" id="fiface" method="POST" role="form" class="form-horizontal">
+                    {%else%}
+                    <form action="{%url "iface"%}" id="fiface" method="POST" role="form" class="form-horizontal">
+                    {%endif%}
+                    {% csrf_token %}
+                    <div class="col-md-10">
+                        {% for field in form %}
+                            {%bootstrap_field field "col-md-6" "col-lg-3 col-md-2" "col-lg-9 col-md-4"%}
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-1">
+                        <a href="javascript:void(0)" onclick="$('#fiface').submit()" class="btn btn-primary">Accept</a>
+                        <a href="javascript:void(0)" onclick="del_iface_form({{obj.pk}})" class="btn btn-warning">Delete</a>
+                    </div>
+                    </form>
+                </div>
+            </div>
+          </div>
+        </div>
+    </div>
+
+
+
+{%endblock%}
+{%block script%}{%endblock%}
+{%block document_ready%}
+    load_dom_script_once("{%url 'iface_js'%}")
+    {%endblock%}
