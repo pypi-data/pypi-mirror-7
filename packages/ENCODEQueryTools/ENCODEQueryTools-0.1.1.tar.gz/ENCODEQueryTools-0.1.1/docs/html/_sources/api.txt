@@ -1,0 +1,1564 @@
+=============================
+General ENCODEQT Web Tool API
+=============================
+
+The ENCODEQT module of the ENCODEQueryTools package is a Python wrapper around the ENCODE ChIP-Seq Significance Tool's API (ENCODEQT API). ENCODEQT expects to receive all data as JSON-formatted text via a POST request to http://encodeweb-elb-726908446.us-west-2.elb.amazonaws.com/encodeqt/hyper/ENCODEQTapi.php. 
+
+The ENCODEQT API accepts JSON-formatted input and returns JSON-formatted output. Input should be POSTed to the appropriate server URL (more details below).
+
+For JSON-formatted data to the server, the server expects a single JSON container named "JSONparams" that holds all necessary data as its value. For output from the server, most results will be contained in a single JSON field named "results". The exception to this is queryType=TFsig, which includes fields for other summary statistics such as the total number of genes analyzed in addition to the results field. Please see the examples below.
+
+JSON Field Descriptions
+#######################
+
+The ENCODEQT API accepts the following parameters:
+
+|
+|
+
+elementType
+***********
+
+**elementType** - the type of element to analyze. Accepted values: 'genes', 'transcripts', 'pgenes', and 'ptranscripts'.
+
+*Example:*
+::
+
+	"elementType" = "genes"
+
+.. note:: The only valid elementType values for mouse analyses are 'genes' and 'transcripts'.
+
+|
+|
+
+organism
+********
+
+**Organism** - the organism to analyze. Accepted values: 'human' and 'mouse'.
+
+*Example:*
+::
+
+  "organism" : "human"
+
+|
+|
+
+featureType
+***********
+
+**featureType** - the feature to be used for the center of the analysis window. Accepted values: 'TSS', 'TTS', and 'Genic'.
+
+*Example:*
+::
+
+  "featureType" : "TSS"
+
+|
+|
+
+upstream
+********
+
+**upstream** - the value to use for the upstream pad. 
+
+*Example:*
+::
+
+  "upstream" : -4
+
+.. note:: The API expects this value to follow the following formula: ceiling(numberOfBasePairs / 500) * -1. The Python library converts raw basepair counts according to this formula. For other implementations, this conversion must be done manually. -1 corresponds to a 500 bp pad, -2 to a 1,000 bp pad, etc.
+
+|
+|
+
+downstream
+**********
+
+**downstream** - the value to use for the downstream pad.
+
+*Example:*
+::
+
+  "downstream" : 4
+
+.. note:: The API expects this value to follow the following formula: ceiling(numberOfBasePairs / 500). The Python library converts raw basepair counts according to this formula. For other implementations, this conversion must be done manually. 1 corresponds to a 500 bp pad, 2 to a 1,000 bp pad, etc.
+
+|
+|
+
+symbolType
+**********
+
+**symbolType** - the type of symbol to be used as the gene/transcript IDs. Accepted values: 'symbol', 'ensembl', 'entrez', and 'havana'.
+
+*Example:*
+::
+
+  "symbolType" : "symbol"
+
+.. warning:: Not all symbol types are valid for all organism and featureType combinations.  'entrez' is an invalid symbolType for transcript or ptranscript analyses. 'havana' is only valid for human analyses.
+
+.. note:: 'symbol' refers to HGNC gene or transcript symbols.
+
+|
+|
+
+symbolList
+**********
+
+**symbolList** - an array of arrays containing the lists of IDs to use as the foreground.
+
+*Example (single foreground list - truncated):*
+::
+
+  "symbolList" : [["ABT1","ACVR1","ADAM12","ADD3","AGGF1"]]
+
+*Example (multiple foreground lists - truncated):*
+::
+
+  "symbolList" : [["ABT1","ACVR1","ADAM12","ADD3","AGGF1"],["ANKRD28","AP4S1","APBB2","APOBR","AQP2","ARHGAP44","ARID1A","ARID4A"GGF1"]]
+
+|
+|
+
+listNames
+*********
+
+**listNames** - an array of strings to use as labels for each foreground list.
+
+.. Note:: The number of elements in this array must correspond to the number of lists provided in symbolList. This parameter is optional for queries that only use a single foreground list (a default value of "List1" will be used).
+
+*Example:*
+::
+
+  "listNames" : ["AAAYRNCTG_Motifs"]
+
+|
+|
+
+cellLines
+*********
+
+**cellLines** - an array of cell types to use for the query. Labels must correspond to the labels used in the ENCODEQT database (see the ENCODE Cell Types webpage).
+
+*Example (pooling all cell lines):*
+::
+
+  "cellLines : ['all']
+
+*Example (pooling specific cell lines):*
+::
+
+  "cellLines : ['Helas3','K562']
+
+.. note:: For queries that pool all cell lines, listNames should be a single-element array containing the value "all".
+
+|
+|
+
+backgroundList
+**************
+
+**backgroundList** - an array containing the gene/transcript IDs to use as the background.
+
+*Example (truncated):*
+::
+
+  "backgroundList" : ["ABT1","ACVR1","ADAM12","ADD3","AGGF1"]
+
+.. warning:: To use the set of all genes as the background, this parameter should NOT be passed to the API!
+
+|
+|
+
+queryType
+*********
+
+**queryType** - the type of query to run. This parameter determines which function will be run server-side.  Accepted values are 'TFsig', 'allGenes', 'listGenes', 'validateTF', 'validateCellLine', 'fuzzyFactorSearch', 'fuzzyCellLineSearch', 'getTFsAndCellLines', and 'geneCheck'.
+::
+
+	"queryType" : "TFsig"
+
+|
+|
+
+targetFactor
+************
+
+**targetFactor** - the label of the transcription factor of interest.
+
+*Example:*
+::
+
+  "targetFactor" : "Suz12"
+
+|
+|
+
+targetCellLine
+**************
+
+**targetCellLine** - the label of the cell type of interest.
+
+*Example:*
+::
+
+  "targetCellLine" : "K562"
+
+.. note:: Descriptions and examples of each queryType appear below.
+
+|
+|
+
+Example Queries
+####################
+
+TFsig
+*****
+
+**TFsig** - determines significantly enriched transcription factors given a list of genes or transcripts.
+
+.. Note:: **Required parameters:** featureType, cellLines, symbolList, downstream, upstream, elementType, organism, symbolType, queryType
+
+.. Note:: **Optional parameters:** backgroundList, listNames (optional when only one symbolList is provided)
+
+*Input Example:*
+::
+
+    {  
+       "JSONparams":{  
+          "featureType":"TSS",
+          "listNames":[  
+             "AAYRNCTG_Motifs"
+          ],
+          "cellLines":[  
+             "all"
+          ],
+          "symbolList":[  
+             [  
+                "ABT1",
+                "ACVR1",
+                "ADAM12",
+                "ADD3",
+                "AGGF1",
+                "ANKRD12",
+                "ANKRD28",
+                "AP4S1",
+                "APBB2",
+                "APOBR",
+                "AQP2",
+                "ARHGAP44",
+                "ARID1A",
+                "ARID4A",
+                "ARPC2",
+                "ARSG",
+                "ARX",
+                "ASB4",
+                "ASPH",
+                "ATOH8",
+                "ATP1A2",
+                "ATP5L",
+                "ATPIF1",
+                "AXDND1",
+                "B4GALT6",
+                "BAI3",
+                "BAMBI",
+                "BCL2L1",
+                "BCL9",
+                "BMPR1B",
+                "BMX",
+                "BRSK2",
+                "BTBD3",
+                "BUB3",
+                "C11ORF84",
+                "C11ORF92",
+                "C12ORF65",
+                "C13ORF30",
+                "C14ORF1",
+                "C15ORF26",
+                "C17ORF28",
+                "C20ORF197",
+                "C3ORF19",
+                "C6ORF138",
+                "CA3",
+                "CACNA2D3",
+                "CACNB2",
+                "CAPN1",
+                "CAPZA1",
+                "CASQ2",
+                "CBX2",
+                "CCNJ",
+                "CCNY",
+                "CDC23",
+                "CDH2",
+                "CER1",
+                "CHRM1",
+                "CITED2",
+                "CLDN5",
+                "CLTC",
+                "CMKLR1",
+                "CNTLN",
+                "CNTN1",
+                "COCH",
+                "COL12A1",
+                "COL1A2",
+                "COL4A5",
+                "COL4A6",
+                "COLEC10",
+                "CRAT",
+                "CRH",
+                "CRKL",
+                "CRYGD",
+                "CRYGS",
+                "CSNK1A1",
+                "CSRNP3",
+                "CSTF3",
+                "CYBRD1",
+                "DAAM1",
+                "DBNDD2",
+                "DCAKD",
+                "DDAH2",
+                "DDX4",
+                "DEF6",
+                "DENND4A",
+                "DGKB",
+                "DHH",
+                "DHRS4",
+                "DHRS4L2",
+                "DIDO1",
+                "DMD",
+                "DMRT1",
+                "DNAJA2",
+                "DNAJB3",
+                "DNAJB4",
+                "DSCAML1",
+                "DUSP4",
+                "DYNC1I1",
+                "DYRK1A",
+                "EDA",
+                "EFNA1",
+                "EGFLAM",
+                "EIF5",
+                "EMX2",
+                "EPC1",
+                "EPHA7",
+                "ERBB4",
+                "ERRFI1",
+                "ESRP2",
+                "ESRRB",
+                "ESRRG",
+                "EYA1",
+                "FAM49A",
+                "FAM83F",
+                "FCER1A",
+                "FGD4",
+                "FGF10",
+                "FGF12",
+                "FGFR1",
+                "FGFR1OP2",
+                "FIZ1",
+                "FKRP",
+                "FMNL3",
+                "FNDC9",
+                "FOXA1",
+                "FOXG1",
+                "FOXO4",
+                "FOXP2",
+                "FSIP2",
+                "FST",
+                "GABRA3",
+                "GDNF",
+                "GFI1",
+                "GGNBP2",
+                "GJB4",
+                "GLDN",
+                "GNAQ",
+                "GPR85",
+                "GPRC5D",
+                "GRIN2B",
+                "H3F3A",
+                "HDAC8",
+                "HESX1",
+                "HEXIM2",
+                "HGF",
+                "HIC2",
+                "HIP1R",
+                "HN1",
+                "HOXA10",
+                "HOXA5",
+                "HOXB8",
+                "HPSE2",
+                "HSD3B7",
+                "ICAM4",
+                "ID1",
+                "IGF1",
+                "IL1RAPL1",
+                "INHBC",
+                "IP6K2",
+                "ITGA10",
+                "ITGA8",
+                "JPH1",
+                "KANK2",
+                "KCNIP2",
+                "KCNK5",
+                "KCNN3",
+                "KCNQ1DN",
+                "KIAA0182",
+                "KITLG",
+                "KLF5",
+                "KLHDC10",
+                "KLHL20",
+                "KLHL3",
+                "LARS2",
+                "LENG9",
+                "LHFP",
+                "LHX9",
+                "LMO7",
+                "LOC151534",
+                "LRP5",
+                "LRRC4",
+                "LRRN4CL",
+                "LTBP1",
+                "MAML1",
+                "MANF",
+                "MAP2",
+                "MAP3K5",
+                "MAP6",
+                "MEIS1",
+                "MGAT1",
+                "MGAT4A",
+                "MID1",
+                "MLL",
+                "MOAP1",
+                "MPP6",
+                "MPPED2",
+                "MRPL13",
+                "MTA2",
+                "MTBP",
+                "MYF6",
+                "MYH1",
+                "MYH10",
+                "MYO18A",
+                "NAGLU",
+                "NAPB",
+                "NAV2",
+                "NAV3",
+                "NCDN",
+                "NDNF",
+                "NDST4",
+                "NDUFS4",
+                "NEK1",
+                "NEK2",
+                "NFATC4",
+                "NFYB",
+                "NMI",
+                "NMT1",
+                "NR2F1",
+                "NRG1",
+                "NTRK2",
+                "NUP54",
+                "NXPH4",
+                "OMA1",
+                "OMG",
+                "OR2L13",
+                "OTX2",
+                "PACRG",
+                "PAPD5",
+                "PARK2",
+                "PART1",
+                "PCDH17",
+                "PCDH18",
+                "PCF11",
+                "PCYT1B",
+                "PDGFB",
+                "PDGFRA",
+                "PDLIM2",
+                "PDS5B",
+                "PDZRN4",
+                "PFN2",
+                "PHC2",
+                "PHEX",
+                "PHF1",
+                "PHF15",
+                "PHF6",
+                "PHOX2B",
+                "PLAGL2",
+                "PLEC",
+                "PLEKHM1",
+                "PLP2",
+                "PMCH",
+                "PMCHL1",
+                "PODXL2",
+                "POFUT1",
+                "POU2AF1",
+                "POU4F1",
+                "PPAP2B",
+                "PPP1R9B",
+                "PPP2R3A",
+                "PPP2R4",
+                "PPP2R5E",
+                "PPP3CA",
+                "PRELP",
+                "PRKCG",
+                "PRKCQ",
+                "PROK2",
+                "PTH1R",
+                "PXN",
+                "R3HDM1",
+                "RAB30",
+                "RAB5B",
+                "RAB5C",
+                "RAPGEF4",
+                "RBMS3",
+                "RGS17",
+                "RNF146",
+                "ROBO4",
+                "ROR1",
+                "RPLP0",
+                "RTN1",
+                "RUFY3",
+                "S1PR2",
+                "SCN3B",
+                "SCN5A",
+                "SCN8A",
+                "SCOC",
+                "SDCBP",
+                "SEMA6D",
+                "SEPT7",
+                "SESN3",
+                "SGCD",
+                "SH2D6",
+                "SHC3",
+                "SHCBP1L",
+                "SIPA1",
+                "SIRPA",
+                "SLC26A6",
+                "SLC4A1",
+                "SLC6A1",
+                "SMARCA2",
+                "SNX9",
+                "SORBS2",
+                "SOX12",
+                "SOX21",
+                "SOX30",
+                "SOX5",
+                "SPOCK2",
+                "SPTLC2",
+                "SRGAP2",
+                "SRSF8",
+                "SSBP2",
+                "ST7L",
+                "STAC3",
+                "STAG1",
+                "STAG2",
+                "STC2",
+                "STRN3",
+                "STRN4",
+                "TAS1R2",
+                "TEF",
+                "TFAP4",
+                "TFDP2",
+                "TM2D3",
+                "TMEM182",
+                "TMEM27",
+                "TMEM69",
+                "TMSB4X",
+                "TMSB4XP1",
+                "TMSL3",
+                "TMSL6",
+                "TNFAIP8",
+                "TNS1",
+                "TNXB",
+                "TP53INP2",
+                "TRDN",
+                "TREML1",
+                "TRIM28",
+                "TRIM68",
+                "TRIM8",
+                "TRIML1",
+                "TRPS1",
+                "TSC22D3",
+                "TSPAN7",
+                "TSPY26P",
+                "TSSK3",
+                "TTC17",
+                "TUSC2",
+                "UBE2W",
+                "UBXN10",
+                "USP1",
+                "VDR",
+                "VIP",
+                "VKORC1L1",
+                "VWA5A",
+                "WBP1",
+                "WNT2B",
+                "WT1",
+                "WT1-AS",
+                "XRCC1",
+                "ZADH2",
+                "ZBTB11",
+                "ZFP91",
+                "ZFPM2",
+                "ZIC1",
+                "ZIC4",
+                "ZMAT3",
+                "ZNF238",
+                "ZNF296",
+                "ZNF503",
+                "ZNF521",
+                "ZNF524",
+                "ZNF654",
+                "ZNF687",
+                "ZNF710"
+             ]
+          ],
+          "downstream":4,
+          "upstream":-4,
+          "elementType":"genes",
+          "organism":"human",
+          "queryType":"TFsig",
+          "symbolType":"symbol"
+       }
+    }
+
+|
+|
+
+allGenes
+********
+
+**allGenes** - get all genes/transcripts in our database with a transcription factor target window intersection.
+
+.. Note:: **Required parameters:** featureType, cellLines, symbolType, downstream, upstream, elementType, organism, queryType, factorTarget
+
+*Input Example:*
+::
+
+    {  
+       "JSONparams":{  
+          "featureType":"TSS",
+          "cellLines":[  
+             "all"
+          ],
+          "symbolType":"symbol",
+          "downstream":4,
+          "upstream":-4,
+          "elementType":"genes",
+          "organism":"human",
+          "queryType":"allGenes",
+          "factorTarget":"Suz12"
+       }
+    }
+
+|
+|
+
+listGenes
+*********
+
+**listGenes** - get all genes/transcripts in symbolList with a transcription factor target window intersection.
+
+.. Note:: **Required parameters:** featureType, downstream, upstream, symbolType, factorTarget, cellLines, elementType, organism, queryType, symbolList.
+
+*Input Example:*
+::
+
+    {  
+       "JSONparams":{  
+          "featureType":"TSS",
+          "downstream":4,
+          "symbolType":"symbol",
+          "upstream":-4,
+          "targetList":"List1",
+          "factorTarget":"Suz12",
+          "cellLines":[  
+            "all"
+          ],
+          "elementType":"genes",
+          "organism":"human",
+          "queryType":"listGenes",
+          "symbolList":[  
+             [  
+                "ABT1",
+                "ACVR1",
+                "ADAM12",
+                "ADD3",
+                "AGGF1",
+                "ANKRD12",
+                "ANKRD28",
+                "AP4S1",
+                "APBB2",
+                "APOBR",
+                "AQP2",
+                "ARHGAP44",
+                "ARID1A",
+                "ARID4A",
+                "ARPC2",
+                "ARSG",
+                "ARX",
+                "ASB4",
+                "ASPH",
+                "ATOH8",
+                "ATP1A2",
+                "ATP5L",
+                "ATPIF1",
+                "AXDND1",
+                "B4GALT6",
+                "BAI3",
+                "BAMBI",
+                "BCL2L1",
+                "BCL9",
+                "BMPR1B",
+                "BMX",
+                "BRSK2",
+                "BTBD3",
+                "BUB3",
+                "C11ORF84",
+                "C11ORF92",
+                "C12ORF65",
+                "C13ORF30",
+                "C14ORF1",
+                "C15ORF26",
+                "C17ORF28",
+                "C20ORF197",
+                "C3ORF19",
+                "C6ORF138",
+                "CA3",
+                "CACNA2D3",
+                "CACNB2",
+                "CAPN1",
+                "CAPZA1",
+                "CASQ2",
+                "CBX2",
+                "CCNJ",
+                "CCNY",
+                "CDC23",
+                "CDH2",
+                "CER1",
+                "CHRM1",
+                "CITED2",
+                "CLDN5",
+                "CLTC",
+                "CMKLR1",
+                "CNTLN",
+                "CNTN1",
+                "COCH",
+                "COL12A1",
+                "COL1A2",
+                "COL4A5",
+                "COL4A6",
+                "COLEC10",
+                "CRAT",
+                "CRH",
+                "CRKL",
+                "CRYGD",
+                "CRYGS",
+                "CSNK1A1",
+                "CSRNP3",
+                "CSTF3",
+                "CYBRD1",
+                "DAAM1",
+                "DBNDD2",
+                "DCAKD",
+                "DDAH2",
+                "DDX4",
+                "DEF6",
+                "DENND4A",
+                "DGKB",
+                "DHH",
+                "DHRS4",
+                "DHRS4L2",
+                "DIDO1",
+                "DMD",
+                "DMRT1",
+                "DNAJA2",
+                "DNAJB3",
+                "DNAJB4",
+                "DSCAML1",
+                "DUSP4",
+                "DYNC1I1",
+                "DYRK1A",
+                "EDA",
+                "EFNA1",
+                "EGFLAM",
+                "EIF5",
+                "EMX2",
+                "EPC1",
+                "EPHA7",
+                "ERBB4",
+                "ERRFI1",
+                "ESRP2",
+                "ESRRB",
+                "ESRRG",
+                "EYA1",
+                "FAM49A",
+                "FAM83F",
+                "FCER1A",
+                "FGD4",
+                "FGF10",
+                "FGF12",
+                "FGFR1",
+                "FGFR1OP2",
+                "FIZ1",
+                "FKRP",
+                "FMNL3",
+                "FNDC9",
+                "FOXA1",
+                "FOXG1",
+                "FOXO4",
+                "FOXP2",
+                "FSIP2",
+                "FST",
+                "GABRA3",
+                "GDNF",
+                "GFI1",
+                "GGNBP2",
+                "GJB4",
+                "GLDN",
+                "GNAQ",
+                "GPR85",
+                "GPRC5D",
+                "GRIN2B",
+                "H3F3A",
+                "HDAC8",
+                "HESX1",
+                "HEXIM2",
+                "HGF",
+                "HIC2",
+                "HIP1R",
+                "HN1",
+                "HOXA10",
+                "HOXA5",
+                "HOXB8",
+                "HPSE2",
+                "HSD3B7",
+                "ICAM4",
+                "ID1",
+                "IGF1",
+                "IL1RAPL1",
+                "INHBC",
+                "IP6K2",
+                "ITGA10",
+                "ITGA8",
+                "JPH1",
+                "KANK2",
+                "KCNIP2",
+                "KCNK5",
+                "KCNN3",
+                "KCNQ1DN",
+                "KIAA0182",
+                "KITLG",
+                "KLF5",
+                "KLHDC10",
+                "KLHL20",
+                "KLHL3",
+                "LARS2",
+                "LENG9",
+                "LHFP",
+                "LHX9",
+                "LMO7",
+                "LOC151534",
+                "LRP5",
+                "LRRC4",
+                "LRRN4CL",
+                "LTBP1",
+                "MAML1",
+                "MANF",
+                "MAP2",
+                "MAP3K5",
+                "MAP6",
+                "MEIS1",
+                "MGAT1",
+                "MGAT4A",
+                "MID1",
+                "MLL",
+                "MOAP1",
+                "MPP6",
+                "MPPED2",
+                "MRPL13",
+                "MTA2",
+                "MTBP",
+                "MYF6",
+                "MYH1",
+                "MYH10",
+                "MYO18A",
+                "NAGLU",
+                "NAPB",
+                "NAV2",
+                "NAV3",
+                "NCDN",
+                "NDNF",
+                "NDST4",
+                "NDUFS4",
+                "NEK1",
+                "NEK2",
+                "NFATC4",
+                "NFYB",
+                "NMI",
+                "NMT1",
+                "NR2F1",
+                "NRG1",
+                "NTRK2",
+                "NUP54",
+                "NXPH4",
+                "OMA1",
+                "OMG",
+                "OR2L13",
+                "OTX2",
+                "PACRG",
+                "PAPD5",
+                "PARK2",
+                "PART1",
+                "PCDH17",
+                "PCDH18",
+                "PCF11",
+                "PCYT1B",
+                "PDGFB",
+                "PDGFRA",
+                "PDLIM2",
+                "PDS5B",
+                "PDZRN4",
+                "PFN2",
+                "PHC2",
+                "PHEX",
+                "PHF1",
+                "PHF15",
+                "PHF6",
+                "PHOX2B",
+                "PLAGL2",
+                "PLEC",
+                "PLEKHM1",
+                "PLP2",
+                "PMCH",
+                "PMCHL1",
+                "PODXL2",
+                "POFUT1",
+                "POU2AF1",
+                "POU4F1",
+                "PPAP2B",
+                "PPP1R9B",
+                "PPP2R3A",
+                "PPP2R4",
+                "PPP2R5E",
+                "PPP3CA",
+                "PRELP",
+                "PRKCG",
+                "PRKCQ",
+                "PROK2",
+                "PTH1R",
+                "PXN",
+                "R3HDM1",
+                "RAB30",
+                "RAB5B",
+                "RAB5C",
+                "RAPGEF4",
+                "RBMS3",
+                "RGS17",
+                "RNF146",
+                "ROBO4",
+                "ROR1",
+                "RPLP0",
+                "RTN1",
+                "RUFY3",
+                "S1PR2",
+                "SCN3B",
+                "SCN5A",
+                "SCN8A",
+                "SCOC",
+                "SDCBP",
+                "SEMA6D",
+                "SEPT7",
+                "SESN3",
+                "SGCD",
+                "SH2D6",
+                "SHC3",
+                "SHCBP1L",
+                "SIPA1",
+                "SIRPA",
+                "SLC26A6",
+                "SLC4A1",
+                "SLC6A1",
+                "SMARCA2",
+                "SNX9",
+                "SORBS2",
+                "SOX12",
+                "SOX21",
+                "SOX30",
+                "SOX5",
+                "SPOCK2",
+                "SPTLC2",
+                "SRGAP2",
+                "SRSF8",
+                "SSBP2",
+                "ST7L",
+                "STAC3",
+                "STAG1",
+                "STAG2",
+                "STC2",
+                "STRN3",
+                "STRN4",
+                "TAS1R2",
+                "TEF",
+                "TFAP4",
+                "TFDP2",
+                "TM2D3",
+                "TMEM182",
+                "TMEM27",
+                "TMEM69",
+                "TMSB4X",
+                "TMSB4XP1",
+                "TMSL3",
+                "TMSL6",
+                "TNFAIP8",
+                "TNS1",
+                "TNXB",
+                "TP53INP2",
+                "TRDN",
+                "TREML1",
+                "TRIM28",
+                "TRIM68",
+                "TRIM8",
+                "TRIML1",
+                "TRPS1",
+                "TSC22D3",
+                "TSPAN7",
+                "TSPY26P",
+                "TSSK3",
+                "TTC17",
+                "TUSC2",
+                "UBE2W",
+                "UBXN10",
+                "USP1",
+                "VDR",
+                "VIP",
+                "VKORC1L1",
+                "VWA5A",
+                "WBP1",
+                "WNT2B",
+                "WT1",
+                "WT1-AS",
+                "XRCC1",
+                "ZADH2",
+                "ZBTB11",
+                "ZFP91",
+                "ZFPM2",
+                "ZIC1",
+                "ZIC4",
+                "ZMAT3",
+                "ZNF238",
+                "ZNF296",
+                "ZNF503",
+                "ZNF521",
+                "ZNF524",
+                "ZNF654",
+                "ZNF687",
+                "ZNF710"
+             ]
+          ]
+       }
+    }
+
+|
+|
+
+validateTF
+**********
+
+**validateTF** - checks if the provided transcription factor label is valid.
+
+.. Note:: **Required parameters:** targetFactor, organism, queryType.
+
+*Example:*
+::
+
+    {  
+       "JSONparams":{  
+          "targetFactor":"Suz12",
+          "organism":"human",
+          "queryType":"validateTF"
+       }
+    }
+
+|
+|
+
+validateCellLines
+*****************
+
+**validateCellLine** - checks if the provided cell type label is valid.
+
+.. Note:: **Required parameters:** organism, queryType, targetCellLine.
+
+*Example:*
+::
+
+    {  
+       "JSONparams":{  
+          "organism":"human",
+          "queryType":"validateCellLine",
+          "targetCellLine":"K562"
+       }
+    }
+
+|
+|
+
+fuzzyFactorSearch
+*****************
+
+**fuzzyFactorSearch** - checks the provided string against valid transcription factor labels and returns possible matches.
+
+.. Note:: **Required parameters:** targetFactor, organism, queryType.
+
+*Example:*
+::
+
+    {
+       "JSONparams":{
+          "targetFactor":"Pol2",
+          "organism":"human",
+          "queryType":"fuzzyFactorSearch"
+       }
+    }
+
+|
+|
+
+fuzzyCellLineSearch
+*******************
+
+**fuzzyCellLineSearch** - checks the provided string against valid cell type labels and returns possible matches.
+
+.. Note:: **Required parameters:** organism, queryType, targetCellLine.
+
+*Example:*
+::
+
+    {  
+       "JSONparams":{  
+          "organism":"human",
+          "queryType":"fuzzyCellLineSearch",
+          "targetCellLine":"He"
+       }
+    }
+
+|
+|
+
+getTFsAndCellLines
+******************
+
+**getTFsAndCellLines** - returns all valid transcription factor/cell line combinations.
+
+.. Note:: **Required parameters:** organism, queryType.
+
+*Example:*
+::
+
+    {  
+       "JSONparams":{  
+          "organism":"human",
+          "queryType":"getTFsAndCellLines"
+       }
+    }
+
+|
+|
+
+geneCheck
+*********
+
+**geneCheck** - checks if the provided gene IDs are valid in our database.
+
+.. Note:: **Required parameters:** symbolList, organism, elementType, queryType, symbolType.
+
+*Example:*
+::
+
+    {  
+       "JSONparams":{  
+          "symbolList":[  
+             [  
+                "ABT1",
+                "ACVR1",
+                "ADAM12",
+                "ADD3",
+                "AGGF1",
+                "ANKRD12",
+                "ANKRD28",
+                "AP4S1",
+                "APBB2",
+                "APOBR",
+                "AQP2",
+                "ARHGAP44",
+                "ARID1A",
+                "ARID4A",
+                "ARPC2",
+                "ARSG",
+                "ARX",
+                "ASB4",
+                "ASPH",
+                "ATOH8",
+                "ATP1A2",
+                "ATP5L",
+                "ATPIF1",
+                "AXDND1",
+                "B4GALT6",
+                "BAI3",
+                "BAMBI",
+                "BCL2L1",
+                "BCL9",
+                "BMPR1B",
+                "BMX",
+                "BRSK2",
+                "BTBD3",
+                "BUB3",
+                "C11ORF84",
+                "C11ORF92",
+                "C12ORF65",
+                "C13ORF30",
+                "C14ORF1",
+                "C15ORF26",
+                "C17ORF28",
+                "C20ORF197",
+                "C3ORF19",
+                "C6ORF138",
+                "CA3",
+                "CACNA2D3",
+                "CACNB2",
+                "CAPN1",
+                "CAPZA1",
+                "CASQ2",
+                "CBX2",
+                "CCNJ",
+                "CCNY",
+                "CDC23",
+                "CDH2",
+                "CER1",
+                "CHRM1",
+                "CITED2",
+                "CLDN5",
+                "CLTC",
+                "CMKLR1",
+                "CNTLN",
+                "CNTN1",
+                "COCH",
+                "COL12A1",
+                "COL1A2",
+                "COL4A5",
+                "COL4A6",
+                "COLEC10",
+                "CRAT",
+                "CRH",
+                "CRKL",
+                "CRYGD",
+                "CRYGS",
+                "CSNK1A1",
+                "CSRNP3",
+                "CSTF3",
+                "CYBRD1",
+                "DAAM1",
+                "DBNDD2",
+                "DCAKD",
+                "DDAH2",
+                "DDX4",
+                "DEF6",
+                "DENND4A",
+                "DGKB",
+                "DHH",
+                "DHRS4",
+                "DHRS4L2",
+                "DIDO1",
+                "DMD",
+                "DMRT1",
+                "DNAJA2",
+                "DNAJB3",
+                "DNAJB4",
+                "DSCAML1",
+                "DUSP4",
+                "DYNC1I1",
+                "DYRK1A",
+                "EDA",
+                "EFNA1",
+                "EGFLAM",
+                "EIF5",
+                "EMX2",
+                "EPC1",
+                "EPHA7",
+                "ERBB4",
+                "ERRFI1",
+                "ESRP2",
+                "ESRRB",
+                "ESRRG",
+                "EYA1",
+                "FAM49A",
+                "FAM83F",
+                "FCER1A",
+                "FGD4",
+                "FGF10",
+                "FGF12",
+                "FGFR1",
+                "FGFR1OP2",
+                "FIZ1",
+                "FKRP",
+                "FMNL3",
+                "FNDC9",
+                "FOXA1",
+                "FOXG1",
+                "FOXO4",
+                "FOXP2",
+                "FSIP2",
+                "FST",
+                "GABRA3",
+                "GDNF",
+                "GFI1",
+                "GGNBP2",
+                "GJB4",
+                "GLDN",
+                "GNAQ",
+                "GPR85",
+                "GPRC5D",
+                "GRIN2B",
+                "H3F3A",
+                "HDAC8",
+                "HESX1",
+                "HEXIM2",
+                "HGF",
+                "HIC2",
+                "HIP1R",
+                "HN1",
+                "HOXA10",
+                "HOXA5",
+                "HOXB8",
+                "HPSE2",
+                "HSD3B7",
+                "ICAM4",
+                "ID1",
+                "IGF1",
+                "IL1RAPL1",
+                "INHBC",
+                "IP6K2",
+                "ITGA10",
+                "ITGA8",
+                "JPH1",
+                "KANK2",
+                "KCNIP2",
+                "KCNK5",
+                "KCNN3",
+                "KCNQ1DN",
+                "KIAA0182",
+                "KITLG",
+                "KLF5",
+                "KLHDC10",
+                "KLHL20",
+                "KLHL3",
+                "LARS2",
+                "LENG9",
+                "LHFP",
+                "LHX9",
+                "LMO7",
+                "LOC151534",
+                "LRP5",
+                "LRRC4",
+                "LRRN4CL",
+                "LTBP1",
+                "MAML1",
+                "MANF",
+                "MAP2",
+                "MAP3K5",
+                "MAP6",
+                "MEIS1",
+                "MGAT1",
+                "MGAT4A",
+                "MID1",
+                "MLL",
+                "MOAP1",
+                "MPP6",
+                "MPPED2",
+                "MRPL13",
+                "MTA2",
+                "MTBP",
+                "MYF6",
+                "MYH1",
+                "MYH10",
+                "MYO18A",
+                "NAGLU",
+                "NAPB",
+                "NAV2",
+                "NAV3",
+                "NCDN",
+                "NDNF",
+                "NDST4",
+                "NDUFS4",
+                "NEK1",
+                "NEK2",
+                "NFATC4",
+                "NFYB",
+                "NMI",
+                "NMT1",
+                "NR2F1",
+                "NRG1",
+                "NTRK2",
+                "NUP54",
+                "NXPH4",
+                "OMA1",
+                "OMG",
+                "OR2L13",
+                "OTX2",
+                "PACRG",
+                "PAPD5",
+                "PARK2",
+                "PART1",
+                "PCDH17",
+                "PCDH18",
+                "PCF11",
+                "PCYT1B",
+                "PDGFB",
+                "PDGFRA",
+                "PDLIM2",
+                "PDS5B",
+                "PDZRN4",
+                "PFN2",
+                "PHC2",
+                "PHEX",
+                "PHF1",
+                "PHF15",
+                "PHF6",
+                "PHOX2B",
+                "PLAGL2",
+                "PLEC",
+                "PLEKHM1",
+                "PLP2",
+                "PMCH",
+                "PMCHL1",
+                "PODXL2",
+                "POFUT1",
+                "POU2AF1",
+                "POU4F1",
+                "PPAP2B",
+                "PPP1R9B",
+                "PPP2R3A",
+                "PPP2R4",
+                "PPP2R5E",
+                "PPP3CA",
+                "PRELP",
+                "PRKCG",
+                "PRKCQ",
+                "PROK2",
+                "PTH1R",
+                "PXN",
+                "R3HDM1",
+                "RAB30",
+                "RAB5B",
+                "RAB5C",
+                "RAPGEF4",
+                "RBMS3",
+                "RGS17",
+                "RNF146",
+                "ROBO4",
+                "ROR1",
+                "RPLP0",
+                "RTN1",
+                "RUFY3",
+                "S1PR2",
+                "SCN3B",
+                "SCN5A",
+                "SCN8A",
+                "SCOC",
+                "SDCBP",
+                "SEMA6D",
+                "SEPT7",
+                "SESN3",
+                "SGCD",
+                "SH2D6",
+                "SHC3",
+                "SHCBP1L",
+                "SIPA1",
+                "SIRPA",
+                "SLC26A6",
+                "SLC4A1",
+                "SLC6A1",
+                "SMARCA2",
+                "SNX9",
+                "SORBS2",
+                "SOX12",
+                "SOX21",
+                "SOX30",
+                "SOX5",
+                "SPOCK2",
+                "SPTLC2",
+                "SRGAP2",
+                "SRSF8",
+                "SSBP2",
+                "ST7L",
+                "STAC3",
+                "STAG1",
+                "STAG2",
+                "STC2",
+                "STRN3",
+                "STRN4",
+                "TAS1R2",
+                "TEF",
+                "TFAP4",
+                "TFDP2",
+                "TM2D3",
+                "TMEM182",
+                "TMEM27",
+                "TMEM69",
+                "TMSB4X",
+                "TMSB4XP1",
+                "TMSL3",
+                "TMSL6",
+                "TNFAIP8",
+                "TNS1",
+                "TNXB",
+                "TP53INP2",
+                "TRDN",
+                "TREML1",
+                "TRIM28",
+                "TRIM68",
+                "TRIM8",
+                "TRIML1",
+                "TRPS1",
+                "TSC22D3",
+                "TSPAN7",
+                "TSPY26P",
+                "TSSK3",
+                "TTC17",
+                "TUSC2",
+                "UBE2W",
+                "UBXN10",
+                "USP1",
+                "VDR",
+                "VIP",
+                "VKORC1L1",
+                "VWA5A",
+                "WBP1",
+                "WNT2B",
+                "WT1",
+                "WT1-AS",
+                "XRCC1",
+                "ZADH2",
+                "ZBTB11",
+                "ZFP91",
+                "ZFPM2",
+                "ZIC1",
+                "ZIC4",
+                "ZMAT3",
+                "ZNF238",
+                "ZNF296",
+                "ZNF503",
+                "ZNF521",
+                "ZNF524",
+                "ZNF654",
+                "ZNF687",
+                "ZNF710"
+             ]
+          ],
+          "elementType":"genes",
+          "organism":"human",
+          "queryType":"geneCheck",
+          "symbolType":"symbol"
+       }
+    }
