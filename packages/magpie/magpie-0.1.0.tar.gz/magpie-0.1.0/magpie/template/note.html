@@ -1,0 +1,102 @@
+{% extends base.html %}
+{% block title %}{{ note_name }}{% end block %}
+
+{% block js %}
+  <script type=text/javascript>
+    function checkbox_replace(el) {
+      var checkbox_regex = /\[([x| ])\](.*)<\/p>/g;
+      var replace_html   = "<label><input type=checkbox onchange=\"toggle(this)\" zindex=\"$$INDEX$$\"$$CHECKED$$>$$TEXT$$</label>";
+      var index          = 0;
+      $(el).html($(el).html().replace(checkbox_regex, function(a,b,c){
+        return replace_html.replace("$$INDEX$$", index++).replace("$$TEXT$$", c).replace("$$CHECKED$$", b == " " ? "" : " checked=\"true\"");
+      }));
+    }
+    function toggle(el) {
+      var sindex = $(el).attr("zindex");
+      var ostate = !$(el).is(":checked");
+      $.post(
+         "{{ url_escape(note_name) }}"
+        ,data={
+           note:   ''
+          ,toggle: sindex
+          ,save:   true
+        }
+      ).error(function(){
+        if(ostate){
+          $("input[zindex='" + sindex + "']").prop("checked", true);
+        }else{
+          $("input[zindex='" + sindex + "']").removeAttr("checked");
+        }
+        $("#savefail").removeClass("hidden");
+      });
+    }
+  </script>
+{% end block %}
+
+{% block bodytag %}
+onload="checkbox_replace(document.getElementById('rendered_note'))";
+{% end block %}
+
+{% block body %}
+  {% if edit %}
+    <br>
+    <form method=POST>
+    <input type=submit class="btn btn-success" value=Save name=save>
+    <input type=submit class="btn btn-danger" value=Cancel name=cancel>
+    <br>
+    <br>
+    <textarea cols=100 rows=25 name=note tabindex=1>{{ note_contents }}</textarea>
+    {% if autosave %}
+        <script>
+          var autosave = function(){
+            $.ajax({
+               url:  "{{ url_escape(note_name) }}?a=edit"
+              ,type: "POST"
+              ,data: {
+                 save: "Save"
+                ,note: $("textarea").val()
+              }
+            });
+          };
+          setInterval(autosave, 5000);
+        </script>
+    {% end if %}
+  {% else %}
+    <br>
+    <button class='btn btn-primary'
+      {% if u'%s/%s' % (notebook_name, note_name) in starred_notes %}
+          onclick="window.location='{{ url_escape(note_name) }}?a=unstar'">
+          <span class="glyphicon glyphicon-star"></span>
+      {% else %}
+          onclick="window.location='{{ url_escape(note_name) }}?a=star'">
+          <span class="glyphicon glyphicon-star-empty"></span>
+      {% end if %}
+    </button>
+    {% if dot %}
+      <button class="btn btn-primary" onclick="window.location='.{{ url_escape(note_name) }}?a=edit'">
+    {% else %}
+      <button class="btn btn-primary" onclick="window.location='{{ url_escape(note_name) }}?a=edit'">
+    {% end if %}
+    Edit</button>
+    <button class='btn btn-danger' onclick="window.location='{{ url_escape(note_name) }}?a=delete'">
+    Delete</button>
+    {% if dot %}
+      <br>
+      <br>
+      <button class="btn btn-primary" onclick="window.location='{{url_escape(note_name)}}?dl=True'">
+      <span class="glyphicon glyphicon-cloud-download"></span>
+      Download Original
+      <span class="glyphicon glyphicon-cloud-download"></span>
+      </button>
+    {% end if %}
+    <br>
+    <br>
+    <div id=rendered_note>
+      <div id="savefail" class="alert alert-danger fade in hidden" data-dismiss="alert">
+        <span onclick="$(this).parent().addClass('hidden');">×</span>
+        There was a failure saving the change, please refresh and try again.
+      </div>
+      {% raw note_contents %}
+    </div>
+  {% end if %}
+{% end block %}
