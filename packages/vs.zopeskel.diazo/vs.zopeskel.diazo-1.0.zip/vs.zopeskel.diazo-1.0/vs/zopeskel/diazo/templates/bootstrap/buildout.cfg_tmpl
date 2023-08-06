@@ -1,0 +1,45 @@
+[buildout]
+parts =
+    nodejs
+    npm
+    scripts
+    test
+
+extends =
+    http://dist.plone.org/release/5.0-latest/versions.cfg
+
+find-links =
+    http://dist.plone.org/release/5.0-latest/
+    http://dist.plone.org/thirdparty
+
+develop = .
+
+versions = versions
+
+[versions]
+
+[nodejs]
+recipe = zc.recipe.cmmi
+url = http://nodejs.org/dist/v0.10.28/node-v0.10.28.tar.gz
+
+[npm]
+recipe = plone.recipe.command
+command =
+    cd \${buildout:directory}/${namespace_package}/${package}
+    \${buildout:parts-directory}/nodejs/bin/npm install
+    node_modules/bower/bin/bower install
+    node_modules/grunt-cli/bin/grunt less
+    node_modules/grunt-cli/bin/grunt copy
+
+[scripts]
+recipe = zc.recipe.egg
+
+eggs =
+    ${namespace_package}.${package}
+    zest.releaser
+
+[test]
+recipe = zc.recipe.testrunner
+defaults = ['--tests-pattern', '^f?tests$', '-v']
+eggs = ${namespace_package}.${package}
+

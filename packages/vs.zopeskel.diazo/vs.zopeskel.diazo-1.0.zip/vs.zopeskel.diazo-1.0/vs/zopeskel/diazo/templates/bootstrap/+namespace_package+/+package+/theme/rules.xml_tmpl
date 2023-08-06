@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rules
+    xmlns="http://namespaces.plone.org/diazo"
+    xmlns:css="http://namespaces.plone.org/diazo/css"
+    xmlns:xhtml="http://www.w3.org/1999/xhtml"
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    xmlns:xi="http://www.w3.org/2001/XInclude">
+
+    <!-- Rules for the standard Plone pages -->
+    <rules css:if-content="#visual-portal-wrapper">
+        
+        <theme href="/++theme++${namespace_package}.${package}/index.html" />
+
+        <!-- Attributes -->
+        <copy attributes="*" theme="/html" content="/html"/>
+        <!-- Base tag -->
+        <before theme="/html/head/title" content="/html/head/base"/>
+        <!-- Title -->
+        <replace theme="/html/head/title" content="/html/head/title" />
+        <!-- Pull in Plone Meta -->
+        <after theme-children="/html/head" content="/html/head/meta" />
+        <!-- dont use Plone icons, use the theme -->
+        <drop css:content="head link[rel='apple-touch-icon']" />
+        <drop css:content="head link[rel='shortcut icon']" />
+
+        <!-- Copy over the id/class attributes on the body tag.
+             This is important e.g. for per-section styling -->
+        <copy attributes="*" css:content="body" css:theme="body" />
+
+        <!-- Copy script tags from Plone head to end of body -->
+        <after theme-children="/html/body" content="/html/head/script" />
+
+        <!-- Move inline scripts in content to end of body -->
+        <drop content="/html/body/script" />
+        <after theme-children="/html/body" content="/html/body/script" method="raw" />
+
+        <!-- Replace globalnav by navbar -->
+        <replace theme-children="//*[@id='globalnav']" content-children="//*[@id='portal-globalnav']" />
+        <!-- Search form in navbar -->
+        <copy attributes="action" theme="//*[@id='searchGadget_form']" content="//*[@id='searchGadget_form']" />
+        <copy attributes="name value placeholder accesskey" theme="//*[@id='searchGadget']" content="//*[@id='searchGadget']" />
+
+        <!-- Breadcrumbs -->
+        <replace theme-children="//*[@id='breadcrumbs']" content-children="//*[@id='portal-breadcrumbs']/ol" />
+
+        <!-- Left column -->
+        <replace theme-children="//*[@id='column-left']" content-children="//*[@id='portal-column-one']" />
+        <!-- Right column -->
+        <replace theme-children="//*[@id='column-right']" content-children="//*[@id='portal-column-two']" />
+        <!-- Footer -->
+        <replace theme-children="//*[@id='footer']" content-children="//*[@id='portal-footer-wrapper']" />
+
+        <!-- Title -->
+        <replace theme-children="/html/body/div/h1" content-children="//*[@id='content']/header/h1" />
+        <!-- Description -->
+        <replace theme-children="//*[@id='description']" css:content-children=".description" />
+        <!-- Content -->
+        <replace theme="//*[@id='content']" content-children="//*[@id='content-core']" />
+
+    </rules>
+</rules>
+
