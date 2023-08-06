@@ -1,0 +1,25 @@
+IDLPYTHON = $(OMDEV)/lib/omniORB-4.1.6-msvc-10/bin/x86_win32/omniidl -bpython -Wbglobal=_OMCIDL -Wbpackage=OMPythonIDL
+IDLPYTHONTARGET = $(builddir_share)/omc/scripts/PythonInterface/OMPythonIDL/omc_communication_idl.py
+
+install: $(IDLPYTHONTARGET)
+
+.PHONY: script-files
+
+script-files: mkbuilddirs
+	# copy library files neeede by OMPython
+	(cp -puf $(OMDEV)/lib/omniORB-4.1.6-msvc-10/lib/x86_win32/_omnipy.pyd $(builddir_lib)/python)
+	(cp -puf $(OMDEV)/lib/omniORB-4.1.6-msvc-10/lib/python/omniORB/__init__.py $(builddir_lib)/python/omniORB/)
+	(cp -puf $(OMDEV)/lib/omniORB-4.1.6-msvc-10/lib/python/omniORB/boxes_idl.py $(builddir_lib)/python/omniORB/)
+	(cp -puf $(OMDEV)/lib/omniORB-4.1.6-msvc-10/lib/python/omniORB/CORBA.py $(builddir_lib)/python/omniORB/)
+	(cp -puf $(OMDEV)/lib/omniORB-4.1.6-msvc-10/lib/python/omniORB/corbaidl_idl.py $(builddir_lib)/python/omniORB/)
+	(cp -puf $(OMDEV)/lib/omniORB-4.1.6-msvc-10/lib/python/omniORB/minorCodes.py $(builddir_lib)/python/omniORB/)
+	(cp -puf $(OMDEV)/lib/omniORB-4.1.6-msvc-10/lib/python/omniORB/PortableServer.py $(builddir_lib)/python/omniORB/)
+	(cp -puf $(OMDEV)/lib/omniORB-4.1.6-msvc-10/lib/python/omniORB/tcInternal.py $(builddir_lib)/python/omniORB/)
+	# copy OMPython files
+	cp -rfp setup.py $(builddir_share)/omc/scripts/PythonInterface
+	cp -rfp OMPython/* $(builddir_share)/omc/scripts/PythonInterface/OMPython
+
+$(IDLPYTHONTARGET) : $(IDLFILE) script-files
+	$(IDLPYTHON) -C$(builddir_share)/omc/scripts/PythonInterface $(IDLFILE)
+
+include Makefile.common
