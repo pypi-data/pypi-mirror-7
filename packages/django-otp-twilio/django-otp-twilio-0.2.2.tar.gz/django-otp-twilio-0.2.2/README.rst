@@ -1,0 +1,10 @@
+.. vim:ft=rst
+
+This is a django-otp plugin that delivers tokens via Twilio's `SMS
+<https://www.twilio.com/sms>`_ service.
+
+See `django-otp <http://packages.python.org/django-otp>`_ for more information
+on the OTP framework.
+
+This version is supported on Python 2.6, 2.7, 3.2, 3.3, and 3.4; and Django >=
+1.4.
