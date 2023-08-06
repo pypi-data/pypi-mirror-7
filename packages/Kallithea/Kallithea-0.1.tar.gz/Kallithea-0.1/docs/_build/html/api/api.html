@@ -1,0 +1,1094 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <title>API &mdash; Kallithea 0 documentation</title>
+
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Kallithea 0 documentation" href="../index.html" />
+    <link rel="next" title="The models Module" href="models.html" />
+    <link rel="prev" title="Changelog" href="../changelog.html" />
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="models.html" title="The models Module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../changelog.html" title="Changelog"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Kallithea 0 documentation</a> &raquo;</li>
+      </ul>
+    </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+
+  <div class="section" id="api">
+<span id="id1"></span><h1>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h1>
+<p>Starting from Kallithea version 1.2 a simple API was implemented.
+There&#8217;s a single schema for calling all api methods. API is implemented
+with JSON protocol both ways. An url to send API request to Kallithea is
+&lt;your_server&gt;/_admin/api</p>
+<div class="section" id="api-access-for-web-views">
+<h2>API ACCESS FOR WEB VIEWS<a class="headerlink" href="#api-access-for-web-views" title="Permalink to this headline">¶</a></h2>
+<p>API access can also be turned on for each web view in Kallithea that is
+decorated with <cite>&#64;LoginRequired</cite> decorator. To enable API access simple change
+the standard login decorator to <cite>&#64;LoginRequired(api_access=True)</cite>.</p>
+<p>To make this operation easier, starting from version 1.7.0 there&#8217;s a white list
+of views that will have API access enabled. Simply edit <cite>api_access_controllers_whitelist</cite>
+option in your .ini file, and define views that should have API access enabled.
+Following example shows how to enable API access to patch/diff raw file and archive
+in Kallithea:</p>
+<div class="highlight-python"><div class="highlight"><pre>api_access_controllers_whitelist =
+    ChangesetController:changeset_patch,
+    ChangesetController:changeset_raw,
+    FilesController:raw,
+    FilesController:archivefile
+</pre></div>
+</div>
+<p>After this change, a Kallithea view can be accessed without login by adding a
+GET parameter <cite>?api_key=&lt;api_key&gt;</cite> to url. By default this is only
+enabled on RSS/ATOM feed views. Exposing raw diffs is a good way to integrate with
+3rd party services like code review, or build farms that could download archives.</p>
+</div>
+<div class="section" id="api-access">
+<h2>API ACCESS<a class="headerlink" href="#api-access" title="Permalink to this headline">¶</a></h2>
+<p>All clients are required to send JSON-RPC spec JSON data:</p>
+<div class="highlight-python"><div class="highlight"><pre>{
+    &quot;id:&quot;&lt;id&gt;&quot;,
+    &quot;api_key&quot;:&quot;&lt;api_key&gt;&quot;,
+    &quot;method&quot;:&quot;&lt;method_name&gt;&quot;,
+    &quot;args&quot;:{&quot;&lt;arg_key&gt;&quot;:&quot;&lt;arg_val&gt;&quot;}
+}
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Example call for autopulling remotes repos using curl::</dt>
+<dd>curl <a class="reference external" href="https://server.com/_admin/api">https://server.com/_admin/api</a> -X POST -H &#8216;content-type:text/plain&#8217; &#8211;data-binary &#8216;{&#8220;id&#8221;:1,&#8221;api_key&#8221;:&#8221;xe7cdb2v278e4evbdf5vs04v832v0efvcbcve4a3&#8221;,&#8221;method&#8221;:&#8221;pull&#8221;,&#8221;args&#8221;:{&#8220;repo&#8221;:&#8221;CPython&#8221;}}&#8217;</dd>
+<dt>Simply provide</dt>
+<dd><ul class="first last simple">
+<li><em>id</em> A value of any type, which is used to match the response with the request that it is replying to.</li>
+<li><em>api_key</em> for access and permission validation.</li>
+<li><em>method</em> is name of method to call</li>
+<li><em>args</em> is an key:value list of arguments to pass to method</li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">api_key can be found in your user account page</p>
+</div>
+<p>Kallithea API will return always a JSON-RPC response:</p>
+<div class="highlight-python"><div class="highlight"><pre>{
+    &quot;id&quot;:&lt;id&gt;, # matching id sent by request
+    &quot;result&quot;: &quot;&lt;result&gt;&quot;|null, # JSON formatted result, null if any errors
+    &quot;error&quot;: &quot;null&quot;|&lt;error_message&gt; # JSON formatted error (if any)
+}
+</pre></div>
+</div>
+<p>All responses from API will be <cite>HTTP/1.0 200 OK</cite>, if there&#8217;s an error while
+calling api <em>error</em> key from response will contain failure description
+and result will be null.</p>
+</div>
+<div class="section" id="api-client">
+<h2>API CLIENT<a class="headerlink" href="#api-client" title="Permalink to this headline">¶</a></h2>
+<p>From version 1.4 Kallithea adds a script that allows to easily
+communicate with API. After installing Kallithea a <cite>kallithea-api</cite> script
+will be available.</p>
+<p>To get started quickly simply run:</p>
+<div class="highlight-python"><div class="highlight"><pre>kallithea-api _create_config --apikey=&lt;youapikey&gt; --apihost=&lt;your.kallithea.server&gt;
+</pre></div>
+</div>
+<p>This will create a file named .config in the directory you executed it storing
+json config file with credentials. You can skip this step and always provide
+both of the arguments to be able to communicate with server</p>
+<p>after that simply run any api command for example get_repo:</p>
+<div class="highlight-python"><div class="highlight"><pre>kallithea-api get_repo
+
+calling {&quot;api_key&quot;: &quot;&lt;apikey&gt;&quot;, &quot;id&quot;: 75, &quot;args&quot;: {}, &quot;method&quot;: &quot;get_repo&quot;} to http://127.0.0.1:5000
+Kallithea said:
+{&#39;error&#39;: &#39;Missing non optional `repoid` arg in JSON DATA&#39;,
+ &#39;id&#39;: 75,
+ &#39;result&#39;: None}
+</pre></div>
+</div>
+<p>Ups looks like we forgot to add an argument</p>
+<p>Let&#8217;s try again now giving the repoid as parameters:</p>
+<div class="highlight-python"><div class="highlight"><pre>kallithea-api get_repo repoid:myrepo
+
+calling {&quot;api_key&quot;: &quot;&lt;apikey&gt;&quot;, &quot;id&quot;: 39, &quot;args&quot;: {&quot;repoid&quot;: &quot;myrepo&quot;}, &quot;method&quot;: &quot;get_repo&quot;} to http://127.0.0.1:5000
+Kallithea said:
+{&#39;error&#39;: None,
+ &#39;id&#39;: 39,
+ &#39;result&#39;: &lt;json data...&gt;}
+</pre></div>
+</div>
+</div>
+<div class="section" id="api-methods">
+<h2>API METHODS<a class="headerlink" href="#api-methods" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="pull">
+<h3>pull<a class="headerlink" href="#pull" title="Permalink to this headline">¶</a></h3>
+<p>Pulls given repo from remote location. Can be used to automatically keep
+remote repos up to date. This command can be executed only using api_key
+belonging to user with admin rights</p>
+<p>INPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_for_response&gt;
+api_key : &quot;&lt;api_key&gt;&quot;
+method :  &quot;pull&quot;
+args :    {
+            &quot;repoid&quot; : &quot;&lt;reponame or repo_id&gt;&quot;
+          }
+</pre></div>
+</div>
+<p>OUTPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_given_in_input&gt;
+result : &quot;Pulled from `&lt;reponame&gt;`&quot;
+error :  null
+</pre></div>
+</div>
+</div>
+<div class="section" id="rescan-repos">
+<h3>rescan_repos<a class="headerlink" href="#rescan-repos" title="Permalink to this headline">¶</a></h3>
+<p>Dispatch rescan repositories action. If remove_obsolete is set
+Kallithea will delete repos that are in database but not in the filesystem.
+This command can be executed only using api_key belonging to user with admin
+rights.</p>
+<p>INPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_for_response&gt;
+api_key : &quot;&lt;api_key&gt;&quot;
+method :  &quot;rescan_repos&quot;
+args :    {
+            &quot;remove_obsolete&quot; : &quot;&lt;boolean = Optional(False)&gt;&quot;
+          }
+</pre></div>
+</div>
+<p>OUTPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_given_in_input&gt;
+result : &quot;{&#39;added&#39;: [&lt;list of names of added repos&gt;],
+           &#39;removed&#39;: [&lt;list of names of removed repos&gt;]}&quot;
+error :  null
+</pre></div>
+</div>
+</div>
+<div class="section" id="invalidate-cache">
+<h3>invalidate_cache<a class="headerlink" href="#invalidate-cache" title="Permalink to this headline">¶</a></h3>
+<p>Invalidate cache for repository.
+This command can be executed only using api_key belonging to user with admin
+rights or regular user that have write or admin or write access to repository.</p>
+<p>INPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_for_response&gt;
+api_key : &quot;&lt;api_key&gt;&quot;
+method :  &quot;invalidate_cache&quot;
+args :    {
+            &quot;repoid&quot; : &quot;&lt;reponame or repo_id&gt;&quot;
+          }
+</pre></div>
+</div>
+<p>OUTPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_given_in_input&gt;
+result : &quot;Caches of repository `&lt;reponame&gt;`&quot;
+error :  null
+</pre></div>
+</div>
+</div>
+<div class="section" id="lock">
+<h3>lock<a class="headerlink" href="#lock" title="Permalink to this headline">¶</a></h3>
+<p>Set locking state on given repository by given user. If userid param is skipped
+, then it is set to id of user whos calling this method. If locked param is skipped
+then function shows current lock state of given repo.
+This command can be executed only using api_key belonging to user with admin
+rights or regular user that have admin or write access to repository.</p>
+<p>INPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_for_response&gt;
+api_key : &quot;&lt;api_key&gt;&quot;
+method :  &quot;lock&quot;
+args :    {
+            &quot;repoid&quot; : &quot;&lt;reponame or repo_id&gt;&quot;
+            &quot;userid&quot; : &quot;&lt;user_id or username = Optional(=apiuser)&gt;&quot;,
+            &quot;locked&quot; : &quot;&lt;bool true|false = Optional(=None)&gt;&quot;
+          }
+</pre></div>
+</div>
+<p>OUTPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_given_in_input&gt;
+result : {
+             &quot;repo&quot;: &quot;&lt;reponame&gt;&quot;,
+             &quot;locked&quot;: &quot;&lt;bool true|false&gt;&quot;,
+             &quot;locked_since&quot;: &quot;&lt;float lock_time&gt;&quot;,
+             &quot;locked_by&quot;: &quot;&lt;username&gt;&quot;,
+             &quot;msg&quot;: &quot;User `&lt;username&gt;` set lock state for repo `&lt;reponame&gt;` to `&lt;false|true&gt;`&quot;
+         }
+error :  null
+</pre></div>
+</div>
+</div>
+<div class="section" id="show-ip">
+<h3>show_ip<a class="headerlink" href="#show-ip" title="Permalink to this headline">¶</a></h3>
+<p>Shows IP address as seen from Kallithea server, together with all
+defined IP addresses for given user.
+This command can be executed only using api_key belonging to user with admin
+rights.</p>
+<p>INPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_for_response&gt;
+api_key : &quot;&lt;api_key&gt;&quot;
+method :  &quot;show_ip&quot;
+args :    {
+            &quot;userid&quot; : &quot;&lt;user_id or username&gt;&quot;,
+          }
+</pre></div>
+</div>
+<p>OUTPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_given_in_input&gt;
+result : {
+             &quot;ip_addr_server&quot;: &lt;ip_from_clien&gt;&quot;,
+             &quot;user_ips&quot;: [
+                            {
+                               &quot;ip_addr&quot;: &quot;&lt;ip_with_mask&gt;&quot;,
+                               &quot;ip_range&quot;: [&quot;&lt;start_ip&gt;&quot;, &quot;&lt;end_ip&gt;&quot;],
+                            },
+                            ...
+                         ]
+         }
+
+error :  null
+</pre></div>
+</div>
+</div>
+<div class="section" id="get-user">
+<h3>get_user<a class="headerlink" href="#get-user" title="Permalink to this headline">¶</a></h3>
+<p>Gets an user by username or user_id, Returns empty result if user is not found.
+If userid param is skipped it is set to id of user who is calling this method.
+This command can be executed only using api_key belonging to user with admin
+rights, or regular users that cannot specify different userid than theirs</p>
+<p>INPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_for_response&gt;
+api_key : &quot;&lt;api_key&gt;&quot;
+method :  &quot;get_user&quot;
+args :    {
+            &quot;userid&quot; : &quot;&lt;username or user_id Optional(=apiuser)&gt;&quot;
+          }
+</pre></div>
+</div>
+<p>OUTPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_given_in_input&gt;
+result: None if user does not exist or
+        {
+            &quot;user_id&quot; :     &quot;&lt;user_id&gt;&quot;,
+            &quot;api_key&quot; :     &quot;&lt;api_key&gt;&quot;,
+            &quot;username&quot; :    &quot;&lt;username&gt;&quot;,
+            &quot;firstname&quot;:    &quot;&lt;firstname&gt;&quot;,
+            &quot;lastname&quot; :    &quot;&lt;lastname&gt;&quot;,
+            &quot;email&quot; :       &quot;&lt;email&gt;&quot;,
+            &quot;emails&quot;:       &quot;&lt;list_of_all_additional_emails&gt;&quot;,
+            &quot;ip_addresses&quot;: &quot;&lt;list_of_ip_addresses_for_user&gt;&quot;,
+            &quot;active&quot; :      &quot;&lt;bool&gt;&quot;,
+            &quot;admin&quot; :       &quot;&lt;bool&gt;&quot;,
+            &quot;ldap_dn&quot; :     &quot;&lt;ldap_dn&gt;&quot;,
+            &quot;last_login&quot;:   &quot;&lt;last_login&gt;&quot;,
+            &quot;permissions&quot;: {
+                &quot;global&quot;: [&quot;hg.create.repository&quot;,
+                           &quot;repository.read&quot;,
+                           &quot;hg.register.manual_activate&quot;],
+                &quot;repositories&quot;: {&quot;repo1&quot;: &quot;repository.none&quot;},
+                &quot;repositories_groups&quot;: {&quot;Group1&quot;: &quot;group.read&quot;}
+             },
+        }
+
+error:  null
+</pre></div>
+</div>
+</div>
+<div class="section" id="get-users">
+<h3>get_users<a class="headerlink" href="#get-users" title="Permalink to this headline">¶</a></h3>
+<p>Lists all existing users. This command can be executed only using api_key
+belonging to user with admin rights.</p>
+<p>INPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_for_response&gt;
+api_key : &quot;&lt;api_key&gt;&quot;
+method :  &quot;get_users&quot;
+args :    { }
+</pre></div>
+</div>
+<p>OUTPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_given_in_input&gt;
+result: [
+          {
+            &quot;user_id&quot; :     &quot;&lt;user_id&gt;&quot;,
+            &quot;api_key&quot; :     &quot;&lt;api_key&gt;&quot;,
+            &quot;username&quot; :    &quot;&lt;username&gt;&quot;,
+            &quot;firstname&quot;:    &quot;&lt;firstname&gt;&quot;,
+            &quot;lastname&quot; :    &quot;&lt;lastname&gt;&quot;,
+            &quot;email&quot; :       &quot;&lt;email&gt;&quot;,
+            &quot;emails&quot;:       &quot;&lt;list_of_all_additional_emails&gt;&quot;,
+            &quot;ip_addresses&quot;: &quot;&lt;list_of_ip_addresses_for_user&gt;&quot;,
+            &quot;active&quot; :      &quot;&lt;bool&gt;&quot;,
+            &quot;admin&quot; :       &quot;&lt;bool&gt;&quot;,
+            &quot;ldap_dn&quot; :     &quot;&lt;ldap_dn&gt;&quot;,
+            &quot;last_login&quot;:   &quot;&lt;last_login&gt;&quot;,
+          },
+          …
+        ]
+error:  null
+</pre></div>
+</div>
+</div>
+<div class="section" id="create-user">
+<h3>create_user<a class="headerlink" href="#create-user" title="Permalink to this headline">¶</a></h3>
+<p>Creates new user. This command can
+be executed only using api_key belonging to user with admin rights.</p>
+<p>INPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_for_response&gt;
+api_key : &quot;&lt;api_key&gt;&quot;
+method :  &quot;create_user&quot;
+args :    {
+            &quot;username&quot; :  &quot;&lt;username&gt;&quot;,
+            &quot;email&quot; :     &quot;&lt;useremail&gt;&quot;,
+            &quot;password&quot; :  &quot;&lt;password = Optional(None)&gt;&quot;,
+            &quot;firstname&quot; : &quot;&lt;firstname&gt; = Optional(None)&quot;,
+            &quot;lastname&quot; :  &quot;&lt;lastname&gt; = Optional(None)&quot;,
+            &quot;active&quot; :    &quot;&lt;bool&gt; = Optional(True)&quot;,
+            &quot;admin&quot; :     &quot;&lt;bool&gt; = Optional(False)&quot;,
+            &quot;ldap_dn&quot; :   &quot;&lt;ldap_dn&gt; = Optional(None)&quot;
+          }
+</pre></div>
+</div>
+<p>OUTPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_given_in_input&gt;
+result: {
+          &quot;msg&quot; : &quot;created new user `&lt;username&gt;`&quot;,
+          &quot;user&quot;: {
+            &quot;user_id&quot; :  &quot;&lt;user_id&gt;&quot;,
+            &quot;username&quot; : &quot;&lt;username&gt;&quot;,
+            &quot;firstname&quot;: &quot;&lt;firstname&gt;&quot;,
+            &quot;lastname&quot; : &quot;&lt;lastname&gt;&quot;,
+            &quot;email&quot; :    &quot;&lt;email&gt;&quot;,
+            &quot;emails&quot;:    &quot;&lt;list_of_all_additional_emails&gt;&quot;,
+            &quot;active&quot; :   &quot;&lt;bool&gt;&quot;,
+            &quot;admin&quot; :    &quot;&lt;bool&gt;&quot;,
+            &quot;ldap_dn&quot; :  &quot;&lt;ldap_dn&gt;&quot;,
+            &quot;last_login&quot;: &quot;&lt;last_login&gt;&quot;,
+          },
+        }
+error:  null
+</pre></div>
+</div>
+</div>
+<div class="section" id="update-user">
+<h3>update_user<a class="headerlink" href="#update-user" title="Permalink to this headline">¶</a></h3>
+<p>updates given user if such user exists. This command can
+be executed only using api_key belonging to user with admin rights.</p>
+<p>INPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_for_response&gt;
+api_key : &quot;&lt;api_key&gt;&quot;
+method :  &quot;update_user&quot;
+args :    {
+            &quot;userid&quot; : &quot;&lt;user_id or username&gt;&quot;,
+            &quot;username&quot; :  &quot;&lt;username&gt; = Optional(None)&quot;,
+            &quot;email&quot; :     &quot;&lt;useremail&gt; = Optional(None)&quot;,
+            &quot;password&quot; :  &quot;&lt;password&gt; = Optional(None)&quot;,
+            &quot;firstname&quot; : &quot;&lt;firstname&gt; = Optional(None)&quot;,
+            &quot;lastname&quot; :  &quot;&lt;lastname&gt; = Optional(None)&quot;,
+            &quot;active&quot; :    &quot;&lt;bool&gt; = Optional(None)&quot;,
+            &quot;admin&quot; :     &quot;&lt;bool&gt; = Optional(None)&quot;,
+            &quot;ldap_dn&quot; :   &quot;&lt;ldap_dn&gt; = Optional(None)&quot;
+          }
+</pre></div>
+</div>
+<p>OUTPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_given_in_input&gt;
+result: {
+          &quot;msg&quot; : &quot;updated user ID:&lt;userid&gt; &lt;username&gt;&quot;,
+          &quot;user&quot;: {
+            &quot;user_id&quot; :  &quot;&lt;user_id&gt;&quot;,
+            &quot;api_key&quot; :  &quot;&lt;api_key&gt;&quot;,
+            &quot;username&quot; : &quot;&lt;username&gt;&quot;,
+            &quot;firstname&quot;: &quot;&lt;firstname&gt;&quot;,
+            &quot;lastname&quot; : &quot;&lt;lastname&gt;&quot;,
+            &quot;email&quot; :    &quot;&lt;email&gt;&quot;,
+            &quot;emails&quot;:    &quot;&lt;list_of_all_additional_emails&gt;&quot;,
+            &quot;active&quot; :   &quot;&lt;bool&gt;&quot;,
+            &quot;admin&quot; :    &quot;&lt;bool&gt;&quot;,
+            &quot;ldap_dn&quot; :  &quot;&lt;ldap_dn&gt;&quot;,
+            &quot;last_login&quot;: &quot;&lt;last_login&gt;&quot;,
+          },
+        }
+error:  null
+</pre></div>
+</div>
+</div>
+<div class="section" id="delete-user">
+<h3>delete_user<a class="headerlink" href="#delete-user" title="Permalink to this headline">¶</a></h3>
+<p>deletes givenuser if such user exists. This command can
+be executed only using api_key belonging to user with admin rights.</p>
+<p>INPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_for_response&gt;
+api_key : &quot;&lt;api_key&gt;&quot;
+method :  &quot;delete_user&quot;
+args :    {
+            &quot;userid&quot; : &quot;&lt;user_id or username&gt;&quot;,
+          }
+</pre></div>
+</div>
+<p>OUTPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_given_in_input&gt;
+result: {
+          &quot;msg&quot; : &quot;deleted user ID:&lt;userid&gt; &lt;username&gt;&quot;,
+          &quot;user&quot;: null
+        }
+error:  null
+</pre></div>
+</div>
+</div>
+<div class="section" id="get-users-group">
+<h3>get_users_group<a class="headerlink" href="#get-users-group" title="Permalink to this headline">¶</a></h3>
+<p>Gets an existing user group. This command can be executed only using api_key
+belonging to user with admin rights.</p>
+<p>INPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_for_response&gt;
+api_key : &quot;&lt;api_key&gt;&quot;
+method :  &quot;get_users_group&quot;
+args :    {
+            &quot;usersgroupid&quot; : &quot;&lt;user group id or name&gt;&quot;
+          }
+</pre></div>
+</div>
+<p>OUTPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_given_in_input&gt;
+result : None if group not exist
+         {
+           &quot;users_group_id&quot; : &quot;&lt;id&gt;&quot;,
+           &quot;group_name&quot; :     &quot;&lt;groupname&gt;&quot;,
+           &quot;active&quot;:          &quot;&lt;bool&gt;&quot;,
+           &quot;members&quot; :  [
+                          {
+                            &quot;user_id&quot; :  &quot;&lt;user_id&gt;&quot;,
+                            &quot;api_key&quot; :  &quot;&lt;api_key&gt;&quot;,
+                            &quot;username&quot; : &quot;&lt;username&gt;&quot;,
+                            &quot;firstname&quot;: &quot;&lt;firstname&gt;&quot;,
+                            &quot;lastname&quot; : &quot;&lt;lastname&gt;&quot;,
+                            &quot;email&quot; :    &quot;&lt;email&gt;&quot;,
+                            &quot;emails&quot;:    &quot;&lt;list_of_all_additional_emails&gt;&quot;,
+                            &quot;active&quot; :   &quot;&lt;bool&gt;&quot;,
+                            &quot;admin&quot; :    &quot;&lt;bool&gt;&quot;,
+                            &quot;ldap_dn&quot; :  &quot;&lt;ldap_dn&gt;&quot;,
+                            &quot;last_login&quot;: &quot;&lt;last_login&gt;&quot;,
+                          },
+                          …
+                        ]
+         }
+error : null
+</pre></div>
+</div>
+</div>
+<div class="section" id="get-users-groups">
+<h3>get_users_groups<a class="headerlink" href="#get-users-groups" title="Permalink to this headline">¶</a></h3>
+<p>Lists all existing user groups. This command can be executed only using
+api_key belonging to user with admin rights.</p>
+<p>INPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_for_response&gt;
+api_key : &quot;&lt;api_key&gt;&quot;
+method :  &quot;get_users_groups&quot;
+args :    { }
+</pre></div>
+</div>
+<p>OUTPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_given_in_input&gt;
+result : [
+           {
+           &quot;users_group_id&quot; : &quot;&lt;id&gt;&quot;,
+           &quot;group_name&quot; :     &quot;&lt;groupname&gt;&quot;,
+           &quot;active&quot;:          &quot;&lt;bool&gt;&quot;,
+           },
+           …
+          ]
+error : null
+</pre></div>
+</div>
+</div>
+<div class="section" id="create-users-group">
+<h3>create_users_group<a class="headerlink" href="#create-users-group" title="Permalink to this headline">¶</a></h3>
+<p>Creates new user group. This command can be executed only using api_key
+belonging to user with admin rights</p>
+<p>INPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_for_response&gt;
+api_key : &quot;&lt;api_key&gt;&quot;
+method :  &quot;create_users_group&quot;
+args:     {
+            &quot;group_name&quot;: &quot;&lt;groupname&gt;&quot;,
+            &quot;owner&quot; :     &quot;&lt;onwer_name_or_id = Optional(=apiuser)&gt;&quot;,
+            &quot;active&quot;:     &quot;&lt;bool&gt; = Optional(True)&quot;
+          }
+</pre></div>
+</div>
+<p>OUTPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_given_in_input&gt;
+result: {
+          &quot;msg&quot;: &quot;created new user group `&lt;groupname&gt;`&quot;,
+          &quot;users_group&quot;: {
+                 &quot;users_group_id&quot; : &quot;&lt;id&gt;&quot;,
+                 &quot;group_name&quot; :     &quot;&lt;groupname&gt;&quot;,
+                 &quot;active&quot;:          &quot;&lt;bool&gt;&quot;,
+           },
+        }
+error:  null
+</pre></div>
+</div>
+</div>
+<div class="section" id="add-user-to-users-group">
+<h3>add_user_to_users_group<a class="headerlink" href="#add-user-to-users-group" title="Permalink to this headline">¶</a></h3>
+<p>Adds a user to a user group. If user exists in that group success will be
+<cite>false</cite>. This command can be executed only using api_key
+belonging to user with admin rights</p>
+<p>INPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_for_response&gt;
+api_key : &quot;&lt;api_key&gt;&quot;
+method :  &quot;add_user_users_group&quot;
+args:     {
+            &quot;usersgroupid&quot; : &quot;&lt;user group id or name&gt;&quot;,
+            &quot;userid&quot; : &quot;&lt;user_id or username&gt;&quot;,
+          }
+</pre></div>
+</div>
+<p>OUTPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_given_in_input&gt;
+result: {
+          &quot;success&quot;: True|False # depends on if member is in group
+          &quot;msg&quot;: &quot;added member `&lt;username&gt;` to user group `&lt;groupname&gt;` |
+                  User is already in that group&quot;
+        }
+error:  null
+</pre></div>
+</div>
+</div>
+<div class="section" id="remove-user-from-users-group">
+<h3>remove_user_from_users_group<a class="headerlink" href="#remove-user-from-users-group" title="Permalink to this headline">¶</a></h3>
+<p>Removes a user from a user group. If user is not in given group success will
+be <cite>false</cite>. This command can be executed only
+using api_key belonging to user with admin rights</p>
+<p>INPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_for_response&gt;
+api_key : &quot;&lt;api_key&gt;&quot;
+method :  &quot;remove_user_from_users_group&quot;
+args:     {
+            &quot;usersgroupid&quot; : &quot;&lt;user group id or name&gt;&quot;,
+            &quot;userid&quot; : &quot;&lt;user_id or username&gt;&quot;,
+          }
+</pre></div>
+</div>
+<p>OUTPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_given_in_input&gt;
+result: {
+          &quot;success&quot;:  True|False,  # depends on if member is in group
+          &quot;msg&quot;: &quot;removed member &lt;username&gt; from user group &lt;groupname&gt; |
+                  User wasn&#39;t in group&quot;
+        }
+error:  null
+</pre></div>
+</div>
+</div>
+<div class="section" id="get-repo">
+<h3>get_repo<a class="headerlink" href="#get-repo" title="Permalink to this headline">¶</a></h3>
+<p>Gets an existing repository by it&#8217;s name or repository_id. Members will return
+either users_group or user associated to that repository. This command can be
+executed only using api_key belonging to user with admin
+rights or regular user that have at least read access to repository.</p>
+<p>INPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_for_response&gt;
+api_key : &quot;&lt;api_key&gt;&quot;
+method :  &quot;get_repo&quot;
+args:     {
+            &quot;repoid&quot; : &quot;&lt;reponame or repo_id&gt;&quot;
+          }
+</pre></div>
+</div>
+<p>OUTPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_given_in_input&gt;
+result: None if repository does not exist or
+        {
+            &quot;repo_id&quot; :          &quot;&lt;repo_id&gt;&quot;,
+            &quot;repo_name&quot; :        &quot;&lt;reponame&gt;&quot;
+            &quot;repo_type&quot; :        &quot;&lt;repo_type&gt;&quot;,
+            &quot;clone_uri&quot; :        &quot;&lt;clone_uri&gt;&quot;,
+            &quot;enable_downloads&quot;:  &quot;&lt;bool&gt;&quot;,
+            &quot;enable_locking&quot;:    &quot;&lt;bool&gt;&quot;,
+            &quot;enable_statistics&quot;: &quot;&lt;bool&gt;&quot;,
+            &quot;private&quot;:           &quot;&lt;bool&gt;&quot;,
+            &quot;created_on&quot; :       &quot;&lt;date_time_created&gt;&quot;,
+            &quot;description&quot; :      &quot;&lt;description&gt;&quot;,
+            &quot;landing_rev&quot;:       &quot;&lt;landing_rev&gt;&quot;,
+            &quot;last_changeset&quot;:    {
+                                   &quot;author&quot;:   &quot;&lt;full_author&gt;&quot;,
+                                   &quot;date&quot;:     &quot;&lt;date_time_of_commit&gt;&quot;,
+                                   &quot;message&quot;:  &quot;&lt;commit_message&gt;&quot;,
+                                   &quot;raw_id&quot;:   &quot;&lt;raw_id&gt;&quot;,
+                                   &quot;revision&quot;: &quot;&lt;numeric_revision&gt;&quot;,
+                                   &quot;short_id&quot;: &quot;&lt;short_id&gt;&quot;
+                                 }
+            &quot;owner&quot;:             &quot;&lt;repo_owner&gt;&quot;,
+            &quot;fork_of&quot;:           &quot;&lt;name_of_fork_parent&gt;&quot;,
+            &quot;members&quot; :     [
+                              {
+                                &quot;type&quot;:        &quot;user&quot;,
+                                &quot;user_id&quot; :    &quot;&lt;user_id&gt;&quot;,
+                                &quot;api_key&quot; :    &quot;&lt;api_key&gt;&quot;,
+                                &quot;username&quot; :   &quot;&lt;username&gt;&quot;,
+                                &quot;firstname&quot;:   &quot;&lt;firstname&gt;&quot;,
+                                &quot;lastname&quot; :   &quot;&lt;lastname&gt;&quot;,
+                                &quot;email&quot; :      &quot;&lt;email&gt;&quot;,
+                                &quot;emails&quot;:      &quot;&lt;list_of_all_additional_emails&gt;&quot;,
+                                &quot;active&quot; :     &quot;&lt;bool&gt;&quot;,
+                                &quot;admin&quot; :      &quot;&lt;bool&gt;&quot;,
+                                &quot;ldap_dn&quot; :    &quot;&lt;ldap_dn&gt;&quot;,
+                                &quot;last_login&quot;:  &quot;&lt;last_login&gt;&quot;,
+                                &quot;permission&quot; : &quot;repository.(read|write|admin)&quot;
+                              },
+                              …
+                              {
+                                &quot;type&quot;:      &quot;users_group&quot;,
+                                &quot;id&quot; :       &quot;&lt;usersgroupid&gt;&quot;,
+                                &quot;name&quot; :     &quot;&lt;usersgroupname&gt;&quot;,
+                                &quot;active&quot;:    &quot;&lt;bool&gt;&quot;,
+                                &quot;permission&quot; : &quot;repository.(read|write|admin)&quot;
+                              },
+                              …
+                            ]
+             &quot;followers&quot;:   [
+                              {
+                                &quot;user_id&quot; :     &quot;&lt;user_id&gt;&quot;,
+                                &quot;username&quot; :    &quot;&lt;username&gt;&quot;,
+                                &quot;api_key&quot; :     &quot;&lt;api_key&gt;&quot;,
+                                &quot;firstname&quot;:    &quot;&lt;firstname&gt;&quot;,
+                                &quot;lastname&quot; :    &quot;&lt;lastname&gt;&quot;,
+                                &quot;email&quot; :       &quot;&lt;email&gt;&quot;,
+                                &quot;emails&quot;:       &quot;&lt;list_of_all_additional_emails&gt;&quot;,
+                                &quot;ip_addresses&quot;: &quot;&lt;list_of_ip_addresses_for_user&gt;&quot;,
+                                &quot;active&quot; :      &quot;&lt;bool&gt;&quot;,
+                                &quot;admin&quot; :       &quot;&lt;bool&gt;&quot;,
+                                &quot;ldap_dn&quot; :     &quot;&lt;ldap_dn&gt;&quot;,
+                                &quot;last_login&quot;:   &quot;&lt;last_login&gt;&quot;,
+                              },
+                              …
+             ]
+        }
+error:  null
+</pre></div>
+</div>
+</div>
+<div class="section" id="get-repos">
+<h3>get_repos<a class="headerlink" href="#get-repos" title="Permalink to this headline">¶</a></h3>
+<p>Lists all existing repositories. This command can be executed only using
+api_key belonging to user with admin rights or regular user that have
+admin, write or read access to repository.</p>
+<p>INPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_for_response&gt;
+api_key : &quot;&lt;api_key&gt;&quot;
+method :  &quot;get_repos&quot;
+args:     { }
+</pre></div>
+</div>
+<p>OUTPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_given_in_input&gt;
+result: [
+          {
+            &quot;repo_id&quot; :          &quot;&lt;repo_id&gt;&quot;,
+            &quot;repo_name&quot; :        &quot;&lt;reponame&gt;&quot;
+            &quot;repo_type&quot; :        &quot;&lt;repo_type&gt;&quot;,
+            &quot;clone_uri&quot; :        &quot;&lt;clone_uri&gt;&quot;,
+            &quot;private&quot;: :         &quot;&lt;bool&gt;&quot;,
+            &quot;created_on&quot; :       &quot;&lt;datetimecreated&gt;&quot;,
+            &quot;description&quot; :      &quot;&lt;description&gt;&quot;,
+            &quot;landing_rev&quot;:       &quot;&lt;landing_rev&gt;&quot;,
+            &quot;owner&quot;:             &quot;&lt;repo_owner&gt;&quot;,
+            &quot;fork_of&quot;:           &quot;&lt;name_of_fork_parent&gt;&quot;,
+            &quot;enable_downloads&quot;:  &quot;&lt;bool&gt;&quot;,
+            &quot;enable_locking&quot;:    &quot;&lt;bool&gt;&quot;,
+            &quot;enable_statistics&quot;: &quot;&lt;bool&gt;&quot;,
+          },
+          …
+        ]
+error:  null
+</pre></div>
+</div>
+</div>
+<div class="section" id="get-repo-nodes">
+<h3>get_repo_nodes<a class="headerlink" href="#get-repo-nodes" title="Permalink to this headline">¶</a></h3>
+<p>returns a list of nodes and it&#8217;s children in a flat list for a given path
+at given revision. It&#8217;s possible to specify ret_type to show only <cite>files</cite> or
+<cite>dirs</cite>. This command can be executed only using api_key belonging to user
+with admin rights</p>
+<p>INPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_for_response&gt;
+api_key : &quot;&lt;api_key&gt;&quot;
+method :  &quot;get_repo_nodes&quot;
+args:     {
+            &quot;repoid&quot; : &quot;&lt;reponame or repo_id&gt;&quot;
+            &quot;revision&quot;  : &quot;&lt;revision&gt;&quot;,
+            &quot;root_path&quot; : &quot;&lt;root_path&gt;&quot;,
+            &quot;ret_type&quot;  : &quot;&lt;ret_type&gt; = Optional(&#39;all&#39;)&quot;
+          }
+</pre></div>
+</div>
+<p>OUTPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_given_in_input&gt;
+result: [
+          {
+            &quot;name&quot; :        &quot;&lt;name&gt;&quot;
+            &quot;type&quot; :        &quot;&lt;type&gt;&quot;,
+          },
+          …
+        ]
+error:  null
+</pre></div>
+</div>
+</div>
+<div class="section" id="create-repo">
+<h3>create_repo<a class="headerlink" href="#create-repo" title="Permalink to this headline">¶</a></h3>
+<p>Creates a repository. If repository name contains &#8220;/&#8221;, all needed repository
+groups will be created. For example &#8220;foo/bar/baz&#8221; will create groups
+&#8220;foo&#8221;, &#8220;bar&#8221; (with &#8220;foo&#8221; as parent), and create &#8220;baz&#8221; repository with
+&#8220;bar&#8221; as group. This command can be executed only using api_key belonging to user with admin
+rights or regular user that have create repository permission. Regular users
+cannot specify owner parameter</p>
+<p>INPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_for_response&gt;
+api_key : &quot;&lt;api_key&gt;&quot;
+method :  &quot;create_repo&quot;
+args:     {
+            &quot;repo_name&quot; :        &quot;&lt;reponame&gt;&quot;,
+            &quot;owner&quot; :            &quot;&lt;onwer_name_or_id = Optional(=apiuser)&gt;&quot;,
+            &quot;repo_type&quot; :        &quot;&lt;repo_type&gt; = Optional(&#39;hg&#39;)&quot;,
+            &quot;description&quot; :      &quot;&lt;description&gt; = Optional(&#39;&#39;)&quot;,
+            &quot;private&quot; :          &quot;&lt;bool&gt; = Optional(False)&quot;,
+            &quot;clone_uri&quot; :        &quot;&lt;clone_uri&gt; = Optional(None)&quot;,
+            &quot;landing_rev&quot; :      &quot;&lt;landing_rev&gt; = Optional(&#39;tip&#39;)&quot;,
+            &quot;enable_downloads&quot;:  &quot;&lt;bool&gt; = Optional(False)&quot;,
+            &quot;enable_locking&quot;:    &quot;&lt;bool&gt; = Optional(False)&quot;,
+            &quot;enable_statistics&quot;: &quot;&lt;bool&gt; = Optional(False)&quot;,
+          }
+</pre></div>
+</div>
+<p>OUTPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_given_in_input&gt;
+result: {
+          &quot;msg&quot;: &quot;Created new repository `&lt;reponame&gt;`&quot;,
+          &quot;repo&quot;: {
+            &quot;repo_id&quot; :          &quot;&lt;repo_id&gt;&quot;,
+            &quot;repo_name&quot; :        &quot;&lt;reponame&gt;&quot;
+            &quot;repo_type&quot; :        &quot;&lt;repo_type&gt;&quot;,
+            &quot;clone_uri&quot; :        &quot;&lt;clone_uri&gt;&quot;,
+            &quot;private&quot;: :         &quot;&lt;bool&gt;&quot;,
+            &quot;created_on&quot; :       &quot;&lt;datetimecreated&gt;&quot;,
+            &quot;description&quot; :      &quot;&lt;description&gt;&quot;,
+            &quot;landing_rev&quot;:       &quot;&lt;landing_rev&gt;&quot;,
+            &quot;owner&quot;:             &quot;&lt;username or user_id&gt;&quot;,
+            &quot;fork_of&quot;:           &quot;&lt;name_of_fork_parent&gt;&quot;,
+            &quot;enable_downloads&quot;:  &quot;&lt;bool&gt;&quot;,
+            &quot;enable_locking&quot;:    &quot;&lt;bool&gt;&quot;,
+            &quot;enable_statistics&quot;: &quot;&lt;bool&gt;&quot;,
+          },
+        }
+error:  null
+</pre></div>
+</div>
+</div>
+<div class="section" id="fork-repo">
+<h3>fork_repo<a class="headerlink" href="#fork-repo" title="Permalink to this headline">¶</a></h3>
+<p>Creates a fork of given repo. In case of using celery this will
+immidiatelly return success message, while fork is going to be created
+asynchronous. This command can be executed only using api_key belonging to
+user with admin rights or regular user that have fork permission, and at least
+read access to forking repository. Regular users cannot specify owner parameter.</p>
+<p>INPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_for_response&gt;
+api_key : &quot;&lt;api_key&gt;&quot;
+method :  &quot;fork_repo&quot;
+args:     {
+            &quot;repoid&quot; :          &quot;&lt;reponame or repo_id&gt;&quot;,
+            &quot;fork_name&quot;:        &quot;&lt;forkname&gt;&quot;,
+            &quot;owner&quot;:            &quot;&lt;username or user_id = Optional(=apiuser)&gt;&quot;,
+            &quot;description&quot;:      &quot;&lt;description&gt;&quot;,
+            &quot;copy_permissions&quot;: &quot;&lt;bool&gt;&quot;,
+            &quot;private&quot;:          &quot;&lt;bool&gt;&quot;,
+            &quot;landing_rev&quot;:      &quot;&lt;landing_rev&gt;&quot;
+
+          }
+</pre></div>
+</div>
+<p>OUTPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_given_in_input&gt;
+result: {
+          &quot;msg&quot;: &quot;Created fork of `&lt;reponame&gt;` as `&lt;forkname&gt;`&quot;,
+          &quot;success&quot;: true
+        }
+error:  null
+</pre></div>
+</div>
+</div>
+<div class="section" id="delete-repo">
+<h3>delete_repo<a class="headerlink" href="#delete-repo" title="Permalink to this headline">¶</a></h3>
+<p>Deletes a repository. This command can be executed only using api_key belonging
+to user with admin rights or regular user that have admin access to repository.
+When <cite>forks</cite> param is set it&#8217;s possible to detach or delete forks of deleting
+repository</p>
+<p>INPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_for_response&gt;
+api_key : &quot;&lt;api_key&gt;&quot;
+method :  &quot;delete_repo&quot;
+args:     {
+            &quot;repoid&quot; : &quot;&lt;reponame or repo_id&gt;&quot;,
+            &quot;forks&quot;  : &quot;`delete` or `detach` = Optional(None)&quot;
+          }
+</pre></div>
+</div>
+<p>OUTPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_given_in_input&gt;
+result: {
+          &quot;msg&quot;: &quot;Deleted repository `&lt;reponame&gt;`&quot;,
+          &quot;success&quot;: true
+        }
+error:  null
+</pre></div>
+</div>
+</div>
+<div class="section" id="grant-user-permission">
+<h3>grant_user_permission<a class="headerlink" href="#grant-user-permission" title="Permalink to this headline">¶</a></h3>
+<p>Grant permission for user on given repository, or update existing one
+if found. This command can be executed only using api_key belonging to user
+with admin rights.</p>
+<p>INPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_for_response&gt;
+api_key : &quot;&lt;api_key&gt;&quot;
+method :  &quot;grant_user_permission&quot;
+args:     {
+            &quot;repoid&quot; : &quot;&lt;reponame or repo_id&gt;&quot;
+            &quot;userid&quot; : &quot;&lt;username or user_id&gt;&quot;
+            &quot;perm&quot; :       &quot;(repository.(none|read|write|admin))&quot;,
+          }
+</pre></div>
+</div>
+<p>OUTPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_given_in_input&gt;
+result: {
+          &quot;msg&quot; : &quot;Granted perm: `&lt;perm&gt;` for user: `&lt;username&gt;` in repo: `&lt;reponame&gt;`&quot;,
+          &quot;success&quot;: true
+        }
+error:  null
+</pre></div>
+</div>
+</div>
+<div class="section" id="revoke-user-permission">
+<h3>revoke_user_permission<a class="headerlink" href="#revoke-user-permission" title="Permalink to this headline">¶</a></h3>
+<p>Revoke permission for user on given repository. This command can be executed
+only using api_key belonging to user with admin rights.</p>
+<p>INPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_for_response&gt;
+api_key : &quot;&lt;api_key&gt;&quot;
+method  : &quot;revoke_user_permission&quot;
+args:     {
+            &quot;repoid&quot; : &quot;&lt;reponame or repo_id&gt;&quot;
+            &quot;userid&quot; : &quot;&lt;username or user_id&gt;&quot;
+          }
+</pre></div>
+</div>
+<p>OUTPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_given_in_input&gt;
+result: {
+          &quot;msg&quot; : &quot;Revoked perm for user: `&lt;username&gt;` in repo: `&lt;reponame&gt;`&quot;,
+          &quot;success&quot;: true
+        }
+error:  null
+</pre></div>
+</div>
+</div>
+<div class="section" id="grant-users-group-permission">
+<h3>grant_users_group_permission<a class="headerlink" href="#grant-users-group-permission" title="Permalink to this headline">¶</a></h3>
+<p>Grant permission for user group on given repository, or update
+existing one if found. This command can be executed only using
+api_key belonging to user with admin rights.</p>
+<p>INPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_for_response&gt;
+api_key : &quot;&lt;api_key&gt;&quot;
+method :  &quot;grant_users_group_permission&quot;
+args:     {
+            &quot;repoid&quot; : &quot;&lt;reponame or repo_id&gt;&quot;
+            &quot;usersgroupid&quot; : &quot;&lt;user group id or name&gt;&quot;
+            &quot;perm&quot; : &quot;(repository.(none|read|write|admin))&quot;,
+          }
+</pre></div>
+</div>
+<p>OUTPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_given_in_input&gt;
+result: {
+          &quot;msg&quot; : &quot;Granted perm: `&lt;perm&gt;` for group: `&lt;usersgroupname&gt;` in repo: `&lt;reponame&gt;`&quot;,
+          &quot;success&quot;: true
+        }
+error:  null
+</pre></div>
+</div>
+</div>
+<div class="section" id="revoke-users-group-permission">
+<h3>revoke_users_group_permission<a class="headerlink" href="#revoke-users-group-permission" title="Permalink to this headline">¶</a></h3>
+<p>Revoke permission for user group on given repository.This command can be
+executed only using api_key belonging to user with admin rights.</p>
+<p>INPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_for_response&gt;
+api_key : &quot;&lt;api_key&gt;&quot;
+method  : &quot;revoke_users_group_permission&quot;
+args:     {
+            &quot;repoid&quot; : &quot;&lt;reponame or repo_id&gt;&quot;
+            &quot;usersgroupid&quot; : &quot;&lt;user group id or name&gt;&quot;
+          }
+</pre></div>
+</div>
+<p>OUTPUT:</p>
+<div class="highlight-python"><div class="highlight"><pre>id : &lt;id_given_in_input&gt;
+result: {
+          &quot;msg&quot; : &quot;Revoked perm for group: `&lt;usersgroupname&gt;` in repo: `&lt;reponame&gt;`&quot;,
+          &quot;success&quot;: true
+        }
+error:  null
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<h3>Support Kallithea development</h3>
+<div style="text-align:center">
+<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+<input type="hidden" name="cmd" value="_s-xclick">
+<input type="hidden" name="hosted_button_id" value="EYXFS3SQPHYUL">
+<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+<img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
+</form>
+    <div style="padding:5px">
+     <a href="https://flattr.com/thing/922714/Donate-to-Software-Freedom-Conservancy" target="_blank">
+     <img src="http://api.flattr.com/button/flattr-badge-large.png" alt="Flattr this" title="Flattr this" border="0" /></a>
+    </div>
+</div>
+
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">API</a><ul>
+<li><a class="reference internal" href="#api-access-for-web-views">API ACCESS FOR WEB VIEWS</a></li>
+<li><a class="reference internal" href="#api-access">API ACCESS</a></li>
+<li><a class="reference internal" href="#api-client">API CLIENT</a></li>
+<li><a class="reference internal" href="#api-methods">API METHODS</a><ul>
+<li><a class="reference internal" href="#pull">pull</a></li>
+<li><a class="reference internal" href="#rescan-repos">rescan_repos</a></li>
+<li><a class="reference internal" href="#invalidate-cache">invalidate_cache</a></li>
+<li><a class="reference internal" href="#lock">lock</a></li>
+<li><a class="reference internal" href="#show-ip">show_ip</a></li>
+<li><a class="reference internal" href="#get-user">get_user</a></li>
+<li><a class="reference internal" href="#get-users">get_users</a></li>
+<li><a class="reference internal" href="#create-user">create_user</a></li>
+<li><a class="reference internal" href="#update-user">update_user</a></li>
+<li><a class="reference internal" href="#delete-user">delete_user</a></li>
+<li><a class="reference internal" href="#get-users-group">get_users_group</a></li>
+<li><a class="reference internal" href="#get-users-groups">get_users_groups</a></li>
+<li><a class="reference internal" href="#create-users-group">create_users_group</a></li>
+<li><a class="reference internal" href="#add-user-to-users-group">add_user_to_users_group</a></li>
+<li><a class="reference internal" href="#remove-user-from-users-group">remove_user_from_users_group</a></li>
+<li><a class="reference internal" href="#get-repo">get_repo</a></li>
+<li><a class="reference internal" href="#get-repos">get_repos</a></li>
+<li><a class="reference internal" href="#get-repo-nodes">get_repo_nodes</a></li>
+<li><a class="reference internal" href="#create-repo">create_repo</a></li>
+<li><a class="reference internal" href="#fork-repo">fork_repo</a></li>
+<li><a class="reference internal" href="#delete-repo">delete_repo</a></li>
+<li><a class="reference internal" href="#grant-user-permission">grant_user_permission</a></li>
+<li><a class="reference internal" href="#revoke-user-permission">revoke_user_permission</a></li>
+<li><a class="reference internal" href="#grant-users-group-permission">grant_users_group_permission</a></li>
+<li><a class="reference internal" href="#revoke-users-group-permission">revoke_users_group_permission</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../changelog.html"
+                        title="previous chapter">Changelog</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="models.html"
+                        title="next chapter">The <tt class="docutils literal"><span class="pre">models</span></tt> Module</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/api/api.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="models.html" title="The models Module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../changelog.html" title="Changelog"
+             >previous</a> |</li>
+        <li><a href="../index.html">Kallithea 0 documentation</a> &raquo;</li>
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010-2014 by various authors, licensed as GPLv3..
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
