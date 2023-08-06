@@ -1,0 +1,71 @@
+Metadata-Version: 1.1
+Name: pertinosdk
+Version: 0.1.0
+Summary: Python package for communicating with Pertino.
+Home-page: https://github.com/Pertino/pertino-sdk-python
+Author: Pertino Inc.
+Author-email: developer@pertino.com
+License: LICENSE.txt
+Download-URL: https://github.com/Pertino/pertino-sdk-python/tarball/0.1
+Description: Welcome to Pertino Python SDK
+        =============================
+        
+        Example usage
+        ######
+        .. code-block:: python
+        
+          '''
+          Created on Jul 26, 2014
+          
+          @author: lwoydziak
+          '''
+          from pertinosdk import PertinoSdk, where
+          from jsonconfigfile import Env
+                  
+          def test_whenOrgsAvailableThenCanListThem():
+              pertinoSdk = PertinoSdk(Env().get("Pertino", "login"), Env().get("Pertino", "password"))
+              organizations = pertinoSdk.listOrgs()
+              assert len(organizations) > 0
+              
+          def test_whenDevicesInOrganizationsThenCanListThem():
+              pertinoSdk = PertinoSdk(Env().get("Pertino", "login"), Env().get("Pertino", "password"))
+              organizations = pertinoSdk.listOrgs()
+              devices = pertinoSdk.listDevicesIn(organizations[0])
+              assert len(devices) > 0
+               
+          def test_deleteMachinesWithNameContainingAuto():
+              pertinoSdk = PertinoSdk(Env().get("Pertino", "login"), Env().get("Pertino", "password"))
+              organizations = pertinoSdk.listOrgs()
+              devices = pertinoSdk.listDevicesIn(organizations[0], where("hostName").contains("auto"))
+              pertinoSdk.deleteFrom(organizations[0], devices)
+              assert not pertinoSdk.listDevicesIn(organizations[0], where("hostName").contains("auto"))
+              
+        To Build
+        ########
+        .. code-block::
+        
+          ant env
+          ant init
+          ant package
+        
+        To run unit tests
+        #################
+        .. code-block::
+        
+          ant test
+        
+        To run acceptance test
+        ######################
+        
+          Create a file with your Pertino credentials (see acceptance/conftest.py for format/name)
+        .. code-block::
+        
+          ant acceptance
+Keywords: pertino,sdk,api
+Platform: any
+Classifier: Development Status :: 3 - Alpha
+Classifier: Natural Language :: English
+Classifier: Operating System :: Unix
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Unix Shell
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
