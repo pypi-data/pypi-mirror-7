@@ -1,0 +1,75 @@
+Metadata-Version: 1.1
+Name: lribeiro.cherrypy.authorizer.neomodel
+Version: 1.0
+Summary: Basic user model, authenticator and authorizer for cherrypy-authorizer and neomodel
+Home-page: http://bitbucket.org/livioribeiro/cherrypy-authorizer-neomodel
+Author: Livio Ribeiro
+Author-email: livioribeiro@outlook.com
+License: BSD License
+Description: ===============================
+        cherrypy-authorizer-mongoengine
+        ===============================
+        
+        Basic user model, authenticator and authorizer for cherrypy-authorizer and neomodel
+        
+        Usage:
+        ------
+        
+        .. sourcecode:: python
+        
+            import cherrypy
+        
+            from lribeiro.cherrypy.authorizer import authorize
+            from lribeiro.cherrypy.authorizer.authentication import AuthControllerDefaultDispatcher
+        
+            from lribeiro.cherrypy.authorizer.neomodel.auth import authenticator, authorizer
+        
+        
+            class Root:
+                @cherrypy.expose
+                def index(self):
+                    return 'index'
+        
+                @cherrypy.expose
+                @authorize
+                def auth_required(self):
+                    return 'auth required'
+        
+                @cherrypy.expose
+                @authorize({'read': 'page'})
+                def authorized(self):
+                    return 'authorized'
+        
+                @cherrypy.expose
+                @authorize({'edit': 'page'})
+                def unauthorized(self):
+                    return 'unauthorized'
+        
+            config = {
+                '/': {
+                    'tools.sessions.on': True,
+                    'tools.authorizer.on': True,
+                    'auth.authenticator': authenticator,
+                    'auth.authorizer': authorizer,
+                    'auth.login_page': '/login'
+                }
+            }
+        
+            if __name__ == '__main__':
+                root = Root()
+                root.auth = AuthControllerDefaultDispatcher()
+        
+                cherrypy.quickstart(root, '/', config)
+Keywords: authentication,authorization,access control,cherrypy,neomodel
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Web Environment
+Classifier: Framework :: CherryPy
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Internet :: WWW/HTTP
+Classifier: Topic :: Internet :: WWW/HTTP :: Dynamic Content
+Classifier: Topic :: Internet :: WWW/HTTP :: Session
