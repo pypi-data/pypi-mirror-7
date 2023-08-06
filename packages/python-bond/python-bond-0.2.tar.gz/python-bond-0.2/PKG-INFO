@@ -1,0 +1,273 @@
+Metadata-Version: 1.1
+Name: python-bond
+Version: 0.2
+Summary: transparent remote/recursive evaluation between Python and other languages
+Home-page: https://github.com/wavexx/python-bond
+Author: Yuri D'Elia
+Author-email: wavexx@thregr.org
+License: GPL2
+Description: ================
+         python ``bond``
+        ================
+        ---------------------------------------------------
+        Ambivalent bonds between Python and other languages
+        ---------------------------------------------------
+        
+        .. contents::
+        
+        The Python module ``bond`` supports transparent remote/recursive evaluation
+        between Python and another interpreter through automatic call serialization.
+        
+        In poorer words, a ``bond`` lets you call functions in other languages as they
+        were normal Python functions. It *also* allows other languages to *call Python
+        functions* as if they were native.
+        
+        Remote output is also transparently redirected locally, and since the
+        evaluation is performed through a persistent co-process, you can actually spawn
+        interpreters on different hosts through "ssh" efficiently.
+        
+        ``bond`` currently supports PHP, Perl and Python itself.
+        
+        
+        A simple  example
+        =================
+        
+        .. code:: python3
+        
+          >>> # Let's bond with a PHP interpreter
+          >>> from bond.PHP import PHP
+          >>> php = PHP()
+          >>> php.eval_block('echo "Hello world!\n";')
+          Hello world!
+        
+          >>> # Make an expensive split function using PHP's explode
+          >>> split = php.callable('explode')
+          >>> split(' ', "Hello world splitted by PHP!")
+          [u'Hello', u'world', u'splitted', u'by', u'PHP!']
+        
+          >>> # Call Python from PHP
+          >>> def call_me():
+          ...     print("Hi, this is Python talking!")
+          >>> php.export(call_me)
+          >>> php.eval('call_me()')
+          Hi, this is Python talking!
+        
+          >>> # Use some remote resources
+          >>> remote_php = PHP('ssh remote php')
+          >>> remote_php.eval_block('function call_me() { echo "Hi from " . system("hostname") . "!"; }')
+          >>> remote_php.eval('call_me()')
+          Hi from remote!
+        
+          >>> # Bridge two worlds!
+          >>> from bond.Perl import Perl
+          >>> perl = Perl()
+          >>> php.proxy('explode', perl)
+          >>> # note: explode is now available to Perl
+          >>> perl.eval('explode("=", "Mind=blown!")')
+          [u'Mind', u'blown!']
+        
+        
+        Why?
+        ====
+        
+        I needed ``bond`` for refactoring a large ``PHP`` project, mostly. With
+        ``bond`` you can rewrite your program incrementally, while still executing all
+        your existing code unchanged. You can start by rewriting just a single
+        function:
+        
+        .. code:: python3
+        
+          from bond.PHP import PHP
+          import sys
+        
+          php = PHP()
+          php.eval_block('include("my_original_program.php");')
+        
+          def new_function(arg)
+             # do something here
+             pass
+        
+          php.export(new_function, 'function_to_be_replaced')
+          php.call('main', sys.argv)
+        
+        It turns out that the same approach can be useful to perform remote computation
+        as well. The wire protocol is simple enough to be extended to any language
+        supporting an interactive interpreter.
+        
+        
+        API
+        ===
+        
+        The ``bond`` class supports the following methods:
+        
+        ``eval(code)``:
+        
+          Evaluate and return the value of a *single statement* of code in the
+          interpreter.
+        
+        ``eval_block(code)``:
+        
+          Execute a "code" block inside the interpreter. Any construct which is legal
+          by the current interpreter is allowed. Nothing is returned.
+        
+        ``close()``:
+        
+          Terminate the communication with the interpreter.
+        
+        ``call(name, *args)``:
+        
+          Call a function "name" in the interpreter using the supplied list of
+          arguments \*args (apply \*args to a callable statement defined by "name").
+          The arguments are automatically converted to their other language's
+          counterpart. The return value is captured and converted back to Python as
+          well.
+        
+        ``callable(name)``:
+        
+          Return a function that calls "name":
+        
+          .. code:: python
+        
+            explode = php.callable('explode')
+            # Now you can call explode as a normal, local function
+            explode(' ', 'Hello world')
+        
+        ``export(func, name)``:
+        
+          Export a local function "func" so that can be called on the remote language
+          as "name". If "name" is not specified, use the local function name directly.
+          Note that "func" must be a function *reference*, not a function name.
+        
+        ``proxy(name, other, remote)``:
+        
+          Export a function "name" from the current ``bond`` to "other", named as
+          "remote". If "remote" is not provided, the same value as "name" is used.
+        
+        ``interact()``:
+        
+          Start an interactive session with the underlying interpreter. By default, all
+          input lines are executed with bond.eval_block(). If "!" is pre-pended,
+          execute a single statement with bond.eval() and print it's return value.
+        
+        You can construct a ``bond`` by using the appropriate subclass:
+        
+        .. code:: python3
+        
+          from bond.<language> import <language>
+          interpreter = <language>().
+        
+        
+        Language support
+        ================
+        
+        Python
+        ------
+        
+        Python, as the identity language, has no restriction on data types. Everything
+        is pickled, including exceptions on the remote side.
+        
+        
+        PHP
+        ---
+        
+        Requirements:
+        
+        * The PHP's command line and the ``readline`` module needs to be installed for
+          the interactive interpreter to work properly. On Debian/Ubuntu, you'll need
+          ``php5-cli`` and ``php5-readline``.
+        
+        Limitations:
+        
+        * You cannot use "call" on a built-in function such as "echo" (use "eval" in
+          that case). You have to use a real function instead, like "print".
+        
+        * Unfortunately, you cannot catch "fatal errors" in PHP. If the evaluated code
+          triggers a "fatal error" it will terminate the bond without appeal. A common
+          example of "fatal error" in PHP is an "undefined variable/function".
+        
+        
+        Perl
+        ----
+        
+        Perl is a quirky language, due to its syntax. We assume here you're an
+        experienced Perl developer.
+        
+        Requirements:
+        
+        * The ``JSON`` and ``Data::Dump`` modules are required (``libjson-perl`` and
+          ``libdata-dump-perl`` in Debian/Ubuntu).
+        
+        Gotchas:
+        
+        * By default, evaluation is forced in array context, as otherwise most of the
+          built-ins working with arrays would return an useless scalar. Use the
+          "scalar" keyword for the rare cases when you really need it to.
+        
+        * You can "call" any function-like statement, as long as the last argument is
+          expected to be an argument list. This allows you to call builtins directly:
+        
+          .. code:: python3
+        
+            perl.call('map { $_ + 1 }', [1, 2, 3])
+        
+        * You can of course "call" a statement that returns any ``CODE``. Meaning that
+          you can call references to functions as long as you dereference them first:
+        
+          .. code:: python3
+        
+            perl.call('&$fun_ref', ...)
+            perl.call('&{ $any->{expression} }', ...)
+        
+          Likewise you can "call" objects methods directly:
+        
+          .. code:: python3
+        
+            perl.call('$object->method', ...)
+        
+        
+        Common limitations
+        ------------------
+        
+        * Except for Python, only basic types (booleans, numbers, strings, lists,
+          arrays and maps/dictionaries) can be transferred between the interpreters.
+        
+          If an object that cannot be serialized reaches a "call", "eval", or even a
+          non-local return such as an *error or exception*, it will generate a
+          ``SerializationException`` on the Python side.
+        
+        * References are implicitly broken as *objects are transferred by value*. This
+          is obvious, as you're talking with a separate process, but it can easily be
+          forgotten due to the blurring of the boundary.
+        
+        * Calling functions across the bridge is slow, also in Python, due to the
+          serialization. But the execution speed of the functions themselves is *not
+          affected*. This might be perfectly reasonable if there are only occasional
+          calls between languages, and/or the calls themselves take a significant
+          fraction of time.
+        
+        
+        Authors and Copyright
+        =====================
+        
+        | "python-bond" is distributed under GPL2 (see COPYING) WITHOUT ANY WARRANTY.
+        | Copyright(c) 2014 by wave++ "Yuri D'Elia" <wavexx@thregr.org>.
+        
+        python-bond's GIT repository is publicly accessible at::
+        
+          git://src.thregr.org/python-bond
+        
+        or at `GitHub <https://github.com/wavexx/python-bond>`_.
+        
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Environment :: Console
+Classifier: Environment :: No Input/Output (Daemon)
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: GNU General Public License v2 (GPLv2)
+Classifier: Operating System :: POSIX
+Classifier: Operating System :: Unix
+Classifier: Programming Language :: PHP
+Classifier: Programming Language :: Perl
+Classifier: Programming Language :: Python
+Classifier: Topic :: Software Development :: Interpreters
+Classifier: Topic :: Software Development
