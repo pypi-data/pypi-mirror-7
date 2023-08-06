@@ -1,0 +1,273 @@
+
+Core Library Functions
+
+(1) Transform Geospatially
+(2) Filter Noise
+(3) Compute Point Cloud Statistics
+(4) Build Web_PLY
+
+
+Directory Structure:
+
+Ecosynth Library:
+/doc
+/ecosynth
+	/acquisition
+		io
+			- ardu_log_to_gps_txt
+			- gps_txt_WGS84_to_UTM
+		?scripts
+			- ardu_log_to_gps_txt
+			- gps_txt_WGS84_to_UTM
+
+	/generation
+		utilities
+			- interpolate_gps_positions_for_cams
+		?scripts
+			- interpolate_gps_positions_for_cams
+
+	/postprocess
+		class: point_cloud
+			+ PLY metadata
+			+ array of points (x,y,z,r,g,b)
+			+ raster_resolution
+			+ raster_map (matrix?)
+			+ origin: x,y,z
+		# 
+			- build_map
+			- build_map_ascii
+			- rebuild_map
+			- load_map
+			- compare_height_rasters
+			- display_2D_raster
+			- display_3D_raster
+			- save_2D_raster
+			- save_3D_raster
+		# class: map
+			+ point_cloud: ?x? matrix, float
+			+ raster: 
+			+ resolution: float/int
+			+ minX, minY, minZ: float
+			- constructor
+			- getHoriz
+			- getVert
+			- maxElevationRaster
+			- medianElevationRaster
+			- colorRaster
+			- pointDensityRaster
+			- maxHeightRaster
+			- medianHeightRaster
+			- heightRangeRaster
+			- standardDeviationRaster
+			- Q95ElevationRaster
+			- meanElevationRaster
+			- meanHeightRaster
+			- CVElevationRaster
+			- CVHeightRaster
+			- logDensityRaster
+			- compareLidarFile
+			- compareLidarString
+			- compareLidar
+			- makeASCII
+			- superASCII
+			- pickle
+		# class: flatmap
+			- create_raster_max_elevation
+			- create_raster_median_elevation
+			- create_raster_point_density
+			- create_raster_rgb
+			- create_raster_height_range
+			- create_raster_height_stdev
+			- create_raster_log_density
+			- compare_height
+
+		filters
+			- noise_removal
+			- z_score
+			- ?z_score_local
+		transforms
+			- georeference_splines
+			- georeference_helmert
+				- ?run_helmert
+				- ?resid
+				- ?combo_dist_from_center
+		io
+			- load_ply
+			- save_ply
+			- txt_to_ply
+			- ply_to_ecobrowser_point_cloud
+		analysis
+			- ?path_xy_rmse
+			- ?path_z_rmse
+			- ?icp_xy_rmse
+			- ?icp_z_rmse
+			- ?point_density_avg
+			- ?canopy_penetration_avg
+			- ?grayscale_variation_avg
+			- ?rugosity_avg
+			- cloud_stats
+			- cloud_stats_compare
+		?scripts
+			- 
+			
+	/sharing
+		database
+			- ?upload_ecosynth_object_to_server
+			- ?upload_ecobrowser_point_cloud_to_server
+		?ecosynth_data_wiki
+			- 
+		?scripts
+			- 
+/test
+
+
+EcosynthDB
+/doc
+/ecosynthdb
+	(PostgreSQL)
+	(Flask)
+/test
+
+
+EcosynthGUI
+/doc
+/ecosynthgui
+	/static
+	(Bottle)
+/test
+
+
+Ecosynth Doc-string Template:
+	"""
+	This is a one-sentence summary
+
+	:param str a: A string to be converted
+	:param integ v: A string to be converted
+	:param type b: optional parameter
+
+	:return: the return
+	:rtype: int
+
+	:raises IndexError: if such and such
+
+	| **Notes**
+	| here
+
+	| **Example**
+	| here
+
+	"""
+
+
+
+TO DO:
+	- Python Classes and Objects (inheritance)
+	- Best way to integrate visualization
+	- How to add repository that can easily be accessed (PIP, easy_install)
+
+
+
+CloudVoxelizer Template
+	+ xyzrgb_array
+	+ resolution
+	+ aoi
+	= resolution
+	= cloud_array
+	= xMin
+	= yMin
+	= zMin
+	= voxel_grid
+	- _cloudToGrid()
+	- filterNoise()
+	- CVElevationRaster()
+	- CVHeightRaster()
+	- Q95ElevationRaster()
+	- colorRaster()
+	- compareClouds()
+	- filterHeight()
+	- get2D()
+	- get2DGrid() ?
+	- getAOI()
+	- getGridSubsetXY()
+	- getGridSubsetXYZ()
+	- getXYPlane()
+	- getXYPlane()
+	- heightRangeRaster()
+	- logDensityRaster()
+	- mapOverlap()
+	- maxElevationRaster()
+	- maxHeightRaster()
+	- meanElevationRaster()
+	- meanHeightRaster()
+	- medianElevationRaster()
+	- medianHeightRaster()
+	- pointDensityRaster()
+	- standardDeviationRaster()
+	- subsetCloud()
+
+
+NEW CloudVoxelizer
+	+ xyzrgb_array
+	+ resolution
+	+ aoi
+	= resolution
+	= cloud_array
+	= xMin
+	= yMin
+	= zMin
+	= voxel_grid
+
+Construction Functions
+	- buildEmptyGrid()
+	- fillGrid()
+	- cloudToGrid()
+
+Filter Functions
+	- filterNoise()
+	- filterDTM() / filterHeight()
+
+Get CloudVoxelizer Functions
+	- get_z_column(x, y)
+	- get2D()
+	- get2DGrid() ?
+	- getAOI()
+	- getGridSubsetXY()
+	- getGridSubsetXYZ()
+	- getXYPlane()
+	- getXZPlane()
+
+Set CloudVoxelizer Functions
+	- set_z_column(x, y, z_column_array)
+
+
+Set Function
+	- subsetCloud() # or is this another get function?
+
+Analysis Functions
+	- CVElevationRaster()
+	- CVHeightRaster()
+	- Q95ElevationRaster()
+	- colorRaster()
+	- heightRangeRaster()
+	- logDensityRaster()
+	- maxElevationRaster()
+	- maxHeightRaster()
+	- meanElevationRaster()
+	- meanHeightRaster()
+	- medianElevationRaster()
+	- medianHeightRaster()
+	- pointDensityRaster()
+	- standardDeviationRaster()
+
+Compare Functions
+	- compareClouds()
+	- mapOverlap()
+	- compare_rasters(r1, r2)
+	- what is nccdiff()?
+
+Plot Functions
+	- plot_raster_2D()
+	- plot_raster_3D()
+
+
+
