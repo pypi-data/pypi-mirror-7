@@ -1,0 +1,32 @@
+{% extends "datebook/base.html" %}
+{% load i18n %}
+
+{% block datebook_content %}
+<div class="datebook-calendar-year">{% for name, datebook in datebooks_map %}
+    <div class="small-12 medium-3 columns{% if not datebook %} empty{% endif %}">
+        <div class="panel radius text-center">
+            <h3>{{ name|capfirst }}</h3>
+            {% if datebook %}
+                <p>
+                    <a href="{% url 'datebook-author-month' author=author year=datebook.period.year month=datebook.period.month %}" class="button">{{ datebook }}</a>
+                </p>
+            {% else %}
+                <p>
+                    <a href="#" class="button secondary" data-reveal-id="new-datebook-{{ name }}">Create it</a>
+                </p>
+            {% endif %}
+        </div>
+    </div>
+{% endfor %}</div>
+{% endblock %}
+
+{% block foot_more_js %}{{ block.super }}
+{% for name, datebook in datebooks_map %}{% if not datebook %}
+<div id="new-datebook-{{ name }}" class="reveal-modal text-center tiny" data-reveal>
+    <h3>Create a new datebook<h3>
+    <p>This will create a datebook for <strong>{{ name|capfirst }} {{ year }}</strong>, confirm this.</p>
+    <p><a href="{% url 'datebook-author-month-add' author=author year=year month=forloop.counter %}" class="radius success button">I confirm</a></p>
+    <a class="close-reveal-modal">&#215;</a>
+</div>
+{% endif %}{% endfor %}
+{% endblock %}
