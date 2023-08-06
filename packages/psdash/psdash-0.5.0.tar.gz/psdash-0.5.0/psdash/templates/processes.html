@@ -1,0 +1,71 @@
+{% if not is_xhr|default(false) %}{% extends "base.html" %}{% endif -%}
+{% block content %}
+    {% set next_order = "desc" if order == "asc" else "asc" %}
+    {% if order == "asc" %}
+        {% set order_icon = '<span class="order-icon glyphicon glyphicon-chevron-up"></span>' %}
+    {% else %}
+        {% set order_icon = '<span class="order-icon glyphicon glyphicon-chevron-down"></span>' %}
+    {% endif %}
+    <div id="processes" class="panel panel-primary">
+        <div class="panel-heading"><span class="glyphicon glyphicon-tasks"></span> Processes</div>
+        <table id="processes" class="table table-condensed table-hover">
+            <thead>
+                <tr>
+                    <th>
+                        <a href="{{ url_for(".processes", sort="pid", order=next_order) }}">PID</a>
+                        {{ order_icon|safe if sort == "pid"}}
+                    </th>
+                    <th>
+                        <a href="{{ url_for(".processes", sort="name", order=next_order) }}">Name</a>
+                        {{ order_icon|safe if sort == "name"}}
+                    </th>
+                    <th>
+                        <a href="{{ url_for(".processes", sort="user", order=next_order) }}">User</a>
+                        {{ order_icon|safe if sort == "user"}}
+                    </th>
+                    <th>
+                        <a href="{{ url_for(".processes", sort="status", order=next_order) }}">Status</a>
+                        {{ order_icon|safe if sort == "status"}}
+                    </th>
+                    <th>
+                        <a href="{{ url_for(".processes", sort="created", order=next_order) }}">Created</a>
+                        {{ order_icon|safe if sort == "created"}}
+                    </th>
+                    <th title="Resident Set Size">
+                        <a href="{{ url_for(".processes", sort="mem_rss", order=next_order) }}">RSS</a>
+                        {{ order_icon|safe if sort == "mem_rss"}}
+                    </th>
+                    <th title="Virtual Memory Size">
+                        <a href="{{ url_for(".processes", sort="mem_vms", order=next_order) }}">VMS</a>
+                        {{ order_icon|safe if sort == "mem_vms"}}
+                    </th>
+                    <th>
+                        <a href="{{ url_for(".processes", sort="mem_percent", order=next_order) }}">Memory %</a>
+                        {{ order_icon|safe if sort == "mem_percent"}}
+                    </th>
+                    <th>
+                        <a href="{{ url_for(".processes", sort="cpu_percent", order=next_order) }}">CPU %</a>
+                        {{ order_icon|safe if sort == "cpu_percent"}}
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in processes %}
+                    <tr>
+                      <td>{{ p.pid }}</td>
+                      <td title="{{ p.cmdline.decode("utf-8") }}">
+                          <a href="{{ url_for(".process", pid=p.pid) }}">{{ p.name.decode("utf-8") }}</a>
+                      </td>
+                      <td>{{ p.user }}</td>
+                      <td>{{ p.status }}</td>
+                      <td>{{ p.created|fromtimestamp }}</td>
+                      <td>{{ p.mem_rss|filesizeformat }}</td>
+                      <td>{{ p.mem_vms|filesizeformat }}</td>
+                      <td>{{ p.mem_percent|round }}</td>
+                      <td>{{ p.cpu_percent }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
