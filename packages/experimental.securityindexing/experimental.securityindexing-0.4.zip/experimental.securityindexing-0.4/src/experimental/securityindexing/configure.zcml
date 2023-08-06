@@ -1,0 +1,66 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:five="http://namespaces.zope.org/five"
+    xmlns:gs="http://namespaces.zope.org/genericsetup"
+    xmlns:i18n="http://namespaces.zope.org/i18n"
+    xmlns:plone="http://namespaces.plone.org/plone"
+    xmlns:zcml="http://namespaces.zope.org/zcml"
+    i18n_domain="experimental.securityindexing">
+
+  <include package=".browser" />
+  <include file="patches.zcml" />
+
+  <five:registerPackage package="." />
+
+  <five:registerClass
+    class=".utilities.ShadowTreeTool"
+    meta_type="Experimental Security Shadow Tree Tool"
+    permission="cmf.ManagePortal"
+    />
+
+  <class class=".utilities.ShadowTreeTool">
+    <require
+      permission="cmf.ManagePortal"
+      interface=".interfaces.IShadowTreeTool"
+      />
+  </class>
+
+  <gs:registerProfile
+    name="default"
+    title="Experimental security re-indexing optimisations"
+    directory="profiles/default"
+    description="Installs optimisations for re-indexing of object security."
+    provides="Products.GenericSetup.interfaces.EXTENSION"
+    />
+
+  <gs:registerProfile
+    name="uninstall"
+    title="Experimental security re-indexing optimisations"
+    directory="profiles/uninstall"
+    description="Uninstalls utilities used for re-indexing of object security."
+    provides="Products.GenericSetup.interfaces.EXTENSION"
+    />
+
+  <subscriber
+    for="Products.CMFCore.interfaces.IContentish
+         zope.lifecycleevent.interfaces.IObjectMovedEvent"
+    handler=".subscribers.on_object_moved"
+    />
+
+  <subscriber
+    for="Products.CMFCore.interfaces.IContentish
+         zope.lifecycleevent.interfaces.IObjectRemovedEvent"
+    handler=".subscribers.on_object_removed"
+    />
+
+  <adapter
+    factory=".adapters.ObjectSecurity"
+    provides=".interfaces.IObjectSecurity"
+    for="Products.CMFCore.interfaces.ICatalogAware
+	 Products.CMFCore.interfaces.ICatalogTool"
+    />
+
+  <utility factory=".utilities.ShadowTreeTool"
+	   provides=".interfaces.IShadowTreeTool" />
+
+</configure>
