@@ -1,0 +1,130 @@
+==========
+timesickle
+==========
+
+Mock dates for Django.
+
+Version 0.2
+
+    **Warning**: Until release of version 1, API is bound to change.
+
+---------
+Rationale
+---------
+
+Imagine you have to test a feature that calculates arrears based on days passed from the due date. You probably want to suggest the amount based on days until **today**. Then you want to do some manual testing and try it with different dates. That's where timesickle comes in. You probably *don't* want to do a nasty::
+
+    import datetime
+    # ...
+    if __debug__:
+        date = datetime.date.today()
+    else:
+        date = datetime.date(2014, 1, 1)
+    # don't do this ^
+        
+Also, if the mock date is to be checked from different points in the code, you don't want to repeat the above code.
+
+To transit easily from a "real today" and a "mock today" in different parts of your code, use ``timesickle``.
+
+Recommendations for use of this piece of software:
+
+    Be careful with this technique, though. I would encourage you to write backend functions that receive dates instead of calculating "now" or "today" inside their bodies. The resolution of what "today" is should be left to the enclosing logic. For example, have model instance fields be told the date they should work with, but calculate this date in the views.
+
+..
+
+    **Disclaimer.** Don't use this software for a full-scale project.
+
+------------
+Installation
+------------
+
+*A more proper installation might be due.*
+
+To install the latest version, run::
+
+   pip install git+git://github.com/jleeothon/timesickle.git
+
+In ``settings.py``, add ``'timesickle'`` under ``INSTALLED_APPS``::
+
+    INSTALLED_APPS = (
+        # django
+        'django.contrib.admin',
+        'django.contrib.auth',
+        'django.contrib.contenttypes',
+        'django.contrib.sessions',
+        'django.contrib.messages',
+        'django.contrib.staticfiles',
+        # third party
+        'timesickle',
+        # my apps
+        'awesomeapp',
+    )
+
+If you want to install a previous version, go figure. I don't know how to do that (but if you know, I don't mind you teaching me).
+
+-------
+Testing
+-------
+
+To test the installation, run::
+
+   python manage.py test "timesickle"
+   
+If the tests fail, you should::
+
+1. not use my software (|||❛︵❛.)
+2. tell me, that is, file an issue on this repository o(^^o
+
+-----
+Usage
+-----
+
+In ``settings.py``, set a ``MOCK_NOW`` object. This will define the variables in the ``timesickle`` module: "now", "today", "tomorrow", "tomorrow_sametime", "yesterday", and "yesterday_sametime"::
+
+    # settings.py
+    import datetime
+    
+    MOCK_NOW = datetime.datetime(2014, 05, 17, 18, 30, 0)
+
+The above will set the mock date and time to IHOT, 6:30 PM.
+
+    If you don't set the ``MOCK_NOW`` object, timesickle's dates will be based on the server's current time (``datetime.datetime.now()``).
+
+Depending on your logging settings, if you let the ``"INFO"`` logging level print to console, you will see the calculated values for the forementioned variables.
+
+You can also set extra dates or date-times using a dictionary called "SICKLE_DATES" in your settings::
+
+    # settings.py
+    
+    SICKLE_DATES = {
+        'pichincha_battle': datetime.date(1822, 5, 24),
+    }
+
+Then, you can check this dates from ``timesickle.dates`` as either an attribute or a dictionary lookup (you might prefer ``\w+`` names to look for them more comfortably)::
+
+   import timesickle
+    
+   print(timesickle.dates.pichincha_battle)
+   print(timesickle.dates['pichincha_battle']
+
+~~~~~~~~~~~~~~~~
+Use in templates
+~~~~~~~~~~~~~~~~
+
+You can also use the tags included in the library. As far as they intend, they work pretty similar to the ``{% now "SOMEFORMAT" %}`` tag::
+
+    {% load sickletime %}
+    <html>
+      <body>
+        Right now it is: {% sicklenow "SHORT_DATETIME_FORMAT" %},
+        then obviously today is {% sickletoday "SHORT_DATE_FORMAT" %}
+      </body>
+    </html>
+
+---------
+Proposals
+---------
+
+This mocking if dates is intended for small scale projects. It doesn't even consider time zones, so be careful. *Be specially careful if you need time-zone-aware functionality*.
+
+We could also use a database to store the ``timesickle.dates`` objects, but this makes the whole project more complex and more difficult to maintain. This is only for small-scale development and test purposes.
