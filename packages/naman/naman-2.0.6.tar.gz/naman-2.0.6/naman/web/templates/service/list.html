@@ -1,0 +1,24 @@
+{%extends 'base.html'%}
+{%load forms%}
+{%block breadcrumb%}
+  <li><a href="{%url 'services'%}">Service list</a></li>
+{%endblock%}
+
+
+{%block middle_col%}
+<table class="table"><tr><th>Service</th><th>Description</th><th>Action</th></tr>
+   {%for obj in listado%}
+      <tr i="{{obj.pk}}"><td>
+         <a href="{%url "service" obj.pk%}">{{obj|truncatechars:25}}</a>
+      </td>
+      <td>{{obj.environment}}</td><td>{{obj.role}}</td>
+      <td><a href="javascript:void(0)" onclick="del_service({{obj.pk}})"><span class="glyphicon glyphicon-trash"></span></a></td></tr>
+   {%empty%}
+      <p class="lead text-warning">No results</p>
+   {%endfor%}
+</table>
+{%endblock%}
+{%block right_col%}{%paginator listado "" referer %}{%endblock%}
+{%block script%}{%endblock%}
+
+{%block document_ready%}load_dom_script_once("{%url 'service_js'%}"){%endblock%}
