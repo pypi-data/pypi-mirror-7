@@ -1,0 +1,282 @@
+#!/usr/bin/env python
+#-*- coding: utf-8 -*-
+"""Sitedrifter building document script.
+
+This script builds HTML documents out of the Markdown files and stores them in
+the `build` directory.
+
+Usage:
+
+    python drift.py build
+
+You can cleanup the `build` directory by using the "clean" command, too.
+
+    :license: BSD, see LICENSE for details
+    :copyright: 2014 by Bruno Bord
+"""
+import os
+from os.path import join, abspath, exists, splitext
+import sys
+import shutil
+import codecs
+import datetime
+import logging
+import argparse
+import json
+
+from jinja2 import Template
+from markdown import Markdown
+
+VERSION = '1.0.0'
+
+now = datetime.datetime.now()
+FILE_EXTENSIONS = ['.md', '.markdown', '.mkd']
+
+BASE_TEMPLATE_CONTENT = r"""<html>
+<head>
+    <title>{{ title }}</title>
+</head>
+<body>
+<nav>
+    <ul>
+    <li {% if current == root_name %}class="active"{% endif %}><a href="{{ path_prefix }}/">Home</a></li>
+    {% for item in navigation recursive %}
+        {% if item.url != None %}
+            <li {% if item.url == current %}class="active"{% endif %}>{% if item.url != "" %}<a href="{{ path_prefix }}/{{ item.url }}/">{{ item.caption }}</a>{% else %}{{ item.caption }}{% endif %}</li>
+            {%- if item.children -%}
+                <ul>{{ loop(item.children) }}</ul>
+            {%- endif -%}
+        {% else %}
+            <li>{{ item.caption }}</li>
+        {% endif %}
+    {% endfor %}
+    </ul>
+</nav>
+<article>
+{{ content }}
+</article>
+</body>
+</html>
+"""
+
+BASE_INDEX_CONTENT = """Title: Your website
+
+# Hello world
+
+This is your website. Please, edit away!
+"""
+
+
+class MarkdownReader(object):
+    "Reader for markdown documents"
+    extensions = ['extra', 'meta', 'tables', 'toc', 'admonition']
+
+    def __init__(self, fragment_path):
+        self.fragments = {}
+        if not exists(fragment_path):
+            return
+        for filename in os.listdir(fragment_path):
+            logging.debug("Fragment: %s" % filename)
+            basename, extension = splitext(filename)
+            if extension in FILE_EXTENSIONS:
+                self.fragments[basename] = codecs.open(
+                    join(fragment_path, filename), encoding='utf').read()
+
+    def _parse_metadata(self, meta):
+        """Return the dict containing document metadata"""
+        md = Markdown(extensions=self.extensions)
+        output = {}
+        for name, value in meta.items():
+            name = name.lower()
+            if name == "summary":
+                summary_values = "\n".join(str(item) for item in value)
+                summary = md.convert(summary_values)
+                output[name] = summary
+            else:
+                output[name] = value[0]
+        return output
+
+    def read(self, source_path):
+        """Parse content and metadata of markdown files"""
+        text = codecs.open(source_path, encoding='utf').read()
+        for key in self.fragments:
+            text = text.replace("~~%s~~" % key, self.fragments[key])
+        md = Markdown(extensions=self.extensions)
+        content = md.convert(text)
+
+        metadata = self._parse_metadata(md.Meta)
+        return content, metadata
+
+
+class HTMLWriter(object):
+    "HTML Writer, builds documentation"
+    def __init__(self, build_path, template, root_name):
+        self.build_path = build_path
+        self.template = template
+        self.root_name = root_name
+        quiet_mkdir(self.build_path)
+
+    def write(self, base, data):
+        "Write content to the destination path"
+        path_prefix = '..'
+        if base != self.root_name:
+            quiet_mkdir(join(self.build_path, base))
+            destination = join(self.build_path, base, 'index.html')
+        else:
+            # special case: intro is the root index
+            path_prefix = '.'
+            destination = os.path.join(self.build_path, 'index.html')
+        data.update({
+            'path_prefix': path_prefix,
+            'root_name': self.root_name,
+            'date': now.strftime("%a, %d %b %Y %H:%M")
+        })
+        with codecs.open(destination, 'w', encoding='utf') as fd:
+            fd.write(self.template.render(data))
+
+
+def quiet_mkdir(path):
+    "Make dirs without warning"
+    try:
+        os.makedirs(path)
+    except OSError:
+        pass
+
+
+def get_navigation(args):
+    "Retrieve navigation content"
+    if not exists(args.navigation_file):
+        return []
+    return json.load(open(args.navigation_file, 'r'))
+
+
+def init(args):
+    "Initialize the project"
+    if not exists(args.source_dir):
+        quiet_mkdir(args.source_dir)
+        index_filename = join(args.source_dir, "{}.md".format(args.root_name))
+        with open(index_filename, 'w') as fd:
+            fd.write(BASE_INDEX_CONTENT)
+
+    if not exists(args.template_dir):
+        quiet_mkdir(args.template_dir)
+        with open(join(args.template_dir, args.template_name), 'w') as fd:
+            fd.write(BASE_TEMPLATE_CONTENT)
+
+    if not exists(args.build_dir):
+        quiet_mkdir(args.build_dir)
+
+
+def build(args):
+    "Build the documents"
+    logging.info('Start building')
+
+    init(args)
+
+    reader = MarkdownReader(os.path.join(args.source_dir, 'fragments'))
+    template_file = join(args.template_dir, args.template_name)
+    if not exists(template_file):
+        sys.exit("You don't have a '{}' file in your template dir: '{}'"
+                 .format(args.template_name, args.template_dir))
+    template = Template(codecs.open(template_file, encoding='utf').read())
+    writer = HTMLWriter(args.build_dir, template, args.root_name)
+    # Reading files in the source directory
+    found = 0
+    for filename in os.listdir(args.source_dir):
+        base, ext = os.path.splitext(filename)
+        if ext in FILE_EXTENSIONS:
+            found += 1
+            source = os.path.join(args.source_dir, filename)
+            content, metadata = reader.read(source)
+            metadata.update({
+                'content': content,
+                'navigation': get_navigation(args),
+                'current': base})
+            logging.info('Writing %s' % base)
+            writer.write(base, metadata)
+
+    # Warn the user if something's wrong
+    if not found:
+        logging.warning("No markdown source file found in '{}'."
+                        " The build is empty."
+                        " Please check".format(args.source_dir))
+
+    # copy the full static files in build
+    if os.path.exists(args.static_dir):
+        shutil.rmtree(args.static_dir)
+    if os.path.exists(args.vendor_dir):
+        shutil.rmtree(args.vendor_dir)
+    if exists('static'):
+        logging.info('Copying static files')
+        shutil.copytree('static', args.static_dir)
+    if exists('vendor'):
+        logging.info('Copying vendor files')
+        shutil.copytree('vendor', args.vendor_dir)
+    logging.info("Done")
+    timed = datetime.datetime.now() - now
+    print("{} documents generated in {}s".format(
+        found,
+        timed.seconds,
+    ))
+
+
+def clean(args):
+    "Clean build directories. Warning! there's no 'undo'."
+    if raw_input('Are you sure? [y/N] ').lower() == 'y':
+        for item in os.listdir(args.build_dir):
+            fullpath = os.path.join(args.build_dir, item)
+            if item.startswith('.'):
+                continue
+            if os.path.isdir(fullpath):
+                shutil.rmtree(fullpath, ignore_errors=True)
+            else:
+                os.unlink(fullpath)
+
+
+if __name__ == '__main__':
+    _SOURCE_PATH = os.path.join('.', 'src')
+    _BUILD_PATH = os.path.join('.', 'build')
+    _STATIC_PATH = join(_BUILD_PATH, 'static')
+    _VENDOR_PATH = join(_BUILD_PATH, 'vendor')
+    _TEMPLATE_PATH = join('.', 'templates')
+
+    available_cmds = (
+        ('init', init),
+        ('build', build),
+        ('clean', clean),
+    )
+
+    parser = argparse.ArgumentParser(
+        prog="Sitedrifter",
+        description='build static website with Markdown content',
+    )
+    parser.add_argument('command', choices=[cmd[0] for cmd in available_cmds])
+    parser.add_argument('--debug', action="store_true")
+    parser.add_argument(
+        '--version',
+        action='version', version='%(prog)s ' + VERSION)
+    # source directories
+    parser.add_argument('--source-dir', default=_SOURCE_PATH)
+    parser.add_argument('--build-dir', default=_BUILD_PATH)
+    parser.add_argument('--static-dir', default=_STATIC_PATH)
+    parser.add_argument('--vendor-dir', default=_VENDOR_PATH)
+    parser.add_argument('--template-dir', default=_TEMPLATE_PATH)
+    parser.add_argument('--template-name', default='base.html')
+    parser.add_argument('--navigation-file', default='navigation.json')
+    parser.add_argument('--root-name', default='index')
+
+    args = parser.parse_args()
+
+    # Past-parser cleanup
+    args.source_dir = abspath(args.source_dir)
+    args.build_dir = abspath(args.build_dir)
+    args.static_dir = abspath(args.static_dir)
+    args.vendor_dir = abspath(args.vendor_dir)
+    args.template_dir = abspath(args.template_dir)
+    args.navigation_file = abspath(args.navigation_file)
+
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
+
+    available_cmds = dict(available_cmds)
+    available_cmds[args.command](args)
