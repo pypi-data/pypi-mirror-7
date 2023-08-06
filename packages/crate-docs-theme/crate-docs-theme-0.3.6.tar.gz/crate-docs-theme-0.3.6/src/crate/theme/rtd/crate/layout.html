@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% set css_files = [
+    '_static/bootstrap/css/bootstrap.min.css',
+    '_static/bootstrap/css/bootstrap-theme.min.css',
+    '_static/font-awesome/css/font-awesome.min.css',
+    '_static/css/main.css',
+  ]
+%}
+
+{% set script_files = [
+    '_static/js/jquery-1.11.0.min.js',
+    '_static/js/jquery-migrate.min.js',
+    '_static/js/underscore-1.6.0.min.js',
+    '_static/bootstrap/js/bootstrap.min.js',
+    '_static/js/jquery.cookie.js',
+    '_static/js/theme.js',
+    '_static/doctools.js',
+    '_static/searchtools.js',
+ ]
+%}
+
+{%- block doctype -%}
+<!DOCTYPE html>
+{%- endblock %}
+
+{%- block extra_head %}
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+{% set ending = "/" if builder == "readthedocsdirhtml" else ".html" %}
+{% set canonical_page = pagename + ending %}
+{% if canonical_url %}
+ <!--
+Always link to the latest version, as canonical.
+http://docs.readthedocs.org/en/latest/canonical.html
+-->
+<link rel="canonical" href="https://crate.io/{{ theme_cannonical_url_path }}stable/{{ canonical_page.replace("index.html", "").replace("index/", "") }}" />
+{% endif %}
+{% endblock %}
+
+{# Silence the sidebar's, relbar's #}
+{% block header %}{% endblock %}
+{% block relbar1 %}{% endblock %}
+{% block relbar2 %}{% endblock %}
+{% block sidebarsourcelink %}{% endblock %}
+
+{%- block content %}
+<div id="page-wrap">
+  {% include "navbar.html" %}
+  <div class="container">
+    <div class="row" id="content-wrap">
+      {%- block sidebar1 %}
+      <div class="col-md-3" id="sidebar-column">
+        {%- for sidebartemplate in sidebars %}
+          {%- include sidebartemplate %}
+        {%- endfor %}
+      </div>
+      {% endblock %}
+      <div class="col-md-9" id="content-column">
+        <div>
+        {% block body %}{% endblock %}
+        </div>
+        <footer class="footer">
+          <div class="footer-container">
+            <p class="pull-right">
+              <a href="#">Back to top</a>
+              {% if theme_source_link_position == "footer" %}
+              <br/>
+              {% include "sourcelink.html" %}
+              {% endif %}
+            </p>
+            <p>
+              {%- if show_copyright %}
+              {%- if hasdoc('copyright') %}
+              {% trans path=pathto('copyright'), copyright=copyright|e %}&copy; <a href="{{ path }}">Copyright</a> {{ copyright }}.{% endtrans %}<br/>
+              {%- else %}
+              {% trans copyright=copyright|e %}&copy; Copyright {{ copyright }}.{% endtrans %}<br/>
+              {%- endif %}
+              {%- endif %}
+              {%- if last_updated %}
+              {% trans last_updated=last_updated|e %}Last updated on {{ last_updated }}.{% endtrans %}<br/>
+              {%- endif %}
+              {%- if show_sphinx %}
+              {% trans sphinx_version=sphinx_version|e %}Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> {{ sphinx_version }}.{% endtrans %}<br/>
+              {%- endif %}
+            </p>
+          </div>
+        </footer>
+      </div>
+      {% block sidebar2 %}
+      {% endblock %}
+    </div>
+  </div>
+</div>
+{%- endblock %}
+
+{%- block custom_footer %}
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+{% if analytics_code %}
+ga('create', '{{ analytics_code }}');
+ga('require', 'displayfeatures');
+ga('send', 'pageview');
+{% endif %}
+</script>
+<script>
+window.analytics=window.analytics||[],window.analytics.methods=["identify","group","track","page","pageview","alias","ready","on","once","off","trackLink","trackForm","trackClick","trackSubmit"],window.analytics.factory=function(t){return function(){var a=Array.prototype.slice.call(arguments);return a.unshift(t),window.analytics.push(a),window.analytics}};for(var i=0;i<window.analytics.methods.length;i++){var key=window.analytics.methods[i];window.analytics[key]=window.analytics.factory(key)}window.analytics.load=function(t){if(!document.getElementById("analytics-js")){var a=document.createElement("script");a.type="text/javascript",a.id="analytics-js",a.async=!0,a.src=("https:"===document.location.protocol?"https://":"http://")+"cdn.segment.io/analytics.js/v1/"+t+"/analytics.min.js";var n=document.getElementsByTagName("script")[0];n.parentNode.insertBefore(a,n)}},window.analytics.SNIPPET_VERSION="2.0.9",
+window.analytics.load("{{ theme_tracking_segment_io_id }}");
+(function(w,d,s,u){
+var a=document.createElement(s); a.type="text/javascript", a.id='crate-utils', a.async=1, a.src=('https:'===document.location.protocol?'https:':'http:')+u;
+var n=document.getElementsByTagName(s)[0]; n.parentNode.insertBefore(a,n);
+})(window, document, 'script', '//cdn.crate.io/libs/crate/utils.js');
+</script>
+{%- endblock %}
