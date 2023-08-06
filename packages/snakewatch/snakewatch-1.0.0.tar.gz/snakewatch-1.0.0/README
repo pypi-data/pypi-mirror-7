@@ -1,0 +1,58 @@
+h1. A log watcher written in Python
+
+Allows RegEx-based line matching for various actions.
+
+Configs are JSON files of the following format:
+
+bc. [
+    {
+        "regex": "<pattern>",
+        "action": "<action>"[,
+        "<argument>": "<value>"[, ...]
+        ]
+    }[, ...]
+]
+
+Currently supported ConsoleUI actions:
+
+* *Print* (with colours!) - prints the line to stdout
+** additional arguments: _fore_, _back_, and _style_ (see "colorama":https://pypi.python.org/pypi/colorama for a list of supported values)
+
+* *Ignore* - ignores the input line
+
+* *Write* - write the line to a file. Multiple actions can write to the same file (_truncate_ must be the same).
+** additional arguments: _truncate_
+
+*Required action arguments:*
+* regex - the regular expression to match against
+* action - the action to perform if the regex matches a line from the input
+
+*Optional action arguments:*
+* continue - if set to true, matching will continue even if the action is called (default is false)
+
+h2. Example config for monitoring SASS output:
+
+bc. [
+    {
+        "regex": "^>>>.*",
+        "action": "Print",
+        "fore": "GRAY"
+    },
+    {
+        "regex": "^\\s+error.*",
+        "action": "Print",
+        "fore": "WHITE",
+        "back": "RED"
+    },
+    {
+        "regex": ".*",
+        "action": "Print",
+        "fore": "YELLOW",
+        "style": "DIM"
+    }
+]
+
+
+h3. Credits
+
+"*colorama*":https://pypi.python.org/pypi/colorama - Terminal output colours
