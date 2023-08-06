@@ -1,0 +1,22 @@
+#!/bin/bash
+
+source /service/sbin/setup
+
+if [ $1 == "init" ]; then 
+    /service/sbin/init01.sh
+elif [ $1 == "halt" ]; then 
+    /service/sbin/halt01.sh    
+elif [ $1 == "hosts" ]; then 
+    pophosts
+elif [ $1 == "start" ]; then 
+    export JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.rmi.port=7200"
+    su ferry -c 'nohup /service/bin/cassandra &'
+    sleep 2
+elif [ $1 == "restart" ]; then 
+    export JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.rmi.port=7200"
+    su ferry -c 'nohup /service/bin/cassandra &'
+    sleep 2
+elif [ $1 == "stop" ]; then 
+    # Stop the Cassandra daemon.
+    pkill -f CassandraDaemon
+fi

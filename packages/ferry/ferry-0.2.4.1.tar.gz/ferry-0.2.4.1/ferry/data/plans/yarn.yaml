@@ -1,0 +1,23 @@
+metadata:
+   author: James Horey
+   version: 0.2.0
+   description: Hadoop YARN over GlusterFS
+   tags: [infrastructure,hadoop,glusterfs]
+params:
+   resolver: ferry.docker.resolve.DefaultResolver
+questions:
+   - question: Number of instances for gluster
+     param: "{numgluster}"
+   - question: Number of instances for yarn
+     param: "{numyarn}"
+backend:
+   - storage:
+        personality: "gluster"
+        instances: "{numgluster}"
+     compute:
+        - personality: "yarn"
+          instances: "{numyarn}"
+          layers: 
+             - "hive"
+connectors:
+   - personality: "ferry/hadoop-client"
