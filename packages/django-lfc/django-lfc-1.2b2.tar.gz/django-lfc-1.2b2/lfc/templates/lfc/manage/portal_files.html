@@ -1,0 +1,128 @@
+{% load i18n %}
+{% load lfc_tags %}
+
+<h2 class="first-heading">
+    {% trans "Files" %}
+</h2>
+{% ifportalhasperm manage_portal %}
+    {% if obj.files.all %}
+        <form id="object-files-update-form"
+              action="{% url 'lfc_update_portal_files' %}"
+              method="post">
+            {% csrf_token %}
+            <table class="lfs-manage-table">
+                <tr>
+                    <th class="tiny">
+                        <input type="checkbox"
+                               class="select-all"
+                               value="file" />
+                    </th>
+                    <th class="small">
+                        {% trans 'Title' %}
+                    </th>
+                    <th class="middle">
+                        {% trans 'Description' %}
+                    </th>
+                    <th class="tiny right-padding">
+                        {% trans 'Position' %}
+                    </th>
+                    <th class="small right-padding">
+                        {% trans 'Manage' %}
+                    </th>
+                </tr>
+                {% for file in obj.files.all %}
+                    <tr>
+                        <td>
+                            <input type="checkbox"
+                                   class="select-file"
+                                   name="delete-files"
+                                   value="{{ file.id }}"
+                                   style="float:left" />
+                        </td>
+                        <td>
+                            <input type="text" name="title-{{ file.id }}" value="{{ file.title }}" />
+                        </td>
+                        <td class="right">
+                            {{ file.description|truncatewords_html:5|safe }}
+                        </td>
+                        <td class="right">
+                            <input class="position" type="text" name="position-{{ file.id }}" value="{{ file.position }}" />
+                        </td>
+                        <td class="right">
+                            {% if not forloop.first %}
+                                <a class="up ajax-link"
+                                   href="{% url 'lfc_move_file' file.id %}?direction=0"
+                                   title='{% trans "Move Up" %}'></a>
+                            {% endif %}
+                            {% if not forloop.last %}
+                                <a class="down ajax-link"
+                                   href="{% url 'lfc_move_file' file.id %}?direction=1"
+                                   title='{% trans "Move Down" %}'></a>
+                            {% else %}
+                                <span class="blank"></span>
+                            {% endif %}
+                            <a class="download"
+                               href="{{ file.get_absolute_url }}"
+                               title='{% trans "Download" %}'></a>
+                            <a class="edit ajax-link"
+                               title='{% trans "Edit" %}'
+                               href="{% url 'lfc_edit_file' file.id %}"
+                               title='{% trans "Edit" %}' /></a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+
+            <input class="ajax-submit"
+                   type="submit" name="update" value="{% trans 'Update' %}" />
+            <input class="ajax-submit"
+                   type="submit" name="delete" value="{% trans 'Delete' %}" />
+
+        </form>
+    {% else %}
+        <span>{% trans 'There are no files' %}</span>
+    {% endif %}
+
+    <h2 class="middle-heading">{% trans 'Add files' %}</h2>
+
+    <form id="files-form"
+          action="{% url 'lfc_add_portal_files' %}"
+          method="post"
+          enctype="multipart/form-data"
+          data="{% url 'lfc_load_portal_files' %}">
+          {% csrf_token %}
+          <input class="button" type="file" name="file" id="fileupload" multiple />
+    </form>
+
+    <div class="file-progress-title">{% trans "Uploading files ..." %}</div>
+    <div class="file-progress-title-2">{% trans "Processing files. Please wait!" %}</div>
+    <div id="file-progress"></div>
+    <div id="file-progressall"><div class="progress-label"></div></div>
+
+    <script>$(function () { bind_fileupload("file") });</script>
+{% else %}
+    {% if obj.files.all %}
+        <table class="lfs-manage-table half">
+            <tr>
+                <th>
+                    {% trans 'Title' %}
+                </th>
+                <th class="middle right-padding">
+                    {% trans 'Creation date' %}
+                </th>
+            </tr>
+            {% for file in obj.files.all %}
+                <tr>
+                    <td>
+                        {{ file.title }}
+                    </td>
+                    <td class="right">
+                        {{ file.creation_date|date:"Y-m-d H:i:s" }}
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <span>{% trans 'There are no files' %}</span>
+    {% endif %}
+{% endifportalhasperm %}

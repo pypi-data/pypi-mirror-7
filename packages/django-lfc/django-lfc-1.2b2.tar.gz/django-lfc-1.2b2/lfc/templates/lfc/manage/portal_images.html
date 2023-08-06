@@ -1,0 +1,149 @@
+{% load i18n %}
+{% load lfc_tags %}
+
+<h2 class="first-heading">
+    {% trans "Images" %}
+</h2>
+{% ifportalhasperm manage_portal %}
+    {% if obj.images.all %}
+        <form id="object-images-update-form"
+              action="{% url 'lfc_update_portal_images' %}"
+              method="post">
+            {% csrf_token %}
+            <table class="lfs-manage-table">
+                <tr>
+                    <th class="tiny">
+                        <input type="checkbox"
+                               class="select-all"
+                               value="image" />
+                    </th>
+                    <th class="small">
+                        {% trans 'Image' %}
+                    </th>
+                    <th class="small">
+                        {% trans 'Title' %}
+                    </th>
+                    <th class="small">
+                        {% trans 'Caption' %}
+                    </th>
+                    <th class="middle">
+                        {% trans 'Description' %}
+                    </th>
+                    <th class="tiny padding">
+                        {% trans 'Position' %}
+                    </th>
+                    <th class="small right-padding">
+                        {% trans 'Manage' %}
+                    </th>
+                </tr>
+                {% for image in obj.images.all %}
+                    <tr>
+                        <td>
+                            <input type="checkbox"
+                                   class="select-image"
+                                   name="delete-images"
+                                   value="{{ image.id }}"
+                                   style="float:left" />
+                        </td>
+                        <td>
+                            <img src="{{ image.image.url_60x60 }}"
+                                 alt="{{ image.title }}"
+                                 title="{{ image_title }}"
+                                 style="float:left"/>
+
+                        </td>
+                        <td>
+                            <input type="text" name="title-{{ image.id }}" value="{{ image.title }}" />
+                        </td>
+                        <td>
+                            <input type="text" name="caption-{{ image.id }}" value="{{ image.caption }}" />
+                        </td>
+                        <td>
+                            {{ image.description|truncatewords_html:15|safe }}
+                        </td>
+                        <td class="right">
+                            <input class="position" type="text" name="position-{{ image.id }}" value="{{ image.position }}" />
+                        </td>
+                        <td class="right-padding">
+
+                            {% if not forloop.first %}
+                                <a class="up ajax-link"
+                                   href="{% url 'lfc_move_image' image.id %}?direction=0"></a>
+                            {% endif %}
+
+                            {% if not forloop.last %}
+                                <a class="down ajax-link"
+                                   href="{% url 'lfc_move_image' image.id %}?direction=1"></a>
+                            {% else %}
+                                <span class="blank"></span>
+                            {% endif %}
+
+                            <a class="edit ajax-link"
+                               title='{% trans "Edit" %}'
+                               href="{% url 'lfc_edit_image' image.id %}"></a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+            <div class="manage-form-buttons">
+                <input class="ajax-submit"
+                       type="submit" name="update" value="{% trans 'Update' %}" />
+                <input class="ajax-submit"
+                       type="submit" name="delete" value="{% trans 'Delete' %}" />
+            </div>
+        </form>
+    {% else %}
+        <span>{% trans 'There are no images' %}</span>
+    {% endif %}
+
+    <h2 class="middle-heading">{% trans 'Add images' %}</h2>
+
+    <div id="content">
+        <form id="images-form"
+              action="{% url 'lfc_add_portal_images' %}"
+              method="post"
+              enctype="multipart/form-data"
+              data="{% url 'lfc_load_portal_images' %}">
+              {% csrf_token %}
+              <input class="button" type="file" name="file" id="imageupload" multiple />
+        </form>
+
+        <div class="image-progress-title">{% trans "Uploading images ..." %}</div>
+        <div class="image-progress-title-2">{% trans "Processing images. Please wait!" %}
+            <img class="image-ajax-loader" src="{{ STATIC_URL }}lfc/img/ajax-loader.gif" alt="ajax-loader" />
+        </div>
+        <div id="image-progress"></div>
+        <div id="image-progressall"><div class="progress-label"></div></div>
+
+    </div>
+    <script>$(function () { bind_fileupload("image") });</script>
+{% else %}
+    {% if obj.images.all %}
+        <table class="lfs-manage-table half">
+            <tr>
+                <th class="tiny">
+                    {% trans 'Image' %}
+                </th>
+                <th>
+                    {% trans 'Title' %}
+                </th>
+            </tr>
+            {% for image in obj.images.all %}
+                <tr>
+                    <td>
+                        <img src="{{ image.image.url_60x60 }}"
+                             alt="{{ image.title }}"
+                             title="{{ image_title }}"
+                             style="float:left"/>
+
+                    </td>
+                    <td>
+                        {{ image.title }}
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <span>{% trans 'There are no images' %}</span>
+    {% endif %}
+{% endifportalhasperm %}

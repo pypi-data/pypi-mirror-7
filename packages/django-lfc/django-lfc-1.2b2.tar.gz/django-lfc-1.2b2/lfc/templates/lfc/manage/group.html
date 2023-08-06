@@ -1,0 +1,79 @@
+{% extends "lfc/manage/base.html" %}
+{% load i18n %}
+
+{% block left_slot %}
+    <div class="navigation-group">
+        {% for group in groups %}
+            <div>
+                <a {% ifequal group.id current_group_id %}class="selected"{% endifequal %}
+                   href="{% url 'lfc_manage_group' group.id %}">
+                    {{ group.name }}
+                </a>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
+
+{% block content %}
+
+    <div id="menu"
+         class="site-actions">
+
+        <ul class="sf-menu">
+            <li>
+                <a href="{% url 'lfc_manage_add_group' %}">{% trans "Add Group" %}</a>
+            </li>
+            <li>
+                <a class="delete-link" href="{% url 'lfc_manage_delete_group' current_group_id %}">{% trans "Delete group" %}</a>
+            </li>
+        </ul>
+    </div>
+
+    <div id="manage-tabs">
+        <ul>
+            <li class="ui-tabs-nav-item"><a href="#data">{% trans "Data" %}</a></li>
+            <li class="ui-tabs-nav-item"><a href="#user">{% trans "User" %}</a></li>
+        </ul>
+
+        <div id="data">
+            <h2 class="first-heading">{% trans "Data" %}</h2>
+            <form action="{% url 'lfc_manage_save_group' group.id %}"
+                  method="POST">
+                {% csrf_token %}
+                {% include "lfc/manage/lfc_form.html" %}
+                <input type="submit" value='{% trans "Save group" %}' />
+            </form>
+        </div>
+
+        <div id="user">
+            <h2 class="first-heading">{% trans "User" %}</h2>
+            <table class="lfs-manage-table">
+                <th>
+                    {% trans "Username" %}
+                </th>
+                <th>
+                    {% trans "Name" %}
+                </th>
+                {% for user in users %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'lfc_manage_user' user.id %}">
+                                {{ user.username }}
+                            </a>
+                        </td>
+                        <td>
+                            {% if user.first_name %}
+                                {{ user.first_name }}
+                            {% endif %}
+                            {% if user.last_name %}
+                                {{ user.last_name }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+
+{% endblock %}
