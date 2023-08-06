@@ -1,0 +1,113 @@
+# -*- mode: python -*-
+
+# Soya 3D
+# Copyright (C) 2001-2014 Jean-Baptiste LAMY
+# http://www.lesfleursdunormal.fr/static/informatique/soya3d/index_en.html
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+const vec3 self.eye = vec3(0.0, 0.0, 1.0)
+
+varying vec4 self.front_specular
+varying vec4 self.back_specular
+
+def void lighting_mini_shader():
+  vec4  self.ambient
+  vec4  self.front_diffuse
+  vec4  self.back_diffuse
+  float self.alpha
+  
+  float self.nDotVP      # current_normal . light direction
+  float self.nDotHV      # current_normal . light half vector
+  float self.spotDot     # cosine of angle between spotlight
+  float self.attenuation # computed attenuation factor
+  float self.d           # distance from surface to light source
+  vec3  self.VP          # direction from surface to light position
+  
+  
+  if lighting_mode == 1:
+    self.ambient        = vec4(0.0) # Clear the light intensity accumulators
+    self.front_diffuse  = vec4(0.0)
+    self.back_diffuse   = vec4(0.0)
+    self.front_specular = vec4(0.0)
+    self.back_specular  = vec4(0.0)
+    
+    for current_light in lights:
+      if gl_LightSource[current_light].position.w == 0.0:
+        
+        # Directional light
+        self.ambient  += gl_LightSource[current_light].ambient
+        
+        self.nDotVP = dot(current_normal, normalize(vec3(gl_LightSource[current_light].position)))
+        if   self.nDotVP > 0.0:
+          self.front_diffuse += gl_LightSource[current_light].diffuse  * self.nDotVP
+          if gl_FrontMaterial.specular[3] != 0.0:
+            self.nDotHV          = max(0.0, dot(current_normal, vec3(gl_LightSource[current_light].halfVector)))
+            self.front_specular += gl_LightSource[current_light].specular * pow(self.nDotHV, gl_FrontMaterial.shininess)
+        elif self.nDotVP < 0.0:
+          self.nDotVP        = -self.nDotVP
+          self.back_diffuse += gl_LightSource[current_light].diffuse  * self.nDotVP
+          if gl_FrontMaterial.specular[3] != 0.0:
+            self.nDotHV         = max(0.0, dot( -current_normal, vec3(gl_LightSource[current_light].halfVector)))
+            self.back_specular += gl_LightSource[current_light].specular * pow(self.nDotHV, gl_FrontMaterial.shininess)
+            
+      else:
+        # Point light
+        self.VP = vec3(gl_LightSource[current_light].position) - vec3(current_vertex) # Compute vector from surface to light position
+        self.d  = length(self.VP)                                                     # Compute distance between surface and light position
+        self.VP = normalize(self.VP)                                                  # Normalize the vector from surface to light position
+
+        if gl_LightSource[current_light].spotCutoff == 180.0: # Point light
+          self.attenuation = 1.0 / (gl_LightSource[current_light].constantAttenuation         + \
+                                    gl_LightSource[current_light].linearAttenuation    * self.d    + \
+                                    gl_LightSource[current_light].quadraticAttenuation * self.d * self.d)
+          
+        else: # Spot light : see if point on surface is inside cone of illumination
+          self.spotDot = dot(self.VP, normalize(gl_LightSource[current_light].spotDirection))
+          if self.spotDot < gl_LightSource[current_light].spotCosCutoff: return # light adds no contribution
+          
+          self.attenuation = pow(self.spotDot, gl_LightSource[current_light].spotExponent) / ( \
+                                               gl_LightSource[current_light].constantAttenuation         + \
+                                               gl_LightSource[current_light].linearAttenuation    * self.d    + \
+                                               gl_LightSource[current_light].quadraticAttenuation * self.d * self.d)
+          
+        self.ambient  += gl_LightSource[current_light].ambient  * self.attenuation
+        
+        self.nDotVP = dot(current_normal, self.VP)
+        if   self.nDotVP > 0.0:
+          self.front_diffuse += gl_LightSource[current_light].diffuse  * self.attenuation * self.nDotVP
+          if gl_FrontMaterial.specular[3] != 0.0:
+            self.nDotHV          = max(0.0, dot(current_normal, normalize(self.VP + self.eye)))
+            self.front_specular += gl_LightSource[current_light].specular * self.attenuation * pow(self.nDotHV, gl_FrontMaterial.shininess)
+        elif self.nDotVP < 0.0:
+          self.nDotVP        = -self.nDotVP
+          self.back_diffuse += gl_LightSource[current_light].diffuse  * self.attenuation * self.nDotVP
+          if gl_FrontMaterial.specular[3] != 0.0:
+            self.nDotHV         = max(0.0, dot( -current_normal, normalize(self.VP + self.eye)))
+            self.back_specular += gl_LightSource[current_light].specular * self.attenuation * pow(self.nDotHV, gl_FrontMaterial.shininess)
+          
+    self.alpha = current_front_color[3]
+    current_front_color    = clamp(gl_FrontMaterial.emission + gl_LightModel.ambient + (self.ambient + self.front_diffuse) * current_front_color, 0.0, 1.0)
+    current_back_color     = clamp(gl_FrontMaterial.emission + gl_LightModel.ambient + (self.ambient + self.back_diffuse ) * current_back_color , 0.0, 1.0)
+    if gl_FrontMaterial.specular[3] != 0.0:
+      self.front_specular = self.front_specular * gl_FrontMaterial.specular
+      self.back_specular  = self.back_specular  * gl_FrontMaterial.specular
+    current_front_color[3] = self.alpha
+    current_back_color [3] = self.alpha
+    
+    
+def void specular_mini_shader():
+  if gl_FrontMaterial.specular[3] != 0.0:
+    if gl_FrontFacing: current_color = clamp(current_color + self.front_specular, 0.0, 1.0)
+    else:              current_color = clamp(current_color + self.back_specular , 0.0, 1.0)

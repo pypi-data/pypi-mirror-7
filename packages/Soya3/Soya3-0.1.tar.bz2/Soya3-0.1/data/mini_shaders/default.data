@@ -1,0 +1,55 @@
+# -*- mode: python -*-
+
+# Soya 3D
+# Copyright (C) 2001-2014 Jean-Baptiste LAMY
+# http://www.lesfleursdunormal.fr/static/informatique/soya3d/index_en.html
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+const vec3 self.eye = vec3(0.0, 0.0, -1.0)
+
+def void bodyspace_to_cameraspace_mini_shader():
+  current_vertex =           gl_ModelViewMatrix * current_vertex
+  current_normal = normalize(gl_NormalMatrix    * current_normal)
+  
+def void cameraspace_to_viewport_mini_shader():
+  current_vertex = gl_ProjectionMatrix * current_vertex
+  
+def void texture_coords_mini_shader():
+  if textures_enabled == 1:
+    gl_TexCoord[0] = gl_MultiTexCoord0
+
+
+const float self.LOG2 = 1.442695
+
+def void fog_factor_mini_shader():
+  if fog_type == -1:
+    current_fog_factor = 1.0
+  else:
+    float fog_coord = length(current_vertex)
+    
+    if   fog_type == 0: # Linear
+      current_fog_factor = current_fog_factor * clamp((gl_Fog.end - fog_coord) * gl_Fog.scale, 0.0, 1.0)
+    elif fog_type == 1: # Exponential
+      current_fog_factor = current_fog_factor * clamp(exp2(-gl_Fog.density * fog_coord * self.LOG2), 0.0, 1.0)
+    elif fog_type == 2: # Exponential squared
+      current_fog_factor = current_fog_factor * clamp(exp2(-gl_Fog.density * gl_Fog.density * fog_coord * fog_coord * self.LOG2), 0.0, 1.0)
+      
+def void texturing_mini_shader():
+  if textures_enabled == 1:
+    current_color = current_color * texture2D(texture0, gl_TexCoord[0].xy)
+    
+def void fog_mini_shader():
+  current_color = mix(gl_Fog.color, current_color, current_fog_factor)
+  

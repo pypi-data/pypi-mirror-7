@@ -1,0 +1,126 @@
+# -*- mode: python -*-
+
+# Soya 3D
+# Copyright (C) 2001-2014 Jean-Baptiste LAMY
+# http://www.lesfleursdunormal.fr/static/informatique/soya3d/index_en.html
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+varying vec3 self.cameraspace_vertex
+varying vec3 self.cameraspace_normal
+
+def void lighting_mini_shader():
+  if lighting_mode == 1:
+    self.cameraspace_vertex = vec3(current_vertex)
+    self.cameraspace_normal =      current_normal
+
+
+
+
+uniform vec4 self.bright_color  = vec4(1.0, 1.0, 1.0, 0.2)
+uniform vec4 self.dark_color    = vec4(0.0, 0.0, 0.0, 0.6)
+
+uniform float self.bright_color_cut_at = 0.9
+uniform float self.dark_color_cut_at   = 0.2
+
+uniform float self.anti_alias = 0.1
+
+float self.bright_color_cut_at0 = 1.0 - ((1.0 - self.anti_alias) * (1.0 - self.bright_color_cut_at))
+float self.bright_color_cut_at2 = 1.0 - ((1.0 + self.anti_alias) * (1.0 - self.bright_color_cut_at))
+
+float self.dark_color_cut_at0   = ((1.0 + self.anti_alias) * self.dark_color_cut_at)
+float self.dark_color_cut_at2   = ((1.0 - self.anti_alias) * self.dark_color_cut_at)
+
+
+
+
+def void specular_mini_shader():
+  float self.alpha
+  float self.intensity
+  float self.spotDot     # cosine of angle between spotlight
+  float self.attenuation # computed attenuation factor
+  float self.d           # distance from surface to light source
+  vec3  self.VP          # direction from surface to light position
+  
+  vec3 self.cameraspace_normal2
+  
+  if lighting_mode == 1:
+    self.intensity = 0.0
+    
+    if gl_FrontFacing: self.cameraspace_normal2 =  normalize(self.cameraspace_normal)
+    else:              self.cameraspace_normal2 = -normalize(self.cameraspace_normal)
+    
+    for current_light in lights:
+      if gl_LightSource[current_light].position.w == 0.0:
+        
+        # Directional light
+        self.intensity += max(0.0, dot(self.cameraspace_normal2, normalize(vec3(gl_LightSource[current_light].position))))
+        
+      else:
+        # Point light
+        self.VP = vec3(gl_LightSource[current_light].position) - vec3(self.cameraspace_vertex) # Compute vector from surface to light position
+        self.d  = length(self.VP)                                                  # Compute distance between surface and light position
+        self.VP = normalize(self.VP)                                               # Normalize the vector from surface to light position
+        
+        if gl_LightSource[current_light].spotCutoff == 180.0: # Point light
+          self.attenuation = 1.0 / (gl_LightSource[current_light].constantAttenuation              + \
+                                    gl_LightSource[current_light].linearAttenuation    * self.d    + \
+                                    gl_LightSource[current_light].quadraticAttenuation * self.d * self.d)
+          
+        else: # Spot light
+          # See if point on surface is inside cone of illumination
+          self.spotDot = dot(self.VP, normalize(gl_LightSource[current_light].spotDirection))
+          if self.spotDot < gl_LightSource[current_light].spotCosCutoff: return # light adds no contribution
+          
+          self.attenuation = pow(self.spotDot, gl_LightSource[current_light].spotExponent) / ( \
+                                               gl_LightSource[current_light].constantAttenuation              + \
+                                               gl_LightSource[current_light].linearAttenuation    * self.d    + \
+                                               gl_LightSource[current_light].quadraticAttenuation * self.d * self.d)
+          
+        self.intensity += self.attenuation * max(0.0, dot(self.cameraspace_normal2, self.VP))
+        
+        
+    self.intensity = min(1.0, self.intensity)
+  else:
+    self.intensity = 0.5
+    
+    
+  if   self.intensity > self.bright_color_cut_at0:
+    self.alpha = current_color[3]
+    current_color = mix(current_color, self.bright_color, self.bright_color[3])
+    current_color[3] = self.alpha
+  
+  elif self.intensity > self.bright_color_cut_at2:
+    self.alpha = current_color[3]
+    current_color = mix(current_color, self.bright_color, self.bright_color[3] * (self.intensity - self.bright_color_cut_at2) / (self.bright_color_cut_at0 - self.bright_color_cut_at2))
+    current_color[3] = self.alpha
+  
+  elif self.intensity > self.dark_color_cut_at0:
+    pass
+  
+  elif self.intensity > self.dark_color_cut_at2:
+    self.alpha = current_color[3]
+    current_color = mix(current_color, self.dark_color, self.dark_color[3] * (1.0 - (self.intensity - self.dark_color_cut_at2) / (self.dark_color_cut_at0 - self.dark_color_cut_at2)))
+    current_color[3] = self.alpha
+  
+  else:
+    self.alpha = current_color[3]
+    current_color = mix(current_color, self.dark_color, self.dark_color[3])
+    current_color[3] = self.alpha
+
+
+
+
+
+
