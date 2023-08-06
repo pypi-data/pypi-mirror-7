@@ -1,0 +1,514 @@
+Metadata-Version: 1.1
+Name: ralph-scrooge
+Version: 2.5.0
+Summary: Pricing module for Ralph
+Home-page: http://ralph.allegrogroup.com/
+Author: Grupa Allegro Sp. z o.o. and Contributors
+Author-email: it-ralph-dev@allegro.pl
+License: Apache Software License v2.0
+Description: .. image:: https://pypip.in/v/scrooge/badge.png
+            :target: https://crate.io/packages/scrooge/
+            :alt: Latest PyPI version
+        
+        
+        .. image:: https://pypip.in/d/scrooge/badge.svg
+            :target: https://crate.io/packages/scrooge/
+            :alt: Number of PyPI downloads
+        
+        
+        .. image:: https://travis-ci.org/allegro/ralph_pricing.svg?branch=develop
+            :target: https://travis-ci.org/allegro/ralph_pricing
+        
+        
+        .. image:: https://coveralls.io/repos/allegro/ralph_pricing/badge.png?branch=develop
+          :target: https://coveralls.io/r/allegro/ralph_pricing?branch=develop
+        
+        
+        .. image:: https://pypip.in/license/scrooge/badge.svg
+            :target: https://crate.io/packages/scrooge/
+        
+        The pricing module aggregates data from Ralph and from Ralph Assets to generate
+        reports showing the prices of the servers in inventory per their owners daily.
+        
+        ============
+        Installation
+        ============
+        Scrooge contains ralph in requirements because is plugin for ralph. For more information how to configure or install ralph refer to ralph documentation.
+        
+        Install Scrooge
+        ~~~~~~~~~~~~~~~
+        There are two way to install scrooge, one of them is simple pip installation and it is easy and pleasant. Installation from sources require download scrooge from github and manually installation them.
+        
+        Install Scrooge from pip
+        ------------------------
+        Faster and easier way is install scrooge from pip::
+        
+          (ralph)$ pip install scrooge
+        
+        That's it.
+        
+        Install Scrooge from sources
+        ----------------------------
+        Also, there is a possible to install scrooge from sources. If you wanna do that, you need to download scrooge from github before.::
+        
+          (ralph)$ git clone git://github.com/allegro/ralph_pricing.git
+        
+        Enter to the project folder::
+        
+          (ralph)$ cd ralph_pricing
+        
+        and install them::
+        
+          (ralph)$ pip install -e .
+        
+        The scrooge requirements (ralph, ralph_assets) will be installed automatically.
+        
+        Upgrade existing installation
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        For upgrade scrooge you need stop any Ralph processes that is running. Good practice is not upgrading old version but create separated virtualenv and install there everything from the begin but if you need upgrade old version just be sure that everything is stopped.
+        
+        Upgrade Scrooge from pip
+        ------------------------
+        If you installed from pip, then you can simply do::
+        
+            (ralph)$ pip install --upgrade scrooge
+        
+        When upgrade will be finished, upgrade the static files::
+        
+            (ralph)$ ralph collectstatic
+        
+        Upgrade Scrooge from sources
+        ----------------------------
+        You need to download scrooge from github before.::
+        
+          (ralph)$ git clone git://github.com/allegro/ralph_pricing.git
+        
+        Enter to the project folder::
+        
+          (ralph)$ cd ralph_pricing
+        
+        and upgrade them::
+        
+          (ralph)$ pip install --upgrade -e .
+        
+        at the end you need to upgrade the static files::
+        
+            (ralph)$ ralph collectstatic
+        
+        Migrate the database
+        ~~~~~~~~~~~~~~~~~~~~
+        Some of updates require database migrations. For migrate database just run::
+        
+            (ralph)$ ralph migrate ralph_pricing
+        
+        Be sure that you have backup of your database. Some of migrations could migrate any data or create some complicate changes and unwanted for you changes.
+        
+        Update the settings
+        ~~~~~~~~~~~~~~~~~~~~
+        Some new features added to Ralph may require additional settings to work
+        properly. In order to enable them in your settings, follow the instructions in
+        the :doc:`change log <changes>` for the version you installed.
+        
+        Testing if it works
+        ~~~~~~~~~~~~~~~~~~~
+        For be sure that everything work fine, is recommended to run unit tests. For do this just run::
+        
+          (ralph)$ DJANGO_SETTINGS_PROFILE=test-pricing ralph test ralph_pricing
+        
+        =============
+        Configuration
+        =============
+        
+        Configuration is available in file settings.py and there you should implement your settings.
+        
+        PLUGGABLE_APPS <list of strings> - List with available applications for ralph
+        
+        ::
+        
+            PLUGGABLE_APPS += ['scrooge']
+        
+        VIRTUAL_VENTURE_NAMES <list of strings> - venture names for virtual devices
+        
+        ::
+        
+            VIRTUAL_VENTURE_NAMES = ['venture1', 'venture2']
+        
+        SCROOGE_SENTRY_DSN <string> - Full address with API key to sentry
+        
+        ::
+        
+            SCROOGE_SENTRY_DSN = 'http://xxxxxx:yyyyyy@sentry/zz'
+        
+        CURRENCY <string> - This currency will be added to each value on report. It is prefix to cost value.
+        
+        ::
+        
+            CURRENCY = 'PLN'
+        
+        HAMSTER_API_URL <string> - Url to hamster API
+        
+        ::
+        
+            HAMSTER_API_URL = 'http://xxxxxxx/'
+        
+        RQ_QUEUE_LIST <tuple of strings> - List of queue names
+        
+        ::
+        
+            RQ_QUEUE_LIST += ('reports', 'reports_pricing')
+        
+        SSH_NFSEN_CREDENTIALS <dict> - Credentials for servers
+        
+        ::
+        
+            SSH_NFSEN_CREDENTIALS = {
+                'xxx.xxx.xxx.xxx': {
+                    'login': 'xxx',
+                    'password': 'xxx',
+                },
+                'yyy.yyy.yyy.yyy': {
+                    'login': 'yyy',
+                    'password': 'yyy',
+                },
+            }
+        
+        NFSEN_CHANNELS <list of strings> - Channels like IN or OUT
+        
+        ::
+        
+            NFSEN_CHANNELS = ['xxx-OUT', 'xxx-IN', 'yyy-OUT', 'yyy-IN']
+        
+        NFSEN_FILES_PATH <string> - Path to nfsen data files on remote server
+        
+        ::
+        
+            NFSEN_FILES_PATH = 'xxx/yyy/zzz'
+        
+        NFSEN_CLASS_ADDRESS <list of strings> - Available class addresses
+        
+        ::
+        
+            NFSEN_CLASS_ADDRESS = [
+                'xxx.xxx.xxx.x/yy'
+                'zzz.zzz.zzz.z/yy'
+            ]
+        
+        OPENSTACK_USER <string> - User login name to openstack
+        
+        ::
+        
+            OPENSTACK_USER = 'xxx'
+        
+        OPENSTACK_PASSWORD <string> - User password for given user name
+        
+        ::
+        
+            OPENSTACK_PASSWORD = 'yyy'
+        
+        OPENSTACK_URL <string> - Url to openstack
+        
+        ::
+        
+            OPENSTACK_URL = 'yyy'
+        
+        OPENSTACK_REGIONS <list of strings> - Datacenter names
+        
+        ::
+        
+            OPENSTACK_REGIONS = ['xxx', 'yyy']
+        
+        OPENSTACK_EXTRA_QUERIES <list of tuple> - Extra queries for openstacp
+        
+        ::
+        
+            OPENSTACK_EXTRA_QUERIES = [('http://xxx', 'yyy'), ('http://zzz', 'aaa')]
+        
+        SCALEME_API_URL <string> - Url to scaleme
+        
+        ::
+        
+            SCALEME_API_URL = 'http://xxxxxxx/'
+        
+        SPLUNK_HOST <string> - Splunk host name
+        
+        ::
+        
+            SPLUNK_HOST = 'http://xxxxxxx/'
+        
+        SPLUNK_USER <string> - Splunk user name
+        
+        ::
+        
+            SPLUNK_USER = 'xxx'
+        
+        SPLUNK_PASSWORD <string> - Password for splunk user
+        
+        ::
+        
+            SPLUNK_PASSWORD = 'yyy'
+        
+        Change Log
+        ----------
+        
+        2.5.0
+        ~~~~~
+        
+        * Fixed decimal precision in tests
+        
+        * Remove back collecting disk share mount
+        
+        * Fixed report error log text
+        
+        * Added average team billing model
+        
+        * Added share multiple groups
+        
+        * Added san collect plugin
+        
+        * Added exclude ventures to teams
+        
+        * Added required permisions to view scrooge
+        
+        * Renamed package to ralph_scrooge
+        
+        * Added coverals
+        
+        * Fixed venture hierarchy, when venture have no parent then venture parent is None
+        
+        * Added html documentation
+        
+        
+        2.4.0
+        ~~~~~
+        
+        * New devices report
+        
+        * Devices ventures changes report
+        
+        * New ceilometer report plugin logic and logging tweakups
+        
+        * Fixed asset collect plugin (replacing to None)
+        
+        * Ceilometer collect plugin bugfixes
+        
+        * Added venture tree rebuild when venture plugin job is finished
+        
+        * Fixed extra costs - add more than 5 rows (with dynamic adding)
+        
+        * Fixed header in csv statement
+        
+        * Improved gitignore and manifest
+        
+        * When venture have no parent set venture parent as none
+        
+        
+        2.3.0
+        ~~~~~
+        
+        * Fixed report table header on scroll.
+        
+        * Exception instan error in logging on report plugin run.
+        
+        * Fixed raise exception 0/0 by team plugins.
+        
+        * Added extra costs to report as separated column and service to total cost.
+        
+        * Fixed saving device_id, sn and barcode
+        
+        * Added monthly statement
+        
+        * Added plugin to bill cloud 1.0 from ralph
+        
+        * Fixed ventures daily usages header colspan
+        
+        
+        2.2.3
+        ~~~~~
+        
+        * nfdump get only ips from given network.
+        
+        * Changed logging to logger in network plugin.
+        
+        * Only usage types wtih is_manually_type flag are show in menu.
+        
+        * Fixed calculating price. Massage incomplete_price was incorrect sometime.
+        
+        * Fixed percent rounding for teams.
+        
+        * Remove PLN from fields and add it to name of column.
+        
+        * Average option for usages is now available.
+        
+        * Fixed is_blade. Now it is truly boolean value.
+        
+        * Added overwriting in push API.
+        
+        * Added ventures daily usages report.
+        
+        * Fixed usages columns width.
+        
+        
+        2.2.2
+        ~~~~~
+        
+        * Fixed nfdump_str, executed command on remote server.
+        
+        * Added console statistics
+        
+        
+        2.2.1
+        ~~~~~
+        
+        * Upgrade ceilometer collect plugins.
+        
+        * Added ceilometer report plugin.
+        
+        * Fixed overwriting configuration by pluggableaps.
+        
+        * Fixed logging from collect plugins. Now, when venture does not exist log warning.
+        
+        * Upgrade inserting teams usages. Added total prcent information and button to dynamically add more rows.
+        
+        * Plugins indentify usages only by symbols. Name and more options are set as defaults.
+        
+        * Added multiple ventures option for single virtual server usages. settings.VIRTUAL_VENTURE_NAMES must be dict where key is name of groub and value is list of ventures.
+        
+        * Network cost is by providers.
+        
+        * Remove teams count table and added count to usage price table.
+        
+        
+        2.2.0
+        ~~~~~
+        
+        * Displayed name changed from Ralph Pricing to Scrooge.
+        
+        * Added service model and plugin for billing service depending on it's usage types, base usage types and dependent services.
+        
+        * Change report plugins architecture (change from function to classes, create plugin for base usages (eg. power consumption) and dedicated plugin for depreciation).
+        
+        * Added teams billing. Teams could be billed in 4 models: by time, by devices count, by devices and cores count or by cost distribution between other teams depending on other teams members count.
+        
+        * Modified collects virtual plugin for getting usages for more than one virtual systems.
+        
+        * Created plugin for colleting internet usages per IP address (using nfsen).
+        
+        * Added height of device usage.
+        
+        * Removed old AllVentures report and warehouse option from report.
+        
+        * PUSH API for usages of service resources by ventures.
+        
+        * New white theme.
+        
+        
+        2.1.1
+        ~~~~~
+        
+        * Added scrooge logger sentry
+        
+        
+        2.1.0
+        ~~~~~
+        
+        * Changes in the architecture. Generate report from plugins for each usage
+        
+        * Create few plugins for each usage
+        
+        * Distinguish two groups of plugins, reports and collections
+        
+        * Rebuild generate reports view and add it as beta venture view
+        
+        * New report contains separated columns for warehouses for one report
+        
+        * Increased efficiency of report generation
+        
+        * Fix splunk plugin
+        
+        * Used pluggableapps for scrooge config
+        
+        * Added more logs from logger
+        
+        * Added separated logger for scrooge
+        
+        * Openstack ceilometer plugin
+        
+        * When usage is per warehouse then warehouse must be chosen
+        
+        * Fix datepicker on report subpage
+        
+        * Added flag to hide/show usages on report
+        
+        * Remove TopVenture subpage
+        
+        
+        2.0.1
+        ~~~~~
+        
+        * If assets plugin cannot find device by asset_id then try get device by sn
+        
+        
+        2.0.0
+        ~~~~~
+        
+        * Changes in the architecture. Now devices are taken by asset plugin from assets
+        
+        * Remove device and cores plugin (This this is a role of asset plugin)
+        
+        * DailyUsage contains warehouse field
+        
+        * Added version of usage type price based on cost
+        
+        * Added price or cost per warehouse
+        
+        * Now venture reports are generated per warehouse (only colums with flag by_warehouse are different between reports)
+        
+        * Added forecast prices and costs and possibility to generate forecast reports
+        
+        * Added cost to price converter used by 'get_assets_count_price_cost' method
+        
+        
+        1.2.8
+        ~~~~~
+        Released on December 11, 2013
+        
+        * F5 devices billing added.
+        
+        
+        1.2.7
+        ~~~~~
+        Released on November 03, 2013
+        
+        * Added search boxes, filters and additional columns in admin.
+        * Fixed corner-case bug related to calculation of bladesystems costs.
+        
+        
+        1.2.6
+        ~~~~~
+        
+        Released on August 08, 2013
+        
+        * Added "show only active" option in the reports
+        * Added short descriptions to reports templates
+        * Fixed assets plugin - IntegrityError protection, added new tests
+        * Show extra costs in the extra costs types admin
+        
+        
+        1.0.0
+        ~~~~~
+        
+        * initial release
+        
+Platform: any
+Classifier: Development Status :: 4 - Beta
+Classifier: Framework :: Django
+Classifier: Intended Audience :: System Administrators
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Natural Language :: English
+Classifier: Operating System :: POSIX
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Operating System :: Microsoft :: Windows :: Windows NT/2000
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 2 :: Only
+Classifier: Topic :: Internet :: WWW/HTTP
