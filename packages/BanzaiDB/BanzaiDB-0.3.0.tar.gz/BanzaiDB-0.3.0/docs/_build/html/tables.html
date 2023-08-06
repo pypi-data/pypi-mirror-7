@@ -1,0 +1,259 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>BanzaiDB tables schema &mdash; BanzaiDB 0.2.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="BanzaiDB 0.2.0 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">BanzaiDB 0.2.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="banzaidb-tables-schema">
+<h1>BanzaiDB tables schema<a class="headerlink" href="#banzaidb-tables-schema" title="Permalink to this headline">¶</a></h1>
+<p>The following tables are defined in BanzaiDB -</p>
+<div class="section" id="references">
+<h2>references<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<p>Provides information on a reference used in mapping.</p>
+<p>references:</p>
+<div class="highlight-python"><div class="highlight"><pre>Elements:
+---------
+
+id:             string
+reference_name: string or null
+revision:       int
+reference_id:   string or null
+
+Example:
+--------
+
+[{&quot;id&quot;:&quot;NC_008527&quot;,&quot;reference_name&quot;:&quot;Lactococcus lactis subsp. cremoris SK11, complete genome.&quot;,&quot;revision&quot;:1},{&quot;id&quot;:&quot;current_reference&quot;,&quot;reference_id&quot;:&quot;NC_008527&quot;,&quot;revision&quot;:1}]
+
+$ head NC_008527_1.gbk
+LOCUS       NC_008527            2438589 bp    DNA              CON 27-AUG-2013
+DEFINITION  Lactococcus lactis subsp. cremoris SK11, complete genome.
+ACCESSION   NC_008527
+VERSION     NC_008527.1  GI:116510843
+...
+
+Thus: ACCESSION = reference[&quot;id&quot;]
+      VERSION = reference[&quot;id&quot;]+reference[&quot;revision&quot;]
+      DEFINITION = reference[&quot;reference_name&quot;]
+
+Note: Primary key &#39;current_reference&#39; is added to keep track of multiple runs
+</pre></div>
+</div>
+</div>
+<div class="section" id="reference-features">
+<h2>reference_features<a class="headerlink" href="#reference-features" title="Permalink to this headline">¶</a></h2>
+<p>Provides information on the features of a given reference.</p>
+<p>Only supports: CDS, gene and xRNA features</p>
+<p>reference_features:</p>
+<div class="highlight-python"><div class="highlight"><pre>Elements:
+---------
+
+end:          int
+id:           string
+locus_tag:    string
+product&quot;:     string
+reference_id: string
+sequence:     string
+start:        int
+strand:       int
+translation:  string or null
+
+Example:
+--------
+
+1) CDS
+
+{
+&quot;end&quot;: 12450 ,
+&quot;id&quot;:  &quot;NC_008527.1_LACR_0008_CDS&quot; ,
+&quot;locus_tag&quot;:  &quot;LACR_0008&quot; ,
+&quot;product&quot;:  &quot;XRE family transcriptional regulator&quot; ,
+&quot;reference_id&quot;:  &quot;NC_008527.1&quot; ,
+&quot;sequence&quot;:  &quot;ATGGAAATATCCGAAATAATCAAAGAAAATCGTAAACTCAAAAATCTCAGTCAGGAAGAGTTAGCAAAGGAACTACACATCTCTCGTCAATCTATCTTAAAATGGGAGACAGGAAAATCACTTCCCACCACAGACCAACTTATCTTACTCAGTGAAATTTTCGATTGTTCTTTGGACACGTTGCTCAAAGGTGACAAAAAAATGGAAGAAAAAGTAAAACATGAAATTGATGACAAACGGACCTTAAAGTTAATTTATAAGGTTGGTTGGGGTTTTATTGTTCCCTTACTTTTTATTTTGAAATTTGTTTTACATTTGTTTTGA&quot; ,
+&quot;start&quot;: 12126 ,
+&quot;strand&quot;: 1 ,
+&quot;translation&quot;:  &quot;MEISEIIKENRKLK
+
+2) gene
+
+{
+&quot;end&quot;: 24970 ,
+&quot;id&quot;:  &quot;NC_008527.1_LACR_0018_gene&quot; ,
+&quot;locus_tag&quot;: null ,
+&quot;product&quot;: null ,
+&quot;reference_id&quot;:  &quot;NC_008527.1&quot; ,
+&quot;sequence&quot;:  &quot;ATGAATAACAACAAACAACCAAGACAAGGAAATTTTGTAAAAAATATCTTAATGTGGGTTATATTGGCTATTGTTGTTGTTGTCGGTTTCAATTTCTTCTTCAGTAGTAATCAATCAGGAGTGGATAAAATTAGCTATTCACAATTGATGACTAAACTTGATGATAATAATATTGAAAACGTCACAATGCAACCATCAGATAGCTTAATTACTGTAACAGGTGAGTATAAAAAACCTGTAAAGGTAAAAGGAAAAAACAATTTCCCACTTTTAGGTAATACTACAAGTGAAGTTAAAAACTTCCAAGCTTATATTATTCCAACTGACAGTGTTGTCAAAGATATCCAAAATGCAGCTAAAAGTAATGATGTAAAACTTAGTGTCGTTCAAGCGTCATCAAGTGGTATGTGGGTTCAAATTCTCTCATATATCATCCCAATGATTTTATTTGTTGGTATCTTCTGGCTCATGATGGGTGGAATGGGCGCTCGTGGCGGAGGCGGCGGTGGAAATCCGATGTCCTTCGGTAAATCTCGTGCTAAACAACAAGATGGTAAAACATCAAAAGTTCGTTTTGCTGATGTTGCCGGTTCTGAAGAGGAAAAACAAGAGCTTGTTGAAGTTGTTGACTTCCTTAAAAATCCGAAAAAATATCACGATTTAGGTGCTCGTATCCCAGCAGGTGTTCTCCTTGAAGGCCCTCCGGGTACAGGGAAAACTTTGCTTGCTAAGGCTGTTGCCGGTGAAGCAGGAGTTCCTTTCTATAGTATCTCAGGTTCTGATTTCGTTGAAATGTTTGTCGGAGTCGGGGCTTCACGTGTTCGTGATTTATTCGAAAATGCGAAGAAAACTGCTCCATCAATCATTTTCATCGATGAAATTGATGCTGTTGGTCGCCAACGTGGTGCAGGTTTAGGTGGGGGTAATGATGAACGTGAACAAACCCTCAACCAATTGCTTGTTGAAATGGATGGATTCCAAGACGATGGAAACTCAGTAATCGTTATCGCTGCAACTAACCGTTCAGATGTGCTTGACCCAGCGCTTTTACGTCCAGGTCGTTTTGACCGTAAAGTCTTGGTCGGAGCACCAGATGTTAAAGGTCGTGAAGCTGTCCTTAAAGTTCATGCTAAAAACAAACCTTTAGCAAGTGATGTTGATTTACACACTGTTGCTACACAAACTCCTGGTTATGTCGGAGCTGATTTGGAAAATGTTTTGAATGAAGCTGCTCTTGTTGCTGCACGTCAAAATAAAAAAGAAATCAATGCTGCTGATATTGATGAAGGAATGGACCGTGCAATGGCTGGTCCTGCTAAGAAAGATCGTATTCAATCAATGCGTGAGCGTGAAATCGTGGCTTATCACGAAGCAGGTCATGCTATTGTTGGTCTCGTTCTTGAAAATGGATCTACTGTTCGTAAAGTTACCGTTGTCCCTCGTGGACGTATCGGTGGTTACATGCTAGCTCTTCCAGATGAAGAAATCATGCAACCAACTAATCTTCATCTTCAAGACCAACTTGCCAGCCTTATGGGTGGACGACTTGGTGAAGAAATTGTCTTTGGTGTAGCTACTCCAGGTGCATCAAATGACATTGAAAAAGCAACACACATTGCTCGTTCAATGGTAACTGAATATGGGATGTCTAAGAAACTTGGTATGGTATCTTATGAAGGAGACCATCAAGTATTTATCGGCCGTGACTATGGTCAGACTAAGACTTACTCAGAAGCTACTGCTGTTATGATTGATGATGAAGTGCGTCGTATTCTTGGTGAAGCTTATGACCGTGCTAAAGAAGCAATTGAAACACATCGTGAACAACATAAAGCAATTGCGCAAGCTCTGCTTAAATACGAAACGCTCGATGCGAAACAAATCATGTCGCTCTTTACAACAGGTAAAATGCCTGATGAAGCAGCTGCATCAGAAGTACCAGAACCAAAAACATTTGAAGAATCTCTCAAAGATGCAAATGCGAATGTTGATGATTTTTCAAACATTAATATCTATAATGGTGAAGAAAAAACAGATTCTAAACCAGAAGAAAATAAGGAAAAATCAGAAGATGAAACAGCCAATTAA&quot; ,
+&quot;start&quot;: 22882 ,
+&quot;strand&quot;: 1 ,
+&quot;translation&quot;: null
+}
+
+3) xRNA
+
+{
+&quot;end&quot;: 25518 ,
+&quot;id&quot;:  &quot;NC_008527.1_25445-25518&quot; ,
+&quot;locus_tag&quot;: null ,
+&quot;product&quot;:  &quot;tRNA-Phe&quot; ,
+&quot;reference_id&quot;:  &quot;NC_008527.1&quot; ,
+&quot;sequence&quot;:  &quot;GGCTCGGTAGCTCAGTTGGTAGAGCAATGGATTGAAGCTCCATGTGTCGGCGGTTCGATTCCGTCTCGCGCCA&quot; ,
+&quot;start&quot;: 25445 ,
+&quot;strand&quot;: 1 ,
+&quot;translation&quot;: null
+}
+</pre></div>
+</div>
+</div>
+<div class="section" id="strains-under-investigation">
+<h2>strains_under_investigation<a class="headerlink" href="#strains-under-investigation" title="Permalink to this headline">¶</a></h2>
+<p>Provides information on the strains in this study.</p>
+<p>strains_under_investigation:</p>
+<div class="highlight-python"><div class="highlight"><pre>Elements:
+---------
+
+StrainID: string
+VarCount: int
+id:       string
+
+Example:
+--------
+
+{
+&quot;StrainID&quot;:  &quot;ASCC880397&quot; ,
+&quot;VarCount&quot;: 40797 ,
+&quot;id&quot;:  &quot;ASCC880397&quot;
+}
+</pre></div>
+</div>
+</div>
+<div class="section" id="determined-variants">
+<h2>determined_variants<a class="headerlink" href="#determined-variants" title="Permalink to this headline">¶</a></h2>
+<p>Provides information on the variants called for a mapping run.</p>
+<p>determined_variants:</p>
+<div class="highlight-python"><div class="highlight"><pre>Elements:
+---------
+
+CDSAANum:         int
+CDSBaseNum:       int
+CDSRegion:        string
+ChangeAA:         char
+ChangeBase:       char
+Class:            string
+CorrelatedChange: boolean
+Evidence:         dict
+LocusTag:         string
+Position:         int
+Product:          string
+RefAA:            char
+RefBase:          char
+StrainID:         string
+SubClass:         string
+UncalledBlock:    boolean
+id:               string
+
+Example:
+--------
+
+[{&quot;CDSAANum&quot;:null,&quot;CDSBaseNum&quot;:null,&quot;CDSRegion&quot;:null,&quot;ChangeAA&quot;:null,&quot;ChangeBase&quot;:&quot;A&quot;,&quot;Class&quot;:&quot;substitution&quot;,&quot;CorrelatedChange&quot;:null,&quot;Evidence&quot;:{&quot;A&quot;:252,&quot;T&quot;:1},&quot;LocusTag&quot;:null,&quot;Position&quot;:100230,&quot;Product&quot;:null,&quot;RefAA&quot;:null,&quot;RefBase&quot;:&quot;T&quot;,&quot;StrainID&quot;:&quot;ASCC880030&quot;,&quot;SubClass&quot;:null,&quot;UncalledBlock&quot;:true,&quot;id&quot;:&quot;ASCC880030_NC_008527_100230&quot;}
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">BanzaiDB tables schema</a><ul>
+<li><a class="reference internal" href="#references">references</a></li>
+<li><a class="reference internal" href="#reference-features">reference_features</a></li>
+<li><a class="reference internal" href="#strains-under-investigation">strains_under_investigation</a></li>
+<li><a class="reference internal" href="#determined-variants">determined_variants</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/tables.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">BanzaiDB 0.2.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Mitchell Stanton-Cook.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
