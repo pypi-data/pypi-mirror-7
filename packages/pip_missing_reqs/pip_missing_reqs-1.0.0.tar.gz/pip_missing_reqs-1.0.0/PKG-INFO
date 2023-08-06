@@ -1,0 +1,61 @@
+Metadata-Version: 1.1
+Name: pip_missing_reqs
+Version: 1.0.0
+Summary: Find packages that should be in requirements for a project
+Home-page: https://github.com/r1chardj0n3s/pip_missing_reqs
+Author: Richard Jonees
+Author-email: r1chardj0n3s@gmail.com
+License: MIT
+Description: pip-missing-reqs
+        ================
+        
+        Find packages that should be in requirements for a project.
+        
+        Assuming your project follows a layout like the suggested `sample project`_::
+        
+            setup.py
+            setup.cfg
+            requirements.txt
+            sample/__init__.py
+            sample/sample.py
+            sample/tests/test_sample.py
+        
+        .. _`sample project`: https://packaging.python.org/en/latest/tutorial.html#creating-your-own-project
+        
+        Basic usage, running in your project directory::
+        
+            <activate virtualenv for your project>
+            pip-missing-reqs --ignore-files=sample/tests sample
+        
+        This will find all imports in the code in "sample" and check that the
+        packages those modules belong to are in the requirements.txt file.
+        
+        
+        Sample tox.ini configuration
+        ----------------------------
+        
+        To make your life easier, copy something like this into your tox.ini::
+        
+            [pip-missing-reqs]
+            deps=-rrequirements.txt
+            commands=pip-missing-reqs --ignore-files=sample/tests sample
+        
+        
+        Excluding test files (or others) from this check
+        ------------------------------------------------
+        
+        Your test files will sometimes be present in the same directory as your
+        application source ("sample" in the above examples). The requirements for
+        those tests generally should not be in the requirements.txt file, and you
+        don't want this tool to generate false hits for those.
+        
+        You may exclude those test files from your check using the --ignore-files
+        option.
+        
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Software Development :: Build Tools
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
