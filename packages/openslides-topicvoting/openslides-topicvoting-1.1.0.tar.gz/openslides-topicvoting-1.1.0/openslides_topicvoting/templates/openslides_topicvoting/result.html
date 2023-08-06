@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% load i18n %}
+{% load staticfiles %}
+{% load tags %}
+
+{% block title %}{% trans 'Topicvoting' %} – {% trans 'Results' %} – {{ block.super }}{% endblock %}
+
+{% block content %}
+    <h1>{% trans 'Results' %}
+        <small class="pull-right">
+            <a href="{% url 'topicvoting_category_list' %}" class="btn btn-mini"><i class="icon-chevron-left"></i> {% trans 'Back to overview' %}</a>
+            <a href="{% url 'topicvoting_result_print' %}" class="btn btn-mini"><i class="icon-print"></i> {% trans 'Print all results' %}</a>
+        </small>
+    </h1>
+
+    <h2>{% trans 'Winning topics' %}</h2>
+    <ul>
+        {% for topic in winning_topics %}
+            <li>{{ topic }}</li>
+        {% empty %}
+            {% trans 'No winners available.' %}
+        {% endfor %}
+    </ul>
+
+    <h2>{% trans 'Result table' %}</h2>
+    <table class="table table-striped table-bordered">
+        <caption class="hidden">{% trans 'Results' %}</caption>
+         <tr>
+            <th>{% trans 'Divisor' %}</th>
+            {% for divisor in divisors %}
+                <th>{{ divisor }}</th>
+            {% endfor %}
+        </tr>
+    {% for row in result_table %}
+        {% if row.0 %}
+            <tr>
+                <td>
+                    {{ row.0.topic.category }}
+                    ({{ row.0.topic.category.get_votes_string }})
+                </td>
+                {% for hoechstzahl in row %}
+                    <td{% if hoechstzahl.topic in winning_topics %} style="font-weight:bold"{% endif %}>
+                        {{ hoechstzahl.topic.get_title_with_votes }}<br />{{ hoechstzahl.value|floatformat:2 }}
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endif %}
+    {% endfor %}
+    </table>
+    {% if topic_post_warning %}
+        <p class="badge badge-warning">{% trans 'Attention: There are less topics than posts.' %}</p>
+    {% endif %}
+    {% if runoff_poll_warning %}
+        <p class="badge badge-warning">{% trans 'Attention: There is a runoff poll necessary.' %}</p>
+    {% endif %}
+{% endblock %}

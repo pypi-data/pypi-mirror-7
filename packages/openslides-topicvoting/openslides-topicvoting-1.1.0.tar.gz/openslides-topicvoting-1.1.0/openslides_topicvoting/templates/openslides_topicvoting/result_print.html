@@ -1,0 +1,32 @@
+{% load i18n %}
+{% load tags %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{% trans 'All voting results' %}</title>
+</head>
+<body>
+    <h1>{% trans 'All voting results' %}: {% get_config 'openslides_topicvoting_ballotpaper_title' %}</h1>
+    <hr />
+    {% if runoff_poll_warning %}
+        <p>{% trans 'Attention: There is a runoff poll necessary.' %}</p>
+        <hr />
+    {% endif %}
+    {% for category in category_list %}
+        {% if category.topic_set.all %}
+            <h2>{{ category }}: {{ category.get_votes_string }}</h2>
+            <ul style="list-style:none">
+            {% for topic in category.topic_set.all %}
+                <li style="margin:0.5em 0">
+                    {% if topic in winning_topics %}<strong>{% endif %}
+                    {{ topic.get_title_with_votes }}
+                    {% if topic in winning_topics %}</strong>{% endif %}
+                </li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endfor %}
+</body>
+</html>
