@@ -1,0 +1,332 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>BanzaiDB.parsers &mdash; BanzaiDB 0.1.2 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="BanzaiDB 0.1.2 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">BanzaiDB 0.1.2 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for BanzaiDB.parsers</h1><div class="highlight"><pre>
+<span class="c"># Copyright 2013 Mitchell Stanton-Cook Licensed under the</span>
+<span class="c"># Educational Community License, Version 2.0 (the &quot;License&quot;); you may</span>
+<span class="c"># not use this file except in compliance with the License. You may</span>
+<span class="c"># obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c"># http://www.osedu.org/licenses/ECL-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing,</span>
+<span class="c"># software distributed under the License is distributed on an &quot;AS IS&quot;</span>
+<span class="c"># BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express</span>
+<span class="c"># or implied. See the License for the specific language governing</span>
+<span class="c"># permissions and limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Functions to parse a nesoni report .txt file</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="parse_evidence"><a class="viewcode-back" href="../../BanzaiDB.html#BanzaiDB.parsers.parse_evidence">[docs]</a><span class="k">def</span> <span class="nf">parse_evidence</span><span class="p">(</span><span class="n">evidence</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    From an evidence string/element return a dictionary or obs/counts</span>
+
+<span class="sd">    :param evidence: an evidence string. It looks something like this -</span>
+<span class="sd">                        Ax27 AGCAx1 AGCAATTAATTAAAATAAx</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">obs_count</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">elem</span> <span class="o">=</span> <span class="n">evidence</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">elem</span><span class="p">:</span>
+        <span class="n">obs</span><span class="p">,</span> <span class="n">count</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+        <span class="n">obs_count</span><span class="p">[</span><span class="n">obs</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">obs_count</span>
+
+</div>
+<div class="viewcode-block" id="strip_non_CDS"><a class="viewcode-back" href="../../BanzaiDB.html#BanzaiDB.parsers.strip_non_CDS">[docs]</a><span class="k">def</span> <span class="nf">strip_non_CDS</span><span class="p">(</span><span class="n">protein_line</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Remove STS/misc_feature etc. from the protein line</span>
+
+<span class="sd">    :param protein_line: a parsed protein line as a string</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">protein_line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">protein_line</span> <span class="o">=</span> <span class="n">protein_line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">protein_line</span>
+
+</div>
+<div class="viewcode-block" id="parse_substitution"><a class="viewcode-back" href="../../BanzaiDB.html#BanzaiDB.parsers.parse_substitution">[docs]</a><span class="k">def</span> <span class="nf">parse_substitution</span><span class="p">(</span><span class="n">consequence</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return fields for syn, non-syn or correlated</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">elem</span>       <span class="o">=</span> <span class="n">consequence</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)</span>
+    <span class="n">correlated</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">locus_tag</span>  <span class="o">=</span> <span class="n">elem</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">base</span>       <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
+    <span class="n">codon</span>      <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">6</span><span class="p">])</span>
+    <span class="n">region</span>     <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">sub_type</span>   <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">old_aa</span><span class="p">,</span> <span class="n">new_aa</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+    <span class="c"># Handle non-syn</span>
+    <span class="n">locus_tag</span> <span class="o">=</span> <span class="n">elem</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">elem</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;=&gt;&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">sub_type</span> <span class="o">=</span> <span class="s">&#39;non-synonymous&#39;</span>
+        <span class="n">old_aa</span><span class="p">,</span> <span class="n">new_aa</span> <span class="o">=</span> <span class="n">elem</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;=&gt;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">old_aa</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_aa</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">protein</span> <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">7</span><span class="p">:])</span>
+        <span class="c"># Need to handle correlated non-syn</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c">#CDS YP=&gt;E ECSF_0465 base 379 codon 127 of codons 127..128 hypothetical protein</span>
+            <span class="c">#CDS A=&gt;QR ECSF_0595 base 1527 codon 509 apolipoprotein N-acyltransferase</span>
+            <span class="n">correlated</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">if</span> <span class="n">elem</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;of&#39;</span><span class="p">:</span>
+                <span class="n">region</span>     <span class="o">=</span> <span class="n">elem</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span>
+                <span class="n">protein</span>    <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">10</span><span class="p">:])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">protein</span>    <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">7</span><span class="p">:])</span>
+    <span class="c"># Handle syn</span>
+    <span class="k">elif</span> <span class="n">elem</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;synonymous&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">sub_type</span> <span class="o">=</span> <span class="s">&#39;synonymous&#39;</span>
+        <span class="n">protein</span> <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">7</span><span class="p">:])</span>
+    <span class="c"># Handle correlated (believe these are syn)</span>
+    <span class="k">elif</span> <span class="n">elem</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;frame-shift&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">sub_type</span> <span class="o">=</span> <span class="s">&#39;synonymous&#39;</span>
+        <span class="n">correlated</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="n">region</span>     <span class="o">=</span> <span class="n">elem</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span>
+        <span class="n">protein</span>    <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">10</span><span class="p">:])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;Error in subsitution&quot;</span><span class="p">,</span> <span class="n">elem</span><span class="p">)</span>
+    <span class="c"># Tidy up possible other features</span>
+    <span class="n">protein</span> <span class="o">=</span> <span class="n">strip_non_CDS</span><span class="p">(</span><span class="n">protein</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">sub_type</span><span class="p">,</span> <span class="n">locus_tag</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">codon</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">old_aa</span><span class="p">,</span> <span class="n">new_aa</span><span class="p">,</span> <span class="n">protein</span><span class="p">,</span> <span class="n">correlated</span>
+</div>
+<div class="viewcode-block" id="parse_substitution_misc"><a class="viewcode-back" href="../../BanzaiDB.html#BanzaiDB.parsers.parse_substitution_misc">[docs]</a><span class="k">def</span> <span class="nf">parse_substitution_misc</span><span class="p">(</span><span class="n">consequence</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return fields for syn, non-syn or correlated</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">elem</span>       <span class="o">=</span> <span class="n">consequence</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)</span>
+    <span class="c">#Default: [&#39;gene&#39;, &#39;G=&gt;A&#39;, &#39;GBS222_0094&#39;, &#39;base&#39;, &#39;33&#39;]</span>
+    <span class="n">correlated</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">locus_tag</span>  <span class="o">=</span> <span class="n">elem</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="c"># Handle: [&#39;gene&#39;, &#39;C=&gt;G&#39;, &#39;GBS222_t08&#39;, &#39;base&#39;, &#39;64,&#39;, &#39;tRNA&#39;, &#39;C=&gt;G&#39;, &#39;GBS222_t08&#39;, &#39;base&#39;, &#39;64&#39;, &#39;tRNA-Phe&#39;]</span>
+    <span class="k">if</span> <span class="n">elem</span><span class="p">[</span><span class="mi">4</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;,&#39;</span><span class="p">:</span>
+        <span class="n">elem</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">=</span> <span class="n">elem</span><span class="p">[</span><span class="mi">4</span><span class="p">][:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">base</span>       <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
+    <span class="n">codon</span>      <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">region</span>     <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">sub_type</span>   <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">old_aa</span><span class="p">,</span> <span class="n">new_aa</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+    <span class="n">protein</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">return</span> <span class="n">sub_type</span><span class="p">,</span> <span class="n">locus_tag</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">codon</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">old_aa</span><span class="p">,</span> <span class="n">new_aa</span><span class="p">,</span> <span class="n">protein</span><span class="p">,</span> <span class="n">correlated</span>
+
+</div>
+<div class="viewcode-block" id="parse_insertion"><a class="viewcode-back" href="../../BanzaiDB.html#BanzaiDB.parsers.parse_insertion">[docs]</a><span class="k">def</span> <span class="nf">parse_insertion</span><span class="p">(</span><span class="n">consequence</span><span class="p">):</span>
+    <span class="c"># As minimum length can be 7 (but test for 9)</span>
+    <span class="n">elem</span>       <span class="o">=</span> <span class="n">consequence</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">]</span>
+    <span class="n">correlated</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">locus_tag</span>  <span class="o">=</span> <span class="n">elem</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">base</span>       <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span>
+    <span class="n">region</span>     <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">old_aa</span><span class="p">,</span> <span class="n">new_aa</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+    <span class="c"># Standard. Found two edge cases</span>
+    <span class="c">#[&#39;CDS&#39;, &#39;frame-shift&#39;, &#39;ECSF_0306&#39;, &#39;before&#39;, &#39;base&#39;, &#39;372&#39;, &#39;           codon&#39;, &#39;124&#39;, &#39;of&#39;, &#39;codons&#39;, &#39;124..148&#39;, &#39;truncated&#39;, &#39;propionate&#39;, ....]</span>
+    <span class="c">#[&#39;CDS&#39;, &#39;frame-shift&#39;, &#39;ECSF_1169&#39;, &#39;before&#39;, &#39;base&#39;, &#39;1009&#39;, &#39;before&#39;, &#39;codon&#39;, &#39;337&#39;, &#39;of&#39;, &#39;codons&#39;, &#39;337..466&#39;, &#39;hypothetical&#39;, &#39;protein&#39;]</span>
+    <span class="k">if</span> <span class="n">elem</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;frame-shift&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">elem</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;before&#39;</span><span class="p">:</span>
+            <span class="n">codon</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">protein</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">8</span><span class="p">]),</span> <span class="n">elem</span><span class="p">[</span><span class="mi">11</span><span class="p">],</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">12</span><span class="p">:])</span>
+        <span class="k">elif</span> <span class="n">elem</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;codon&#39;</span><span class="p">:</span>
+            <span class="n">codon</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">protein</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">7</span><span class="p">]),</span> <span class="n">elem</span><span class="p">[</span><span class="mi">10</span><span class="p">],</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">11</span><span class="p">:])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;Error in insertion frame-shift&quot;</span><span class="p">,</span> <span class="n">elem</span><span class="p">)</span>
+    <span class="c"># Correlated. Found 3 edge cases</span>
+    <span class="c">#[&#39;CDS&#39;, &#39;GYR=&gt;EWQ&#39;, &#39;ECSF_1083&#39;, &#39;before&#39;, &#39;base&#39;, &#39;233&#39;,            &#39;codon&#39;, &#39;78&#39;, &#39;  of&#39;, &#39;codons&#39;, &#39;78..80&#39;, &#39;putative&#39;, &#39;phage&#39;, &#39;tail&#39;, &#39;component&#39;]</span>
+    <span class="c">#[&#39;CDS&#39;, &#39;TS=&gt;ED&#39;,   &#39;ECSF_2797&#39;, &#39;before&#39;, &#39;base&#39;, &#39;3730&#39;, &#39;before&#39;, &#39;codon&#39;, &#39;1244&#39;, &#39;of&#39;, &#39;codons&#39;, &#39;1244..1245&#39;, &#39;hypothetical&#39;, &#39;protein&#39;]</span>
+    <span class="c">#[&#39;CDS&#39;, &#39;T=&gt;NT&#39;,   &#39;ECSF_2797&#39;,  &#39;before&#39;, &#39;base&#39;, &#39;389&#39;,            &#39;codon&#39;, &#39;130&#39;, &#39;hypothetical&#39;, &#39;protein&#39;]</span>
+    <span class="k">elif</span> <span class="n">elem</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;=&gt;&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">correlated</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="n">old_aa</span><span class="p">,</span> <span class="n">new_aa</span> <span class="o">=</span> <span class="n">elem</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;=&gt;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">elem</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;before&#39;</span><span class="p">:</span>
+            <span class="n">codon</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">protein</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">8</span><span class="p">]),</span> <span class="n">elem</span><span class="p">[</span><span class="mi">11</span><span class="p">],</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">12</span><span class="p">:])</span>
+        <span class="k">elif</span> <span class="n">elem</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;codons&#39;</span><span class="p">:</span>
+            <span class="n">codon</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">protein</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">7</span><span class="p">]),</span> <span class="n">elem</span><span class="p">[</span><span class="mi">10</span><span class="p">],</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">11</span><span class="p">:])</span>
+        <span class="k">elif</span> <span class="n">elem</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;codon&#39;</span><span class="p">:</span>
+            <span class="n">codon</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">protein</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">7</span><span class="p">]),</span> <span class="bp">None</span><span class="p">,</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">8</span><span class="p">:])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;Error in insertion correlated&quot;</span><span class="p">,</span> <span class="n">elem</span><span class="p">)</span>
+    <span class="c"># Possibly correlated (Possibly where insertion restores previous deletion)</span>
+    <span class="c"># Only 1 edge case. (Did add all 3 above...)</span>
+    <span class="c">#[&#39;CDS&#39;, &#39;synonymous&#39;, &#39;ECSF_0302&#39;, &#39;before&#39;, &#39;base&#39;, &#39;1050&#39;, &#39;codon&#39;, &#39;350&#39;, &#39;putative&#39;, &#39;oxidoreductase&#39;, &#39;&#39;]</span>
+    <span class="k">elif</span> <span class="n">elem</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;synonymous&#39;</span><span class="p">:</span>
+        <span class="n">correlated</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">if</span> <span class="n">elem</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;before&#39;</span><span class="p">:</span>
+            <span class="n">codon</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">protein</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">8</span><span class="p">]),</span> <span class="n">elem</span><span class="p">[</span><span class="mi">11</span><span class="p">],</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">12</span><span class="p">:])</span>
+        <span class="k">elif</span> <span class="n">elem</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;codons&#39;</span><span class="p">:</span>
+            <span class="n">codon</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">protein</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">7</span><span class="p">]),</span> <span class="n">elem</span><span class="p">[</span><span class="mi">10</span><span class="p">],</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">11</span><span class="p">:])</span>
+        <span class="k">elif</span> <span class="n">elem</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;codon&#39;</span><span class="p">:</span>
+            <span class="n">codon</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">protein</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">7</span><span class="p">]),</span> <span class="bp">None</span><span class="p">,</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">8</span><span class="p">:])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;Error in insertion possibly correlated&quot;</span><span class="p">,</span> <span class="n">elem</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;Error in insertion&quot;</span><span class="p">,</span> <span class="n">elem</span><span class="p">)</span>
+    <span class="n">protein</span> <span class="o">=</span> <span class="n">strip_non_CDS</span><span class="p">(</span><span class="n">protein</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">locus_tag</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">codon</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">old_aa</span><span class="p">,</span> <span class="n">new_aa</span><span class="p">,</span> <span class="n">protein</span><span class="p">,</span> <span class="n">correlated</span>
+
+</div>
+<div class="viewcode-block" id="parse_insertion_misc"><a class="viewcode-back" href="../../BanzaiDB.html#BanzaiDB.parsers.parse_insertion_misc">[docs]</a><span class="k">def</span> <span class="nf">parse_insertion_misc</span><span class="p">(</span><span class="n">consequence</span><span class="p">):</span>
+    <span class="n">elem</span>       <span class="o">=</span> <span class="n">consequence</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">]</span>
+    <span class="c"># Default: [&#39;gene&#39;, &#39;-=&gt;ACC&#39;, &#39;GBS222_0005&#39;, &#39;before&#39;, &#39;base&#39;, &#39;105&#39;, &#39;&#39;, &#39;&#39;]</span>
+    <span class="n">correlated</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">locus_tag</span>  <span class="o">=</span> <span class="n">elem</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="c"># Handle: [&#39;gene&#39;, &#39;C=&gt;G&#39;, &#39;GBS222_t08&#39;, &#39;base&#39;, &#39;64,&#39;, &#39;tRNA&#39;, &#39;C=&gt;G&#39;, &#39;GBS222_t08&#39;, &#39;base&#39;, &#39;64&#39;, &#39;tRNA-Phe&#39;]</span>
+    <span class="k">if</span> <span class="n">elem</span><span class="p">[</span><span class="mi">5</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;,&#39;</span><span class="p">:</span>
+        <span class="n">elem</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="o">=</span> <span class="n">elem</span><span class="p">[</span><span class="mi">5</span><span class="p">][:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">base</span>       <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span>
+    <span class="n">region</span>     <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">old_aa</span><span class="p">,</span> <span class="n">new_aa</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+    <span class="n">codon</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">protein</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">return</span> <span class="n">locus_tag</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">codon</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">old_aa</span><span class="p">,</span> <span class="n">new_aa</span><span class="p">,</span> <span class="n">protein</span><span class="p">,</span> <span class="n">correlated</span>
+
+</div>
+<div class="viewcode-block" id="parse_deletion"><a class="viewcode-back" href="../../BanzaiDB.html#BanzaiDB.parsers.parse_deletion">[docs]</a><span class="k">def</span> <span class="nf">parse_deletion</span><span class="p">(</span><span class="n">consequence</span><span class="p">):</span>
+    <span class="c"># As minimum length can be 7 (but test for 9)</span>
+    <span class="n">elem</span> <span class="o">=</span> <span class="n">consequence</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">]</span>
+    <span class="n">correlated</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">locus_tag</span>  <span class="o">=</span> <span class="n">elem</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">base</span>       <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
+    <span class="n">codon</span>      <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">6</span><span class="p">])</span>
+    <span class="n">region</span>     <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">old_aa</span><span class="p">,</span> <span class="n">new_aa</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+    <span class="c"># Standard - found a sinlge edge case...</span>
+    <span class="c"># [&#39;CDS&#39;, &#39;frame-shift&#39;, &#39;ECSF_4268&#39;, &#39;base&#39;, &#39;691&#39;, &#39;codon&#39;, &#39;231&#39;, &#39;of&#39;, &#39;codons&#39;, &#39;229..281&#39;, &#39;hypothetical&#39;, &#39;protein&#39;]</span>
+    <span class="c"># [&#39;CDS&#39;, &#39;frame-shift&#39;, &#39;ECSF_3381&#39;, &#39;base&#39;,&#39;1692   &#39;codon&#39;  &#39;564&#39; hypothetical protein</span>
+
+    <span class="k">if</span> <span class="n">elem</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;frame-shift&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">elem</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;of&#39;</span><span class="p">:</span>
+            <span class="n">region</span>  <span class="o">=</span> <span class="n">elem</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span>
+            <span class="n">protein</span> <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">10</span><span class="p">:])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c">#Could be correlated...?</span>
+            <span class="n">protein</span> <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">7</span><span class="p">:])</span>
+    <span class="c"># Correlated. Two edge cases</span>
+    <span class="c">#[&#39;CDS&#39;, &#39;N=&gt;-&#39;,     &#39;ECSF_3715&#39;, &#39;base&#39;, &#39;235&#39;, &#39;codon&#39;, &#39;79&#39;, &#39;hypothetical&#39;, &#39;protein&#39;]#</span>
+    <span class="c">#[&#39;CDS&#39;, &#39;TTS=&gt;XLP&#39;, &#39;ECSF_4010&#39;, &#39;base&#39;, &#39;192&#39;, &#39;codon&#39;, &#39;64&#39;, &#39;of&#39;, &#39;codons&#39;, &#39;64..66&#39;, &#39;phage&#39;, &#39;protein&#39;]</span>
+    <span class="k">elif</span> <span class="n">elem</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;=&gt;&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">correlated</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="n">old_aa</span><span class="p">,</span> <span class="n">new_aa</span> <span class="o">=</span> <span class="n">elem</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;=&gt;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">elem</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;codons&#39;</span><span class="p">:</span>
+            <span class="n">region</span> <span class="o">=</span> <span class="n">elem</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span>
+            <span class="n">protein</span> <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">10</span><span class="p">:])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">protein</span> <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">7</span><span class="p">:])</span>
+    <span class="c"># Possibly correlated (Possibly where insertion effect  downstream deletion)</span>
+    <span class="c">#[&#39;CDS&#39;, &#39;synonymous&#39;, &#39;L37667&#39;, &#39;base&#39;, &#39;979&#39;, &#39;codon&#39;, &#39;327&#39;, &#39;of&#39;, &#39;codons&#39;, &#39;326..329&#39;, &#39;DNA&#39;, &#39;primase,&#39;, &#39;misc_feature&#39;, &#39;T=&gt;-&#39;, &#39;L37667&#39;, &#39;base&#39;, &#39;937&#39;, &#39;&#39;, &#39;&#39;]</span>
+    <span class="k">elif</span> <span class="n">elem</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;synonymous&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">correlated</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="c"># Think this is WRONG!!!</span>
+        <span class="n">old_aa</span><span class="p">,</span> <span class="n">new_aa</span> <span class="o">=</span> <span class="n">elem</span><span class="p">[</span><span class="mi">13</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;=&gt;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">elem</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;codons&#39;</span><span class="p">:</span>
+            <span class="n">region</span> <span class="o">=</span> <span class="n">elem</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span>
+            <span class="n">protein</span> <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">10</span><span class="p">:])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;New case in deletion&quot;</span><span class="p">,</span> <span class="n">elem</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;Error in deletion&quot;</span><span class="p">,</span> <span class="n">elem</span><span class="p">)</span>
+    <span class="n">protein</span> <span class="o">=</span> <span class="n">strip_non_CDS</span><span class="p">(</span><span class="n">protein</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">locus_tag</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">codon</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">old_aa</span><span class="p">,</span> <span class="n">new_aa</span><span class="p">,</span> <span class="n">protein</span><span class="p">,</span> <span class="n">correlated</span>
+
+</div>
+<div class="viewcode-block" id="parse_deletion_misc"><a class="viewcode-back" href="../../BanzaiDB.html#BanzaiDB.parsers.parse_deletion_misc">[docs]</a><span class="k">def</span> <span class="nf">parse_deletion_misc</span><span class="p">(</span><span class="n">consequence</span><span class="p">):</span>
+    <span class="n">elem</span> <span class="o">=</span> <span class="n">consequence</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">]</span>
+    <span class="c"># Default: [&#39;gene&#39;, &#39;T=&gt;-&#39;, &#39;GBS222_0017&#39;, &#39;base&#39;, &#39;366&#39;, &#39;&#39;, &#39;&#39;]</span>
+    <span class="n">correlated</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">locus_tag</span>  <span class="o">=</span> <span class="n">elem</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="c"># Handle: [&#39;gene&#39;, &#39;G=&gt;-&#39;, &#39;GBS222_r08&#39;, &#39;base&#39;, &#39;2266,&#39;, &#39;rRNA&#39;, &#39;G=&gt;-&#39;, &#39;GBS222_r08&#39;, &#39;base&#39;, &#39;2266&#39;, &#39;23S&#39;, &#39;ribosomal&#39;, &#39;RNA&#39;, &#39;&#39;, &#39;&#39;]</span>
+    <span class="k">if</span> <span class="n">elem</span><span class="p">[</span><span class="mi">4</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;,&#39;</span><span class="p">:</span>
+        <span class="n">elem</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">=</span> <span class="n">elem</span><span class="p">[</span><span class="mi">4</span><span class="p">][:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">base</span>       <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">elem</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
+    <span class="n">codon</span>      <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">region</span>     <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">old_aa</span><span class="p">,</span> <span class="n">new_aa</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+    <span class="n">protein</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">return</span> <span class="n">locus_tag</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">codon</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">old_aa</span><span class="p">,</span> <span class="n">new_aa</span><span class="p">,</span> <span class="n">protein</span><span class="p">,</span> <span class="n">correlated</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">BanzaiDB 0.1.2 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Mitchell Stanton-Cook.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

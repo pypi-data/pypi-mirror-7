@@ -1,0 +1,530 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>BanzaiDB.fabfile.variants &mdash; BanzaiDB 0.1.2 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.1.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="BanzaiDB 0.1.2 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">BanzaiDB 0.1.2 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for BanzaiDB.fabfile.variants</h1><div class="highlight"><pre>
+<span class="c"># Copyright 2013-2014 Mitchell Stanton-Cook Licensed under the</span>
+<span class="c"># Educational Community License, Version 2.0 (the &quot;License&quot;); you may</span>
+<span class="c"># not use this file except in compliance with the License. You may</span>
+<span class="c"># obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c"># http://www.osedu.org/licenses/ECL-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing,</span>
+<span class="c"># software distributed under the License is distributed on an &quot;AS IS&quot;</span>
+<span class="c"># BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express</span>
+<span class="c"># or implied. See the License for the specific language governing</span>
+<span class="c"># permissions and limitations under the License.</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Counter</span>
+<span class="kn">import</span> <span class="nn">ast</span>
+
+<span class="kn">import</span> <span class="nn">rethinkdb</span> <span class="kn">as</span> <span class="nn">r</span>
+<span class="kn">from</span> <span class="nn">fabric.api</span> <span class="kn">import</span> <span class="n">task</span>
+
+<span class="kn">from</span> <span class="nn">BanzaiDB</span> <span class="kn">import</span> <span class="n">database</span>
+<span class="kn">from</span> <span class="nn">BanzaiDB</span> <span class="kn">import</span> <span class="n">converters</span>
+<span class="kn">from</span> <span class="nn">BanzaiDB</span> <span class="kn">import</span> <span class="n">misc</span>
+<span class="kn">from</span> <span class="nn">BanzaiDB</span> <span class="kn">import</span> <span class="n">imaging</span>
+
+<span class="c"># __version__ = 0.1.2</span>
+
+<span class="n">TABLE</span> <span class="o">=</span> <span class="s">&#39;variants&#39;</span>
+
+
+<div class="viewcode-block" id="get_required_strains"><a class="viewcode-back" href="../../../BanzaiDB.fabfile.html#BanzaiDB.fabfile.variants.get_required_strains">[docs]</a><span class="k">def</span> <span class="nf">get_required_strains</span><span class="p">(</span><span class="n">strains</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a list of strains stored in the database if argument strains=None</span>
+
+<span class="sd">    If argument strains=None we actually query the database</span>
+
+<span class="sd">    If argument strains is not None we actually just spit the strain string on</span>
+<span class="sd">    the space delimiter.</span>
+
+<span class="sd">    :param strains: a string of strain IDs</span>
+
+<span class="sd">    :type strains: string or None</span>
+
+<span class="sd">    :returns: a list of strains (if None, those all stored in the database)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">strains_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">with</span> <span class="n">database</span><span class="o">.</span><span class="n">make_connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">connection</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">strains</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">get_strains</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s">&#39;strains&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">pluck</span><span class="p">(</span><span class="s">&#39;StrainID&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">connection</span><span class="p">)</span>
+            <span class="n">strains_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span><span class="p">[</span><span class="s">&#39;StrainID&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;ascii&#39;</span><span class="p">,</span> <span class="s">&#39;ignore&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">get_strains</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">strains_list</span> <span class="o">=</span> <span class="n">strains</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">strains_list</span>
+
+</div>
+<div class="viewcode-block" id="get_num_strains"><a class="viewcode-back" href="../../../BanzaiDB.fabfile.html#BanzaiDB.fabfile.variants.get_num_strains">[docs]</a><span class="k">def</span> <span class="nf">get_num_strains</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the number of strains in the study</span>
+
+<span class="sd">    It will query all strains in the database and will factor if the reference</span>
+<span class="sd">    has been included in the run (will remove it from the count)</span>
+
+<span class="sd">    :returns: the number of strains as an int</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">strains</span> <span class="o">=</span> <span class="n">get_required_strains</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+    <span class="n">strain_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">strains</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">database</span><span class="o">.</span><span class="n">make_connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">connection</span><span class="p">:</span>
+        <span class="c"># In case reference is included in run</span>
+        <span class="c"># Will need to update for multiple runs</span>
+        <span class="n">ref_id</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s">&#39;ref&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">connection</span><span class="p">))[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;id&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">strains</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">ref_id</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">strain_count</span> <span class="o">=</span> <span class="n">strain_count</span><span class="o">-</span><span class="mi">1</span>
+                <span class="k">break</span>
+    <span class="k">return</span> <span class="n">strain_count</span>
+
+</div>
+<div class="viewcode-block" id="filter_counts"><a class="viewcode-back" href="../../../BanzaiDB.fabfile.html#BanzaiDB.fabfile.variants.filter_counts">[docs]</a><span class="k">def</span> <span class="nf">filter_counts</span><span class="p">(</span><span class="n">list_of_elements</span><span class="p">,</span> <span class="n">minimum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Filter out elements in a list that are not observed a minimum of times</span>
+
+<span class="sd">    :param list_of_elements: a list of for example positions</span>
+<span class="sd">    :param minimum: the miminum number of times an value must be observed</span>
+
+<span class="sd">    :type list_of_elements: list</span>
+<span class="sd">    :type minimum: int</span>
+
+<span class="sd">    :returns: a dictionary of value:observation key value pairs</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="n">list_of_elements</span><span class="p">)</span>
+    <span class="n">lookup</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">counts</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;=</span> <span class="n">minimum</span><span class="p">:</span>
+            <span class="n">lookup</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+    <span class="k">return</span> <span class="n">lookup</span>
+
+</div>
+<div class="viewcode-block" id="position_counter"><a class="viewcode-back" href="../../../BanzaiDB.fabfile.html#BanzaiDB.fabfile.variants.position_counter">[docs]</a><span class="k">def</span> <span class="nf">position_counter</span><span class="p">(</span><span class="n">strains</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Pull all the positions that we observe changes</span>
+
+<span class="sd">    .. note::</span>
+
+<span class="sd">        This query could be sped up?</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">database</span><span class="o">.</span><span class="n">make_connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">connection</span><span class="p">:</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">strain</span> <span class="ow">in</span> <span class="n">strains</span><span class="p">:</span>
+            <span class="c"># Get every variant position</span>
+            <span class="n">cursor</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">TABLE</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">({</span><span class="s">&#39;StrainID&#39;</span><span class="p">:</span> <span class="n">strain</span><span class="p">})</span><span class="o">.</span><span class="n">pluck</span><span class="p">(</span>
+                <span class="s">&#39;Position&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">connection</span><span class="p">)</span>
+            <span class="n">cur</span> <span class="o">=</span> <span class="p">[</span><span class="n">strain</span><span class="p">[</span><span class="s">&#39;Position&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">strain</span> <span class="ow">in</span> <span class="n">cursor</span><span class="p">]</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">pos</span><span class="o">+</span><span class="n">cur</span>
+        <span class="n">common</span> <span class="o">=</span> <span class="n">filter_counts</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">strains</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">common</span>
+
+</div>
+<div class="viewcode-block" id="fetch_given_strain_position"><a class="viewcode-back" href="../../../BanzaiDB.fabfile.html#BanzaiDB.fabfile.variants.fetch_given_strain_position">[docs]</a><span class="k">def</span> <span class="nf">fetch_given_strain_position</span><span class="p">(</span><span class="n">strain</span><span class="p">,</span> <span class="n">position</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    With a strainID and a &#39;change&#39; position return known details</span>
+
+<span class="sd">    Prints the position, locus tag, product, class and subclass</span>
+
+<span class="sd">    :param strain: the strain ID</span>
+<span class="sd">    :param position: the position relative to the reference</span>
+
+<span class="sd">    :type strain: string</span>
+<span class="sd">    :type position: int</span>
+
+<span class="sd">    :returns: a dictionary (JSON)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">with</span> <span class="n">database</span><span class="o">.</span><span class="n">make_connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">connection</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">TABLE</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">({</span><span class="s">&#39;StrainID&#39;</span><span class="p">:</span> <span class="n">strain</span><span class="p">,</span> <span class="s">&#39;Position&#39;</span><span class="p">:</span> <span class="n">position</span><span class="p">})</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">connection</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">print</span> <span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s">&#39;Position&#39;</span><span class="p">])</span><span class="o">+</span><span class="s">&quot;,&quot;</span><span class="o">+</span><span class="n">result</span><span class="p">[</span><span class="s">&#39;LocusTag&#39;</span><span class="p">]</span><span class="o">+</span><span class="s">&quot;,&quot;</span><span class="o">+</span><span class="n">result</span><span class="p">[</span><span class="s">&#39;Product&#39;</span><span class="p">]</span><span class="o">+</span><span class="s">&quot;,&quot;</span><span class="o">+</span><span class="n">result</span><span class="p">[</span><span class="s">&#39;Class&#39;</span><span class="p">]</span><span class="o">+</span><span class="s">&quot;,&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s">&#39;SubClass&#39;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+</div>
+<span class="nd">@task</span>
+<div class="viewcode-block" id="get_variants_in_range"><a class="viewcode-back" href="../../../BanzaiDB.fabfile.html#BanzaiDB.fabfile.variants.get_variants_in_range">[docs]</a><span class="k">def</span> <span class="nf">get_variants_in_range</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                          <span class="n">plucking</span><span class="o">=</span><span class="s">&#39;StrainID Position LocusTag Class SubClass&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return all the variants in given [start:end] range (inclusive of)</span>
+
+<span class="sd">    By default: print (in CSV) results with headers:</span>
+<span class="sd">    StrainID, Position, LocusTag, Class, SubClass</span>
+
+<span class="sd">    Examples::</span>
+
+<span class="sd">        # All variants in the 1Kb range of 60K-61K</span>
+<span class="sd">        fab variants.get_variants_in_range:60000,61000</span>
+
+<span class="sd">        #Nail down on a particular position and redefine the output</span>
+<span class="sd">        fab variants.get_variants_in_range:60760,60760,plucking=&#39;StrainID Position Class Product&#39;</span>
+
+<span class="sd">    :param start: the genomic location start</span>
+<span class="sd">    :param end: the genomic location end</span>
+<span class="sd">    :param verbose: [def = True] toggle if printing results</span>
+<span class="sd">    :param plucking: [def = &#39;StrainID Position LocusTag Class SubClass&#39;]</span>
+<span class="sd">                     toggle headers based on table values</span>
+
+<span class="sd">    :returns: List containing JSON elements with the data: &#39;StrainID&#39;,</span>
+<span class="sd">                &#39;Position&#39;, &#39;LocusTag&#39;, &#39;Class&#39;, &#39;SubClass&#39; for each result</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">verbose</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">literal_eval</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">verbose</span><span class="p">))</span>
+    <span class="n">plucking</span> <span class="o">=</span> <span class="n">plucking</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)</span>
+    <span class="n">ROW</span> <span class="o">=</span> <span class="s">&#39;Position&#39;</span>
+    <span class="n">JSON_result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">with</span> <span class="n">database</span><span class="o">.</span><span class="n">make_connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">connection</span><span class="p">:</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">TABLE</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">row</span><span class="p">[</span><span class="n">ROW</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="nb">int</span><span class="p">(</span><span class="n">end</span><span class="p">))</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">row</span><span class="p">[</span><span class="n">ROW</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="nb">int</span><span class="p">(</span><span class="n">start</span><span class="p">))</span><span class="o">.</span><span class="n">pluck</span><span class="p">(</span><span class="n">plucking</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">connection</span><span class="p">)</span>
+        <span class="n">JSON_result</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">document</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cursor</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">idx</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">print</span> <span class="n">converters</span><span class="o">.</span><span class="n">convert_from_JSON_to_CSV</span><span class="p">(</span><span class="n">document</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">print</span> <span class="n">converters</span><span class="o">.</span><span class="n">convert_from_JSON_to_CSV</span><span class="p">(</span><span class="n">document</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+            <span class="n">JSON_result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">document</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">JSON_result</span>
+
+</div>
+<span class="nd">@task</span>
+<div class="viewcode-block" id="get_variants_by_keyword"><a class="viewcode-back" href="../../../BanzaiDB.fabfile.html#BanzaiDB.fabfile.variants.get_variants_by_keyword">[docs]</a><span class="k">def</span> <span class="nf">get_variants_by_keyword</span><span class="p">(</span><span class="n">regular_expression</span><span class="p">,</span> <span class="n">ROW</span><span class="o">=</span><span class="s">&#39;Product&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                            <span class="n">plucking</span><span class="o">=</span><span class="s">&#39;StrainID Position LocusTag Class SubClass&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return variants with a match in the &quot;Product&quot; with the regular_expression</span>
+
+<span class="sd">    Supported regular expression syntax:</span>
+<span class="sd">    https://code.google.com/p/re2/wiki/Syntax</span>
+
+<span class="sd">    By default: print (in CSV) results with headers:</span>
+<span class="sd">    StrainID, Position, LocusTag, Class, SubClass</span>
+
+<span class="sd">    :param regular_expression:</span>
+<span class="sd">    :param ROW: [def = &#39;Product&#39;] toggle searching of other table headers</span>
+<span class="sd">    :param verbose: [def = True] toggle if printing results</span>
+<span class="sd">    :param plucking: [def = &#39;StrainID Position LocusTag Class SubClass&#39;]</span>
+<span class="sd">                    toggle headers based on table headers</span>
+
+<span class="sd">    :returns: List containing JSON elements with the data: &#39;StrainID&#39;,</span>
+<span class="sd">                &#39;Position&#39;, &#39;LocusTag&#39;, &#39;Class&#39;, &#39;SubClass&#39; for each result</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">verbose</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">literal_eval</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">verbose</span><span class="p">))</span>
+    <span class="n">plucking</span> <span class="o">=</span> <span class="n">plucking</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)</span>
+    <span class="n">JSON_result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">with</span> <span class="n">database</span><span class="o">.</span><span class="n">make_connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">connection</span><span class="p">:</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">TABLE</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="n">ROW</span><span class="p">]</span><span class="o">.</span><span class="n">match</span><span class="p">(</span>
+            <span class="n">regular_expression</span><span class="p">))</span><span class="o">.</span><span class="n">pluck</span><span class="p">(</span><span class="n">plucking</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">connection</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">document</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cursor</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">idx</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">print</span> <span class="n">converters</span><span class="o">.</span><span class="n">convert_from_JSON_to_CSV</span><span class="p">(</span><span class="n">document</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">print</span> <span class="n">converters</span><span class="o">.</span><span class="n">convert_from_JSON_to_CSV</span><span class="p">(</span><span class="n">document</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+            <span class="n">JSON_result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">document</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">JSON_result</span>
+
+</div>
+<span class="nd">@task</span>
+<div class="viewcode-block" id="plot_variant_positions"><a class="viewcode-back" href="../../../BanzaiDB.fabfile.html#BanzaiDB.fabfile.variants.plot_variant_positions">[docs]</a><span class="k">def</span> <span class="nf">plot_variant_positions</span><span class="p">(</span><span class="n">strains</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate a PDF of SNP positions for given strains using GenomeDiagram</span>
+
+<span class="sd">    Places the reference features on the outerring</span>
+
+<span class="sd">    User has to provide a space dlimited list of strains (see warning below)</span>
+
+<span class="sd">    .. warning: if you have heaps of variants this will most likely fry you</span>
+<span class="sd">                computer.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">strains</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;all&#39;</span><span class="p">:</span>
+        <span class="n">strains</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">strains</span> <span class="o">=</span> <span class="n">get_required_strains</span><span class="p">(</span><span class="n">strains</span><span class="p">)</span>
+    <span class="n">gd_data</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">with</span> <span class="n">database</span><span class="o">.</span><span class="n">make_connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">connection</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">strain</span> <span class="ow">in</span> <span class="n">strains</span><span class="p">:</span>
+            <span class="n">hits</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">TABLE</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s">&#39;StrainID&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">match</span><span class="p">(</span>
+                <span class="n">strain</span><span class="p">))</span><span class="o">.</span><span class="n">pluck</span><span class="p">(</span><span class="s">&#39;Position&#39;</span><span class="p">,</span> <span class="s">&#39;Class&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">connection</span><span class="p">)</span>
+            <span class="n">feat</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">hit</span> <span class="ow">in</span> <span class="n">hits</span><span class="p">:</span>
+                <span class="n">cur</span> <span class="o">=</span> <span class="n">hit</span><span class="p">[</span><span class="s">&#39;Position&#39;</span><span class="p">]</span>
+                <span class="n">feat</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">misc</span><span class="o">.</span><span class="n">create_feature</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="n">cur</span><span class="p">,</span> <span class="n">hit</span><span class="p">[</span><span class="s">&#39;Class&#39;</span><span class="p">],</span> <span class="n">strand</span><span class="o">=</span><span class="bp">None</span><span class="p">))</span>
+            <span class="n">gd_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">feat</span><span class="p">)</span>
+    <span class="n">imaging</span><span class="o">.</span><span class="n">plot_SNPs</span><span class="p">(</span><span class="n">gd_data</span><span class="p">,</span> <span class="n">strains</span><span class="p">)</span>
+
+</div>
+<span class="nd">@task</span>
+<div class="viewcode-block" id="variant_hotspots"><a class="viewcode-back" href="../../../BanzaiDB.fabfile.html#BanzaiDB.fabfile.variants.variant_hotspots">[docs]</a><span class="k">def</span> <span class="nf">variant_hotspots</span><span class="p">(</span><span class="n">most_prevalent</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the (default = 100) prevalent variant positions</span>
+
+<span class="sd">    Example usage::</span>
+
+<span class="sd">        fab variants.variant_hotspots</span>
+<span class="sd">        fab variants.variant_hotspots:250</span>
+
+<span class="sd">    :param most_prevalent: [def = 100]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">verbose</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">literal_eval</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">verbose</span><span class="p">))</span>
+    <span class="n">most_prevalent</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">most_prevalent</span><span class="p">)</span>
+    <span class="n">ROW</span> <span class="o">=</span> <span class="s">&#39;Position&#39;</span>
+    <span class="c"># Fetch &amp; store all positions</span>
+    <span class="k">with</span> <span class="n">database</span><span class="o">.</span><span class="n">make_connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">connection</span><span class="p">:</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">TABLE</span><span class="p">)</span><span class="o">.</span><span class="n">pluck</span><span class="p">(</span><span class="n">ROW</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">connection</span><span class="p">)</span>
+        <span class="n">positions</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">e</span><span class="p">[</span><span class="n">ROW</span><span class="p">])</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">cursor</span><span class="p">]</span>
+        <span class="c"># Count occurences at positions</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="n">positions</span><span class="p">)</span>
+    <span class="n">mp</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">most_common</span><span class="p">(</span><span class="n">most_prevalent</span><span class="p">)</span>
+    <span class="c"># Now extract out</span>
+    <span class="n">header</span> <span class="o">=</span> <span class="s">&quot;Counts,Position,LocusTag,Product&quot;</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="k">print</span> <span class="n">header</span>
+    <span class="k">with</span> <span class="n">database</span><span class="o">.</span><span class="n">make_connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">connection</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">mp</span><span class="p">:</span>
+            <span class="n">first_hit</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">TABLE</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">row</span><span class="p">[</span><span class="n">ROW</span><span class="p">]</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">element</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span><span class="o">.</span><span class="n">pluck</span><span class="p">(</span><span class="s">&#39;Position&#39;</span><span class="p">,</span> <span class="s">&#39;LocusTag&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">connection</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">product</span> <span class="o">=</span> <span class="s">&#39;&quot;&#39;</span><span class="o">+</span><span class="nb">list</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s">&#39;ref_feat&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">({</span><span class="s">&#39;LocusTag&#39;</span><span class="p">:</span> <span class="n">first_hit</span><span class="p">[</span><span class="s">&#39;LocusTag&#39;</span><span class="p">]})</span><span class="o">.</span><span class="n">pluck</span><span class="p">(</span><span class="s">&#39;Product&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">connection</span><span class="p">))[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;Product&#39;</span><span class="p">]</span><span class="o">+</span><span class="s">&#39;&quot;&#39;</span>
+            <span class="n">cur</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%i</span><span class="s">,</span><span class="si">%i</span><span class="s">,</span><span class="si">%s</span><span class="s">,</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">element</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">first_hit</span><span class="p">[</span><span class="s">&#39;Position&#39;</span><span class="p">],</span> <span class="n">first_hit</span><span class="p">[</span><span class="s">&#39;LocusTag&#39;</span><span class="p">],</span> <span class="n">product</span><span class="p">)</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cur</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="k">print</span> <span class="n">cur</span>
+    <span class="k">return</span> <span class="n">results</span>
+
+</div>
+<span class="nd">@task</span>
+<div class="viewcode-block" id="variant_positions_within_atleast"><a class="viewcode-back" href="../../../BanzaiDB.fabfile.html#BanzaiDB.fabfile.variants.variant_positions_within_atleast">[docs]</a><span class="k">def</span> <span class="nf">variant_positions_within_atleast</span><span class="p">(</span><span class="n">minimum_at_position</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return positions that have at least this many variants</span>
+
+<span class="sd">    By default the minimum number will be equal to all the strains in the</span>
+<span class="sd">    study.</span>
+
+<span class="sd">    Example usage:</span>
+
+<span class="sd">        fab variants.variant_positions_within_atleast</span>
+<span class="sd">        fab variants.variant_positions_within_atleast:16</span>
+
+<span class="sd">    :param minimum_at_position: [def = None] minimum number of variants</span>
+<span class="sd">                                conserved in N strains at this positions</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">verbose</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">literal_eval</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">verbose</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">minimum_at_position</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">minimum_at_position</span> <span class="o">=</span> <span class="n">get_num_strains</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">minimum_at_position</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">minimum_at_position</span><span class="p">)</span>
+    <span class="n">ROW</span> <span class="o">=</span> <span class="s">&#39;Position&#39;</span>
+    <span class="c"># Fetch &amp; store all positions</span>
+    <span class="k">with</span> <span class="n">database</span><span class="o">.</span><span class="n">make_connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">connection</span><span class="p">:</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">TABLE</span><span class="p">)</span><span class="o">.</span><span class="n">pluck</span><span class="p">(</span><span class="n">ROW</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">connection</span><span class="p">)</span>
+        <span class="n">positions</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">e</span><span class="p">[</span><span class="n">ROW</span><span class="p">])</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">cursor</span><span class="p">]</span>
+    <span class="c"># Count occurences at positions</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="n">positions</span><span class="p">)</span>
+    <span class="c"># Filter out those below threshold</span>
+    <span class="n">lookup</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">counts</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;=</span> <span class="n">minimum_at_position</span><span class="p">:</span>
+            <span class="n">lookup</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+    <span class="c"># Now extract out</span>
+    <span class="n">header</span> <span class="o">=</span> <span class="s">&quot;Position,LocusTag,Product&quot;</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="k">print</span> <span class="n">header</span>
+    <span class="k">with</span> <span class="n">database</span><span class="o">.</span><span class="n">make_connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">connection</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">lookup</span><span class="p">:</span>
+            <span class="n">first_hit</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">TABLE</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">row</span><span class="p">[</span><span class="n">ROW</span><span class="p">]</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">element</span><span class="p">))</span><span class="o">.</span><span class="n">pluck</span><span class="p">(</span><span class="s">&#39;Position&#39;</span><span class="p">,</span> <span class="s">&#39;LocusTag&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">connection</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">product</span> <span class="o">=</span> <span class="s">&#39;&quot;&#39;</span><span class="o">+</span><span class="nb">list</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s">&#39;ref_feat&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">({</span><span class="s">&#39;LocusTag&#39;</span><span class="p">:</span> <span class="n">first_hit</span><span class="p">[</span><span class="s">&#39;LocusTag&#39;</span><span class="p">]})</span><span class="o">.</span><span class="n">pluck</span><span class="p">(</span><span class="s">&#39;Product&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">connection</span><span class="p">))[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;Product&#39;</span><span class="p">]</span><span class="o">+</span><span class="s">&#39;&quot;&#39;</span>
+            <span class="n">cur</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%i</span><span class="s">,</span><span class="si">%s</span><span class="s">,</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">first_hit</span><span class="p">[</span><span class="s">&#39;Position&#39;</span><span class="p">],</span> <span class="n">first_hit</span><span class="p">[</span><span class="s">&#39;LocusTag&#39;</span><span class="p">],</span> <span class="n">product</span><span class="p">)</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cur</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="k">print</span> <span class="n">cur</span>
+    <span class="k">return</span> <span class="n">results</span>
+
+</div>
+<span class="nd">@task</span>
+<div class="viewcode-block" id="strain_variant_stats"><a class="viewcode-back" href="../../../BanzaiDB.fabfile.html#BanzaiDB.fabfile.variants.strain_variant_stats">[docs]</a><span class="k">def</span> <span class="nf">strain_variant_stats</span><span class="p">(</span><span class="n">strains</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Print the number of variants and variant classes for all strains</span>
+
+<span class="sd">    Example usage::</span>
+
+<span class="sd">        fab variants.strain_variant_stats</span>
+<span class="sd">        fab variants.strain_variant_stats:&#39;AEXT01-FSL-S3-026 QMA0306.gz&#39;</span>
+
+<span class="sd">    :param strains: [def = None] Print info about all strains unless given a</span>
+<span class="sd">                    space delimited list of specific strains</span>
+<span class="sd">    :param verbose: [def = True] print to STDOUT</span>
+
+<span class="sd">    :returns: a list of results in CSV</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">verbose</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">literal_eval</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">verbose</span><span class="p">))</span>
+    <span class="n">strains</span> <span class="o">=</span> <span class="n">get_required_strains</span><span class="p">(</span><span class="n">strains</span><span class="p">)</span>
+    <span class="n">header</span> <span class="o">=</span> <span class="s">&quot;StrainID,Total Variants,Substitution,Insertion,Deletion&quot;</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="k">print</span> <span class="n">header</span>
+    <span class="k">with</span> <span class="n">database</span><span class="o">.</span><span class="n">make_connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">connection</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">strain</span> <span class="ow">in</span> <span class="n">strains</span><span class="p">:</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">tmp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">TABLE</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">({</span><span class="s">&#39;StrainID&#39;</span><span class="p">:</span> <span class="n">strain</span><span class="p">})</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">connection</span><span class="p">))</span>
+            <span class="n">classes</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;substitution&#39;</span><span class="p">,</span> <span class="s">&#39;insertion&#39;</span><span class="p">,</span> <span class="s">&#39;deletion&#39;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">classes</span><span class="p">:</span>
+                <span class="n">tmp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">TABLE</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">({</span><span class="s">&#39;StrainID&#39;</span><span class="p">:</span> <span class="n">strain</span><span class="p">,</span>
+                                                  <span class="s">&#39;Class&#39;</span><span class="p">:</span> <span class="n">c</span><span class="p">})</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">connection</span><span class="p">))</span>
+            <span class="n">cur</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">,</span><span class="si">%i</span><span class="s">,</span><span class="si">%i</span><span class="s">,</span><span class="si">%i</span><span class="s">,</span><span class="si">%i</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">strain</span><span class="p">,</span> <span class="n">tmp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tmp</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">tmp</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">tmp</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="k">print</span> <span class="n">cur</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cur</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">results</span>
+
+</div>
+<div class="viewcode-block" id="list_membership"><a class="viewcode-back" href="../../../BanzaiDB.fabfile.html#BanzaiDB.fabfile.variants.list_membership">[docs]</a><span class="k">def</span> <span class="nf">list_membership</span><span class="p">(</span><span class="n">combined</span><span class="p">,</span> <span class="n">list1</span><span class="p">,</span> <span class="n">list2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">in1</span><span class="p">,</span> <span class="n">in2</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">combined</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">list1</span><span class="p">:</span>
+            <span class="n">in1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">list2</span><span class="p">:</span>
+            <span class="n">in2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&quot;Error&quot;</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">in1</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="nb">int</span><span class="p">),</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">in2</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="extract_positions"><a class="viewcode-back" href="../../../BanzaiDB.fabfile.html#BanzaiDB.fabfile.variants.extract_positions">[docs]</a><span class="k">def</span> <span class="nf">extract_positions</span><span class="p">(</span><span class="n">position_list</span><span class="p">,</span> <span class="n">strain_set</span><span class="p">,</span> <span class="n">verbose</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">with</span> <span class="n">database</span><span class="o">.</span><span class="n">make_connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">connection</span><span class="p">:</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">TABLE</span><span class="p">)</span><span class="o">.</span><span class="n">get_all</span><span class="p">(</span><span class="o">*</span><span class="n">position_list</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s">&quot;Position&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="p">{</span><span class="s">&#39;StrainID&#39;</span><span class="p">:</span> <span class="n">strain_set</span><span class="p">[</span><span class="mi">0</span><span class="p">]})</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">connection</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">defining_snp</span> <span class="ow">in</span> <span class="n">cursor</span><span class="p">:</span>
+            <span class="n">cur</span> <span class="o">=</span> <span class="s">&#39;&quot;</span><span class="si">%s</span><span class="s">&quot;,</span><span class="si">%i</span><span class="s">,</span><span class="si">%s</span><span class="s">,&quot;</span><span class="si">%s</span><span class="s">&quot;,</span><span class="si">%s</span><span class="s">,</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">strain_set</span><span class="p">),</span>
+                                             <span class="n">defining_snp</span><span class="p">[</span><span class="s">&#39;Position&#39;</span><span class="p">],</span>
+                                             <span class="n">defining_snp</span><span class="p">[</span><span class="s">&#39;LocusTag&#39;</span><span class="p">],</span>
+                                             <span class="n">defining_snp</span><span class="p">[</span><span class="s">&#39;Product&#39;</span><span class="p">],</span>
+                                             <span class="n">defining_snp</span><span class="p">[</span><span class="s">&#39;Class&#39;</span><span class="p">],</span>
+                                             <span class="n">defining_snp</span><span class="p">[</span><span class="s">&#39;SubClass&#39;</span><span class="p">])</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">defining_snp</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="k">print</span> <span class="n">cur</span>
+    <span class="k">return</span> <span class="n">results</span>
+
+</div>
+<span class="nd">@task</span>
+<div class="viewcode-block" id="what_differentiates_strains"><a class="viewcode-back" href="../../../BanzaiDB.fabfile.html#BanzaiDB.fabfile.variants.what_differentiates_strains">[docs]</a><span class="k">def</span> <span class="nf">what_differentiates_strains</span><span class="p">(</span><span class="n">strain_set1</span><span class="p">,</span> <span class="n">strain_set2</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get variant **positions** that differentiate two given sets of strains</span>
+
+<span class="sd">    Example usage::</span>
+
+<span class="sd">        fab $BANZAIDB_LOCATION/fabfile/&#39; variants.what_differentiates_strains:ASCC880519,&#39;ASCC881171 ASCC881475&#39;</span>
+
+<span class="sd">    :param strain_set1: a space delimited string of strains that belong in set1</span>
+<span class="sd">    :param strain_set2: a space delimited string of strains that belong in set2</span>
+
+<span class="sd">    :returns: 2 lists of JSON that define the variants that are unique to set1</span>
+<span class="sd">              (1st) and set2 (2nd)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">header</span> <span class="o">=</span> <span class="s">&#39;Exclusivity,Position,LocusTag,Product,Class,SubClass&#39;</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="k">print</span> <span class="n">header</span>
+    <span class="n">strain_set1</span><span class="p">,</span> <span class="n">strain_set2</span> <span class="o">=</span> <span class="n">strain_set1</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">),</span> <span class="n">strain_set2</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)</span>
+    <span class="c"># Positions only considered if found in all in the strains within the set</span>
+    <span class="n">r1</span><span class="p">,</span> <span class="n">r2</span> <span class="o">=</span> <span class="n">position_counter</span><span class="p">(</span><span class="n">strain_set1</span><span class="p">),</span> <span class="n">position_counter</span><span class="p">(</span><span class="n">strain_set2</span><span class="p">)</span>
+    <span class="c"># A new set with elements in either r1 or r2 but not both</span>
+    <span class="n">unique</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">r1</span><span class="p">)</span><span class="o">.</span><span class="n">symmetric_difference</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">r2</span><span class="p">))</span>
+    <span class="n">sin1</span><span class="p">,</span> <span class="n">sin2</span> <span class="o">=</span> <span class="n">list_membership</span><span class="p">(</span><span class="n">unique</span><span class="p">,</span> <span class="n">r1</span><span class="p">,</span> <span class="n">r2</span><span class="p">)</span>
+    <span class="c"># if verbose:</span>
+    <span class="c">#    print &quot;%i variants are unique to set 1&quot; % (len(sin1))</span>
+    <span class="c">#    print &quot;%i variants are unique to set 1&quot; % (len(sin2))</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">extract_positions</span><span class="p">(</span><span class="n">sin1</span><span class="p">,</span> <span class="n">strain_set1</span><span class="p">,</span> <span class="n">verbose</span><span class="p">),</span>
+            <span class="n">extract_positions</span><span class="p">(</span><span class="n">sin2</span><span class="p">,</span> <span class="n">strain_set2</span><span class="p">,</span> <span class="n">verbose</span><span class="p">))</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">BanzaiDB 0.1.2 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Mitchell Stanton-Cook.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

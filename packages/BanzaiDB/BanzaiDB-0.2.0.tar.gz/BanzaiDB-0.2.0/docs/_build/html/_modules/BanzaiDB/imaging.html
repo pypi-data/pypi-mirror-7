@@ -1,0 +1,180 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>BanzaiDB.imaging &mdash; BanzaiDB 0.1.2 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="BanzaiDB 0.1.2 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">BanzaiDB 0.1.2 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for BanzaiDB.imaging</h1><div class="highlight"><pre>
+<span class="c"># Copyright 2013-2014 Mitchell Stanton-Cook Licensed under the</span>
+<span class="c"># Educational Community License, Version 2.0 (the &quot;License&quot;); you may</span>
+<span class="c"># not use this file except in compliance with the License. You may</span>
+<span class="c"># obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c"># http://www.osedu.org/licenses/ECL-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing,</span>
+<span class="c"># software distributed under the License is distributed on an &quot;AS IS&quot;</span>
+<span class="c"># BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express</span>
+<span class="c"># or implied. See the License for the specific language governing</span>
+<span class="c"># permissions and limitations under the License.</span>
+
+
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">from</span> <span class="nn">reportlab.lib.units</span> <span class="kn">import</span> <span class="n">cm</span>
+<span class="kn">from</span> <span class="nn">Bio.Graphics</span> <span class="kn">import</span> <span class="n">GenomeDiagram</span>
+
+
+<span class="n">SEED</span> <span class="o">=</span> <span class="mi">99</span>
+
+
+<div class="viewcode-block" id="hsv_to_rgb"><a class="viewcode-back" href="../../BanzaiDB.html#BanzaiDB.imaging.hsv_to_rgb">[docs]</a><span class="k">def</span> <span class="nf">hsv_to_rgb</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert HSV to RGB</span>
+
+<span class="sd">    :param h: hue</span>
+<span class="sd">    :param s: saturation</span>
+<span class="sd">    :param v: value</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">h_i</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">h</span><span class="o">*</span><span class="mi">6</span><span class="p">)</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">h</span><span class="o">*</span><span class="mi">6</span> <span class="o">-</span> <span class="n">h_i</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">v</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">s</span><span class="p">)</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">v</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">f</span><span class="o">*</span><span class="n">s</span><span class="p">)</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">v</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">f</span><span class="p">)</span> <span class="o">*</span> <span class="n">s</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">h_i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span>
+    <span class="k">elif</span> <span class="n">h_i</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">q</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">p</span>
+    <span class="k">elif</span> <span class="n">h_i</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span>
+    <span class="k">elif</span> <span class="n">h_i</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">v</span>
+    <span class="k">elif</span> <span class="n">h_i</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span>
+    <span class="k">elif</span> <span class="n">h_i</span> <span class="o">==</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">v</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">q</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&quot;Problem&quot;</span>
+    <span class="k">return</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">r</span><span class="o">*</span><span class="mi">256</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">g</span><span class="o">*</span><span class="mi">256</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">b</span><span class="o">*</span><span class="mi">256</span><span class="p">)]</span>
+
+</div>
+<div class="viewcode-block" id="gen_colors"><a class="viewcode-back" href="../../BanzaiDB.html#BanzaiDB.imaging.gen_colors">[docs]</a><span class="k">def</span> <span class="nf">gen_colors</span><span class="p">(</span><span class="n">number</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate a list of length number of distinct &quot;good&quot; random colors</span>
+
+<span class="sd">    Based on http://martin.ankerl.com/</span>
+<span class="sd">        2009/12/09/how-to-create-random-colors-programmatically/</span>
+
+<span class="sd">    :param number: int</span>
+<span class="sd">    :type: int</span>
+<span class="sd">    :rtype: a list of lists in the form: [[243, 137, 121], [232, 121, 243],</span>
+<span class="sd">                                          [216, 121, 243]]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rgb_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">golden_ratio_conjugate</span> <span class="o">=</span> <span class="mf">0.618033988749895</span>
+    <span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">SEED</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">number</span><span class="p">)):</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span><span class="o">+</span><span class="n">golden_ratio_conjugate</span><span class="p">)</span> <span class="o">%</span> <span class="mi">1</span>
+        <span class="n">rgb</span> <span class="o">=</span> <span class="n">hsv_to_rgb</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">)</span>
+        <span class="n">rgb_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rgb</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rgb_list</span>
+
+</div>
+<div class="viewcode-block" id="plot_SNPs"><a class="viewcode-back" href="../../BanzaiDB.html#BanzaiDB.imaging.plot_SNPs">[docs]</a><span class="k">def</span> <span class="nf">plot_SNPs</span><span class="p">(</span><span class="n">snp_features</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Using GenomeDiagram from Biopython generate a SNP position plot_SNPs</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">gdd</span> <span class="o">=</span> <span class="n">GenomeDiagram</span><span class="o">.</span><span class="n">Diagram</span><span class="p">(</span><span class="s">&#39;SNP Diagram&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">track</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">snp_features</span><span class="p">):</span>
+        <span class="n">gdt_features</span> <span class="o">=</span> <span class="n">gdd</span><span class="o">.</span><span class="n">new_track</span><span class="p">(</span><span class="n">idx</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">greytrack</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">labels</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+        <span class="n">gds_features</span> <span class="o">=</span> <span class="n">gdt_features</span><span class="o">.</span><span class="n">new_set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">track</span><span class="p">:</span>
+            <span class="n">gds_features</span><span class="o">.</span><span class="n">add_feature</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span>
+    <span class="n">gdd</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">format</span><span class="o">=</span><span class="s">&#39;circular&#39;</span><span class="p">,</span> <span class="n">pagesize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="o">*</span><span class="n">cm</span><span class="p">,</span> <span class="mi">15</span><span class="o">*</span><span class="n">cm</span><span class="p">),</span> <span class="n">track_size</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
+    <span class="n">gdd</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;GD_labels_default.pdf&quot;</span><span class="p">,</span> <span class="s">&quot;pdf&quot;</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">BanzaiDB 0.1.2 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Mitchell Stanton-Cook.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
