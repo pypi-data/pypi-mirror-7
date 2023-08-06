@@ -1,0 +1,19 @@
+PySeleniumFox
+=============
+
+Install:
+
+pip install pyseleniumfox
+
+Use:
+
+'''
+from selenium import webdriver
+import pyseleniumfox
+
+driver = webdriver.Firefox(pyseleniumfox.Profile())
+
+# Write your tests
+'''
+
+Your preconfigured firefox profile with the selenium IDE in python mode is now usable.
