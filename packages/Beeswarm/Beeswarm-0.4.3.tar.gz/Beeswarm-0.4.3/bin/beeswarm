@@ -1,0 +1,145 @@
+# !/usr/bin/env python
+# Copyright (C) 2013 Johnny Vestergaard <jkv@unixcluster.dk>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+import gevent
+import gevent.monkey
+
+gevent.monkey.patch_all()
+
+import logging
+import json
+from argparse import ArgumentParser
+import sys
+import os
+
+from gevent import Greenlet
+
+import beeswarm
+from beeswarm.drones.drone import Drone
+from beeswarm.drones.honeypot.honeypot import Honeypot
+from beeswarm.server.server import Server
+from beeswarm.drones.client.client import Client
+from beeswarm.errors import ConfigNotFound
+from beeswarm.shared.asciify import asciify
+from beeswarm.shared.helpers import is_url, extract_config_from_api
+
+
+logger = logging.getLogger()
+
+
+def setuplogging(logfile, verbose):
+    """
+        Sets up logging to the logfiles/console.
+    :param logfile: Path of the file to write logs to.
+    :param verbose: If True, enables verbose logging.
+    """
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG)
+
+    formatter = logging.Formatter('%(asctime)-15s (%(name)s) %(message)s')
+
+    if verbose:
+        loglevel = logging.DEBUG
+    else:
+        loglevel = logging.INFO
+
+    console_log = logging.StreamHandler()
+    console_log.addFilter(LogFilter())
+    console_log.setLevel(loglevel)
+    console_log.setFormatter(formatter)
+    root_logger.addHandler(console_log)
+
+    file_log = logging.FileHandler(logfile)
+    file_log.setLevel(logging.DEBUG)
+    file_log.setFormatter(formatter)
+    root_logger.addHandler(file_log)
+
+
+class LogFilter(logging.Filter):
+    def filter(self, rec):
+        if rec.name == 'paramiko.transport':
+            return False
+        else:
+            return True
+
+
+if __name__ == '__main__':
+    parser = ArgumentParser(description='Beeswarm')
+
+    group = parser.add_argument_group()
+    group.add_argument('-ho', '--honeypot', action='store_true', help='Starts beeswarm in honeypot mode.')
+    group.add_argument('-fe', '--client', action='store_true', help='Starts beeswarm in client mode.')
+    group.add_argument('-se', '--server', action='store_true', help='Starts beeswarm in server mode.')
+
+    parser.add_argument('--config', dest='configurl', default='', help='Configuration URL to the server service.')
+    parser.add_argument('--workdir', dest='workdir', default=os.getcwd())
+    parser.add_argument('--logfile', dest='logfile', default='beeswarm.log')
+    parser.add_argument('-v', '--verbose', action='store_true', default=False, help='Logs debug messages.')
+    parser.add_argument('--customize', action='store_true', default=False,
+                        help='Asks for specific network and certificate information on the first run.')
+    args = parser.parse_args()
+
+    setuplogging(args.logfile, args.verbose)
+    mode = None
+    config = None
+    config_file = None
+    logger.info('Initializing BeeSwarm version {0}'.format(beeswarm.version))
+
+    if is_url(args.configurl):
+        # meh, MiTM problem here... Acceptable? Workaround?
+        # maybe print fingerprint on the web ui and let user verify manually?
+        config_extracted = extract_config_from_api(args.configurl)
+        if not config_extracted:
+            logger.error('Error while extracting configuration from {0}, please make sure that the correct url was '
+                         'provided.'.format(args.configurl))
+            sys.exit(1)
+
+    if os.path.isfile('beeswarmcfg.json'):
+        with open('beeswarmcfg.json', 'r') as config_file:
+            config = json.load(config_file, object_hook=asciify)
+            if 'general' in config:
+                _mode = config['general']['mode']
+                if _mode == 'server':
+                    mode = Server
+                else:
+                    mode = Drone
+    elif args.honeypot:
+        mode = Honeypot
+    elif args.client:
+        mode = Client
+    elif args.server:
+        mode = Server
+    else:
+        parser.print_help()
+        sys.exit(1)
+
+    try:
+        m = mode(args.workdir, config, customize=args.customize)
+    except ConfigNotFound as ex:
+        logger.error(ex)
+        sys.exit(ex)
+
+    mode_greenlet = Greenlet.spawn(m.start)
+    gevent.sleep()
+
+    try:
+        gevent.joinall([mode_greenlet])
+    except KeyboardInterrupt as ex:
+        m.stop()
+    finally:
+        gevent.joinall([mode_greenlet], 5)
+        # Restore previous terminal state
