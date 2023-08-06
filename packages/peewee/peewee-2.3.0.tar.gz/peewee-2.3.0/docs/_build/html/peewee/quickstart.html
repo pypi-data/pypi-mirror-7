@@ -1,0 +1,389 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Quickstart &mdash; peewee 2.3.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.3.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="peewee 2.3.0 documentation" href="../index.html" />
+    <link rel="next" title="Example app" href="example.html" />
+    <link rel="prev" title="Installing and Testing" href="installation.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="example.html" title="Example app"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="installation.html" title="Installing and Testing"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">peewee 2.3.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="quickstart">
+<span id="id1"></span><h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h1>
+<p>This document presents a brief, high-level overview of Peewee&#8217;s primary features. This guide will cover:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#model-definition"><em>Model Definition</em></a></li>
+<li><a class="reference internal" href="#storing-data"><em>Storing data</em></a></li>
+<li><a class="reference internal" href="#retrieving-data"><em>Retrieving Data</em></a></li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If you&#8217;d like something a bit more meaty, there is a thorough tutorial on
+<a class="reference internal" href="example.html#example-app"><em>creating a &#8220;twitter&#8221;-style web app</em></a> using peewee and the
+Flask framework.</p>
+</div>
+<p>I <strong>strongly</strong> recommend opening an interactive shell session and running the code. That way you can get a feel for typing in queries.</p>
+<div class="section" id="model-definition">
+<span id="id2"></span><h2>Model Definition<a class="headerlink" href="#model-definition" title="Permalink to this headline">¶</a></h2>
+<p>Each Model class maps directly to a database table, and each field maps to a column on that table. Each model instance corresponds to a row in the table.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">peewee</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">db</span> <span class="o">=</span> <span class="n">SqliteDatabase</span><span class="p">(</span><span class="s">&#39;people.db&#39;</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">CharField</span><span class="p">()</span>
+    <span class="n">birthday</span> <span class="o">=</span> <span class="n">DateField</span><span class="p">()</span>
+    <span class="n">is_relative</span> <span class="o">=</span> <span class="n">BooleanField</span><span class="p">()</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">database</span> <span class="o">=</span> <span class="n">db</span> <span class="c"># This model uses the &quot;people.db&quot; database.</span>
+</pre></div>
+</div>
+<p>There are lots of <a class="reference internal" href="models.html#fields"><em>field types</em></a> suitable for storing various types of data. Peewee handles converting between <em>pythonic</em> values those used by the database, so you can use Python types in your code without having to worry.</p>
+<p>Things get interesting when we set up relationships between models using foreign keys. This is easy to do with peewee:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">Pet</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">owner</span> <span class="o">=</span> <span class="n">ForeignKeyField</span><span class="p">(</span><span class="n">Person</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s">&#39;pets&#39;</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">CharField</span><span class="p">()</span>
+    <span class="n">animal_type</span> <span class="o">=</span> <span class="n">CharField</span><span class="p">()</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">database</span> <span class="o">=</span> <span class="n">db</span> <span class="c"># this model uses the people database</span>
+</pre></div>
+</div>
+<p>Now that we have our models, let&#8217;s create the tables in the database that will store our data. This will create the tables with the appropriate columns, indexes, sequences, and foreign key constraints:</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">db</span><span class="o">.</span><span class="n">create_tables</span><span class="p">([</span><span class="n">Person</span><span class="p">,</span> <span class="n">Pet</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="storing-data">
+<span id="id3"></span><h2>Storing data<a class="headerlink" href="#storing-data" title="Permalink to this headline">¶</a></h2>
+<p>Let&#8217;s begin by populating the database with some people. We will use the <a class="reference internal" href="api.html#Model.save" title="Model.save"><tt class="xref py py-meth docutils literal"><span class="pre">save()</span></tt></a> and <a class="reference internal" href="api.html#Model.create" title="Model.create"><tt class="xref py py-meth docutils literal"><span class="pre">create()</span></tt></a> methods to add and update people&#8217;s records.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">date</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">uncle_bob</span> <span class="o">=</span> <span class="n">Person</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;Bob&#39;</span><span class="p">,</span> <span class="n">birthday</span><span class="o">=</span><span class="n">date</span><span class="p">(</span><span class="mi">1960</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span> <span class="n">is_relative</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">uncle_bob</span><span class="o">.</span><span class="n">save</span><span class="p">()</span> <span class="c"># bob is now stored in the database</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">When you call <a class="reference internal" href="api.html#Model.save" title="Model.save"><tt class="xref py py-meth docutils literal"><span class="pre">save()</span></tt></a>, the number of rows modified is returned.</p>
+</div>
+<p>You can also add a person by calling the <a class="reference internal" href="api.html#Model.create" title="Model.create"><tt class="xref py py-meth docutils literal"><span class="pre">create()</span></tt></a> method, which returns a model instance:</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">grandma</span> <span class="o">=</span> <span class="n">Person</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;Grandma&#39;</span><span class="p">,</span> <span class="n">birthday</span><span class="o">=</span><span class="n">date</span><span class="p">(</span><span class="mi">1935</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">is_relative</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">herb</span> <span class="o">=</span> <span class="n">Person</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;Herb&#39;</span><span class="p">,</span> <span class="n">birthday</span><span class="o">=</span><span class="n">date</span><span class="p">(</span><span class="mi">1950</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="n">is_relative</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To update a row, modify the model instance and call <a class="reference internal" href="api.html#Model.save" title="Model.save"><tt class="xref py py-meth docutils literal"><span class="pre">save()</span></tt></a> to persist the changes. Here we will change Grandma&#8217;s name and then save the changes in the database:</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">grandma</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s">&#39;Grandma L.&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">grandma</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>  <span class="c"># Update grandma&#39;s name in the database.</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+<p>Now we have stored 3 people in the database. Let&#8217;s give them some pets. Grandma doesn&#8217;t like animals in the house, so she won&#8217;t have any, but Herb is an animal lover:</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bob_kitty</span> <span class="o">=</span> <span class="n">Pet</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">owner</span><span class="o">=</span><span class="n">uncle_bob</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&#39;Kitty&#39;</span><span class="p">,</span> <span class="n">animal_type</span><span class="o">=</span><span class="s">&#39;cat&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">herb_fido</span> <span class="o">=</span> <span class="n">Pet</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">owner</span><span class="o">=</span><span class="n">herb</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&#39;Fido&#39;</span><span class="p">,</span> <span class="n">animal_type</span><span class="o">=</span><span class="s">&#39;dog&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">herb_mittens</span> <span class="o">=</span> <span class="n">Pet</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">owner</span><span class="o">=</span><span class="n">herb</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&#39;Mittens&#39;</span><span class="p">,</span> <span class="n">animal_type</span><span class="o">=</span><span class="s">&#39;cat&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">herb_mittens_jr</span> <span class="o">=</span> <span class="n">Pet</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">owner</span><span class="o">=</span><span class="n">herb</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&#39;Mittens Jr&#39;</span><span class="p">,</span> <span class="n">animal_type</span><span class="o">=</span><span class="s">&#39;cat&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>After a long full life, Mittens sickens and dies. We need to remove him from the database:</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">herb_mittens</span><span class="o">.</span><span class="n">delete_instance</span><span class="p">()</span> <span class="c"># he had a great life</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The return value of <a class="reference internal" href="api.html#Model.delete_instance" title="Model.delete_instance"><tt class="xref py py-meth docutils literal"><span class="pre">delete_instance()</span></tt></a> is the number of rows removed from the database.</p>
+</div>
+<p>Uncle Bob decides that too many animals have been dying at Herb&#8217;s house, so he adopts Fido:</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">herb_fido</span><span class="o">.</span><span class="n">owner</span> <span class="o">=</span> <span class="n">uncle_bob</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">herb_fido</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bob_fido</span> <span class="o">=</span> <span class="n">herb_fido</span> <span class="c"># rename our variable for clarity</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="retrieving-data">
+<span id="id4"></span><h2>Retrieving Data<a class="headerlink" href="#retrieving-data" title="Permalink to this headline">¶</a></h2>
+<p>The real strength of our database is in how it allows us to retrieve data through <em>queries</em>. Relational databases are excellent for making ad-hoc queries.</p>
+<div class="section" id="getting-single-records">
+<h3>Getting single records<a class="headerlink" href="#getting-single-records" title="Permalink to this headline">¶</a></h3>
+<p>Let&#8217;s retrieve Grandma&#8217;s record from the database. To get a single record from the database, use <a class="reference internal" href="api.html#SelectQuery.get" title="SelectQuery.get"><tt class="xref py py-meth docutils literal"><span class="pre">SelectQuery.get()</span></tt></a>:</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">grandma</span> <span class="o">=</span> <span class="n">Person</span><span class="o">.</span><span class="n">select</span><span class="p">()</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">Person</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s">&#39;Grandma L.&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>We can also use the equivalent shorthand <a class="reference internal" href="api.html#Model.get" title="Model.get"><tt class="xref py py-meth docutils literal"><span class="pre">Model.get()</span></tt></a>:</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">grandma</span> <span class="o">=</span> <span class="n">Person</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">Person</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s">&#39;Grandma L.&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="lists-of-records">
+<h3>Lists of records<a class="headerlink" href="#lists-of-records" title="Permalink to this headline">¶</a></h3>
+<p>Let&#8217;s list all the people in the database:</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">person</span> <span class="ow">in</span> <span class="n">Person</span><span class="o">.</span><span class="n">select</span><span class="p">():</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">person</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">person</span><span class="o">.</span><span class="n">is_relative</span>
+<span class="gp">...</span>
+<span class="go">Bob True</span>
+<span class="go">Grandma L. True</span>
+<span class="go">Herb False</span>
+</pre></div>
+</div>
+<p>Let&#8217;s list all the cats and their owner&#8217;s name:</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">query</span> <span class="o">=</span> <span class="n">Pet</span><span class="o">.</span><span class="n">select</span><span class="p">()</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">Pet</span><span class="o">.</span><span class="n">animal_type</span> <span class="o">==</span> <span class="s">&#39;cat&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">pet</span> <span class="ow">in</span> <span class="n">query</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">pet</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">pet</span><span class="o">.</span><span class="n">owner</span><span class="o">.</span><span class="n">name</span>
+<span class="gp">...</span>
+<span class="go">Kitty Bob</span>
+<span class="go">Mittens Jr Herb</span>
+</pre></div>
+</div>
+<p>There is a big problem with the previous query: because we are accessing <tt class="docutils literal"><span class="pre">pet.owner.name</span></tt> and we did not select this value in our original query, peewee will have to perform an additional query to retrieve the pet&#8217;s owner. This behavior is referred to as <a class="reference internal" href="querying.html#nplusone"><em>N+1</em></a> and it should generally be avoided.</p>
+<p>We can avoid the extra queries by selecting both <em>Pet</em> and <em>Person</em>, and adding a <em>join</em>.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">query</span> <span class="o">=</span> <span class="p">(</span><span class="n">Pet</span>
+<span class="gp">... </span>         <span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">Pet</span><span class="p">,</span> <span class="n">Person</span><span class="p">)</span>
+<span class="gp">... </span>         <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">Person</span><span class="p">)</span>
+<span class="gp">... </span>         <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">Pet</span><span class="o">.</span><span class="n">animal_type</span> <span class="o">==</span> <span class="s">&#39;cat&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">pet</span> <span class="ow">in</span> <span class="n">query</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">pet</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">pet</span><span class="o">.</span><span class="n">owner</span><span class="o">.</span><span class="n">name</span>
+<span class="gp">...</span>
+<span class="go">Kitty Bob</span>
+<span class="go">Mittens Jr Herb</span>
+</pre></div>
+</div>
+<p>Let&#8217;s get all the pets owned by Bob:</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">pet</span> <span class="ow">in</span> <span class="n">Pet</span><span class="o">.</span><span class="n">select</span><span class="p">()</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">Person</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">Person</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s">&#39;Bob&#39;</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">pet</span><span class="o">.</span><span class="n">name</span>
+<span class="gp">...</span>
+<span class="go">Kitty</span>
+<span class="go">Fido</span>
+</pre></div>
+</div>
+<p>We can do another cool thing here to get bob&#8217;s pets. Since we already have an object to represent Bob, we can do this instead:</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">pet</span> <span class="ow">in</span> <span class="n">Pet</span><span class="o">.</span><span class="n">select</span><span class="p">()</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">Pet</span><span class="o">.</span><span class="n">owner</span> <span class="o">==</span> <span class="n">uncle_bob</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">pet</span><span class="o">.</span><span class="n">name</span>
+</pre></div>
+</div>
+<p>Let&#8217;s make sure these are sorted alphabetically by adding an <a class="reference internal" href="api.html#SelectQuery.order_by" title="SelectQuery.order_by"><tt class="xref py py-meth docutils literal"><span class="pre">order_by()</span></tt></a> clause:</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">pet</span> <span class="ow">in</span> <span class="n">Pet</span><span class="o">.</span><span class="n">select</span><span class="p">()</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">Pet</span><span class="o">.</span><span class="n">owner</span> <span class="o">==</span> <span class="n">uncle_bob</span><span class="p">)</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">Pet</span><span class="o">.</span><span class="n">name</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">pet</span><span class="o">.</span><span class="n">name</span>
+<span class="gp">...</span>
+<span class="go">Fido</span>
+<span class="go">Kitty</span>
+</pre></div>
+</div>
+<p>Let&#8217;s list all the people now, youngest to oldest:</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">person</span> <span class="ow">in</span> <span class="n">Person</span><span class="o">.</span><span class="n">select</span><span class="p">()</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">Person</span><span class="o">.</span><span class="n">birthday</span><span class="o">.</span><span class="n">desc</span><span class="p">()):</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">person</span><span class="o">.</span><span class="n">name</span>
+<span class="gp">...</span>
+<span class="go">Bob</span>
+<span class="go">Herb</span>
+<span class="go">Grandma L.</span>
+</pre></div>
+</div>
+<p>Now let&#8217;s list all the people <em>and</em> some info about their pets:</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">person</span> <span class="ow">in</span> <span class="n">Person</span><span class="o">.</span><span class="n">select</span><span class="p">():</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">person</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">person</span><span class="o">.</span><span class="n">pets</span><span class="o">.</span><span class="n">count</span><span class="p">(),</span> <span class="s">&#39;pets&#39;</span>
+<span class="gp">... </span>    <span class="k">for</span> <span class="n">pet</span> <span class="ow">in</span> <span class="n">person</span><span class="o">.</span><span class="n">pets</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="k">print</span> <span class="s">&#39;    &#39;</span><span class="p">,</span> <span class="n">pet</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">pet</span><span class="o">.</span><span class="n">animal_type</span>
+<span class="gp">...</span>
+<span class="go">Bob 2 pets</span>
+<span class="go">    Kitty cat</span>
+<span class="go">    Fido dog</span>
+<span class="go">Grandma L. 0 pets</span>
+<span class="go">Herb 1 pets</span>
+<span class="go">    Mittens Jr cat</span>
+</pre></div>
+</div>
+<p>Once again we&#8217;ve run into a classic example of <a class="reference internal" href="querying.html#nplusone"><em>N+1</em></a> query behavior. We can avoid this by performing a <em>JOIN</em> and aggregating the records:</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">subquery</span> <span class="o">=</span> <span class="n">Pet</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">fn</span><span class="o">.</span><span class="n">COUNT</span><span class="p">(</span><span class="n">Pet</span><span class="o">.</span><span class="n">id</span><span class="p">))</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">Pet</span><span class="o">.</span><span class="n">owner</span> <span class="o">==</span> <span class="n">Person</span><span class="o">.</span><span class="n">id</span><span class="p">)</span><span class="o">.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">query</span> <span class="o">=</span> <span class="p">(</span><span class="n">Person</span>
+<span class="gp">... </span>         <span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">Person</span><span class="p">,</span> <span class="n">Pet</span><span class="p">,</span> <span class="n">subquery</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s">&#39;pet_count&#39;</span><span class="p">))</span>
+<span class="gp">... </span>         <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">Pet</span><span class="p">,</span> <span class="n">JOIN_LEFT_OUTER</span><span class="p">)</span>
+<span class="gp">... </span>         <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">Person</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">person</span> <span class="ow">in</span> <span class="n">query</span><span class="o">.</span><span class="n">aggregate_rows</span><span class="p">():</span>  <span class="c"># Note the `aggregate_rows()` call.</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">person</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">person</span><span class="o">.</span><span class="n">pet_count</span><span class="p">,</span> <span class="s">&#39;pets&#39;</span>
+<span class="gp">... </span>    <span class="k">for</span> <span class="n">pet</span> <span class="ow">in</span> <span class="n">person</span><span class="o">.</span><span class="n">pets</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="k">print</span> <span class="s">&#39;    &#39;</span><span class="p">,</span> <span class="n">pet</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">pet</span><span class="o">.</span><span class="n">animal_type</span>
+<span class="gp">...</span>
+<span class="go">Bob 2 pets</span>
+<span class="go">     Kitty cat</span>
+<span class="go">     Fido dog</span>
+<span class="go">Grandma L. 0 pets</span>
+<span class="go">Herb 1 pets</span>
+<span class="go">     Mittens Jr cat</span>
+</pre></div>
+</div>
+<p>Even thought we created the subquery separately, <strong>only one</strong> query is actually executed.</p>
+<p>Finally, let&#8217;s do a complicated one. Let&#8217;s get all the people whose birthday was
+either:</p>
+<ul class="simple">
+<li>before 1940 (grandma)</li>
+<li>after 1959 (bob)</li>
+</ul>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">d1940</span> <span class="o">=</span> <span class="n">date</span><span class="p">(</span><span class="mi">1940</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d1960</span> <span class="o">=</span> <span class="n">date</span><span class="p">(</span><span class="mi">1960</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">query</span> <span class="o">=</span> <span class="p">(</span><span class="n">Person</span>
+<span class="gp">... </span>         <span class="o">.</span><span class="n">select</span><span class="p">()</span>
+<span class="gp">... </span>         <span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">Person</span><span class="o">.</span><span class="n">birthday</span> <span class="o">&lt;</span> <span class="n">d1940</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">Person</span><span class="o">.</span><span class="n">birthday</span> <span class="o">&gt;</span> <span class="n">d1960</span><span class="p">)))</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">person</span> <span class="ow">in</span> <span class="n">query</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">person</span><span class="o">.</span><span class="n">name</span>
+<span class="gp">...</span>
+<span class="go">Bob</span>
+<span class="go">Grandma L.</span>
+</pre></div>
+</div>
+<p>Now let&#8217;s do the opposite. People whose birthday is between 1940 and 1960:</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">query</span> <span class="o">=</span> <span class="p">(</span><span class="n">Person</span>
+<span class="gp">... </span>         <span class="o">.</span><span class="n">select</span><span class="p">()</span>
+<span class="gp">... </span>         <span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">Person</span><span class="o">.</span><span class="n">birthday</span> <span class="o">&gt;</span> <span class="n">d1940</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">Person</span><span class="o">.</span><span class="n">birthday</span> <span class="o">&lt;</span> <span class="n">d1960</span><span class="p">)))</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">person</span> <span class="ow">in</span> <span class="n">query</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">person</span><span class="o">.</span><span class="n">name</span>
+<span class="gp">...</span>
+<span class="go">Herb</span>
+</pre></div>
+</div>
+<p>One last query. This will use a SQL function to find all people whose names start with either an upper or lower-case <em>G</em>:</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expression</span> <span class="o">=</span> <span class="p">(</span><span class="n">fn</span><span class="o">.</span><span class="n">Lower</span><span class="p">(</span><span class="n">fn</span><span class="o">.</span><span class="n">Substr</span><span class="p">(</span><span class="n">Person</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">==</span> <span class="s">&#39;g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">person</span> <span class="ow">in</span> <span class="n">Person</span><span class="o">.</span><span class="n">select</span><span class="p">()</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">expression</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">person</span><span class="o">.</span><span class="n">name</span>
+<span class="gp">...</span>
+<span class="go">Grandma L.</span>
+</pre></div>
+</div>
+<p>This is just the basics! You can make your queries as complex as you like.</p>
+<p>All the other SQL clauses are available as well, such as:</p>
+<ul class="simple">
+<li><a class="reference internal" href="api.html#SelectQuery.group_by" title="SelectQuery.group_by"><tt class="xref py py-meth docutils literal"><span class="pre">group_by()</span></tt></a></li>
+<li><a class="reference internal" href="api.html#SelectQuery.having" title="SelectQuery.having"><tt class="xref py py-meth docutils literal"><span class="pre">having()</span></tt></a></li>
+<li><a class="reference internal" href="api.html#SelectQuery.limit" title="SelectQuery.limit"><tt class="xref py py-meth docutils literal"><span class="pre">limit()</span></tt></a> and <a class="reference internal" href="api.html#SelectQuery.offset" title="SelectQuery.offset"><tt class="xref py py-meth docutils literal"><span class="pre">offset()</span></tt></a></li>
+</ul>
+<p>Check the documentation on <a class="reference internal" href="querying.html#querying"><em>Querying</em></a> for more info.</p>
+</div>
+</div>
+<div class="section" id="working-with-existing-databases">
+<h2>Working with existing databases<a class="headerlink" href="#working-with-existing-databases" title="Permalink to this headline">¶</a></h2>
+<p>If you already have a database, you can autogenerate peewee models using <a class="reference internal" href="playhouse.html#pwiz"><em>pwiz, a model generator</em></a>. For instance, if I have a postgresql database named <em>charles_blog</em>, I might run:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">pwiz.py -e postgresql charles_blog &gt; blog_models.py</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="what-next">
+<h2>What next?<a class="headerlink" href="#what-next" title="Permalink to this headline">¶</a></h2>
+<p>That&#8217;s it for the quickstart. If you want to look at a full web-app, check out the <a class="reference internal" href="example.html#example-app"><em>Example app</em></a>.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Quickstart</a><ul>
+<li><a class="reference internal" href="#model-definition">Model Definition</a></li>
+<li><a class="reference internal" href="#storing-data">Storing data</a></li>
+<li><a class="reference internal" href="#retrieving-data">Retrieving Data</a><ul>
+<li><a class="reference internal" href="#getting-single-records">Getting single records</a></li>
+<li><a class="reference internal" href="#lists-of-records">Lists of records</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#working-with-existing-databases">Working with existing databases</a></li>
+<li><a class="reference internal" href="#what-next">What next?</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="installation.html"
+                        title="previous chapter">Installing and Testing</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="example.html"
+                        title="next chapter">Example app</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/peewee/quickstart.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="example.html" title="Example app"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="installation.html" title="Installing and Testing"
+             >previous</a> |</li>
+        <li><a href="../index.html">peewee 2.3.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright charles leifer.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,551 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Managing your Database &mdash; peewee 2.3.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.3.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="peewee 2.3.0 documentation" href="../index.html" />
+    <link rel="next" title="Models and Fields" href="models.html" />
+    <link rel="prev" title="Example app" href="example.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="models.html" title="Models and Fields"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="example.html" title="Example app"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">peewee 2.3.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="managing-your-database">
+<span id="databases"></span><h1>Managing your Database<a class="headerlink" href="#managing-your-database" title="Permalink to this headline">¶</a></h1>
+<p>This document describes how to perform typical database-related tasks with peewee. Throughout this document we will use the following example models:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">peewee</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">username</span> <span class="o">=</span> <span class="n">CharField</span><span class="p">(</span><span class="n">unique</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">Tweet</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="n">ForeignKeyField</span><span class="p">(</span><span class="n">User</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s">&#39;tweets&#39;</span><span class="p">)</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="n">TextField</span><span class="p">()</span>
+    <span class="n">created_date</span> <span class="o">=</span> <span class="n">DateTimeField</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">)</span>
+    <span class="n">is_published</span> <span class="o">=</span> <span class="n">BooleanField</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="section" id="creating-a-database-connection-and-tables">
+<h2>Creating a database connection and tables<a class="headerlink" href="#creating-a-database-connection-and-tables" title="Permalink to this headline">¶</a></h2>
+<p>While it is not necessary to explicitly connect to the database before using it, managing connections explicitly is a good practice. This way if the connection fails, the exception can be caught during the <em>connect</em> step, rather than some arbitrary time later when a query is executed.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">database</span> <span class="o">=</span> <span class="n">SqliteDatabase</span><span class="p">(</span><span class="s">&#39;my_app.db&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">database</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>To use this database with your models, set the <tt class="docutils literal"><span class="pre">database</span></tt> attribute on an inner <a class="reference internal" href="models.html#model-options"><em>Meta</em></a> class:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">some_field</span> <span class="o">=</span> <span class="n">CharField</span><span class="p">()</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">database</span> <span class="o">=</span> <span class="n">database</span>
+</pre></div>
+</div>
+<p><strong>Best practice:</strong> define a base model class that points at the database object you wish to use, and then all your models will extend it:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">database</span> <span class="o">=</span> <span class="n">SqliteDatabase</span><span class="p">(</span><span class="s">&#39;my_app.db&#39;</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">BaseModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">database</span> <span class="o">=</span> <span class="n">database</span>
+
+<span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">username</span> <span class="o">=</span> <span class="n">CharField</span><span class="p">()</span>
+
+<span class="k">class</span> <span class="nc">Tweet</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="n">ForeignKeyField</span><span class="p">(</span><span class="n">User</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s">&#39;tweets&#39;</span><span class="p">)</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="n">TextField</span><span class="p">()</span>
+    <span class="c"># etc, etc</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Remember to specify a database on your model classes, otherwise peewee will
+fall back to a default sqlite database named &#8220;peewee.db&#8221;.</p>
+</div>
+</div>
+<div class="section" id="using-postgresql">
+<span id="id1"></span><h2>Using Postgresql<a class="headerlink" href="#using-postgresql" title="Permalink to this headline">¶</a></h2>
+<p>To connect to a Postgresql database, we will use <a class="reference internal" href="api.html#PostgresqlDatabase" title="PostgresqlDatabase"><tt class="xref py py-class docutils literal"><span class="pre">PostgresqlDatabase</span></tt></a>. The first parameter is always the name of the database, and after that you can specify arbitrary <a class="reference external" href="http://initd.org/psycopg/docs/module.html#psycopg2.connect">psycopg2 parameters</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">psql_db</span> <span class="o">=</span> <span class="n">PostgresqlDatabase</span><span class="p">(</span><span class="s">&#39;my_database&#39;</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="s">&#39;postgres&#39;</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">BaseModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A base model that will use our Postgresql database&quot;&quot;&quot;</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">database</span> <span class="o">=</span> <span class="n">psql_db</span>
+
+<span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">username</span> <span class="o">=</span> <span class="n">CharField</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The <a class="reference internal" href="playhouse.html#playhouse"><em>Playhouse, a collection of addons</em></a> contains a <a class="reference internal" href="playhouse.html#postgres-ext"><em>Postgresql extension module</em></a> which provides many postgres-specific features such as:</p>
+<ul class="simple">
+<li><a class="reference internal" href="playhouse.html#pgarrays"><em>Arrays</em></a></li>
+<li><a class="reference internal" href="playhouse.html#hstore"><em>HStore</em></a></li>
+<li><a class="reference internal" href="playhouse.html#pgjson"><em>JSON</em></a></li>
+<li><a class="reference internal" href="playhouse.html#server-side-cursors"><em>Server-side cursors</em></a></li>
+<li>And more!</li>
+</ul>
+<p>If you would like to use these awesome features, use the <a class="reference internal" href="playhouse.html#PostgresqlExtDatabase" title="PostgresqlExtDatabase"><tt class="xref py py-class docutils literal"><span class="pre">PostgresqlExtDatabase</span></tt></a> from the <tt class="docutils literal"><span class="pre">playhouse.postgres_ext</span></tt> module:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">playhouse.postgres_ext</span> <span class="kn">import</span> <span class="n">PostgresqlExtDatabase</span>
+
+<span class="n">psql_db</span> <span class="o">=</span> <span class="n">PostgresqlExtDatabase</span><span class="p">(</span><span class="s">&#39;my_database&#39;</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="s">&#39;postgres&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="using-sqlite">
+<span id="id2"></span><h2>Using SQLite<a class="headerlink" href="#using-sqlite" title="Permalink to this headline">¶</a></h2>
+<p>To connect to a SQLite database, we will use <a class="reference internal" href="api.html#SqliteDatabase" title="SqliteDatabase"><tt class="xref py py-class docutils literal"><span class="pre">SqliteDatabase</span></tt></a>. The first parameter is the filename containing the database, or the string <em>:memory:</em> to create an in-memory database. After the database filename, you can specify arbitrary <a class="reference external" href="https://docs.python.org/2/library/sqlite3.html#sqlite3.connect">sqlite3 parameters</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">sqlite_db</span> <span class="o">=</span> <span class="n">SqliteDatabase</span><span class="p">(</span><span class="s">&#39;my_app.db&#39;</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">BaseModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A base model that will use our Sqlite database.&quot;&quot;&quot;</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">database</span> <span class="o">=</span> <span class="n">sqlite_db</span>
+
+<span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">username</span> <span class="o">=</span> <span class="n">CharField</span><span class="p">()</span>
+    <span class="c"># etc, etc</span>
+</pre></div>
+</div>
+<p>The <a class="reference internal" href="playhouse.html#playhouse"><em>Playhouse, a collection of addons</em></a> contains a <a class="reference internal" href="playhouse.html#sqlite-ext"><em>SQLite extension module</em></a> which provides many SQLite-specific features such as:</p>
+<ul class="simple">
+<li><a class="reference internal" href="playhouse.html#sqlite-fts"><em>Full-text search</em></a></li>
+<li>Support for custom functions, aggregates and collations</li>
+<li>Advanced transaction support</li>
+<li>And more!</li>
+</ul>
+<p>If you would like to use these awesome features, use the <a class="reference internal" href="playhouse.html#SqliteExtDatabase" title="SqliteExtDatabase"><tt class="xref py py-class docutils literal"><span class="pre">SqliteExtDatabase</span></tt></a> from the <tt class="docutils literal"><span class="pre">playhouse.sqlite_ext</span></tt> module:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">playhouse.sqlite_ext</span> <span class="kn">import</span> <span class="n">SqliteExtDatabase</span>
+
+<span class="n">sqlite_db</span> <span class="o">=</span> <span class="n">SqliteExtDatabase</span><span class="p">(</span><span class="s">&#39;my_app.db&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Peewee also comes with an alternate SQLite database that uses <a class="reference internal" href="playhouse.html#apsw"><em>apsw, an advanced sqlite driver</em></a>, an advanced Python SQLite driver. More information on APSW can be obtained on the <a class="reference external" href="https://code.google.com/p/apsw/">APSW project website</a>. APSW provides special features like:</p>
+<ul class="simple">
+<li>Virtual tables, virtual file-systems, Blob I/O, backups and file control.</li>
+<li>Connections can be shared across threads without any additional locking.</li>
+<li>Transactions are managed explicitly by your code.</li>
+<li>Transactions can be nested.</li>
+<li>Unicode is handled <em>correctly</em>.</li>
+<li>APSW is faster that the standard library sqlite3 module.</li>
+</ul>
+<p>If you would like to use APSW, use the <a class="reference internal" href="playhouse.html#APSWDatabase" title="APSWDatabase"><tt class="xref py py-class docutils literal"><span class="pre">APSWDatabase</span></tt></a> from the <cite>apsw_ext</cite> module:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">playhouse.apsw_ext</span> <span class="kn">import</span> <span class="n">APSWDatabase</span>
+
+<span class="n">apsw_db</span> <span class="o">=</span> <span class="n">APSWDatabase</span><span class="p">(</span><span class="s">&#39;my_app.db&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="using-berkeleydb">
+<span id="id3"></span><h2>Using BerkeleyDB<a class="headerlink" href="#using-berkeleydb" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="playhouse.html#playhouse"><em>playhouse</em></a> contains a special extension module for using a <a class="reference internal" href="playhouse.html#berkeleydb"><em>BerkeleyDB database</em></a>. BerkeleyDB can be compiled with a SQLite-compatible API, then the python SQLite driver can be compiled to use the Berkeley version of SQLite.</p>
+<p>To simplify this process, you can use the <tt class="docutils literal"><span class="pre">berkeley_build.sh</span></tt> script found in the <tt class="docutils literal"><span class="pre">playhouse</span></tt> directory or find instructions in <a class="reference external" href="http://charlesleifer.com/blog/building-the-python-sqlite-driver-for-use-with-berkeleydb/">this blog post</a>.</p>
+<p>To connect to a BerkeleyDB database, we will use <a class="reference internal" href="playhouse.html#BerkeleyDatabase" title="BerkeleyDatabase"><tt class="xref py py-class docutils literal"><span class="pre">BerkeleyDatabase</span></tt></a>. Like <a class="reference internal" href="api.html#SqliteDatabase" title="SqliteDatabase"><tt class="xref py py-class docutils literal"><span class="pre">SqliteDatabase</span></tt></a>, the first parameter is the filename containing the database or the string <em>:memory:</em> to create an in-memory database.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">playhouse.berkeleydb</span> <span class="kn">import</span> <span class="n">BerkeleyDatabase</span>
+
+<span class="n">berkeley_db</span> <span class="o">=</span> <span class="n">BerkeleyDatabase</span><span class="p">(</span><span class="s">&#39;my_app.db&#39;</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">BaseModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A base model that will use our BDB database.&quot;&quot;&quot;</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">database</span> <span class="o">=</span> <span class="n">berkeley_db</span>
+
+<span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">username</span> <span class="o">=</span> <span class="n">CharField</span><span class="p">()</span>
+    <span class="c"># etc, etc</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="using-mysql">
+<span id="id4"></span><h2>Using MySQL<a class="headerlink" href="#using-mysql" title="Permalink to this headline">¶</a></h2>
+<p>To connect to a MySQL database, we will use <a class="reference internal" href="api.html#MySQLDatabase" title="MySQLDatabase"><tt class="xref py py-class docutils literal"><span class="pre">MySQLDatabase</span></tt></a>. After the database name, you can specify arbitrary connection parameters that will be passed back to the driver (either MySQLdb or pymysql).</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">mysql_db</span> <span class="o">=</span> <span class="n">MySQLDatabase</span><span class="p">(</span><span class="s">&#39;my_database&#39;</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">BaseModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A base model that will use our MySQL database&quot;&quot;&quot;</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">database</span> <span class="o">=</span> <span class="n">mysql_db</span>
+
+<span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">username</span> <span class="o">=</span> <span class="n">CharField</span><span class="p">()</span>
+    <span class="c"># etc, etc</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="multi-threaded-applications">
+<h2>Multi-threaded applications<a class="headerlink" href="#multi-threaded-applications" title="Permalink to this headline">¶</a></h2>
+<p>Some database engines may not allow a connection to be shared across threads, notably SQLite. If you would like peewee to maintain a connection-per-thread, instantiate your database with <tt class="docutils literal"><span class="pre">threadlocals=True</span></tt> (<em>recommended</em>):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">database</span> <span class="o">=</span> <span class="n">SqliteDatabase</span><span class="p">(</span><span class="s">&#39;my_app.db&#39;</span><span class="p">,</span> <span class="n">threadlocals</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The above code will cause peewee to store the connection state in a thread local; each thread gets its own separate connection.</p>
+<p>Alternatively, Python sqlite3 module can share a connection across different threads, but you have to disable runtime checks to reuse the single connection:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">database</span> <span class="o">=</span> <span class="n">SqliteDatabase</span><span class="p">(</span><span class="s">&#39;stats.db&#39;</span><span class="p">,</span> <span class="n">check_same_thread</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">For web applications or any multi-threaded (including green threads!) app,
+it is best to set <tt class="docutils literal"><span class="pre">threadlocals=True</span></tt> when instantiating your database.</p>
+</div>
+</div>
+<div class="section" id="deferring-initialization">
+<span id="id5"></span><h2>Deferring initialization<a class="headerlink" href="#deferring-initialization" title="Permalink to this headline">¶</a></h2>
+<p>Sometimes the database connection settings are not known until run-time, when these values may be loaded from a configuration file or the environment. In these cases, you can <em>defer</em> the initialization of the database by specifying <tt class="docutils literal"><span class="pre">None</span></tt> as the database_name.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">database</span> <span class="o">=</span> <span class="n">SqliteDatabase</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>  <span class="c"># Un-initialized database.</span>
+
+<span class="k">class</span> <span class="nc">SomeModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">database</span> <span class="o">=</span> <span class="n">database</span>
+</pre></div>
+</div>
+<p>If you try to connect or issue any queries while your database is uninitialized you will get an exception:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">database</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+<span class="go">Exception: Error, database not properly initialized before opening connection</span>
+</pre></div>
+</div>
+<p>To initialize your database, call the <a class="reference internal" href="api.html#Database.init" title="Database.init"><tt class="xref py py-meth docutils literal"><span class="pre">init()</span></tt></a> method with the database name and any additional keyword arguments:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">database_name</span> <span class="o">=</span> <span class="nb">raw_input</span><span class="p">(</span><span class="s">&#39;What is the name of the db? &#39;</span><span class="p">)</span>
+<span class="n">database</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">database_name</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="s">&#39;localhost&#39;</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="s">&#39;postgres&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="dynamically-defining-a-database">
+<span id="dynamic-db"></span><h2>Dynamically defining a database<a class="headerlink" href="#dynamically-defining-a-database" title="Permalink to this headline">¶</a></h2>
+<p>For even more control over how your database is defined/initialized, you can use the <a class="reference internal" href="api.html#Proxy" title="Proxy"><tt class="xref py py-class docutils literal"><span class="pre">Proxy</span></tt></a> helper. <a class="reference internal" href="api.html#Proxy" title="Proxy"><tt class="xref py py-class docutils literal"><span class="pre">Proxy</span></tt></a> objects act as a placeholder, and then at run-time you can swap it out for a different object. In the example below, we will swap out the database depending on how the app is configured:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">database_proxy</span> <span class="o">=</span> <span class="n">Proxy</span><span class="p">()</span>  <span class="c"># Create a proxy for our db.</span>
+
+<span class="k">class</span> <span class="nc">BaseModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">database</span> <span class="o">=</span> <span class="n">database_proxy</span>  <span class="c"># Use proxy for our DB.</span>
+
+<span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">username</span> <span class="o">=</span> <span class="n">CharField</span><span class="p">()</span>
+
+<span class="c"># Based on configuration, use a different database.</span>
+<span class="k">if</span> <span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;DEBUG&#39;</span><span class="p">]:</span>
+    <span class="n">database</span> <span class="o">=</span> <span class="n">SqliteDatabase</span><span class="p">(</span><span class="s">&#39;local.db&#39;</span><span class="p">)</span>
+<span class="k">elif</span> <span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;TESTING&#39;</span><span class="p">]:</span>
+    <span class="n">database</span> <span class="o">=</span> <span class="n">SqliteDatabase</span><span class="p">(</span><span class="s">&#39;:memory:&#39;</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">database</span> <span class="o">=</span> <span class="n">PostgresqlDatabase</span><span class="p">(</span><span class="s">&#39;mega_production_db&#39;</span><span class="p">)</span>
+
+<span class="c"># Configure our proxy to use the db we specified in config.</span>
+<span class="n">database_proxy</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">database</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="connection-pooling">
+<span id="id6"></span><h2>Connection Pooling<a class="headerlink" href="#connection-pooling" title="Permalink to this headline">¶</a></h2>
+<p>Connection pooling is provided by the <a class="reference internal" href="playhouse.html#pool"><em>pool module</em></a>, included in the <a class="reference internal" href="playhouse.html#playhouse"><em>Playhouse, a collection of addons</em></a> extensions library. The pool supports:</p>
+<ul class="simple">
+<li>Timeout after which connections will be recycled.</li>
+<li>Upper bound on the number of open connections.</li>
+</ul>
+<p>The connection pool module comes with support for Postgres and MySQL (though adding support for other databases is trivial).</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">playhouse.pool</span> <span class="kn">import</span> <span class="n">PooledPostgresqlDatabase</span>
+
+<span class="n">db</span> <span class="o">=</span> <span class="n">PooledPostgresqlDatabase</span><span class="p">(</span>
+    <span class="s">&#39;my_database&#39;</span><span class="p">,</span>
+    <span class="n">max_connections</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+    <span class="n">stale_timeout</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
+    <span class="n">threadlocals</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+    <span class="n">user</span><span class="o">=</span><span class="s">&#39;postgres&#39;</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">BaseModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">database</span> <span class="o">=</span> <span class="n">db</span>
+</pre></div>
+</div>
+<p>The following pooled database classes are available:</p>
+<ul class="simple">
+<li><a class="reference internal" href="playhouse.html#PooledPostgresqlDatabase" title="PooledPostgresqlDatabase"><tt class="xref py py-class docutils literal"><span class="pre">PooledPostgresqlDatabase</span></tt></a></li>
+<li><a class="reference internal" href="playhouse.html#PooledPostgresqlExtDatabase" title="PooledPostgresqlExtDatabase"><tt class="xref py py-class docutils literal"><span class="pre">PooledPostgresqlExtDatabase</span></tt></a></li>
+<li><a class="reference internal" href="playhouse.html#PooledMySQLDatabase" title="PooledMySQLDatabase"><tt class="xref py py-class docutils literal"><span class="pre">PooledMySQLDatabase</span></tt></a></li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If you have a multi-threaded application (including green threads), be sure to specify <tt class="docutils literal"><span class="pre">threadlocals=True</span></tt> when instantiating your pooled database.</p>
+</div>
+</div>
+<div class="section" id="read-slaves">
+<span id="using-read-slaves"></span><h2>Read Slaves<a class="headerlink" href="#read-slaves" title="Permalink to this headline">¶</a></h2>
+<p>Peewee can automatically run <em>SELECT</em> queries against one or more read replicas. The <a class="reference internal" href="playhouse.html#read-slaves"><em>read_slave module</em></a>, included in the <a class="reference internal" href="playhouse.html#playhouse"><em>Playhouse, a collection of addons</em></a> extensions library, contains a <a class="reference internal" href="api.html#Model" title="Model"><tt class="xref py py-class docutils literal"><span class="pre">Model</span></tt></a> subclass which provides this behavior.</p>
+<p>Here is how you might use the <a class="reference internal" href="playhouse.html#ReadSlaveModel" title="ReadSlaveModel"><tt class="xref py py-class docutils literal"><span class="pre">ReadSlaveModel</span></tt></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">peewee</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">playhouse.read_slave</span> <span class="kn">import</span> <span class="n">ReadSlaveModel</span>
+
+<span class="c"># Declare a master and two read-replicas.</span>
+<span class="n">master</span> <span class="o">=</span> <span class="n">PostgresqlDatabase</span><span class="p">(</span><span class="s">&#39;master&#39;</span><span class="p">)</span>
+<span class="n">replica_1</span> <span class="o">=</span> <span class="n">PostgresqlDatabase</span><span class="p">(</span><span class="s">&#39;replica&#39;</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="s">&#39;192.168.1.2&#39;</span><span class="p">)</span>
+<span class="n">replica_2</span> <span class="o">=</span> <span class="n">PostgresqlDatabase</span><span class="p">(</span><span class="s">&#39;replica&#39;</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="s">&#39;192.168.1.3&#39;</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">BaseModel</span><span class="p">(</span><span class="n">ReadSlaveModel</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">database</span> <span class="o">=</span> <span class="n">master</span>
+        <span class="n">read_slaves</span> <span class="o">=</span> <span class="p">(</span><span class="n">replica_1</span><span class="p">,</span> <span class="n">replica_2</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">username</span> <span class="o">=</span> <span class="n">CharField</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Now when you execute writes (or deletes), they will be run on the master, while all read-only queries will be executed against one of the replicas. Queries are dispatched among the read slaves in round-robin fashion.</p>
+</div>
+<div class="section" id="generating-models-from-existing-databases">
+<h2>Generating Models from Existing Databases<a class="headerlink" href="#generating-models-from-existing-databases" title="Permalink to this headline">¶</a></h2>
+<p>If you&#8217;d like to generate peewee model definitions for an existing database, you can try out the database introspection tool <a class="reference internal" href="playhouse.html#pwiz"><em>pwiz, a model generator</em></a> that comes with peewee. <em>pwiz</em> is capable of introspecting Postgresql, MySQL and SQLite databases.</p>
+<p>Introspecting a Postgresql database:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">pwiz.py --engine=postgresql my_postgresql_database</span>
+</pre></div>
+</div>
+<p>Introspecting a SQLite database:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">pwiz.py --engine=sqlite test.db</span>
+</pre></div>
+</div>
+<p>pwiz will generate:</p>
+<ul class="simple">
+<li>Database connection object</li>
+<li>A <em>BaseModel</em> class to use with the database</li>
+<li><em>Model</em> classes for each table in the database.</li>
+</ul>
+<p>The generated code is written to stdout, and can easily be redirected to a file:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">pwiz.py -e postgresql my_postgresql_db &gt; models.py</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">pwiz generally works quite well with even large and complex database
+schemas, but in some cases it will not be able to introspect a column.
+You may need to go through the generated code to add indexes, fix unrecognized
+column types, and resolve any circular references that were found.</p>
+</div>
+</div>
+<div class="section" id="logging-queries">
+<h2>Logging queries<a class="headerlink" href="#logging-queries" title="Permalink to this headline">¶</a></h2>
+<p>All queries are logged to the <em>peewee</em> namespace using the standard library <tt class="docutils literal"><span class="pre">logging</span></tt> module. Queries are logged using the <em>DEBUG</em> level.  If you&#8217;re interested in doing something with the queries, you can simply register a handler.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Print all queries to stderr.</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s">&#39;peewee&#39;</span><span class="p">)</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="generating-skeleton-code">
+<h2>Generating skeleton code<a class="headerlink" href="#generating-skeleton-code" title="Permalink to this headline">¶</a></h2>
+<p>For writing quick scripts, peewee comes with a helper script <a class="reference internal" href="playhouse.html#pskel"><em>pskel</em></a> which generates database connection and model boilerplate code. If you find yourself frequently writing small programs, <a class="reference internal" href="playhouse.html#pskel"><em>pskel</em></a> can really save you time.</p>
+<p>To generate a script, you can simply run:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">pskel User Tweet SomeModel AnotherModel &gt; my_script.py</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">pskel</span></tt> will generate code to connect to an in-memory SQLite database, as well as blank model definitions for the model names specified on the command line.</p>
+<p>Here is a more complete example, which will use the <a class="reference internal" href="playhouse.html#PostgresqlExtDatabase" title="PostgresqlExtDatabase"><tt class="xref py py-class docutils literal"><span class="pre">PostgresqlExtDatabase</span></tt></a> with query logging enabled:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">pskel -l -e postgres_ext -d my_database User Tweet &gt; my_script.py</span>
+</pre></div>
+</div>
+<p>You can now fill in the model definitions and get to hacking!</p>
+</div>
+<div class="section" id="adding-a-new-database-driver">
+<h2>Adding a new Database Driver<a class="headerlink" href="#adding-a-new-database-driver" title="Permalink to this headline">¶</a></h2>
+<p>Peewee comes with built-in support for Postgres, MySQL and SQLite. These databases are very popular and run the gamut from fast, embeddable databases to heavyweight servers suitable for large-scale deployments.  That being said, there are a ton of cool databases out there and adding support for your database-of-choice should be really easy, provided the driver supports the <a class="reference external" href="http://www.python.org/dev/peps/pep-0249/">DB-API 2.0 spec</a>.</p>
+<p>The db-api 2.0 spec should be familiar to you if you&#8217;ve used the standard library sqlite3 driver, psycopg2 or the like. Peewee currently relies on a handful of parts:</p>
+<ul class="simple">
+<li><cite>Connection.commit</cite></li>
+<li><cite>Connection.execute</cite></li>
+<li><cite>Connection.rollback</cite></li>
+<li><cite>Cursor.description</cite></li>
+<li><cite>Cursor.fetchone</cite></li>
+</ul>
+<p>These methods are generally wrapped up in higher-level abstractions and exposed by the <a class="reference internal" href="api.html#Database" title="Database"><tt class="xref py py-class docutils literal"><span class="pre">Database</span></tt></a>, so even if your driver doesn&#8217;t do these exactly you can still get a lot of mileage out of peewee.  An example is the <a class="reference external" href="http://code.google.com/p/apsw/">apsw sqlite driver</a> in the &#8220;playhouse&#8221; module.</p>
+<p>The first thing is to provide a subclass of <a class="reference internal" href="api.html#Database" title="Database"><tt class="xref py py-class docutils literal"><span class="pre">Database</span></tt></a> that will open a connection.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">peewee</span> <span class="kn">import</span> <span class="n">Database</span>
+<span class="kn">import</span> <span class="nn">foodb</span>  <span class="c"># Our fictional DB-API 2.0 driver.</span>
+
+
+<span class="k">class</span> <span class="nc">FooDatabase</span><span class="p">(</span><span class="n">Database</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">database</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">foodb</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">database</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <a class="reference internal" href="api.html#Database" title="Database"><tt class="xref py py-class docutils literal"><span class="pre">Database</span></tt></a> provides a higher-level API and is responsible for executing queries, creating tables and indexes, and introspecting the database to get lists of tables. The above implementation is the absolute minimum needed, though some features will not work &#8211; for best results you will want to additionally add a method for extracting a list of tables and indexes for a table from the database.  We&#8217;ll pretend that <tt class="docutils literal"><span class="pre">FooDB</span></tt> is a lot like MySQL and has special &#8220;SHOW&#8221; statements:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">FooDatabase</span><span class="p">(</span><span class="n">Database</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">database</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">foodb</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">database</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s">&#39;SHOW TABLES;&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">res</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()]</span>
+
+    <span class="k">def</span> <span class="nf">get_indexes_for_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s">&#39;SHOW INDEXES IN </span><span class="si">%s</span><span class="s">;&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">quote_name</span><span class="p">(</span><span class="n">table</span><span class="p">))</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([(</span><span class="n">r</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">res</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()])</span>
+        <span class="k">return</span> <span class="n">rows</span>
+</pre></div>
+</div>
+<p>Other things the database handles that are not covered here include:</p>
+<ul class="simple">
+<li><a class="reference internal" href="api.html#Database.last_insert_id" title="Database.last_insert_id"><tt class="xref py py-meth docutils literal"><span class="pre">last_insert_id()</span></tt></a> and <a class="reference internal" href="api.html#Database.rows_affected" title="Database.rows_affected"><tt class="xref py py-meth docutils literal"><span class="pre">rows_affected()</span></tt></a></li>
+<li><tt class="xref py py-attr docutils literal"><span class="pre">interpolation</span></tt> and <tt class="xref py py-attr docutils literal"><span class="pre">quote_char</span></tt></li>
+<li><tt class="xref py py-attr docutils literal"><span class="pre">op_overrides</span></tt> for mapping operations such as &#8220;LIKE/ILIKE&#8221; to their database equivalent</li>
+</ul>
+<p>Refer to the <a class="reference internal" href="api.html#Database" title="Database"><tt class="xref py py-class docutils literal"><span class="pre">Database</span></tt></a> API reference or the <a class="reference external" href="https://github.com/coleifer/peewee/blob/master/peewee.py">source code</a>. for details.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If your driver conforms to the DB-API 2.0 spec, there shouldn&#8217;t be much work needed to get up and running.</p>
+</div>
+<p>Our new database can be used just like any of the other database subclasses:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">peewee</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">foodb_ext</span> <span class="kn">import</span> <span class="n">FooDatabase</span>
+
+<span class="n">db</span> <span class="o">=</span> <span class="n">FooDatabase</span><span class="p">(</span><span class="s">&#39;my_database&#39;</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="s">&#39;foo&#39;</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="s">&#39;secret&#39;</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">BaseModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">database</span> <span class="o">=</span> <span class="n">db</span>
+
+<span class="k">class</span> <span class="nc">Blog</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="n">CharField</span><span class="p">()</span>
+    <span class="n">contents</span> <span class="o">=</span> <span class="n">TextField</span><span class="p">()</span>
+    <span class="n">pub_date</span> <span class="o">=</span> <span class="n">DateTimeField</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="schema-migrations">
+<h2>Schema migrations<a class="headerlink" href="#schema-migrations" title="Permalink to this headline">¶</a></h2>
+<p>Currently peewee does not have support for <em>automatic</em> schema migrations, but you can use the <a class="reference internal" href="playhouse.html#migrate"><em>Schema Migrations</em></a> module to create simple migration scripts. The schema migrations module works with SQLite, MySQL and Postgres, and will even allow you to do things like drop or rename columns in SQLite!</p>
+<p>Here is an example of how you might write a migration script:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">playhouse.migrate</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">my_db</span> <span class="o">=</span> <span class="n">SqliteDatabase</span><span class="p">(</span><span class="s">&#39;my_database.db&#39;</span><span class="p">)</span>
+<span class="n">migrator</span> <span class="o">=</span> <span class="n">SqliteMigrator</span><span class="p">(</span><span class="n">my_db</span><span class="p">)</span>
+
+<span class="n">title_field</span> <span class="o">=</span> <span class="n">CharField</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+<span class="n">status_field</span> <span class="o">=</span> <span class="n">IntegerField</span><span class="p">(</span><span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="k">with</span> <span class="n">my_db</span><span class="o">.</span><span class="n">transaction</span><span class="p">():</span>
+    <span class="n">migrate</span><span class="p">(</span>
+        <span class="n">migrator</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s">&#39;some_table&#39;</span><span class="p">,</span> <span class="s">&#39;title&#39;</span><span class="p">,</span> <span class="n">title_field</span><span class="p">),</span>
+        <span class="n">migrator</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s">&#39;some_table&#39;</span><span class="p">,</span> <span class="s">&#39;status&#39;</span><span class="p">,</span> <span class="n">status_field</span><span class="p">),</span>
+        <span class="n">migrator</span><span class="o">.</span><span class="n">drop_column</span><span class="p">(</span><span class="s">&#39;some_table&#39;</span><span class="p">,</span> <span class="s">&#39;old_column&#39;</span><span class="p">),</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+<p>Check the <a class="reference internal" href="playhouse.html#migrate"><em>Schema Migrations</em></a> documentation for more details.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Managing your Database</a><ul>
+<li><a class="reference internal" href="#creating-a-database-connection-and-tables">Creating a database connection and tables</a></li>
+<li><a class="reference internal" href="#using-postgresql">Using Postgresql</a></li>
+<li><a class="reference internal" href="#using-sqlite">Using SQLite</a></li>
+<li><a class="reference internal" href="#using-berkeleydb">Using BerkeleyDB</a></li>
+<li><a class="reference internal" href="#using-mysql">Using MySQL</a></li>
+<li><a class="reference internal" href="#multi-threaded-applications">Multi-threaded applications</a></li>
+<li><a class="reference internal" href="#deferring-initialization">Deferring initialization</a></li>
+<li><a class="reference internal" href="#dynamically-defining-a-database">Dynamically defining a database</a></li>
+<li><a class="reference internal" href="#connection-pooling">Connection Pooling</a></li>
+<li><a class="reference internal" href="#read-slaves">Read Slaves</a></li>
+<li><a class="reference internal" href="#generating-models-from-existing-databases">Generating Models from Existing Databases</a></li>
+<li><a class="reference internal" href="#logging-queries">Logging queries</a></li>
+<li><a class="reference internal" href="#generating-skeleton-code">Generating skeleton code</a></li>
+<li><a class="reference internal" href="#adding-a-new-database-driver">Adding a new Database Driver</a></li>
+<li><a class="reference internal" href="#schema-migrations">Schema migrations</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="example.html"
+                        title="previous chapter">Example app</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="models.html"
+                        title="next chapter">Models and Fields</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/peewee/database.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="models.html" title="Models and Fields"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="example.html" title="Example app"
+             >previous</a> |</li>
+        <li><a href="../index.html">peewee 2.3.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright charles leifer.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>
