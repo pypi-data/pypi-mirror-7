@@ -1,0 +1,98 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+      tal:omit-tag="">
+<dl class="portlet portletZimbraMail"
+    i18n:domain="vnccollab.zimbra"
+    tal:define="purl  context/portal_url;
+                error view/check_credentials">
+
+    <!-- new zimbra mail portlet -->
+    <dt class="portletHeader">
+        <span class="portletTopLeft"></span>
+        <a href=""
+           target="_blank"
+           tal:attributes="href view/data/url"
+           tal:content="view/title"
+           class="tile">
+            Tags
+        </a>
+        <span class="portletTopRight"></span>
+    </dt>
+
+    <dd tal:condition="error">
+      <span tal:replace="error">Error Message</span>
+      <br>You can check your credentials
+      <a tal:attributes="href string:${purl}/@@personal-information" target="_blank">here.</a>
+    </dd>
+
+
+    <dd class="portletBody emails portletItem noSlimScroll"
+        tal:condition="not:error">
+      <div class="navBar">
+        <div class="navBarGroup navBarFolders">
+          <span class="label"></span>
+        </div>
+        <div class="navBarGroup navBarEmails">
+          <span class="buttons1">
+            <span class="button refreshButton"
+                  onclick="vnc_collab_zimbra_portlets.refreshEmails(event, 'inbox')">Refresh</span>
+            <select name="zimbra-mail-folder-selector" id="zimbra-mail-folder-selector"
+                    onchange="vnc_collab_zimbra_portlets.refreshEmails(event, 'inbox')">
+              <option tal:repeat="folder view/folders"
+                      tal:attributes="value python:folder[0];
+                                      selected python:folder[2]"
+                      tal:content="python:folder[1]"></option>
+            </select>
+          </span>
+        </div>
+        <div class="navBarGroup navBarEmail">
+          <span class="buttons1">
+            <span class="button backButton"
+                  onclick="vnc_collab_zimbra_portlets.goBackToEmails(event, 'inbox')">&lt; Back</span>
+          </span>
+        </div>
+        <div class="navBarGroup navBarNewEmail">
+          <span class="buttons1">
+            <span class="button backButton">Back</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="bulkActionsBar">
+        <span class="counter">1</span>
+        <span class="trashButton">Trash</span>
+        <span class="closeButton">x</span>
+      </div>
+
+      <div class="progressBar"><!-- --></div>
+
+      <div class="statusBar">
+        <span class="status"><!-- --></span>
+        <span class="closeButton"><!-- --></span>
+      </div>
+
+      <tal:comment replace="nothing">
+        Main Pane consist of a few views:
+          * foldersView - folders listing, root view
+          * emailsView - emails listing, default view with first defined folder
+          * emailView - single email view
+          * newEmailView - new email creation form, also used for Reply and
+              Forward Email forms
+      </tal:comment>
+      <div class="mainPane">
+        <div class="pane foldersView"><!-- --></div>
+        <div class="pane emailsView"><!-- --></div>
+        <div class="pane emailView">
+          <div class="emailSubject"><!-- --></div>
+          <div class="emailThread"><!-- --></div>
+          <div class="spinner">
+            <img src="++resource++vnccollab.common.images/spinner_arrows.gif"
+                 tal:attributes="src string:${purl}/${attrs/src}" />
+          </div>
+        </div>
+        <div class="newEmailView"><!-- --></div>
+      </div>
+    </dd>
+</dl>
+</html>
