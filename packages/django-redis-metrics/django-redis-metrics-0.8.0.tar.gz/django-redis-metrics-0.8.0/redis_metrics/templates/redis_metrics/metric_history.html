@@ -1,0 +1,30 @@
+{% extends "redis_metrics/base.html" %}
+{% load url from future %}
+{% load redis_metric_tags %}
+
+
+{% block content %}
+    <h1><code>{{ slug }}</code> history</h1>
+    <ul class="breadcrumb">
+    <li><a href="{% url 'redis_metrics_list' %}">Metrics List</a></li>
+    <li><a href="{% url 'redis_metric_detail' slug %}">{{ slug }} detail</a></li>
+    <li class="active">{{ granularity }} history</li>
+    </ul>
+
+    <ul class="subnav history">
+    <li><a href="{% url 'redis_metric_history' slug 'seconds' %}">Seconds</a></li>
+    <li><a href="{% url 'redis_metric_history' slug 'minutes' %}">Minutes</a></li>
+    <li><a href="{% url 'redis_metric_history' slug 'hourly' %}">Hourly</a></li>
+    <li><a href="{% url 'redis_metric_history' slug 'daily' %}">Daily</a></li>
+    <li><a href="{% url 'redis_metric_history' slug 'weekly' %}">Weekly</a></li>
+    <li><a href="{% url 'redis_metric_history' slug 'monthly' %}">Monthly</a></li>
+    <li><a href="{% url 'redis_metric_history' slug 'yearly' %}">Yearly</a></li>
+    </ul>
+
+    {# Menu to control the date from which we display metrics #}
+    {% metrics_since slug 5 "history" granularity %}
+
+    {# Include the metrics chart #}
+    {% metric_history slug granularity since True %}
+
+{% endblock %}
