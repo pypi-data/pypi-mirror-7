@@ -1,0 +1,858 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Creating an experiment &mdash; experimentator 0.2.0 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="experimentator 0.2.0 documentation" href="index.html"/>
+        <link rel="next" title="Command-line interface" href="cli.html"/>
+        <link rel="prev" title="Concepts" href="concepts.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="index.html" class="fa fa-home"> experimentator</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Concepts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#experiment-structure">Experiment structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#design">Design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#why-use-levels">Why use levels?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#heterogeneous-experiment-structures">Heterogeneous experiment structures</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Creating an experiment</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#constructor-methods">Constructor methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#constructing-heterogeneous-experiments">Constructing heterogeneous experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#design-matrices">Design matrices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#callbacks">Callbacks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Command-line interface</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cli.html#commands">Commands</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api_reference.html#experiment">Experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_reference.html#helper-functions">Helper functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_reference.html#experimentsection">ExperimentSection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_reference.html#design">Design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_reference.html#designtree">DesignTree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_reference.html#module-experimentator.order">experimentator.order</a></li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">experimentator</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Creating an experiment</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="_sources/creation.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            
+  <div class="section" id="creating-an-experiment">
+<span id="creation"></span><h1>Creating an experiment<a class="headerlink" href="#creating-an-experiment" title="Permalink to this headline">¶</a></h1>
+<p>The typical workflow using experimentator is relatively straightforward:</p>
+<ol class="arabic simple">
+<li>Create an <a class="reference internal" href="api_reference.html#experimentator.Experiment" title="experimentator.Experiment"><tt class="xref py py-class docutils literal"><span class="pre">Experiment</span></tt></a> instance.</li>
+<li>Run the experiment using the <a class="reference internal" href="cli.html#cli"><em>command-line interface</em></a>.</li>
+<li>Inspect, analyze or export the resulting data.</li>
+</ol>
+<div class="section" id="constructor-methods">
+<span id="constructors"></span><h2>Constructor methods<a class="headerlink" href="#constructor-methods" title="Permalink to this headline">¶</a></h2>
+<p>There are a number of ways to create an <a class="reference internal" href="api_reference.html#experimentator.Experiment" title="experimentator.Experiment"><tt class="xref py py-class docutils literal"><span class="pre">Experiment</span></tt></a>.</p>
+<div class="section" id="simple-constructor-methods">
+<span id="simple-constructors"></span><h3>Simple constructor methods<a class="headerlink" href="#simple-constructor-methods" title="Permalink to this headline">¶</a></h3>
+<p>These methods construct <a class="reference internal" href="api_reference.html#experimentator.Experiment" title="experimentator.Experiment"><tt class="xref py py-class docutils literal"><span class="pre">Experiment</span></tt></a> instances based on common experimental designs.</p>
+<ul>
+<li><p class="first"><a class="reference internal" href="api_reference.html#experimentator.Experiment.within_subjects" title="experimentator.Experiment.within_subjects"><tt class="xref py py-meth docutils literal"><span class="pre">Experiment.within_subjects</span></tt></a>:
+Construct an experiment with levels <tt class="docutils literal"><span class="pre">'participant'</span></tt> and <tt class="docutils literal"><span class="pre">'trial'</span></tt>, and IVs only at the <tt class="docutils literal"><span class="pre">'trial'</span></tt> level.
+For example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">experimentator</span> <span class="kn">import</span> <span class="n">Experiment</span><span class="p">,</span> <span class="n">order</span>
+<span class="gp">... </span><span class="n">independent_variables</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s">&#39;side&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;left&#39;</span><span class="p">,</span> <span class="s">&#39;right&#39;</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="s">&#39;display_time&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.55</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">... </span><span class="n">experiment</span> <span class="o">=</span> <span class="n">Experiment</span><span class="o">.</span><span class="n">within_subjects</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">independent_variables</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">n_participants</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">ordering</span><span class="o">=</span><span class="n">order</span><span class="o">.</span><span class="n">Shuffle</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The above creates a 2 (side) by 3 (display time) within-subjects experiment,
+with 10 trials of each condition and 20 participants.
+Trials will be shuffled within participants.</p>
+</li>
+<li><p class="first"><a class="reference internal" href="api_reference.html#experimentator.Experiment.blocked" title="experimentator.Experiment.blocked"><tt class="xref py py-meth docutils literal"><span class="pre">Experiment.blocked</span></tt></a>:
+Construct an experiment with levels <tt class="docutils literal"><span class="pre">'participant'</span></tt>, <tt class="docutils literal"><span class="pre">'block'</span></tt>, and <tt class="docutils literal"><span class="pre">'trial'</span></tt>,
+with IVs at the <tt class="docutils literal"><span class="pre">'trial'</span></tt> level (and optionally at the <tt class="docutils literal"><span class="pre">'block'</span></tt> level also).
+The following constructs an experiment identical to the previous example,
+except with each participant&#8217;s 60 trials split into two blocks:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">experimentator</span> <span class="kn">import</span> <span class="n">Experiment</span><span class="p">,</span> <span class="n">order</span>
+<span class="gp">... </span><span class="n">independent_variables</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s">&#39;side&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;left&#39;</span><span class="p">,</span> <span class="s">&#39;right&#39;</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="s">&#39;display_time&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.55</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">experiment</span> <span class="o">=</span> <span class="n">Experiment</span><span class="o">.</span><span class="n">blocked</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">independent_variables</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">n_participants</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">orderings</span><span class="o">=</span><span class="p">{</span>
+<span class="gp">... </span>        <span class="s">&#39;trial&#39;</span><span class="p">:</span> <span class="n">order</span><span class="o">.</span><span class="n">Shuffle</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="s">&#39;participant&#39;</span><span class="p">:</span> <span class="n">order</span><span class="o">.</span><span class="n">Ordering</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="p">}</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In the above example, it doesn&#8217;t matter what ordering method we use at the <tt class="docutils literal"><span class="pre">'block'</span></tt> level;
+since there are no block-level IVs, all blocks are identical.
+We could, alternatively, introduce an IV at the block level:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">experimentator</span> <span class="kn">import</span> <span class="n">Experiment</span><span class="p">,</span> <span class="n">order</span>
+<span class="gp">... </span> <span class="n">independent_variables</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s">&#39;side&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;left&#39;</span><span class="p">,</span> <span class="s">&#39;right&#39;</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="s">&#39;display_time&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.55</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">experiment</span> <span class="o">=</span> <span class="n">Experiment</span><span class="o">.</span><span class="n">blocked</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">independent_variables</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">block_ivs</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;difficulty&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;easy&#39;</span><span class="p">,</span> <span class="s">&#39;hard&#39;</span><span class="p">]}</span>
+<span class="gp">... </span>    <span class="n">n_participants</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">orderings</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;trial&#39;</span><span class="p">:</span> <span class="n">order</span><span class="o">.</span><span class="n">Shuffle</span><span class="p">(</span><span class="mi">5</span><span class="p">)}</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this example, we introduced the IV <tt class="docutils literal"><span class="pre">'difficulty'</span></tt> with two levels.
+Since we didn&#8217;t specify an ordering for blocks, <tt class="docutils literal"><span class="pre">Shuffle(1)</span></tt> will be used.
+In other words, each participant will experience one <tt class="docutils literal"><span class="pre">'easy'</span></tt> and one <tt class="docutils literal"><span class="pre">'hard'</span></tt> block, in a random order.</p>
+</li>
+<li><p class="first"><a class="reference internal" href="api_reference.html#experimentator.Experiment.basic" title="experimentator.Experiment.basic"><tt class="xref py py-meth docutils literal"><span class="pre">Experiment.basic</span></tt></a>:
+Construct an experiment with arbitrary levels but a homogeneous structure.
+This constructor can handle any experimental structure, with the exception of <a class="reference internal" href="concepts.html#heterogeneity"><em>heterogeneity</em></a>.
+For example, to create the same blocked experiment as in the previous example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">experimentator</span> <span class="kn">import</span> <span class="n">Exeriment</span><span class="p">,</span> <span class="n">order</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">independent_variables</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s">&#39;trial&#39;</span><span class="p">:</span> <span class="p">{</span>
+<span class="gp">... </span>        <span class="s">&#39;side&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;left&#39;</span><span class="p">,</span> <span class="s">&#39;right&#39;</span><span class="p">],</span>
+<span class="gp">... </span>        <span class="s">&#39;display_time&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.55</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="p">},</span>
+<span class="gp">... </span>    <span class="s">&#39;block&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;difficulty&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;easy&#39;</span><span class="p">,</span> <span class="s">&#39;hard&#39;</span><span class="p">]},</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">experiment</span> <span class="o">=</span> <span class="n">Experiment</span><span class="o">.</span><span class="n">basic</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="p">(</span><span class="s">&#39;participant&#39;</span><span class="p">,</span> <span class="s">&#39;block&#39;</span><span class="p">,</span> <span class="s">&#39;trial&#39;</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">independent_variables</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">ordering_by_level</span><span class="o">=</span><span class="p">{</span>
+<span class="gp">... </span>        <span class="s">&#39;participant&#39;</span><span class="p">:</span> <span class="n">order</span><span class="o">.</span><span class="n">Ordering</span><span class="p">(</span><span class="mi">20</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="s">&#39;trial&#39;</span><span class="p">:</span> <span class="n">order</span><span class="o">.</span><span class="n">Shuffle</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="p">}</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Again, the default <tt class="docutils literal"><span class="pre">Shuffle(1)</span></tt> will be used at the <tt class="docutils literal"><span class="pre">'block'</span></tt> level.</p>
+<p>We could also use <a class="reference internal" href="api_reference.html#experimentator.Experiment.basic" title="experimentator.Experiment.basic"><tt class="xref py py-meth docutils literal"><span class="pre">Experiment.basic</span></tt></a> to make a mixed-design experiment,
+by adding a new IV at the <tt class="docutils literal"><span class="pre">'participant'</span></tt> level:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">experimentator</span> <span class="kn">import</span> <span class="n">Exeriment</span><span class="p">,</span> <span class="n">Shuffle</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">independent_variables</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s">&#39;trial&#39;</span><span class="p">:</span> <span class="p">{</span>
+<span class="gp">... </span>        <span class="s">&#39;side&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;left&#39;</span><span class="p">,</span> <span class="s">&#39;right&#39;</span><span class="p">],</span>
+<span class="gp">... </span>        <span class="s">&#39;display_time&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.55</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="p">},</span>
+<span class="gp">... </span>    <span class="s">&#39;block&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;difficulty&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;easy&#39;</span><span class="p">,</span> <span class="s">&#39;hard&#39;</span><span class="p">]},</span>
+<span class="gp">... </span>    <span class="s">&#39;participant&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;vision&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;monocular&#39;</span><span class="p">,</span> <span class="s">&#39;binocular&#39;</span><span class="p">]},</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">experiment</span> <span class="o">=</span> <span class="n">Experiment</span><span class="o">.</span><span class="n">basic</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="p">(</span><span class="s">&#39;participant&#39;</span><span class="p">,</span> <span class="s">&#39;block&#39;</span><span class="p">,</span> <span class="s">&#39;trial&#39;</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">independent_variables</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">ordering_by_level</span><span class="o">=</span><span class="p">{</span>
+<span class="gp">... </span>        <span class="s">&#39;participant&#39;</span><span class="p">:</span> <span class="n">Shuffle</span><span class="p">(</span><span class="mi">20</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="s">&#39;trial&#39;</span><span class="p">:</span> <span class="n">Shuffle</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="p">}</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In addition to adding the IV <tt class="docutils literal"><span class="pre">'vision'</span></tt> at the <tt class="docutils literal"><span class="pre">'participant'</span></tt> level,
+we also changed the <tt class="docutils literal"><span class="pre">'participant'</span></tt> ordering from <a class="reference internal" href="api_reference.html#experimentator.order.Ordering" title="experimentator.order.Ordering"><tt class="xref py py-class docutils literal"><span class="pre">Ordering</span></tt></a> to <a class="reference internal" href="api_reference.html#experimentator.order.Shuffle" title="experimentator.order.Shuffle"><tt class="xref py py-class docutils literal"><span class="pre">Shuffle</span></tt></a>
+in order to assign participants to conditions randomly.
+Note that we kept the <tt class="docutils literal"><span class="pre">number</span></tt> parameter on the <tt class="docutils literal"><span class="pre">'participant'</span></tt> ordering at 20;
+this means our experiment will now require 40 participants,
+since there will be 2 conditions at the <tt class="docutils literal"><span class="pre">'participant'</span></tt> level.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="specification-based-constructor-methods">
+<span id="spec-constructors"></span><h3>Specification-based constructor methods<a class="headerlink" href="#specification-based-constructor-methods" title="Permalink to this headline">¶</a></h3>
+<p>Experimentator provides a dictionary-based specification format for creating new <a class="reference internal" href="api_reference.html#experimentator.Experiment" title="experimentator.Experiment"><tt class="xref py py-class docutils literal"><span class="pre">Experiment</span></tt></a> instances.
+There are two relevant constructor methods:
+<a class="reference internal" href="api_reference.html#experimentator.Experiment.from_dict" title="experimentator.Experiment.from_dict"><tt class="xref py py-meth docutils literal"><span class="pre">Experiment.from_dict</span></tt></a> constructs an <a class="reference internal" href="api_reference.html#experimentator.Experiment" title="experimentator.Experiment"><tt class="xref py py-class docutils literal"><span class="pre">Experiment</span></tt></a> given a dictionary, and
+<a class="reference internal" href="api_reference.html#experimentator.Experiment.from_yaml_file" title="experimentator.Experiment.from_yaml_file"><tt class="xref py py-meth docutils literal"><span class="pre">Experiment.from_yaml_file</span></tt></a> constructs an <a class="reference internal" href="api_reference.html#experimentator.Experiment" title="experimentator.Experiment"><tt class="xref py py-class docutils literal"><span class="pre">Experiment</span></tt></a>
+given the path to a file containing the specification in <a class="reference external" href="http://en.wikipedia.org/wiki/YAML">YAML</a> format.</p>
+<p>The specification is the same for both.
+Central to the specification format is specifying a <a class="reference internal" href="api_reference.html#experimentator.DesignTree" title="experimentator.DesignTree"><tt class="xref py py-class docutils literal"><span class="pre">DesignTree</span></tt></a> and its constituent <a class="reference internal" href="api_reference.html#experimentator.Design" title="experimentator.Design"><tt class="xref py py-class docutils literal"><span class="pre">Design</span></tt></a> instances.</p>
+<div class="section" id="design-specification-format">
+<span id="design-spec"></span><h4>Design specification format<a class="headerlink" href="#design-specification-format" title="Permalink to this headline">¶</a></h4>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="concepts.html#designs"><em>Design</em></a></dt>
+<dd>More information on the <a class="reference internal" href="api_reference.html#experimentator.Design" title="experimentator.Design"><tt class="xref py py-class docutils literal"><span class="pre">Design</span></tt></a> concept.</dd>
+<dt><a class="reference internal" href="api_reference.html#experimentator.Design.from_dict" title="experimentator.Design.from_dict"><tt class="xref py py-meth docutils literal"><span class="pre">Design.from_dict</span></tt></a></dt>
+<dd>The method that implements the construction of a <a class="reference internal" href="api_reference.html#experimentator.Design" title="experimentator.Design"><tt class="xref py py-class docutils literal"><span class="pre">Design</span></tt></a> from a specification dictionary.</dd>
+</dl>
+</div>
+<p>A single <a class="reference internal" href="api_reference.html#experimentator.Design" title="experimentator.Design"><tt class="xref py py-class docutils literal"><span class="pre">Design</span></tt></a> instance can be created from a dictionary
+(either a Python dict or read from a <a class="reference external" href="http://en.wikipedia.org/wiki/YAML">YAML</a> file via <a class="reference internal" href="api_reference.html#experimentator.Experiment.from_yaml_file" title="experimentator.Experiment.from_yaml_file"><tt class="xref py py-meth docutils literal"><span class="pre">Experiment.from_yaml_file</span></tt></a>).
+The dictionary can contain any of the following keys, all optional:</p>
+<ul>
+<li><p class="first"><tt class="docutils literal"><span class="pre">'name'</span></tt>:
+The name of the level.</p>
+</li>
+<li><p class="first"><tt class="docutils literal"><span class="pre">'ivs'</span></tt>:
+The designs&#8217;s independent variables.
+Can be a dictionary mapping IV names to possible IV values,
+or a list of <tt class="docutils literal"><span class="pre">(name,</span> <span class="pre">values)</span></tt> tuples.
+See <a class="reference internal" href="concepts.html#ivs"><em>Independent variables</em></a>.
+If <tt class="docutils literal"><span class="pre">'ivs'</span></tt> is not specified, the design will have no IVs.</p>
+</li>
+<li><p class="first"><tt class="docutils literal"><span class="pre">'order'</span></tt> or <tt class="docutils literal"><span class="pre">'ordering'</span></tt>:
+The design&#8217;s ordering method.
+Can be specified in three ways:</p>
+<blockquote>
+<div><ul class="simple">
+<li>as a string, interpreted as a class name in the <a class="reference internal" href="api_reference.html#module-experimentator.order" title="experimentator.order"><tt class="xref py py-mod docutils literal"><span class="pre">order</span></tt></a> module;</li>
+<li>as a dictionary, with the key <tt class="docutils literal"><span class="pre">'class'</span></tt> containing the class name
+and the rest of the items containing keyword arguments to its constructor; or</li>
+<li>as a sequence, with the first item containing the class name
+and the rest of the items containing positional arguments to its constructor.</li>
+</ul>
+</div></blockquote>
+<p>If no ordering is specified, the default is <a class="reference internal" href="api_reference.html#experimentator.order.Shuffle" title="experimentator.order.Shuffle"><tt class="xref py py-class docutils literal"><span class="pre">Shuffle</span></tt></a>
+(<a class="reference internal" href="api_reference.html#experimentator.order.Ordering" title="experimentator.order.Ordering"><tt class="xref py py-class docutils literal"><span class="pre">Ordering</span></tt></a> if a <a class="reference internal" href="#design-matrices"><em>design matrix</em></a> is used).</p>
+</li>
+<li><p class="first"><tt class="docutils literal"><span class="pre">'n'</span></tt> or <tt class="docutils literal"><span class="pre">'number'</span></tt>:
+The <tt class="docutils literal"><span class="pre">number</span></tt> argument to the specified ordering class can be specified here
+(or as part of the <tt class="docutils literal"><span class="pre">ordering</span></tt> specification).</p>
+</li>
+<li><p class="first"><tt class="docutils literal"><span class="pre">'design_matrix'</span></tt>:
+An array-like (e.g., a list of lists) specifying a design matrix to use at this level.
+See <a class="reference internal" href="#design-matrices"><em>Design matrices</em></a>.</p>
+</li>
+<li><p class="first">Any remaining fields are passed to the <a class="reference internal" href="api_reference.html#experimentator.Design" title="experimentator.Design"><tt class="xref py py-class docutils literal"><span class="pre">Design</span></tt></a> constructor as the <tt class="docutils literal"><span class="pre">extra_data</span></tt> argument.
+These values are associated with any sections created under this design.
+For example, you could pass <tt class="docutils literal"><span class="pre">{'practice':</span> <span class="pre">True}</span></tt> to practice blocks, to mark them as such.</p>
+</li>
+</ul>
+<p>For example, the following creates a <a class="reference internal" href="api_reference.html#experimentator.Design" title="experimentator.Design"><tt class="xref py py-class docutils literal"><span class="pre">Design</span></tt></a> instance
+equivalent to the one at the <tt class="docutils literal"><span class="pre">'trial'</span></tt> level in the previous example (of <a class="reference internal" href="api_reference.html#experimentator.Experiment.basic" title="experimentator.Experiment.basic"><tt class="xref py py-meth docutils literal"><span class="pre">Experiment.basic</span></tt></a>):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">experimentator</span> <span class="kn">import</span> <span class="n">Design</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">level_name</span><span class="p">,</span> <span class="n">design</span> <span class="o">=</span> <span class="n">Design</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">name</span><span class="o">=</span><span class="s">&#39;trial&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">ivs</span><span class="o">=</span><span class="p">{</span>
+<span class="gp">... </span>        <span class="s">&#39;side&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;left&#39;</span><span class="p">,</span> <span class="s">&#39;right&#39;</span><span class="p">],</span>
+<span class="gp">... </span>        <span class="s">&#39;display_time&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.55</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="p">},</span>
+<span class="gp">... </span>    <span class="n">ordering</span><span class="o">=</span><span class="s">&#39;Shuffle&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">n</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">))</span>
+</pre></div>
+</div>
+<p>For internal reasons, <a class="reference internal" href="api_reference.html#experimentator.Design.from_dict" title="experimentator.Design.from_dict"><tt class="xref py py-meth docutils literal"><span class="pre">Design.from_dict</span></tt></a> outputs the level name as well as the <a class="reference internal" href="api_reference.html#experimentator.Design" title="experimentator.Design"><tt class="xref py py-class docutils literal"><span class="pre">Design</span></tt></a> object.
+This shouldn&#8217;t be too important,
+because you will probably not be calling <a class="reference internal" href="api_reference.html#experimentator.Design.from_dict" title="experimentator.Design.from_dict"><tt class="xref py py-meth docutils literal"><span class="pre">Design.from_dict</span></tt></a> directly,
+but rather using the dictionary format within <a class="reference internal" href="api_reference.html#experimentator.Experiment.from_dict" title="experimentator.Experiment.from_dict"><tt class="xref py py-meth docutils literal"><span class="pre">Experiment.from_dict</span></tt></a> or <a class="reference internal" href="api_reference.html#experimentator.Experiment.from_yaml_file" title="experimentator.Experiment.from_yaml_file"><tt class="xref py py-meth docutils literal"><span class="pre">Experiment.from_yaml_file</span></tt></a>.</p>
+</div>
+<div class="section" id="designtree-specification-format">
+<span id="design-tree-spec"></span><h4>DesignTree specification format<a class="headerlink" href="#designtree-specification-format" title="Permalink to this headline">¶</a></h4>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="api_reference.html#experimentator.DesignTree.from_spec" title="experimentator.DesignTree.from_spec"><tt class="xref py py-meth docutils literal"><span class="pre">DesignTree.from_spec</span></tt></a></dt>
+<dd>The method that implements this specification.</dd>
+</dl>
+</div>
+<p>To create an <a class="reference internal" href="api_reference.html#experimentator.Experiment" title="experimentator.Experiment"><tt class="xref py py-class docutils literal"><span class="pre">Experiment</span></tt></a>, multiple <a class="reference internal" href="api_reference.html#experimentator.Design" title="experimentator.Design"><tt class="xref py py-class docutils literal"><span class="pre">Design</span></tt></a> instances are needed, collected under a single <a class="reference internal" href="api_reference.html#experimentator.DesignTree" title="experimentator.DesignTree"><tt class="xref py py-class docutils literal"><span class="pre">DesignTree</span></tt></a>.
+This can also be done with a relatively simple specification format.</p>
+<p>To create a <a class="reference internal" href="api_reference.html#experimentator.DesignTree" title="experimentator.DesignTree"><tt class="xref py py-class docutils literal"><span class="pre">DesignTree</span></tt></a> with a homogeneous structure, simply create a list of dictionaries,
+each specifying the <a class="reference internal" href="api_reference.html#experimentator.Design" title="experimentator.Design"><tt class="xref py py-class docutils literal"><span class="pre">Design</span></tt></a> of one level, ordered from top to bottom.
+For example, to create the <a class="reference internal" href="api_reference.html#experimentator.DesignTree" title="experimentator.DesignTree"><tt class="xref py py-class docutils literal"><span class="pre">DesignTree</span></tt></a> equivalent to the <a class="reference internal" href="api_reference.html#experimentator.Experiment.basic" title="experimentator.Experiment.basic"><tt class="xref py py-meth docutils literal"><span class="pre">Experiment.basic</span></tt></a> mixed-design example above:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">experimentator</span> <span class="kn">import</span> <span class="n">DesignTree</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tree</span> <span class="o">=</span> <span class="n">DesignTree</span><span class="o">.</span><span class="n">from_spec</span><span class="p">([</span>
+<span class="gp">... </span>    <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;participant&#39;</span><span class="p">,</span>
+<span class="gp">... </span>         <span class="n">ivs</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;vision&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;monocular&#39;</span><span class="p">,</span> <span class="s">&#39;binocular&#39;</span><span class="p">]},</span>
+<span class="gp">... </span>         <span class="n">n</span><span class="o">=</span><span class="mi">20</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;block&#39;</span><span class="p">,</span>
+<span class="gp">... </span>         <span class="n">ivs</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;difficulty&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;easy&#39;</span><span class="p">,</span> <span class="s">&#39;hard&#39;</span><span class="p">]}),</span>
+<span class="gp">... </span>    <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;trial&#39;</span><span class="p">,</span>
+<span class="gp">... </span>         <span class="n">ivs</span><span class="o">=</span><span class="p">{</span>
+<span class="gp">... </span>             <span class="s">&#39;side&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;left&#39;</span><span class="p">,</span> <span class="s">&#39;right&#39;</span><span class="p">],</span>
+<span class="gp">... </span>             <span class="s">&#39;display_time&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.55</span><span class="p">,</span> <span class="mi">1</span><span class="p">]},</span>
+<span class="gp">... </span>         <span class="n">n</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">])</span>
+</pre></div>
+</div>
+<p>This example takes advantage of the default ordering of <a class="reference internal" href="api_reference.html#experimentator.order.Shuffle" title="experimentator.order.Shuffle"><tt class="xref py py-class docutils literal"><span class="pre">Shuffle</span></tt></a> for all three levels.</p>
+<p>A <a class="reference internal" href="api_reference.html#experimentator.DesignTree" title="experimentator.DesignTree"><tt class="xref py py-class docutils literal"><span class="pre">DesignTree</span></tt></a> can also be constructed with a list of <tt class="docutils literal"><span class="pre">(level_name,</span> <span class="pre">level_design)</span></tt> tuples,
+though the specification format is more convenient as it can be used as part of the <a class="reference internal" href="api_reference.html#experimentator.Experiment" title="experimentator.Experiment"><tt class="xref py py-class docutils literal"><span class="pre">Experiment</span></tt></a> specification format.</p>
+<p>Creating heterogeneous structures is a little more tricky;
+it will be described <a class="reference internal" href="#constructing-heterogeneity"><em>below</em></a>.</p>
+</div>
+<div class="section" id="experiment-specification-format">
+<span id="experiment-spec"></span><h4>Experiment specification format<a class="headerlink" href="#experiment-specification-format" title="Permalink to this headline">¶</a></h4>
+<p>Once you can build a specification input suitable for <a class="reference internal" href="api_reference.html#experimentator.DesignTree.from_spec" title="experimentator.DesignTree.from_spec"><tt class="xref py py-meth docutils literal"><span class="pre">DesignTree.from_spec</span></tt></a>,
+constructing an <a class="reference internal" href="api_reference.html#experimentator.Experiment" title="experimentator.Experiment"><tt class="xref py py-class docutils literal"><span class="pre">Experiment</span></tt></a> is straightforward.
+Create a dictionary with the following keys:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">'design'</span></tt>:
+The <a class="reference internal" href="api_reference.html#experimentator.DesignTree" title="experimentator.DesignTree"><tt class="xref py py-class docutils literal"><span class="pre">DesignTree</span></tt></a> spec goes here (the list of dictionaries described above).
+This is the only required key.</li>
+<li><tt class="docutils literal"><span class="pre">'file'</span></tt> or <tt class="docutils literal"><span class="pre">'filename'</span></tt>:
+Use this field to associate your experiment with a data file.
+This is saved in the <tt class="xref py py-attr docutils literal"><span class="pre">Experiment.filename</span></tt> attribute.
+Note that the <a class="reference internal" href="api_reference.html#experimentator.Experiment" title="experimentator.Experiment"><tt class="xref py py-class docutils literal"><span class="pre">Experiment</span></tt></a> will not be saved automatically;
+you still have to call <a class="reference internal" href="api_reference.html#experimentator.Experiment.save" title="experimentator.Experiment.save"><tt class="xref py py-meth docutils literal"><span class="pre">Experiment.save()</span></tt></a>.</li>
+<li>Any remaining fields will be saved as a dictionary in <tt class="xref py py-attr docutils literal"><span class="pre">Experiment.experiment_data</span></tt>.
+This is a good place to put local configuration that you read during a <a class="reference internal" href="#callbacks"><em>callback</em></a>.</li>
+</ul>
+</div>
+<div class="section" id="using-yaml">
+<h4>Using YAML<a class="headerlink" href="#using-yaml" title="Permalink to this headline">¶</a></h4>
+<p>All the nested lists and dictionaries required for <a class="reference internal" href="api_reference.html#experimentator.Experiment.from_dict" title="experimentator.Experiment.from_dict"><tt class="xref py py-meth docutils literal"><span class="pre">Experiment.from_dict</span></tt></a> can be unwieldy.
+An alternative is <a class="reference internal" href="api_reference.html#experimentator.Experiment.from_yaml_file" title="experimentator.Experiment.from_yaml_file"><tt class="xref py py-meth docutils literal"><span class="pre">Experiment.from_yaml_file</span></tt></a>, which allows you to save your specification in an external file.
+<a class="reference external" href="http://en.wikipedia.org/wiki/YAML">YAML</a> is a file-format designed to be both human- and computer-readable.</p>
+<p>Porting the previous mixed-design example into a YAML file would look like this:</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">design</span><span class="p-Indicator">:</span>
+  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">participant</span>
+    <span class="l-Scalar-Plain">ivs</span><span class="p-Indicator">:</span>
+      <span class="l-Scalar-Plain">vision</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">monocular</span><span class="p-Indicator">,</span> <span class="nv">binocular</span><span class="p-Indicator">]</span>
+    <span class="l-Scalar-Plain">n</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">20</span>
+
+  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">block</span>
+    <span class="l-Scalar-Plain">ivs</span><span class="p-Indicator">:</span>
+      <span class="l-Scalar-Plain">difficulty</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">easy</span><span class="p-Indicator">,</span> <span class="nv">hard</span><span class="p-Indicator">]</span>
+
+  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">trial</span>
+    <span class="l-Scalar-Plain">ivs</span><span class="p-Indicator">:</span>
+      <span class="l-Scalar-Plain">side</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">left</span><span class="p-Indicator">,</span> <span class="nv">right</span><span class="p-Indicator">]</span>
+      <span class="l-Scalar-Plain">display_time</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">0.1</span><span class="p-Indicator">,</span> <span class="nv">0.55</span><span class="p-Indicator">,</span> <span class="nv">1</span><span class="p-Indicator">]</span>
+    <span class="l-Scalar-Plain">n</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">5</span>
+
+<span class="l-Scalar-Plain">filename</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mixed_experiment.dat</span>
+</pre></div>
+</div>
+<p>The only new piece of information here is the filename.
+It probably makes sense to include the filename in your YAML file,
+so you have a  record of which data file is associated with the YAML file.</p>
+<p>You can then create instantiate an <a class="reference internal" href="api_reference.html#experimentator.Experiment" title="experimentator.Experiment"><tt class="xref py py-class docutils literal"><span class="pre">Experiment</span></tt></a>, assuming the YAML above is stored in <tt class="docutils literal"><span class="pre">mixed_experiment.yaml</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">experimentator</span> <span class="kn">import</span> <span class="n">Experiment</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">experiment</span> <span class="o">=</span> <span class="n">Experiment</span><span class="o">.</span><span class="n">from_yaml_file</span><span class="p">(</span><span class="s">&#39;mixed_experiment.yaml&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="constructing-an-experiment-from-a-designtree">
+<span id="from-scratch"></span><h3>Constructing an Experiment from a DesignTree<a class="headerlink" href="#constructing-an-experiment-from-a-designtree" title="Permalink to this headline">¶</a></h3>
+<p>A final option for constructing an <a class="reference internal" href="api_reference.html#experimentator.Experiment" title="experimentator.Experiment"><tt class="xref py py-class docutils literal"><span class="pre">Experiment</span></tt></a> is to pass a <a class="reference internal" href="api_reference.html#experimentator.DesignTree" title="experimentator.DesignTree"><tt class="xref py py-class docutils literal"><span class="pre">DesignTree</span></tt></a> directly to the constructor.
+For example, the following code would create the same <a class="reference internal" href="api_reference.html#experimentator.Experiment" title="experimentator.Experiment"><tt class="xref py py-class docutils literal"><span class="pre">Experiment</span></tt></a> as the previous example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">experimentator</span> <span class="kn">import</span> <span class="n">DesignTree</span><span class="p">,</span> <span class="n">Experiment</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tree</span> <span class="o">=</span> <span class="n">DesignTree</span><span class="o">.</span><span class="n">from_spec</span><span class="p">([</span>
+<span class="gp">... </span>    <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;participant&#39;</span><span class="p">,</span>
+<span class="gp">... </span>         <span class="n">ivs</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;vision&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;monocular&#39;</span><span class="p">,</span> <span class="s">&#39;binocular&#39;</span><span class="p">]},</span>
+<span class="gp">... </span>         <span class="n">n</span><span class="o">=</span><span class="mi">20</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;block&#39;</span><span class="p">,</span>
+<span class="gp">... </span>         <span class="n">ivs</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;difficulty&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;easy&#39;</span><span class="p">,</span> <span class="s">&#39;hard&#39;</span><span class="p">]}),</span>
+<span class="gp">... </span>    <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;trial&#39;</span><span class="p">,</span>
+<span class="gp">... </span>         <span class="n">ivs</span><span class="o">=</span><span class="p">{</span>
+<span class="gp">... </span>             <span class="s">&#39;side&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;left&#39;</span><span class="p">,</span> <span class="s">&#39;right&#39;</span><span class="p">],</span>
+<span class="gp">... </span>             <span class="s">&#39;display_time&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.55</span><span class="p">,</span> <span class="mi">1</span><span class="p">]},</span>
+<span class="gp">... </span>         <span class="n">n</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">experiment</span> <span class="o">=</span> <span class="n">Experiment</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s">&#39;mixed_experiment.dat&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="constructing-heterogeneous-experiments">
+<span id="constructing-heterogeneity"></span><h2>Constructing heterogeneous experiments<a class="headerlink" href="#constructing-heterogeneous-experiments" title="Permalink to this headline">¶</a></h2>
+<p>As we&#8217;ve noted, constructing a <a class="reference internal" href="concepts.html#heterogeneity"><em>heterogenous</em></a> <a class="reference internal" href="api_reference.html#experimentator.Experiment" title="experimentator.Experiment"><tt class="xref py py-class docutils literal"><span class="pre">Experiment</span></tt></a> is a bit more complicated.
+To expand on the above example, let&#8217;s imagine we want to create a two-session experiment.
+The first session contains only one block, with only easy trials.
+The second session will then contain an easy and a hard block.
+Furthermore, we would like to add four practice trials at the beginning of each session.</p>
+<p>Heterogeneity is created at the level of the <a class="reference internal" href="api_reference.html#experimentator.DesignTree" title="experimentator.DesignTree"><tt class="xref py py-class docutils literal"><span class="pre">DesignTree</span></tt></a>.
+Remember how we built a <a class="reference internal" href="api_reference.html#experimentator.DesignTree" title="experimentator.DesignTree"><tt class="xref py py-class docutils literal"><span class="pre">DesignTree</span></tt></a> as a list of dictionaries?
+To create a heterogeneous <a class="reference internal" href="api_reference.html#experimentator.DesignTree" title="experimentator.DesignTree"><tt class="xref py py-class docutils literal"><span class="pre">DesignTree</span></tt></a>, we need multiple lists of dictionaries.
+We use a dictionary, where each value is a list of dictionaries
+(specifying an internally homogeneous <em>section</em> of the tree),
+and the keys give names to these sub-trees.</p>
+<p>Experimentator will create the <a class="reference internal" href="api_reference.html#experimentator.DesignTree" title="experimentator.DesignTree"><tt class="xref py py-class docutils literal"><span class="pre">DesignTree</span></tt></a> by starting at the sub-tree with the key <tt class="docutils literal"><span class="pre">'main'</span></tt>.
+When it reaches the bottom of this sub-tree, it decides how to continue by looking for a special IV named <tt class="docutils literal"><span class="pre">'design'</span></tt>.
+If this IV exists, it uses its value to decide which sub-tree to use next.
+When it reaches the end of these sub-trees, if there is an IV called <tt class="docutils literal"><span class="pre">'design'</span></tt>
+it again uses it to determine which sub-tree to use next.
+If there is no IV called <tt class="docutils literal"><span class="pre">'design'</span></tt>, then three tree ends.
+In other words, the possible values of the <tt class="docutils literal"><span class="pre">'design'</span></tt> IV should be names of sub-trees.</p>
+<p>For example, let&#8217;s make our experiment more complex by adding practice trials and two different session types.
+We&#8217;ll add the practice trials by creating a new level called <tt class="docutils literal"><span class="pre">'section'</span></tt>,
+with the first section of each session proceeding to the practice trials, and the second into the experimental blocks.</p>
+<p>We&#8217;ll use the <a class="reference internal" href="api_reference.html#experimentator.Experiment.from_yaml_file" title="experimentator.Experiment.from_yaml_file"><tt class="xref py py-meth docutils literal"><span class="pre">Experiment.from_yaml_file</span></tt></a> format:</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">design</span><span class="p-Indicator">:</span>
+  <span class="l-Scalar-Plain">main</span><span class="p-Indicator">:</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">participant</span>
+      <span class="l-Scalar-Plain">ivs</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">vision</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">monocular</span><span class="p-Indicator">,</span> <span class="nv">binocular</span><span class="p-Indicator">]</span>
+      <span class="l-Scalar-Plain">n</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">20</span>
+
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">session</span>
+      <span class="l-Scalar-Plain">ivs</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">design</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">first_session</span><span class="p-Indicator">,</span> <span class="nv">second_session</span><span class="p-Indicator">]</span>
+      <span class="l-Scalar-Plain">ordering</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Ordering</span>
+
+  <span class="l-Scalar-Plain">first_session</span><span class="p-Indicator">:</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">section</span>
+      <span class="l-Scalar-Plain">ivs</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">design</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">practice</span><span class="p-Indicator">,</span> <span class="nv">first_experimental_section</span><span class="p-Indicator">]</span>
+      <span class="l-Scalar-Plain">ordering</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Ordering</span>
+
+  <span class="l-Scalar-Plain">second_session</span><span class="p-Indicator">:</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">section</span>
+      <span class="l-Scalar-Plain">ivs</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">design</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">practice</span><span class="p-Indicator">,</span> <span class="nv">second_experimental_section</span><span class="p-Indicator">]</span>
+      <span class="l-Scalar-Plain">ordering</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Ordering</span>
+
+  <span class="l-Scalar-Plain">practice</span><span class="p-Indicator">:</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">trial</span>
+      <span class="l-Scalar-Plain">ivs</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">difficulty</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">easy</span><span class="p-Indicator">]</span>
+        <span class="l-Scalar-Plain">side</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">left</span><span class="p-Indicator">,</span> <span class="nv">right</span><span class="p-Indicator">]</span>
+        <span class="l-Scalar-Plain">display_time</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">0.1</span><span class="p-Indicator">,</span> <span class="nv">1</span><span class="p-Indicator">]</span>
+      <span class="l-Scalar-Plain">practice</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">True</span>
+
+  <span class="l-Scalar-Plain">first_experimental_section</span><span class="p-Indicator">:</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">trial</span>
+      <span class="l-Scalar-Plain">ivs</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">difficulty</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">easy</span><span class="p-Indicator">]</span>
+        <span class="l-Scalar-Plain">side</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">left</span><span class="p-Indicator">,</span> <span class="nv">right</span><span class="p-Indicator">]</span>
+        <span class="l-Scalar-Plain">display_time</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">0.1</span><span class="p-Indicator">,</span> <span class="nv">0.55</span><span class="p-Indicator">,</span> <span class="nv">1</span><span class="p-Indicator">]</span>
+      <span class="l-Scalar-Plain">n</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">10</span>
+      <span class="l-Scalar-Plain">practice</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">False</span>
+
+  <span class="l-Scalar-Plain">second_experimental_section</span><span class="p-Indicator">:</span>
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">block</span>
+      <span class="l-Scalar-Plain">ivs</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">difficulty</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">easy</span><span class="p-Indicator">,</span> <span class="nv">hard</span><span class="p-Indicator">]</span>
+
+    <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">trial</span>
+      <span class="l-Scalar-Plain">ivs</span><span class="p-Indicator">:</span>
+        <span class="l-Scalar-Plain">side</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">left</span><span class="p-Indicator">,</span> <span class="nv">right</span><span class="p-Indicator">]</span>
+        <span class="l-Scalar-Plain">display_time</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">0.1</span><span class="p-Indicator">,</span> <span class="nv">0.55</span><span class="p-Indicator">,</span> <span class="nv">1</span><span class="p-Indicator">]</span>
+      <span class="l-Scalar-Plain">n</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">5</span>
+      <span class="l-Scalar-Plain">practice</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">False</span>
+
+<span class="l-Scalar-Plain">filename</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mixed_experiment.dat</span>
+</pre></div>
+</div>
+<p>Now we have a complex, heterogeneous experiment.
+Each participant will have two sessions;
+each session will start with four practice trials
+(a cross of two levels of the IV <tt class="docutils literal"><span class="pre">'side'</span></tt>,
+two levels of the IV <tt class="docutils literal"><span class="pre">'display_time'</span></tt>,
+and one level of the IV <tt class="docutils literal"><span class="pre">'easy'</span></tt>).
+The first session will include, after the practice section, sixty trials all with difficulty <tt class="docutils literal"><span class="pre">'easy'</span></tt>.
+The second session will include, after the practice session, two blocks in random order,
+the first with difficulty <tt class="docutils literal"><span class="pre">'easy'</span></tt> and the second <tt class="docutils literal"><span class="pre">'hard'</span></tt>, each with 30 trials.
+To make this happen we created four sub-trees in addition to the <tt class="docutils literal"><span class="pre">'main</span></tt> tree.</p>
+<p>Note that we added the custom key <tt class="docutils literal"><span class="pre">'practice'</span></tt> to the <tt class="docutils literal"><span class="pre">'trial'</span></tt> level,
+to be able to more easily identify practice and experimental trials later
+(Alternatively, we could separate them later by looking for trials with <tt class="docutils literal"><span class="pre">section==2</span></tt>
+and ignoring trials with <tt class="docutils literal"><span class="pre">section==1</span></tt>).
+Also note that we use the <a class="reference internal" href="api_reference.html#experimentator.order.Ordering" title="experimentator.order.Ordering"><tt class="xref py py-class docutils literal"><span class="pre">Ordering</span></tt></a> method to produce a predictable order of the sub-trees.
+Otherwise, <a class="reference internal" href="api_reference.html#experimentator.order.Shuffle" title="experimentator.order.Shuffle"><tt class="xref py py-class docutils literal"><span class="pre">Shuffle</span></tt></a> is the default and we would get our sub-trees in a random order.
+Sometimes this is what we want, however.
+Because sub-trees are determined based on IV values, we can manipulate them in the same way as with other IVs,
+with ordering methods, design matrices, and even crossing them with other &#8220;normal&#8221; IVs.</p>
+<p>It is not necessary to have the same level names for all possible routes down the tree.
+In this example, there are no blocks in the first session
+(or the practice section of the second session, for that matter).
+However, it is critical that all IVs get assigned a value in one place or another.
+In this example, the only place that the IV <tt class="docutils literal"><span class="pre">'difficulty'</span></tt> can take the value <tt class="docutils literal"><span class="pre">'hard'</span></tt>
+is at the <tt class="docutils literal"><span class="pre">'block'</span></tt> level of the second session.
+In other places on the design tree, we have to create an IV <tt class="docutils literal"><span class="pre">'difficulty'</span></tt> with only one level (<tt class="docutils literal"><span class="pre">'easy'</span></tt>)
+to ensure that we never generate a trial without assigning a value to the IV <tt class="docutils literal"><span class="pre">'difficulty'</span></tt>.</p>
+<div class="section" id="manually-modifying-experiments">
+<h3>Manually modifying experiments<a class="headerlink" href="#manually-modifying-experiments" title="Permalink to this headline">¶</a></h3>
+<p>Another way to create complex experiment structures is to first construct a simple experiment,
+then manually modify it.
+For example, you can use the method <a class="reference internal" href="api_reference.html#experimentator.section.ExperimentSection.append_child" title="experimentator.section.ExperimentSection.append_child"><tt class="xref py py-meth docutils literal"><span class="pre">ExperimentSection.append_child</span></tt></a> to add a child under any given section,
+or <a class="reference internal" href="api_reference.html#experimentator.section.ExperimentSection.append_design_tree" title="experimentator.section.ExperimentSection.append_design_tree"><tt class="xref py py-meth docutils literal"><span class="pre">ExperimentSection.append_design_tree</span></tt></a> to add an entire sub-tree.
+See these methods&#8217; docstrings for details.
+Be sure to call <a class="reference internal" href="api_reference.html#experimentator.Experiment.save" title="experimentator.Experiment.save"><tt class="xref py py-meth docutils literal"><span class="pre">Experiment.save</span></tt></a> after to make the changes permanent.</p>
+</div>
+</div>
+<div class="section" id="design-matrices">
+<span id="id1"></span><h2>Design matrices<a class="headerlink" href="#design-matrices" title="Permalink to this headline">¶</a></h2>
+<p>In all the examples so far, we&#8217;ve only specified possible IV values;
+we let experimentator handle the creation of conditions of them.
+Experimentator will use a full factorial cross, constructing a condition for every possible combination of IV values.
+Sometimes this isn&#8217;t what we want, though.
+In a <a class="reference external" href="http://en.wikipedia.org/wiki/Fractional_factorial_design">fractional factorial design</a>, for example,
+only a subset of the possible combinations are used.
+We can specify these, and other, designs in experimentator using
+<a class="reference external" href="http://en.wikipedia.org/wiki/Design_matrix">design matrices</a>.</p>
+<p>The support for design matrices in experimenator is designed to be compatible with the Python library <a class="reference external" href="http://pythonhosted.org//pyDOE/index.html">pyDOE</a>.
+This is a library that allows for easy creation of various common design matrices.</p>
+<p>Design matrices can be specified during the creation of <a class="reference internal" href="api_reference.html#experimentator.Design" title="experimentator.Design"><tt class="xref py py-class docutils literal"><span class="pre">Design</span></tt></a> objects.
+This is the same place where IVs are specified when using the <a class="reference internal" href="#spec-constructors"><em>Specification-based constructor methods</em></a>.</p>
+<p>Each column of the design matrix is associated with one IV;
+a design matrix should have the same number of columns as the number of IVs in the design at that level.
+The order of IVs is important when using design matrices;
+because dictionaries in Python have no inherent order,
+<a class="reference external" href="http://docs.python.org/3/library/collections.html#collections.OrderedDict" title="(in Python v3.4)"><tt class="xref py py-class docutils literal"><span class="pre">OrderedDict</span></tt></a> should be used when defining IVs with design matrices,
+or alternatively IVs can be specified as a list of tuples (see the <a class="reference internal" href="concepts.html#ivs"><em>IV docs</em></a>).</p>
+<p>Each row of the design matrix is one condition,
+and the values of the matrix are interpreted in one of two ways:</p>
+<ul class="simple">
+<li>If the levels of an IV are passed as <tt class="docutils literal"><span class="pre">None</span></tt> rather than a list, then the IV is assumed to take arbitrary, continuous values.
+The values in the associated column of the design matrix are then interpreted at &#8220;face value&#8221;.</li>
+<li>Otherwise, each value in the design matrix is interpreted as an index,
+determining which value to take from the list of possible IV values.
+Experimentator is smart about this and only cares about the relative value of these &#8220;indices&#8221;.
+For example, if a design matrix column contains the values 0 and 1,
+they will be associated with the first and second IV values, respectively.
+Alternatively, if the column contains 1 and 2,
+then 1 will be associated with the first and 2 the second IV value.</li>
+</ul>
+<p>A design matrix can also specify the order of conditions, by the order of its rows.
+For this reason, the default ordering method is <a class="reference internal" href="api_reference.html#experimentator.order.Ordering" title="experimentator.order.Ordering"><tt class="xref py py-class docutils literal"><span class="pre">Ordering</span></tt></a> when a design matrix is used.
+Change this to <a class="reference internal" href="api_reference.html#experimentator.order.Shuffle" title="experimentator.order.Shuffle"><tt class="xref py py-class docutils literal"><span class="pre">Shuffle</span></tt></a>, for example,
+if you instead want the rows of the design matrix to appear in a random order.</p>
+<p>Here is an example of using a <a class="reference external" href="http://pythonhosted.org/pyDOE/rsm.html">Box-Behnken design</a> with <a class="reference external" href="http://pythonhosted.org//pyDOE/index.html">pyDOE</a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pyDOE</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">experimentator</span> <span class="kn">import</span> <span class="n">Design</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">design_matrix</span> <span class="o">=</span> <span class="n">pyDOE</span><span class="o">.</span><span class="n">bbdesign</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">design_matrix</span><span class="p">)</span>
+<span class="go">[[-1. -1.  0.]</span>
+<span class="go"> [ 1. -1.  0.]</span>
+<span class="go"> [-1.  1.  0.]</span>
+<span class="go"> [ 1.  1.  0.]</span>
+<span class="go"> [-1.  0. -1.]</span>
+<span class="go"> [ 1.  0. -1.]</span>
+<span class="go"> [-1.  0.  1.]</span>
+<span class="go"> [ 1.  0.  1.]</span>
+<span class="go"> [ 0. -1. -1.]</span>
+<span class="go"> [ 0.  1. -1.]</span>
+<span class="go"> [ 0. -1.  1.]</span>
+<span class="go"> [ 0.  1.  1.]</span>
+<span class="go"> [ 0.  0.  0.]</span>
+<span class="go"> [ 0.  0.  0.]</span>
+<span class="go"> [ 0.  0.  0.]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">trial_design</span> <span class="o">=</span> <span class="n">Design</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">ivs</span><span class="o">=</span><span class="p">[(</span><span class="s">&#39;target_size&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">30</span><span class="p">]),</span>
+<span class="gp">... </span>         <span class="p">(</span><span class="s">&#39;target_speed&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">]),</span>
+<span class="gp">... </span>         <span class="p">(</span><span class="s">&#39;target_position&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)],</span>
+<span class="gp">... </span>    <span class="n">design_matrix</span><span class="o">=</span><span class="n">design_matrix</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># The following is just to demonstrate the conditions that are created.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># These methods are usually called behind the scenes.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">trial_design</span><span class="o">.</span><span class="n">first_pass</span><span class="p">()</span>
+<span class="go">IndependentValue(name=(), values=())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">trial_design</span><span class="o">.</span><span class="n">get_order</span><span class="p">()</span>
+<span class="go">[{&#39;target_position&#39;: 0.0, &#39;target_size&#39;: 10, &#39;target_speed&#39;: 5},</span>
+<span class="go"> {&#39;target_position&#39;: 0.0, &#39;target_size&#39;: 30, &#39;target_speed&#39;: 5},</span>
+<span class="go"> {&#39;target_position&#39;: 0.0, &#39;target_size&#39;: 10, &#39;target_speed&#39;: 20},</span>
+<span class="go"> {&#39;target_position&#39;: 0.0, &#39;target_size&#39;: 30, &#39;target_speed&#39;: 20},</span>
+<span class="go"> {&#39;target_position&#39;: -1.0, &#39;target_size&#39;: 10, &#39;target_speed&#39;: 10},</span>
+<span class="go"> {&#39;target_position&#39;: -1.0, &#39;target_size&#39;: 30, &#39;target_speed&#39;: 10},</span>
+<span class="go"> {&#39;target_position&#39;: 1.0, &#39;target_size&#39;: 10, &#39;target_speed&#39;: 10},</span>
+<span class="go"> {&#39;target_position&#39;: 1.0, &#39;target_size&#39;: 30, &#39;target_speed&#39;: 10},</span>
+<span class="go"> {&#39;target_position&#39;: -1.0, &#39;target_size&#39;: 20, &#39;target_speed&#39;: 5},</span>
+<span class="go"> {&#39;target_position&#39;: -1.0, &#39;target_size&#39;: 20, &#39;target_speed&#39;: 20},</span>
+<span class="go"> {&#39;target_position&#39;: 1.0, &#39;target_size&#39;: 20, &#39;target_speed&#39;: 5},</span>
+<span class="go"> {&#39;target_position&#39;: 1.0, &#39;target_size&#39;: 20, &#39;target_speed&#39;: 20},</span>
+<span class="go"> {&#39;target_position&#39;: 0.0, &#39;target_size&#39;: 20, &#39;target_speed&#39;: 10},</span>
+<span class="go"> {&#39;target_position&#39;: 0.0, &#39;target_size&#39;: 20, &#39;target_speed&#39;: 10},</span>
+<span class="go"> {&#39;target_position&#39;: 0.0, &#39;target_size&#39;: 20, &#39;target_speed&#39;: 10}]</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="api_reference.html#experimentator.Design.get_order" title="experimentator.Design.get_order"><tt class="xref py py-meth docutils literal"><span class="pre">Design.get_order</span></tt></a> (usually called behind the scenes)
+gives us a list of conditions, each a dictionary.
+We can see here the correspondence between the design matrix and the conditions.
+Because we used <tt class="docutils literal"><span class="pre">None</span></tt> with <tt class="docutils literal"><span class="pre">'target_position'</span></tt>, its values are taken directly from the matrix.
+For the other IVs, the values are taken from the list of possible values that we defined them with.</p>
+</div>
+<div class="section" id="callbacks">
+<span id="id3"></span><h2>Callbacks<a class="headerlink" href="#callbacks" title="Permalink to this headline">¶</a></h2>
+<p>Up to this point, we&#8217;ve explained how to create an experiment of arbitrary complexity.
+But presumably you actually something to happen when you run a trial.
+This is accomplished with <em>callbacks</em>.
+In general, a callback is a function that you supply that is automatically triggered at a certain time.
+There are two types of callbacks in experimentator,
+the <a class="reference internal" href="#run-callback"><em>run callback</em></a> and <a class="reference internal" href="#contexts"><em>context-managers</em></a>,
+set with <a class="reference internal" href="api_reference.html#experimentator.Experiment.set_run_callback" title="experimentator.Experiment.set_run_callback"><tt class="xref py py-meth docutils literal"><span class="pre">Experiment.set_run_callback</span></tt></a> and <a class="reference internal" href="api_reference.html#experimentator.Experiment.set_context_manager" title="experimentator.Experiment.set_context_manager"><tt class="xref py py-meth docutils literal"><span class="pre">Experiment.set_context_manager</span></tt></a>, respectively.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Be sure to save your experiment to disk after setting a callback, using <a class="reference internal" href="api_reference.html#experimentator.Experiment.save" title="experimentator.Experiment.save"><tt class="xref py py-meth docutils literal"><span class="pre">Experiment.save</span></tt></a>,
+to make the changes permanent.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Experimentator does not store the callbacks with your <a class="reference internal" href="api_reference.html#experimentator.Experiment" title="experimentator.Experiment"><tt class="xref py py-class docutils literal"><span class="pre">Experiment</span></tt></a>, but rather
+every time you load your experiment, the callbacks are re-imported.
+Experimentator looks for a Python file with the same name as the functions were originally defined in.
+As a result, the data file exported by <a class="reference internal" href="api_reference.html#experimentator.Experiment.save" title="experimentator.Experiment.save"><tt class="xref py py-meth docutils literal"><span class="pre">Experiment.save</span></tt></a> is not sufficient when you want to move an experiment
+between computers.
+You will also need to move the Python file(s) in which any callbacks are defined.</p>
+<p class="last"><a class="reference internal" href="api_reference.html#experimentator.Experiment.set_run_callback" title="experimentator.Experiment.set_run_callback"><tt class="xref py py-meth docutils literal"><span class="pre">Experiment.set_run_callback</span></tt></a> and <a class="reference internal" href="api_reference.html#experimentator.Experiment.set_context_manager" title="experimentator.Experiment.set_context_manager"><tt class="xref py py-meth docutils literal"><span class="pre">Experiment.set_context_manager</span></tt></a> also take optional keyword arguments
+<tt class="docutils literal"><span class="pre">func_name</span></tt> and <tt class="docutils literal"><span class="pre">func_module</span></tt> that you can set to tell experimentator where to look for the callback.</p>
+</div>
+<div class="section" id="run-callback">
+<span id="id4"></span><h3>Run callback<a class="headerlink" href="#run-callback" title="Permalink to this headline">¶</a></h3>
+<p>The run callback is essentially the &#8220;trial function&#8221;.
+It is the function that is run for every trial.</p>
+<p>The run callback should take two positional arguments.
+It will be passed the current <a class="reference internal" href="api_reference.html#experimentator.Experiment" title="experimentator.Experiment"><tt class="xref py py-class docutils literal"><span class="pre">Experiment</span></tt></a> and <a class="reference internal" href="api_reference.html#experimentator.section.ExperimentSection" title="experimentator.section.ExperimentSection"><tt class="xref py py-class docutils literal"><span class="pre">ExperimentSection</span></tt></a> instances, respectively.
+Everything that the run callback might need to know can be taken from these arguments.
+Here are the most useful attributes:</p>
+<ul class="simple">
+<li><tt class="xref py py-attr docutils literal"><span class="pre">ExperimentSection.data</span></tt>:
+This is the <a class="reference external" href="http://docs.python.org/3/library/collections.html#collections.ChainMap" title="(in Python v3.4)"><tt class="xref py py-class docutils literal"><span class="pre">ChainMap</span></tt></a> that contains the condition (IV values) for the currently running trial.
+It also includes the section numbers, for example <tt class="docutils literal"><span class="pre">section.data['trial']</span></tt> will get the current trial number.</li>
+<li><tt class="xref py py-attr docutils literal"><span class="pre">Experiment.experiment_data</span></tt>:
+This is a dictionary that you can use to store persistent data that every callback will have access to.
+By default, it is empty, but you can put data in here and it will always be available,
+even across sessions of the Python interpreter.
+This means that everything you put here must be <a class="reference external" href="http://docs.python.org/3/library/pickle.html#pickle-picklable" title="(in Python v3.4)"><em class="xref std std-ref">picklable</em></a>, so not everything will work.</li>
+<li><tt class="xref py py-attr docutils literal"><span class="pre">Experiment.session_data</span></tt>:
+This is where you can store data that is only persistent within the current session of the Python interpreter.
+Every time Python exits, this dictionary is emptied.
+This means you can store data here even if it is not <a class="reference external" href="http://docs.python.org/3/library/pickle.html#pickle-picklable" title="(in Python v3.4)"><em class="xref std std-ref">picklable</em></a>.
+This is the place to store external resources like multimedia data.
+You can reload these resources during a <a class="reference internal" href="#contexts"><em>context-manager callback</em></a>.</li>
+</ul>
+<p>The run callback should return a dictionary, mapping dependent variable (DV) names to values.
+The DV names are only used to label the columns in the final representation of the experiment&#8217;s data,
+<tt class="xref py py-attr docutils literal"><span class="pre">Experiment.dataframe</span></tt>.</p>
+<p>Set the run callback using the <a class="reference internal" href="api_reference.html#experimentator.Experiment.set_run_callback" title="experimentator.Experiment.set_run_callback"><tt class="xref py py-meth docutils literal"><span class="pre">Experiment.set_run_callback</span></tt></a> method.
+You can also pass this method arbitrary positional and keyword arguments.
+Therefore, the full signature for a run callback is <tt class="docutils literal"><span class="pre">func(experiment,</span> <span class="pre">section,</span> <span class="pre">*args,</span> <span class="pre">**kwargs)</span></tt>,
+where <tt class="docutils literal"><span class="pre">func</span></tt> (the callback itself), <tt class="docutils literal"><span class="pre">*args</span></tt>, and <tt class="docutils literal"><span class="pre">**kwargs</span></tt>, are arguments to <a class="reference internal" href="api_reference.html#experimentator.Experiment.set_run_callback" title="experimentator.Experiment.set_run_callback"><tt class="xref py py-meth docutils literal"><span class="pre">Experiment.set_run_callback</span></tt></a>.</p>
+</div>
+<div class="section" id="context-managers">
+<span id="contexts"></span><h3>Context-managers<a class="headerlink" href="#context-managers" title="Permalink to this headline">¶</a></h3>
+<p>The second type of callback is the context manager.
+The name context manager is taken from the Python standard library, where they are referred to as <a class="reference external" href="http://docs.python.org/3/reference/datamodel.html#context-managers" title="(in Python v3.4)"><em>With Statement Context Managers</em></a>
+(the <tt class="docutils literal"><span class="pre">with</span></tt> statement is one way to <em>use</em> context managers,
+but it is not generally used to <em>create</em> them).
+Fundamentally, a context manager specifies behavior that should occur <em>before</em> something,
+and behavior that should occur <em>after</em>.
+In experimentator, the idea is that you will use context managers
+to define behavior that occurs before, between, and after sections of the experiment.
+One may want to open external resources (e.g., a sound file) at the beginning of each session,
+and close them afterward, for example.
+Another common use case would be to offer a break between blocks.</p>
+<p>The most verbose way to create a context manager is to make a class that contains the magic methods
+<tt class="docutils literal"><span class="pre">__enter__</span></tt> and <tt class="docutils literal"><span class="pre">__exit__</span></tt> with &#8220;before&#8221; and &#8220;after&#8221; behavior, respectively.
+See <a class="reference external" href="http://docs.python.org/3/library/stdtypes.html#typecontextmanager" title="(in Python v3.4)"><em>Context Manager Types</em></a>.</p>
+<p>A much more convenient way is to use the <a class="reference external" href="http://docs.python.org/3/library/contextlib.html#contextlib.contextmanager" title="(in Python v3.4)"><tt class="xref py py-func docutils literal"><span class="pre">contextlib.contextmanager</span></tt></a> decorator in the standard library.
+See the documentation for details, but it works like this:
+first you code the &#8220;before&#8221; behavior, then the keyword <tt class="docutils literal"><span class="pre">yield</span></tt>, then the &#8220;after&#8221; behavior.
+Here is an example context manager that offers a break between blocks:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
+
+<span class="nd">@contextmanager</span>
+<span class="k">def</span> <span class="nf">offer_break</span><span class="p">(</span><span class="n">experiment</span><span class="p">,</span> <span class="n">section</span><span class="p">):</span>
+    <span class="c"># Don&#39;t need to offer a break before the first block.</span>
+    <span class="k">if</span> <span class="n">section</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;block&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="nb">input</span><span class="p">(</span><span class="s">&#39;Take a break if you would like.</span><span class="se">\n</span><span class="s">Press ENTER when you are ready to continue.&#39;</span><span class="p">)</span>
+
+    <span class="k">yield</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;Block {} completed.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">section</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;block&#39;</span><span class="p">]))</span>
+</pre></div>
+</div>
+<p>As you see, the signature of a context manager is the same as the signature of the run callback.
+All the same data in the <a class="reference internal" href="api_reference.html#experimentator.Experiment" title="experimentator.Experiment"><tt class="xref py py-class docutils literal"><span class="pre">Experiment</span></tt></a> and <a class="reference internal" href="api_reference.html#experimentator.section.ExperimentSection" title="experimentator.section.ExperimentSection"><tt class="xref py py-class docutils literal"><span class="pre">ExperimentSection</span></tt></a> objects are also available to context managers.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In the above example, we could make the <tt class="docutils literal"><span class="pre">offer_break</span></tt> function work on any level of the experiment.
+Every <a class="reference internal" href="api_reference.html#experimentator.section.ExperimentSection" title="experimentator.section.ExperimentSection"><tt class="xref py py-class docutils literal"><span class="pre">ExperimentSection</span></tt></a> stores its level name in the attribute
+<tt class="xref py py-attr docutils literal"><span class="pre">level</span></tt>.
+If we replace <tt class="docutils literal"><span class="pre">section.data['block']</span></tt> with <tt class="docutils literal"><span class="pre">section.data[section.level]</span></tt>
+(we&#8217;d want to change the <tt class="docutils literal"><span class="pre">print</span></tt> message as well),
+then we could use <tt class="docutils literal"><span class="pre">offer_break</span></tt> at multiple levels.</p>
+</div>
+<p>Unlike the run callback, each context manager is associated with a specific level.
+Pass the level name to <a class="reference internal" href="api_reference.html#experimentator.Experiment.set_context_manager" title="experimentator.Experiment.set_context_manager"><tt class="xref py py-meth docutils literal"><span class="pre">Experiment.set_context_manager</span></tt></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">experiment</span><span class="o">.</span><span class="n">set_context_manager</span><span class="p">(</span><span class="s">&#39;block&#39;</span><span class="p">,</span> <span class="n">offer_break</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If you are using the context manager to close resources,
+it may be a good idea to use a try-finally block (see <a class="reference external" href="http://docs.python.org/3/tutorial/errors.html#tut-cleanup" title="(in Python v3.4)"><em>Defining Clean-up Actions</em></a>)
+to ensure that the resource is still closed in the case of an exception occurring.
+Here is an example that loads audio using the library <a class="reference external" href="http://pyget.org">pyglet</a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
+<span class="kn">import</span> <span class="nn">pyglet</span>
+
+<span class="nd">@contextmanager</span>
+<span class="k">def</span> <span class="nf">load_audio</span><span class="p">(</span><span class="n">experiment</span><span class="p">,</span> <span class="n">section</span><span class="p">):</span>
+    <span class="n">player</span> <span class="o">=</span> <span class="n">pyglet</span><span class="o">.</span><span class="n">media</span><span class="o">.</span><span class="n">Player</span><span class="p">()</span>
+    <span class="n">source</span> <span class="o">=</span> <span class="n">pyglet</span><span class="o">.</span><span class="n">media</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;background_music.mp3&#39;</span><span class="p">)</span>
+
+    <span class="c"># Make the Player available to other callbacks by saving it in session_data.</span>
+    <span class="n">experiment</span><span class="o">.</span><span class="n">session_data</span><span class="p">[</span><span class="s">&#39;player&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">player</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c"># Run the section.</span>
+        <span class="k">yield</span>
+
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="c"># This block will run even if an error occurs during the try block.</span>
+        <span class="c"># If no error occurs, it will run after the section ends.</span>
+        <span class="n">player</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This example is just for illustration.
+Pyglet is actually smart enough to delete <tt class="docutils literal"><span class="pre">player</span></tt> for you when the Python interpreter exits.</p>
+</div>
+<p>An alternative to manually editing <tt class="xref py py-attr docutils literal"><span class="pre">Experiment.session_data</span></tt> is to put objects after the <tt class="docutils literal"><span class="pre">yield</span></tt> keyword.
+Anything yielded by a context manager is stored in <tt class="docutils literal"><span class="pre">experiment.session_data[level_name]</span></tt>
+for the duration of the session.
+In the above example, if we have <tt class="docutils literal"><span class="pre">yield</span> <span class="pre">player</span></tt>, then we can access <tt class="docutils literal"><span class="pre">player</span></tt> from other callbacks
+as <tt class="docutils literal"><span class="pre">experiment.session_data['session']</span></tt>
+(assuming <tt class="docutils literal"><span class="pre">load_audio</span></tt> is set as the context manager of the level <tt class="docutils literal"><span class="pre">'session'</span></tt>).</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="cli.html" class="btn btn-neutral float-right" title="Command-line interface"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="concepts.html" class="btn btn-neutral" title="Concepts"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2014, Henry S. Harrison.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

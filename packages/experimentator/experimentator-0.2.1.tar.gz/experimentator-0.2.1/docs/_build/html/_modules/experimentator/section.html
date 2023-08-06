@@ -1,0 +1,729 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>experimentator.section &mdash; experimentator 0.2.0 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="experimentator 0.2.0 documentation" href="../../index.html"/>
+        <link rel="up" title="experimentator" href="../experimentator.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="../../index.html" class="fa fa-home"> experimentator</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../concepts.html">Concepts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../concepts.html#experiment-structure">Experiment structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../concepts.html#design">Design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../concepts.html#why-use-levels">Why use levels?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../concepts.html#heterogeneous-experiment-structures">Heterogeneous experiment structures</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../creation.html">Creating an experiment</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../creation.html#constructor-methods">Constructor methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../creation.html#constructing-heterogeneous-experiments">Constructing heterogeneous experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../creation.html#design-matrices">Design matrices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../creation.html#callbacks">Callbacks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html">Command-line interface</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../cli.html#commands">Commands</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference.html">API reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api_reference.html#experiment">Experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api_reference.html#helper-functions">Helper functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api_reference.html#experimentsection">ExperimentSection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api_reference.html#design">Design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api_reference.html#designtree">DesignTree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api_reference.html#module-experimentator.order">experimentator.order</a></li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">experimentator</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+          <li><a href="../experimentator.html">experimentator</a> &raquo;</li>
+      
+    <li>experimentator.section</li>
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            
+  <h1>Source code for experimentator.section</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module contains the |ExperimentSection| class, which is imported in `__init__.py`.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ExperimentSection"><a class="viewcode-back" href="../../api_reference.html#experimentator.section.ExperimentSection">[docs]</a><span class="k">class</span> <span class="nc">ExperimentSection</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A section of the experiment, at any level of the hierarchy.</span>
+<span class="sd">    Single trials and groups of trials (blocks, sessions, participants, etc.)</span>
+<span class="sd">    are represented as |ExperimentSection| instances.</span>
+<span class="sd">    A complete experiment consists of |ExperimentSection| instances arranged in a tree.</span>
+<span class="sd">    The root element should be an |Experiment| (a subclass of |ExperimentSection|);</span>
+<span class="sd">    the rest of the sections can be reached via its descendants (see below on the sequence protocol).</span>
+<span class="sd">    A new |ExperimentSection| instance is automatically populated with |ExperimentSection| descendants</span>
+<span class="sd">    according to the |DesignTree| passed to its constructor.</span>
+
+<span class="sd">    |ExperimentSection| implements Python&#39;s sequence protocol;</span>
+<span class="sd">    its contents are |ExperimentSection| instances at the level below.</span>
+<span class="sd">    In other words, children can be accessed using the ``[index]`` notation,</span>
+<span class="sd">    as well as with slices (``[3:6]``) or iteration (``for section in experiment_section``).</span>
+<span class="sd">    However, |ExperimentSection| breaks the Python convention of 0-based indexing,</span>
+<span class="sd">    using 1-based indexing to match the convention in experimental science.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tree : |DesignTree|</span>
+<span class="sd">        Describes the design of the experiment hierarchy.</span>
+<span class="sd">    data : |ChainMap|</span>
+<span class="sd">        All data to be associated with the |ExperimentSection|,</span>
+<span class="sd">        including the values of independent variables,</span>
+<span class="sd">        the section numbers indicating the section&#39;s location in the experiment,</span>
+<span class="sd">        and any results associated with this section,</span>
+<span class="sd">        arising from either the run callback of the |Experiment| or from the method |ExperimentSection.add_data|.</span>
+<span class="sd">        `data` should be a  |collections.ChainMap|,</span>
+<span class="sd">        which behaves like a dictionary but has a hierarchical organization such that</span>
+<span class="sd">        children can access values from the parent but not vice-versa.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tree : |DesignTree|</span>
+<span class="sd">    data : |ChainMap|</span>
+<span class="sd">    dataframe : |DataFrame|</span>
+<span class="sd">        All data associated with the |ExperimentSection| and its descendants.</span>
+<span class="sd">    heterogeneous_design_iv_name : str</span>
+<span class="sd">        IV name determining which branch of the |DesignTree| to follow.</span>
+<span class="sd">    level : str</span>
+<span class="sd">        The level of the hierarchy at which this section lives.</span>
+<span class="sd">    levels : list of str</span>
+<span class="sd">        Level names below this section.</span>
+<span class="sd">    local_levels : set</span>
+<span class="sd">        Level names of this section&#39;s children. Usually a single-element set.</span>
+<span class="sd">    is_bottom_level : bool</span>
+<span class="sd">        If true, this is the lowest level of the hierarchy.</span>
+<span class="sd">    has_start : bool</span>
+<span class="sd">        Whether this section has started to be run.</span>
+<span class="sd">    has_finished : bool</span>
+<span class="sd">        Whether this section has finished running.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -------</span>
+<span class="sd">    Use 1-based indexing to refer to |ExperimentSection| children,</span>
+<span class="sd">    both when when using indexing or slicing with an |ExperimentSection|,</span>
+<span class="sd">    and when identifying sections in keyword arguments to methods such as |ExperimentSection.subsection|.</span>
+<span class="sd">    This better corresponds to the language commonly used by scientists to identify participants, trials, etc.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tree</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tree</span> <span class="o">=</span> <span class="n">tree</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tree</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom_level</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tree</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_children</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">deque</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">has_started</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">has_finished</span> <span class="o">=</span> <span class="bp">False</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom_level</span><span class="p">:</span>
+            <span class="c"># Create the section tree. Creating any section also creates the sections below it.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">append_design_tree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_next_tree</span><span class="p">(),</span> <span class="n">_renumber</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_number_children</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">heterogeneous_design_iv_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tree</span><span class="o">.</span><span class="n">levels_and_designs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">design</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">heterogeneous_design_iv_name</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">pandas</span> <span class="kn">import</span> <span class="n">DataFrame</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">DataFrame</span><span class="p">(</span><span class="n">section</span><span class="o">.</span><span class="n">data</span> <span class="k">for</span> <span class="n">section</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">walk</span><span class="p">()</span> <span class="k">if</span> <span class="n">section</span><span class="o">.</span><span class="n">is_bottom_level</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">levels</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">levels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">levels</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">section</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">walk</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="n">section</span><span class="o">.</span><span class="n">local_levels</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">level</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">levels</span><span class="p">:</span>
+                    <span class="n">levels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">levels</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">local_levels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">child</span><span class="o">.</span><span class="n">level</span> <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;ExperimentSection({}, {})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tree</span><span class="o">.</span><span class="n">__repr__</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">__repr__</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">__dict__</span>
+
+<div class="viewcode-block" id="ExperimentSection.get_next_tree"><a class="viewcode-back" href="../../api_reference.html#experimentator.section.ExperimentSection.get_next_tree">[docs]</a>    <span class="k">def</span> <span class="nf">get_next_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a tree to use for creating child |ExperimentSection| instances.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        |DesignTree|</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">next_tree</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tree</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">next_tree</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">next_tree</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">heterogeneous_design_iv_name</span><span class="p">]]</span>
+        <span class="k">return</span> <span class="n">next_tree</span>
+</div>
+<div class="viewcode-block" id="ExperimentSection.append_design_tree"><a class="viewcode-back" href="../../api_reference.html#experimentator.section.ExperimentSection.append_design_tree">[docs]</a>    <span class="k">def</span> <span class="nf">append_design_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tree</span><span class="p">,</span> <span class="n">to_start</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">_renumber</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Append all sections associated with the top level of a |DesignTree|</span>
+<span class="sd">        (and therefore also create descendant sections) to the |ExperimentSection|.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        tree : |DesignTree|</span>
+<span class="sd">            The tree to append.</span>
+<span class="sd">        to_start : bool, optional</span>
+<span class="sd">            If True, the sections will be inserted at the beginning of the section.</span>
+<span class="sd">            If False (the default), they will be appended to the end.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        After calling this method,</span>
+<span class="sd">        the section numbers in the children&#39;s |ExperimentSection.data| attributes</span>
+<span class="sd">        will be automatically replaced with the correct numbers.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">level</span><span class="p">,</span> <span class="n">designs</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">levels_and_designs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">==</span> <span class="n">level</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;DesignTree to be appended is at the same level as the current section&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">to_start</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">design</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">designs</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">new_data</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">design</span><span class="o">.</span><span class="n">get_order</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">append_child</span><span class="p">(</span><span class="n">new_data</span><span class="p">,</span> <span class="n">tree</span><span class="o">=</span><span class="n">tree</span><span class="p">,</span> <span class="n">to_start</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">_renumber</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">design</span> <span class="ow">in</span> <span class="n">designs</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">new_data</span> <span class="ow">in</span> <span class="n">design</span><span class="o">.</span><span class="n">get_order</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">append_child</span><span class="p">(</span><span class="n">new_data</span><span class="p">,</span> <span class="n">tree</span><span class="o">=</span><span class="n">tree</span><span class="p">,</span> <span class="n">_renumber</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">_renumber</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_number_children</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="ExperimentSection.append_child"><a class="viewcode-back" href="../../api_reference.html#experimentator.section.ExperimentSection.append_child">[docs]</a>    <span class="k">def</span> <span class="nf">append_child</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">tree</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">to_start</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">_renumber</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a new |ExperimentSection| (and its descendants)</span>
+<span class="sd">        and append it as a child of the current |ExperimentSection|.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : dict</span>
+<span class="sd">            Data to be included in the new section&#39;s |ExperimentSection.data| |ChainMap|.</span>
+<span class="sd">            Should include values of IVs at the section&#39;s level, for example.</span>
+<span class="sd">        tree : |DesignTree|, optional</span>
+<span class="sd">            If given, the section will be appended from the top level of `tree`.</span>
+<span class="sd">            If not passed, the tree of the current section will be used.</span>
+<span class="sd">            Note that this does not affect IV values; IV values must still be included in `data`.</span>
+<span class="sd">        to_start : bool, optional</span>
+<span class="sd">            If True, the new |ExperimentSection| will be appended to the beginning of the current section.</span>
+<span class="sd">            If False (the default), it will be appended to the end.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        After calling this method,</span>
+<span class="sd">        the section numbers in the children&#39;s |ExperimentSection.data| attributes</span>
+<span class="sd">        will be automatically replaced with the correct numbers.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">tree</span><span class="p">:</span>
+            <span class="n">tree</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_next_tree</span><span class="p">()</span>
+
+        <span class="n">child_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">new_child</span><span class="p">()</span>
+        <span class="n">child_data</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">levels_and_designs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Generating {} with data {}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">child_data</span><span class="p">))</span>
+        <span class="n">child</span> <span class="o">=</span> <span class="n">ExperimentSection</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">child_data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">to_start</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">appendleft</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">_renumber</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_number_children</span><span class="p">()</span>
+</div>
+    <span class="k">def</span> <span class="nf">_number_children</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">local_levels</span><span class="p">:</span>
+            <span class="n">children_at_level</span> <span class="o">=</span> <span class="p">[</span><span class="n">child</span> <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span> <span class="k">if</span> <span class="n">child</span><span class="o">.</span><span class="n">level</span> <span class="o">==</span> <span class="n">level</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">child</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">children_at_level</span><span class="p">):</span>
+                <span class="n">child</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">level</span><span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">})</span>
+
+<div class="viewcode-block" id="ExperimentSection.add_data"><a class="viewcode-back" href="../../api_reference.html#experimentator.section.ExperimentSection.add_data">[docs]</a>    <span class="k">def</span> <span class="nf">add_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the |ExperimentSection.data| |ChainMap|.</span>
+<span class="sd">        This data will apply to this section and all child sections.</span>
+<span class="sd">        This can be used, for example, to manually record a participant&#39;s age.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : dict</span>
+<span class="sd">            Elements to be added to |ExperimentSection.data|.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ExperimentSection.subsection"><a class="viewcode-back" href="../../api_reference.html#experimentator.section.ExperimentSection.subsection">[docs]</a>    <span class="k">def</span> <span class="nf">subsection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">section_numbers</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find a single, descendant |ExperimentSection| based on section numbers.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        **section_numbers</span>
+<span class="sd">            Keyword arguments describing which subsection to find</span>
+<span class="sd">            Must include every level higher than the desired section.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        |ExperimentSection|</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        experimentator.section.ExperimentSection.all_subsections</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Assuming the levels of the experiment saved in ``&#39;example.dat&#39;`` are</span>
+<span class="sd">        ``(&#39;participant&#39;, &#39;session&#39;, &#39;block&#39;, &#39;trial&#39;)``,</span>
+<span class="sd">        this will return the third block of the second participant&#39;s first session:</span>
+
+<span class="sd">        &gt;&gt;&gt; from experimentator import Experiment</span>
+<span class="sd">        &gt;&gt;&gt; exp = Experiment.load(&#39;example.dat&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; some_block = exp.subsection(participant=2, session=1, block=3)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">node</span><span class="p">:</span> <span class="nb">all</span><span class="p">(</span><span class="n">level</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">data</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">level</span><span class="p">]</span> <span class="o">==</span> <span class="n">number</span>
+                               <span class="k">for</span> <span class="n">level</span><span class="p">,</span> <span class="n">number</span> <span class="ow">in</span> <span class="n">section_numbers</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth_first_search</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Could not find specified section.&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ExperimentSection.all_subsections"><a class="viewcode-back" href="../../api_reference.html#experimentator.section.ExperimentSection.all_subsections">[docs]</a>    <span class="k">def</span> <span class="nf">all_subsections</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">section_numbers</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find all subsections in the experiment matching the given section numbers.</span>
+
+<span class="sd">        Yields specified |ExperimentSection| instances.</span>
+<span class="sd">        The yielded sections will be at the lowest level given in `section_numbers`.</span>
+<span class="sd">        If levels not in `section_numbers` are encountered before reaching its lowest level,</span>
+<span class="sd">        all sections will be descended into.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        **section_numbers</span>
+<span class="sd">            Keyword arguments describing what subsections to find.</span>
+<span class="sd">            Keys are level names, values are ints or sequences of ints.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        experimentator.section.ExperimentSection.subsection</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Assuming the levels of the experiment saved in ``&#39;example.dat&#39;`` are</span>
+<span class="sd">        ``(&#39;participant&#39;, &#39;session&#39;, &#39;block&#39;, &#39;trial&#39;)``:</span>
+
+<span class="sd">        &gt;&gt;&gt; from experimentator import Experiment</span>
+<span class="sd">        &gt;&gt;&gt; exp = Experiment.load(&#39;example.dat&#39;)</span>
+
+<span class="sd">        Get the  first session of each participant:</span>
+
+<span class="sd">        &gt;&gt;&gt; all_first_sessions = list(exp.all_subsections(session=1))</span>
+
+<span class="sd">        Get the second trial of the first block in each session:</span>
+
+<span class="sd">        &gt;&gt;&gt; trials = list(exp.all_subsections(block=1, trial=2))</span>
+
+<span class="sd">        Get the first three trials of each block in the first session of each participant:</span>
+
+<span class="sd">        &gt;&gt;&gt; more_trials = list(exp.all_subsections(session=1, trial=[1, 2, 3]))</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># The state of the recursion is passed in the keyword argument &#39;_section&#39;.</span>
+        <span class="n">section</span> <span class="o">=</span> <span class="n">section_numbers</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;_section&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">section</span><span class="o">.</span><span class="n">is_bottom_level</span> <span class="ow">and</span> <span class="n">section</span><span class="o">.</span><span class="n">tree</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">section_numbers</span><span class="p">:</span>
+            <span class="c"># Remove the section from section_numbers...it needs to be empty to signal completion.</span>
+            <span class="n">numbers</span> <span class="o">=</span> <span class="n">section_numbers</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">section</span><span class="o">.</span><span class="n">tree</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">numbers</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>  <span class="c"># Only one number specified.</span>
+                <span class="k">if</span> <span class="n">section_numbers</span><span class="p">:</span>  <span class="c"># We&#39;re not done.</span>
+                    <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_subsections</span><span class="p">(</span><span class="n">_section</span><span class="o">=</span><span class="n">section</span><span class="p">[</span><span class="n">numbers</span><span class="p">],</span> <span class="o">**</span><span class="n">section_numbers</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>  <span class="c"># We&#39;re done.</span>
+                    <span class="k">yield</span> <span class="n">section</span><span class="p">[</span><span class="n">numbers</span><span class="p">]</span>
+
+            <span class="k">else</span><span class="p">:</span>  <span class="c"># Multiple numbers specified.</span>
+                <span class="k">if</span> <span class="n">section_numbers</span><span class="p">:</span>  <span class="c"># We&#39;re not done.</span>
+                    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">numbers</span><span class="p">:</span>
+                        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_subsections</span><span class="p">(</span><span class="n">_section</span><span class="o">=</span><span class="n">section</span><span class="p">[</span><span class="n">n</span><span class="p">],</span> <span class="o">**</span><span class="n">section_numbers</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>  <span class="c"># We&#39;re done.</span>
+                    <span class="k">yield from</span> <span class="p">(</span><span class="n">section</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">numbers</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># Section not specified but we&#39;re not done; descend into every child.</span>
+            <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">section</span><span class="p">:</span>
+                <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_subsections</span><span class="p">(</span><span class="n">_section</span><span class="o">=</span><span class="n">child</span><span class="p">,</span> <span class="o">**</span><span class="n">section_numbers</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ExperimentSection.find_first_not_run"><a class="viewcode-back" href="../../api_reference.html#experimentator.section.ExperimentSection.find_first_not_run">[docs]</a>    <span class="k">def</span> <span class="nf">find_first_not_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">at_level</span><span class="p">,</span> <span class="n">by_started</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Search the experimental hierarchy,</span>
+<span class="sd">        and return the first descendant |ExperimentSection| at `at_level`</span>
+<span class="sd">        that has not yet been run.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        at_level : str</span>
+<span class="sd">            Which level to search.</span>
+<span class="sd">        by_started : bool, optional</span>
+<span class="sd">            If True (default), returns the first section that has not been started.</span>
+<span class="sd">            Otherwise, finds the first section that has not finished.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        |ExperimentSection|</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">node</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">level</span> <span class="o">==</span> <span class="n">at_level</span>
+
+        <span class="k">if</span> <span class="n">by_started</span><span class="p">:</span>
+            <span class="n">path_key</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">node</span><span class="p">:</span> <span class="ow">not</span> <span class="n">node</span><span class="o">.</span><span class="n">has_started</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">path_key</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">node</span><span class="p">:</span> <span class="ow">not</span> <span class="n">node</span><span class="o">.</span><span class="n">has_finished</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth_first_search</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">path_key</span><span class="o">=</span><span class="n">path_key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="ExperimentSection.find_first_partially_run"><a class="viewcode-back" href="../../api_reference.html#experimentator.section.ExperimentSection.find_first_partially_run">[docs]</a>    <span class="k">def</span> <span class="nf">find_first_partially_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">at_level</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Search the experimental hierarchy,</span>
+<span class="sd">        and return the first descendant |ExperimentSection| at `at_level`</span>
+<span class="sd">        that has been started but not finished.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        at_level : str</span>
+<span class="sd">            Which level to search.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        |ExperimentSection|</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">node</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">level</span> <span class="o">==</span> <span class="n">at_level</span>
+        <span class="n">path_key</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">node</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">has_started</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">node</span><span class="o">.</span><span class="n">has_finished</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth_first_search</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">path_key</span><span class="o">=</span><span class="n">path_key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="ExperimentSection.breadth_first_search"><a class="viewcode-back" href="../../api_reference.html#experimentator.section.ExperimentSection.breadth_first_search">[docs]</a>    <span class="k">def</span> <span class="nf">breadth_first_search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Breadth-first search starting from here.</span>
+<span class="sd">        Returns the entire search path.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        key : func</span>
+<span class="sd">            Function that returns True or False when passed an |ExperimentSection|.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list of |ExperimentSection|</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">paths</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">deque</span><span class="p">([[</span><span class="bp">self</span><span class="p">]])</span>
+        <span class="k">while</span> <span class="n">paths</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">paths</span><span class="o">.</span><span class="n">popleft</span><span class="p">()</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">path</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">key</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">path</span>
+
+            <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">node</span><span class="p">:</span>
+                <span class="n">paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="o">+</span> <span class="p">[</span><span class="n">child</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="p">[]</span>
+</div>
+<div class="viewcode-block" id="ExperimentSection.depth_first_search"><a class="viewcode-back" href="../../api_reference.html#experimentator.section.ExperimentSection.depth_first_search">[docs]</a>    <span class="k">def</span> <span class="nf">depth_first_search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">path_key</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">_path</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Depth-first search starting from here.</span>
+<span class="sd">        Returns the entire search path.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        key : func</span>
+<span class="sd">            Function that returns True or False when passed an |ExperimentSection|.</span>
+<span class="sd">        path_key : func, optional</span>
+<span class="sd">            Function that returns True or False when passed an |ExperimentSection|.</span>
+<span class="sd">            If given, the search will proceed only via sections for which `path_key` returns True.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list of |ExperimentSection|</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">no_path_key_or_true</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">node</span><span class="p">:</span> <span class="ow">not</span> <span class="n">path_key</span> <span class="ow">or</span> <span class="n">path_key</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+        <span class="n">path</span> <span class="o">=</span> <span class="n">_path</span> <span class="ow">or</span> <span class="p">[</span><span class="bp">self</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">key</span><span class="p">(</span><span class="n">path</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="ow">and</span> <span class="n">no_path_key_or_true</span><span class="p">(</span><span class="n">path</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="k">return</span> <span class="n">path</span>
+
+        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">path</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">no_path_key_or_true</span><span class="p">(</span><span class="n">child</span><span class="p">):</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth_first_search</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">path_key</span><span class="o">=</span><span class="n">path_key</span><span class="p">,</span> <span class="n">_path</span><span class="o">=</span><span class="n">path</span> <span class="o">+</span> <span class="p">[</span><span class="n">child</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">result</span>
+
+        <span class="k">return</span> <span class="p">[]</span>
+</div>
+<div class="viewcode-block" id="ExperimentSection.walk"><a class="viewcode-back" href="../../api_reference.html#experimentator.section.ExperimentSection.walk">[docs]</a>    <span class="k">def</span> <span class="nf">walk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Walk the tree depth-first, starting from here.</span>
+<span class="sd">        Yields this section and every descendant section.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">yield</span> <span class="bp">self</span>
+        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">yield from</span> <span class="n">child</span><span class="o">.</span><span class="n">walk</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="ExperimentSection.parent"><a class="viewcode-back" href="../../api_reference.html#experimentator.section.ExperimentSection.parent">[docs]</a>    <span class="k">def</span> <span class="nf">parent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">section</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find the parent of a section.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        section : |ExperimentSection|</span>
+<span class="sd">            The section to find the parent of.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        |ExperimentSection|</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">parents</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parents</span><span class="p">(</span><span class="n">section</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">parents</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">parents</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="ExperimentSection.parents"><a class="viewcode-back" href="../../api_reference.html#experimentator.section.ExperimentSection.parents">[docs]</a>    <span class="k">def</span> <span class="nf">parents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">section</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find all parents of a section, in top-to-bottom order.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        section : |ExperimentSection|</span>
+<span class="sd">            The section to find the parents of.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list of |ExperimentSection|</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">section</span><span class="o">.</span><span class="n">level</span> <span class="o">==</span> <span class="s">&#39;_base&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">breadth_first_search</span><span class="p">(</span><span class="k">lambda</span> <span class="n">node</span><span class="p">:</span> <span class="n">section</span> <span class="ow">in</span> <span class="n">node</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">_convert_index_object</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Change an indexing object (slice or int) from using 1-based indexing to using 0-based indexing.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+                <span class="k">return</span> <span class="nb">slice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_convert_index</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">start</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_index</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">stop</span><span class="p">),</span> <span class="n">item</span><span class="o">.</span><span class="n">step</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_index</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s">&#39;Use 1-based indexing with ExperimentSection instances&#39;</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_convert_index</span><span class="p">(</span><span class="n">idx</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">idx</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+
+        <span class="k">if</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">idx</span>
+
+        <span class="k">if</span> <span class="n">idx</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s">&#39;Use 1-based indexing with ExperimentSection instances&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">idx</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_index_object</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">islice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">,</span> <span class="o">*</span><span class="n">item</span><span class="o">.</span><span class="n">indices</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">item</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">__iter__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_convert_index_object</span><span class="p">(</span><span class="n">key</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_number_children</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_convert_index_object</span><span class="p">(</span><span class="n">key</span><span class="p">)]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_number_children</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__reversed__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span></div>
+</pre></div>
+
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2014, Henry S. Harrison.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
