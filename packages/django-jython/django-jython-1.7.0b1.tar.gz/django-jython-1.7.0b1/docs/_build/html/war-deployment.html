@@ -1,0 +1,243 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Creating a .war archive for deployment &mdash; django-jython 1.7.0b1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.7.0b1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="django-jython 1.7.0b1 documentation" href="index.html" />
+    <link rel="next" title="Release Notes" href="release-notes.html" />
+    <link rel="prev" title="Database backends" href="database-backends.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="release-notes.html" title="Release Notes"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="database-backends.html" title="Database backends"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">django-jython 1.7.0b1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="creating-a-war-archive-for-deployment">
+<span id="war-deployment"></span><h1>Creating a .war archive for deployment<a class="headerlink" href="#creating-a-war-archive-for-deployment" title="Permalink to this headline">¶</a></h1>
+<p>django-jython includes a <tt class="docutils literal"><span class="pre">buildwar</span></tt> management command so you can go to your project
+directory and type something like this:</p>
+<div class="highlight-python"><pre>$ jython manage.py buildwar --include-java-libs=/path/to/jython-standalone-2.7-b2.jar:/path/to/postgresql-9.1-902.jdbc4.jar</pre>
+</div>
+<p>And get a single <tt class="docutils literal"><span class="pre">mysite.war</span></tt> file which you can deploy in your preferred application server.
+This file doesn&#8217;t require anything special installed on the target server. No Django, no Jython, no nothing.</p>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<p>The first step is to add <tt class="docutils literal"><span class="pre">'doj'</span></tt> to the list of <tt class="docutils literal"><span class="pre">INSTALLED_APPS</span></tt> on your
+<tt class="docutils literal"><span class="pre">settings.py</span></tt> file. So this section should look like:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">INSTALLED_APPS</span> <span class="o">=</span> <span class="p">(</span>
+  <span class="s">&#39;django.contrib.auth&#39;</span><span class="p">,</span>
+  <span class="s">&#39;django.contrib.contenttypes&#39;</span><span class="p">,</span>
+  <span class="s">&#39;django.contrib.sessions&#39;</span><span class="p">,</span>
+  <span class="s">&#39;django.contrib.sites&#39;</span><span class="p">,</span>
+  <span class="s">&#39;django.contrib.admin&#39;</span><span class="p">,</span>
+  <span class="s">&#39;mysite.polls&#39;</span><span class="p">,</span>
+  <span class="s">&#39;mysite.another_app&#39;</span><span class="p">,</span>
+  <span class="c"># More apps...</span>
+  <span class="s">&#39;doj&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Then, the most typical usage is the one already exemplified:</p>
+<div class="highlight-python"><pre>$ jython manage.py buildwar --include-java-libs=/path/to/jython-standalone-2.7-b2.jar:/path/to/postgresql-9.1-902.jdbc4.jar</pre>
+</div>
+<p>Here, you tell the <tt class="docutils literal"><span class="pre">buildwar</span></tt> command that it should include an extra Java library to
+the generated <tt class="docutils literal"><span class="pre">.war</span></tt> file, because it can&#8217;t know which Java libraries are you using
+inside your project. In the typical cases, you must <strong>at least</strong> specify the
+JDBC driver you are using to connect to the database, which will depend on the
+configured <a class="reference internal" href="database-backends.html#database-backends"><em>Database backends</em></a>, as well as the <strong>standalone version</strong> of Jython itself.</p>
+<p>The generated <tt class="docutils literal"><span class="pre">.war</span></tt> file is created on the current working directory.</p>
+<p>You may also specify more files to include, separating the paths by the special
+<strong>path separator</strong> character, which is <tt class="docutils literal"><span class="pre">:</span></tt> in Unix based platforms and
+<tt class="docutils literal"><span class="pre">;</span></tt> on Windows platforms.</p>
+<p>For example, if you are using the iText library inside your Django project you should
+specify something like the following when constructing the <tt class="docutils literal"><span class="pre">.war</span></tt> file:</p>
+<div class="highlight-python"><pre>$ jython manage.py buildwar --include-java-libs=/path/to/jython-standalone-2.7-b2.jar:/path/to/postgresql-9.1-902.jdbc4.jar:/path/to/iText-2.1.3.jar</pre>
+</div>
+<p>It is also possible to tell django-jython the needed Java library via the application&#8217;s
+settings. This has the advantage that there is no need to add the library paths to the
+<tt class="docutils literal"><span class="pre">buildwar</span></tt> command every time you build a new <tt class="docutils literal"><span class="pre">.war</span></tt>. All you need to do is to add
+a <tt class="docutils literal"><span class="pre">DOJ_BUILDWAR_JAVA_LIBS</span></tt> configuration to your settings:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">DOJ_BUILDWAR_JAVA_LIBS</span> <span class="o">=</span> <span class="p">[</span>
+  <span class="s">&#39;/path/to/jython-standalone-2.7-b2.jar&#39;</span><span class="p">,</span>
+  <span class="s">&#39;/path/to/postgresql-9.1-902.jdbc4.jar&#39;</span><span class="p">,</span>
+  <span class="s">&#39;/path/to/iText-2.1.3.jar&#39;</span><span class="p">,</span>
+  <span class="c"># More .jars...</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="including-extra-python-libraries">
+<h2>Including extra Python libraries<a class="headerlink" href="#including-extra-python-libraries" title="Permalink to this headline">¶</a></h2>
+<p>By default, the <tt class="docutils literal"><span class="pre">buildwar</span></tt> command copies your project directory and the root directory
+of every Django application declared on the <tt class="docutils literal"><span class="pre">INSTALLED_APPS</span></tt> settings inside
+the generated file (in addition to Django itself, of course). <strong>It won&#8217;t detect
+any other Python dependency of your project</strong>, like for example PyAMF.</p>
+<p>So, in case you have a dependency on a Python library (not included on the
+standard library of course), you have to specify it with the
+<tt class="docutils literal"><span class="pre">--include-py-packages</span></tt> option, as the following example:</p>
+<div class="highlight-python"><pre>$ jython manage.py buildwar --include-py-packages=pyamf</pre>
+</div>
+<p>As with <tt class="docutils literal"><span class="pre">--include-java-libs</span></tt>, multiple entries and/or packages can be
+specified, by separating them with the <strong>path separator</strong> character of your
+platform (<tt class="docutils literal"><span class="pre">:</span></tt> in Unix-based systems and <tt class="docutils literal"><span class="pre">;</span></tt> in Windows).</p>
+<p>Note that you do not add paths here, but Python module names. This means that
+django-jython must be able to import the module with the given name (the package
+must be in the Python path).</p>
+<p>As with <tt class="docutils literal"><span class="pre">DOJ_BUILDWAR_JAVA_LIBS</span></tt> it is also possible to add the package
+dependencies to your application&#8217;s settings. This is done with the
+<tt class="docutils literal"><span class="pre">DOJ_BUILDWAR_PY_PACKAGES</span></tt> configuration:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">DOJ_BUILDWAR_PY_PACKAGES</span> <span class="o">=</span> <span class="p">[</span>
+  <span class="s">&#39;pyamf&#39;</span><span class="p">,</span>
+  <span class="c"># More packages...</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="media-files-and-the-context-root-name">
+<h2>Media files and the context root name<a class="headerlink" href="#media-files-and-the-context-root-name" title="Permalink to this headline">¶</a></h2>
+<p>In principle, your application could live inside any URL, as long as you use
+the <a class="reference external" href="http://www.djangoproject.com/documentation/templates/#url">url template tag</a> and the <a class="reference external" href="http://www.djangoproject.com/documentation/url_dispatch/#reverse">reverse()
+function</a>
+to generate links inside your applications. This decouples your views from the
+actual url they get attached to on the web server.</p>
+<p><strong>But</strong>, this isn&#8217;t true for media files when the prefix is configured on
+<tt class="docutils literal"><span class="pre">settings.py</span></tt>, such as <tt class="docutils literal"><span class="pre">MEDIA_URL</span></tt> or <tt class="docutils literal"><span class="pre">STATIC_URL</span></tt>. (Now, if you
+never planned to serve media on the same server where your Django applications
+live, skip this section. This is all about making it easy to serve static files
+inside the <strong>same</strong> servlet context as your Django project will live.)</p>
+<p>So, the <tt class="docutils literal"><span class="pre">buildwar</span></tt> command patches the application&#8217;s settings, by appending
+something like the following, at the end of the file:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Added by django-jython. Fixes URL prefixes to include the context root:</span>
+<span class="n">CONTEXT_ROOT</span><span class="o">=</span><span class="s">&#39;/mysite/&#39;</span>
+<span class="n">MEDIA_URL</span><span class="o">=</span><span class="s">&#39;/mysite/site_media/&#39;</span>
+<span class="n">STATIC_URL</span><span class="o">=</span><span class="s">&#39;/mysite/site_static/&#39;</span>
+<span class="n">LOGIN_REDIRECT_URL</span><span class="o">=</span><span class="s">&#39;/mysite/index/&#39;</span>
+<span class="n">LOGIN_URL</span><span class="o">=</span><span class="s">&#39;/mysite/login/&#39;</span>
+<span class="n">LOGOUT_URL</span><span class="o">=</span><span class="s">&#39;/mysite/logout/&#39;</span>
+</pre></div>
+</div>
+<p>These values respect the original values of these variables. If any
+of these variables do point to an remote server (e.g. starting with <tt class="docutils literal"><span class="pre">http://...</span></tt>)
+it will not get prefixed.</p>
+<p>(You can check this by yourself, looking at the file
+<tt class="docutils literal"><span class="pre">WEB-INF/lib-python/application_settings.py</span></tt> inside the generated <tt class="docutils literal"><span class="pre">.war</span></tt>
+file)</p>
+<p>By default, the <tt class="docutils literal"><span class="pre">buildwar</span></tt> command assumes that you will use the name of the project as
+the name of the context root in the deployed application. You can change this
+using the <tt class="docutils literal"><span class="pre">--context-root=my_customized_context_root</span></tt> option of the command.</p>
+<p>You can also add the context root name to your application&#8217;s settings by using the
+<tt class="docutils literal"><span class="pre">DOJ_BUILDWAR_CONTEXT_ROOT</span></tt> configuration:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">DOJ_BUILDWAR_CONTEXT_ROOT</span> <span class="o">=</span> <span class="s">&#39;my_customized_context_root&#39;</span>
+</pre></div>
+</div>
+<p>Please note that this small hack means that you can&#8217;t simply rename your war
+file to deploy it on another context name. You must regenerate it specifying the
+other context name. Or just manually editing the <tt class="docutils literal"><span class="pre">application_settings.py</span></tt> file
+inside the <tt class="docutils literal"><span class="pre">.war</span></tt>, whatever fits you better.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Creating a .war archive for deployment</a><ul>
+<li><a class="reference internal" href="#usage">Usage</a></li>
+<li><a class="reference internal" href="#including-extra-python-libraries">Including extra Python libraries</a></li>
+<li><a class="reference internal" href="#media-files-and-the-context-root-name">Media files and the context root name</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="database-backends.html"
+                        title="previous chapter">Database backends</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="release-notes.html"
+                        title="next chapter">Release Notes</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/war-deployment.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="release-notes.html" title="Release Notes"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="database-backends.html" title="Database backends"
+             >previous</a> |</li>
+        <li><a href="index.html">django-jython 1.7.0b1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Josh Juneau and Andreas Stocker.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
