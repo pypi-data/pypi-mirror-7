@@ -1,0 +1,42 @@
+#!/bin/bash
+
+source /etc/profile
+source /service/sbin/setup
+
+if [ $1 == "init" ]; then 
+    /service/sbin/init01.sh
+elif [ $1 == "halt" ]; then 
+    /service/sbin/halt01.sh    
+elif [ $1 == "hosts" ]; then 
+    pophosts
+elif [ $1 == "start" ]; then 
+    if [ $2 == "metastore" ]; then
+        # Start the PostGres service
+	service postgresql start
+
+        # Now create the Hive metastore
+	su postgres -c 'psql -f /service/sbin/createstore.sql'
+
+        # Sstart the metastore service and Hiveserver2.
+	su ferry -c 'nohup /service/packages/hive/bin/hive --service metastore > /service/data/logs/metastore.out 2> /service/data/logs/metastore.err &'
+	su ferry -c 'nohup /service/packages/hive/bin/hive --service hiveserver2 > /service/data/logs/hive.out 2> /service/data/logs/hive.err &'
+
+	# Give everything a couple seconds to start
+	sleep 3
+    fi
+elif [ $1 == "restart" ]; then 
+    if [ $2 == "metastore" ]; then
+        # Start the PostGres service
+	service postgresql start
+
+        # Start the metastore service. Give it a couple seconds to start 
+	# before stopping the script otherwise sometimes it doesn't start. 
+	su ferry -c 'nohup /service/packages/hive/bin/hive --service metastore > /service/data/logs/metastore.out 2> /service/data/logs/metastore.err &'
+	su ferry -c 'nohup /service/packages/hive/bin/hive --service hiveserver2 > /service/data/logs/hive.out 2> /service/data/logs/hive.err &'
+	sleep 3
+    fi
+elif [ $1 == "stop" ]; then 
+    # Stop Hive and PostGres
+    pkill -f hive 
+    service postgresql stop
+fi

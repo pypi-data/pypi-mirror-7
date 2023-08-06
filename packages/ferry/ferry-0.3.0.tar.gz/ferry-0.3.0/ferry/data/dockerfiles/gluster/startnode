@@ -1,0 +1,32 @@
+#!/bin/bash
+
+source /service/sbin/setup
+
+if [ $1 == "init" ]; then 
+    /service/sbin/init01.sh
+elif [ $1 == "halt" ]; then 
+    /service/sbin/halt01.sh    
+elif [ $1 == "hosts" ]; then 
+    pophosts
+elif [ $1 == "start" ]; then 
+    nohup /usr/sbin/glusterd &
+    sleep 2
+    if [ $2 == "master" ]; then
+	/service/conf/gluster/configure start
+    fi
+elif [ $1 == "restart" ]; then 
+    nohup /usr/sbin/glusterd &
+    sleep 2
+    if [ $2 == "master" ]; then
+	/service/conf/gluster/configure restart
+    fi
+elif [ $1 == "stop" ]; then 
+    # Stop the gluster volume
+    if [ $2 == "master" ]; then
+	/service/conf/gluster/configure stop
+    fi
+    # Stop the gluster daemon
+    pkill -f glusterd
+elif [ $1 == "clean" ]; then 
+    /service/conf/gluster/configure clean    
+fi
