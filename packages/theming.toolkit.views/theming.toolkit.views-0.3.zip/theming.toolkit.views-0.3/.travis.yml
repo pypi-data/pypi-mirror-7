@@ -1,0 +1,34 @@
+language: python
+python:
+  - 2.6
+  - 2.7
+env:
+  - PLONE_VERSION=4.1
+  - PLONE_VERSION=4.2
+  - PLONE_VERSION=4.3
+matrix:
+  exclude:
+    - python: 2.7
+      env: PLONE_VERSION=4.1
+    - python: 2.6
+      env: PLONE_VERSION=4.2
+    - python: 2.6
+      env: PLONE_VERSION=4.3
+install:
+  - sed -ie "s#travis-4.x.cfg#travis-$PLONE_VERSION.x.cfg#" travis.cfg
+  - sed -ie "s#versions-$PLONE_VERSION.x#versions#" travis.cfg
+  - mkdir -p buildout-cache/eggs
+  - mkdir -p buildout-cache/downloads
+  - python bootstrap.py -c travis.cfg
+  - bin/buildout -c travis.cfg annotate
+  - bin/buildout -c travis.cfg -N -q
+branches:
+  only:
+    - master
+script:
+  - bin/code-analysis
+  - bin/test
+notifications:
+  irc: irc.freenode.org#propertyshelf
+  hipchat:
+    secure: "Mim2LyP5lNkzZ8gPCuiCd7grGLQ81ypxLea5BtpcLMmz/T3D+lsimvYhNDN7jc5S8TTCANmdiC4cjQz1tx1sSngdFEiT2gXzeAoaP6kDU44IyPBYGINtCDcVw0lQ35wMMIElJwXHhOmukDid6qIDXoXC7hPlYnh8xVJktwyNf+Y="
