@@ -1,0 +1,73 @@
+Metadata-Version: 1.1
+Name: lauteur
+Version: 0.0.3
+Summary: Tools for ascribing authorship - to the chagrin of Barthes
+Home-page: http://github.com/newslynx/lauteur
+Author: Brian Abelson
+Author-email: brian@newslynx.org
+License: MIT
+Description: |travis-img| lauteur ====== *Tools for ascribing authorship - to the
+        chagrin of
+        `Barthes <http://en.wikipedia.org/wiki/Death_of_the_Author>`__*
+        
+        Install
+        -------
+        
+        ::
+        
+            pip install lauteur
+        
+        Test
+        ----
+        
+        Requires ``nose``
+        
+        ::
+        
+            nosetests
+        
+        Usage
+        -----
+        
+        ``lauteur`` has two methods: ``from_string`` and ``from_html``
+        
+        ``from_string`` is mostly used in RSS Feed parsing where authors are
+        sometimes embedded as bylines:
+        
+        .. code:: python
+        
+            import lauteur
+        
+            string = 'By: Brian Abelson ,and Michael H. Keller & Dr. Stijn Debrouwere IV'
+            authors = lauteur.from_string(string)
+            print authors
+        
+            # ['Brian Abelson', 'Michael H Keller', 'DR Stijn Debrouwere IV']
+        
+        ``from_html`` searches through common meta tags for authors.
+        
+        .. code:: python
+        
+            import lauteur
+            import requests
+        
+            r = requests.get('http://www.nytimes.com/2013/12/20/books/michiko-kakutanis-10-favorite-books-of-2013.html')
+        
+            authors = lauteur.from_html(r.content)
+            print authors
+            # ['Michiko Kakutani']
+        
+        Todo:
+        -----
+        
+        -  [ ] Find more meta tags.
+        -  [ ] Improve name formatting algorithm.
+        
+        .. |travis-img| image:: https://travis-ci.org/newslynx/lauteur.svg
+        
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
