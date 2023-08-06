@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Cam detail{%endblock%}
+{% block body %}
+<div data-role="page" id="cam">
+
+    <div data-role="header" data-position="fixed">
+        <a href="/" data-rel="back" class="ui-btn ui-btn-left ui-alt-icon ui-nodisc-icon ui-corner-all ui-btn-icon-notext ui-icon-carat-l">Back</a>
+        <h1>
+            {% if cam.name %}{{cam.name}}
+            {%else%}{{cam.address}}
+            {%endif%}
+        </h1>
+    </div><!-- /header -->
+
+    <div role="main" class="ui-content">
+        {% if cam.get_type() == "foscam" %}
+        <div data-role="collapsible">
+            <h4>Live stream</h4>
+            <div style="text-align:center;">
+                <img style="width:300px;" src="{{cam.get_stream_url()}}">
+            </div>
+        </div>
+        {%endif%}
+        <div data-role="collapsible">
+            <h4>Browse screenshoots</h4>
+            <ul data-role="listview">
+            {% for day in days %}
+	        <li><a href="/screenshots/{{cam_index}}/{{day[1]}}">{{ day[0]|e }}</a></li>
+            {%endfor%}
+            </ul>
+        </div>
+        <div data-role="collapsible">
+            <h4>Detailed status</h4>
+            <ul data-role="listview">
+            <li><b>Address:</b> {{ cam.address }}</li>
+            {% if cam.status() is iterable %}
+            {% for key, value in cam.status().items() %}
+            <li><b>{{ key|e }}:</b> {{ value|e }}</li>
+            {%endfor%}
+            {%endif%}
+            </ul>
+        </div>
+    </div><!-- /content -->
+
+    <div data-role="footer">
+        <h4>IpCamPy</h4>
+    </div><!-- /footer -->
+</div><!-- /page -->
+{% endblock %}
