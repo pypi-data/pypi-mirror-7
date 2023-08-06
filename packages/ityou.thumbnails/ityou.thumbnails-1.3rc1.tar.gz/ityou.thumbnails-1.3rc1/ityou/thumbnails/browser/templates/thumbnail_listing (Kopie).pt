@@ -1,0 +1,118 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:metal="http://xml.zope.org/namespaces/metal"
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+      lang="en"
+      metal:use-macro="here/main_template/macros/master"
+      i18n:domain="ityou.thumbnails">
+<body>
+
+    <div metal:fill-slot="main" id="thumbnail-view">
+    <metal:main-macro define-macro="main"
+                      tal:define="kssClassesView context/@@kss_field_decorator_view;
+                                  getKssClasses nocall:kssClassesView/getKssClassesInlineEditable;
+                                  templateId template/getId;
+                                  is_mobile python:False;
+                                  ">
+        
+        <div id="ESI_ROOT" class="hiddenStructure" tal:content="view/ESI_ROOT | nothing"></div>
+
+        <div tal:replace="structure provider:plone.abovecontenttitle" />
+        <h1 metal:use-macro="here/kss_generic_macros/macros/generic_title_view" />
+		
+        <div tal:replace="structure provider:plone.belowcontenttitle" />
+        
+		<p class="documentDescription clear-fix-drag-drop">
+            <span tal:replace="context/Description" />
+            <span class="thumbnail-listing-size"></span>
+        </p>
+
+        <div tal:replace="structure provider:plone.abovecontentbody" />
+
+        <div metal:define-macro="text-field-view"
+             id="parent-fieldname-text" class="plain"
+             tal:define="kss_class python:getKssClasses('text',
+                         templateId=templateId, macro='text-field-view');
+                         text here/aq_explicit/getText|nothing"
+             tal:condition="text" >
+            <div metal:define-slot="inside" tal:replace="structure text">The body</div>
+        </div>
+
+        <form class="kssattr-serveraction-foldercontents_update_table" 
+            action="" 
+            method="post"
+            name="folderContentsForm"
+			tal:define="fc view/getFolderContents"
+			tal:attributes="action context/absolute_url">
+            	
+			<div tal:attributes="class string:folder-item ${item/type} ${item/id};
+								 id item/uid" tal:repeat="item fc/folder_items" >
+            <!--
+                <input class="noborder" type="checkbox" name="paths:list"
+                    tal:attributes="id string:cb_${item/id}; value item/path">
+                    
+                <div class="toolbar"></div>
+            -->
+            <div class="toolbar clear-fix-drag-drop" tal:condition="view/DRAGDROP_INSTALLED">
+                <div>
+                    <input class="noborder" type="checkbox" tal:attributes="name item/uid" />
+                    <i tal:condition="view/CAN_DELETE | nothing" class="icon-trash delete"></i>
+                </div>
+            </div>
+
+			<a tal:condition="python: item['type'] != 'Folder'" tal:attributes="href string:${item/url}" class="document-download">
+				<div tal:condition="item/icon | nothing" tal:attributes="class string: ${item/contenttype_class} item-title">
+					<img tal:attributes="src item/icon" /><span tal:content="item/title"/>
+				</div>
+				<div tal:condition="not: item/icon | nothing" tal:attributes="class string: ${item/contenttype_class} item-title" tal:content="item/title"/>
+			</a>            											
+			<a tal:condition="python: item['type'] != 'Folder'" tal:attributes="href string:${item/url}/@@show_preview" class="linked-document">
+				<div class="thumbnail-wrapper">
+					<img tal:attributes="class string:thumbnail ${item/type}" src="++resource++ityou.thumbnails.images/no-thumbnail.png"/>
+				</div>
+			</a>
+
+			
+			<a tal:condition="python: item['type'] == 'Folder'" tal:attributes="href string:${item/url}">
+				<div class="thumbnail-wrapper"><!--<br /><br />-->
+					<img tal:attributes="class string:thumbnail ${item/type}" src="++resource++ityou.thumbnails.images/no-thumbnail.png"/>
+					<div tal:attributes="class string: item-title" tal:content="item/title"/>
+				</div>
+			</a>
+
+			<div class="additional-information">
+				<i class="icon-file-text-alt"><div tal:content="item/title" class="item-title" /></i>
+				<div tal:content="python: item['description'][0:20]" class="item-description" /><div tal:condition="item/description | nothing">...</div>
+				<i class="icon-user"><div tal:content="item/author" class="item-author" /></i>
+				<i class="icon-pencil"><div tal:content="item/created" class="item-created" /></i>
+				<i class="icon-edit"><div tal:content="item/edited" class="item-edited" /></i>
+			</div>
+			</div>
+			<div class="more-item">
+				<a class="show-more-linked">
+					<div class="thumbnail-wrapper">
+						<img class="thumbnail" tal:attributes="src string:++resource++ityou.thumbnails.images/down.png"/>
+					</div>
+				</a>
+			</div>			
+<!--
+            <div class="buttons">
+			    <div tal:repeat="action fc/folder_actions" class="button">
+				   <input tal:condition="action/allowed | nothing"
+						tal:attributes="value action/title;
+						name string:${action/id}:method" class="context" type="submit">
+			    </div>
+            </div>
+			
+			<input tal:replace="structure context/@@authenticator/authenticator" />
+-->
+        </form>
+		
+        <div tal:replace="structure provider:plone.belowcontentbody" />
+
+    </metal:main-macro>
+    </div>
+
+</body>
+</html>
+
