@@ -1,0 +1,51 @@
+<hudson.plugins.parameterizedtrigger.BlockableBuildTriggerConfig>
+  <projects>{{ trigger.projects }}</projects>
+  <condition>ALWAYS</condition>
+  
+  
+  {% if trigger.params %}
+  <configs>
+  {% for param in trigger.params %}
+    {% include 'builders/params/' + param.type + '.xml' %}
+  {% endfor %}
+  </configs>
+  {% else %}
+  <configs class="empty-list"/>
+  {% endif %}
+  
+  
+  {% if trigger.paramFactories %}
+  <configFactories>
+  {% for paramFactory in trigger.paramFactories %}
+    {% include 'builders/paramFactories/' + paramFactory.type + '.xml' %}
+  {% endfor %}
+  </configFactories>
+  {% else %}
+  <configFactories class="empty-list"/>
+  {% endif %}
+  
+
+  {% if trigger.block and trigger.block.enabled %}
+  <block>
+    {% if trigger.block.fail_if != "never" %}
+    <buildStepFailureThreshold>
+      <ordinal>{{ trigger.block.fail_if or 2 }}</ordinal>
+    </buildStepFailureThreshold>
+    {% endif %}
+    
+    {% if trigger.block.is_unstable_if != "never" %}
+    <unstableThreshold>
+      <ordinal>{{ trigger.block.is_unstable_if or 1 }}</ordinal>
+    </unstableThreshold>
+    {% endif %}
+    
+    {% if trigger.block.is_failure_if != "never" %}
+    <failureThreshold>
+      <ordinal>{{ trigger.block.is_failure_if or 2 }}</ordinal>
+    </failureThreshold>
+    {% endif %}
+  </block>
+  {% endif %}
+  <triggerWithNoParameters>{{ trigger.with_no_params or 'false' }}</triggerWithNoParameters>
+  <buildAllNodesWithLabel>{{ trigger.all_nodes_for_label or 'false' }}</buildAllNodesWithLabel>
+</hudson.plugins.parameterizedtrigger.BlockableBuildTriggerConfig>
