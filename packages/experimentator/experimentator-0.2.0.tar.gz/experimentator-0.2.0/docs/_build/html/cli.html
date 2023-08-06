@@ -1,0 +1,359 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Command-line interface &mdash; experimentator 0.2.0 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="experimentator 0.2.0 documentation" href="index.html"/>
+        <link rel="next" title="API reference" href="api_reference.html"/>
+        <link rel="prev" title="Creating an experiment" href="creation.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="index.html" class="fa fa-home"> experimentator</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Concepts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#experiment-structure">Experiment structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#design">Design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#why-use-levels">Why use levels?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#heterogeneous-experiment-structures">Heterogeneous experiment structures</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="creation.html">Creating an experiment</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="creation.html#constructor-methods">Constructor methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="creation.html#constructing-heterogeneous-experiments">Constructing heterogeneous experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="creation.html#design-matrices">Design matrices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="creation.html#callbacks">Callbacks</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Command-line interface</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#commands">Commands</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api_reference.html#experiment">Experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_reference.html#helper-functions">Helper functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_reference.html#experimentsection">ExperimentSection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_reference.html#design">Design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_reference.html#designtree">DesignTree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_reference.html#module-experimentator.order">experimentator.order</a></li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">experimentator</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Command-line interface</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="_sources/cli.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            
+  <div class="section" id="command-line-interface">
+<span id="cli"></span><h1>Command-line interface<a class="headerlink" href="#command-line-interface" title="Permalink to this headline">¶</a></h1>
+<p>You&#8217;ve generated your experiment, now what?
+A major feature of experimentator is that it automatically turns your experiment into a command-line program,
+via the command <tt class="docutils literal"><span class="pre">exp</span></tt>.
+The general format for running experimentator commands is:</p>
+<div class="highlight-python"><pre>exp COMMAND &lt;exp-file&gt; OPTIONS</pre>
+</div>
+<p>The available commands are <a class="reference internal" href="#run-command"><em>run</em></a>, <a class="reference internal" href="#resume-command"><em>resume</em></a>, and <a class="reference internal" href="#export-command"><em>export</em></a>.
+Additionally, <tt class="docutils literal"><span class="pre">exp</span> <span class="pre">--help</span></tt> (or <tt class="docutils literal"><span class="pre">-h</span></tt>) will show the usage information,
+and <tt class="docutils literal"><span class="pre">exp</span> <span class="pre">--version</span></tt> will print experimentator&#8217;s version number.</p>
+<div class="section" id="commands">
+<span id="id1"></span><h2>Commands<a class="headerlink" href="#commands" title="Permalink to this headline">¶</a></h2>
+<p>Here is the abridged usage message:</p>
+<div class="highlight-python"><pre>  exp run [options] &lt;exp-file&gt; (--next=&lt;level&gt;  [--not-finished] | (&lt;level&gt; &lt;n&gt;)... [--from=&lt;n&gt;])
+  exp resume [options] &lt;exp-file&gt; (&lt;level&gt; | (&lt;level&gt; &lt;n&gt;)...)
+  exp export &lt;exp-file&gt; &lt;data-file&gt; [ --no-index-label --delim=&lt;sep&gt; --skip=&lt;columns&gt; --float=&lt;format&gt; --nan=&lt;rep&gt;]
+  exp -h | --help
+  exp --version
+
+</pre>
+</div>
+<p>Don&#8217;t fear, an in-depth explanation follows.</p>
+<div class="section" id="run">
+<span id="run-command"></span><h3>run<a class="headerlink" href="#run" title="Permalink to this headline">¶</a></h3>
+<p>The central command is <tt class="docutils literal"><span class="pre">run</span></tt>.
+There are a few ways to call it.</p>
+<div class="section" id="run-next">
+<h4>run &#8211;next<a class="headerlink" href="#run-next" title="Permalink to this headline">¶</a></h4>
+<p>To run the first section at <tt class="docutils literal"><span class="pre">&lt;level&gt;</span></tt> that hasn&#8217;t been started:</p>
+<div class="highlight-python"><pre>exp run &lt;exp-file&gt; --next &lt;level&gt;</pre>
+</div>
+<p>For example, to run the next participant from <tt class="docutils literal"><span class="pre">example.dat</span></tt>:</p>
+<div class="highlight-python"><pre>exp run example.dat --next participant</pre>
+</div>
+<p>To run the next participant that hasn&#8217;t been <em>finished</em>
+(as opposed to the next that hasn&#8217;t <em>started</em>, the default):</p>
+<div class="highlight-python"><pre>exp run example.dat --next participant --not-finished</pre>
+</div>
+</div>
+<div class="section" id="run-level-n">
+<h4>run &lt;level&gt; &lt;n&gt;<a class="headerlink" href="#run-level-n" title="Permalink to this headline">¶</a></h4>
+<p>To run a specific section:</p>
+<div class="highlight-python"><pre>exp run &lt;exp-file&gt; (&lt;level&gt; &lt;n&gt;)...</pre>
+</div>
+<p>The elipsis means that the previous element (the pair <tt class="docutils literal"><span class="pre">&lt;level&gt;</span> <span class="pre">&lt;n&gt;</span></tt>)
+can be repeated any number of times.
+For example, to run the second session of the third participant:</p>
+<div class="highlight-python"><pre>exp run example.dat participant 3 session 2</pre>
+</div>
+</div>
+<div class="section" id="run-from">
+<h4>run &#8211;from<a class="headerlink" href="#run-from" title="Permalink to this headline">¶</a></h4>
+<p>In either version of <tt class="docutils literal"><span class="pre">run</span></tt>, you can add the <tt class="docutils literal"><span class="pre">--from</span> <span class="pre">&lt;n&gt;</span></tt> option
+to start at a specific section.
+For example, to run the second session of the third participant,
+starting at the second block:</p>
+<div class="highlight-python"><pre>exp run example.dat participant 3 session 2 --from 2</pre>
+</div>
+<p><tt class="docutils literal"><span class="pre">&lt;n&gt;</span></tt> can also be a comma-separated list of integers.
+To start at the fourth trial of the second block:</p>
+<div class="highlight-python"><pre>exp run example.dat participant 3 session 2 --from 2,4</pre>
+</div>
+<p><tt class="docutils literal"><span class="pre">--from=&lt;n&gt;</span></tt> works the same as the <tt class="docutils literal"><span class="pre">from_section</span></tt> parameter to <tt class="xref py py-func docutils literal"><span class="pre">run_experiment_section</span></tt>;
+see documentation for that method for details.</p>
+</div>
+<div class="section" id="run-options">
+<h4>run options<a class="headerlink" href="#run-options" title="Permalink to this headline">¶</a></h4>
+<p>Here is the full set of options for the <tt class="docutils literal"><span class="pre">run</span></tt> command:</p>
+<blockquote>
+<div><table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd><span class="option">-d</span>, <span class="option">--debug</span></kbd></td>
+<td>Set logging level to DEBUG.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-o <var>&lt;options&gt;</var></span></kbd></td>
+<td>Pass &lt;options&gt; to the experiment and save it as string in Experiment.session_data[&#8216;options&#8217;].</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--demo</span></kbd></td>
+<td>Don&#8217;t save data.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--not-finished</span></kbd></td>
+<td>Run the first &lt;level&gt; that hasn&#8217;t finished (rather than first that hasn&#8217;t started).</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--skip-parents</span></kbd></td>
+<td>Don&#8217;t enter context of parent levels.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--from=<var>&lt;n&gt;</var></span></kbd></td>
+<td>Start running at child number &lt;n&gt; of the specified section.
+&lt;n&gt; can also be a comma-separated list of ints; see run_experiment_section for details
+(specifically, &#8211;from=&lt;n&gt; works like the parameter from_section).</td></tr>
+</tbody>
+</table>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="resume">
+<span id="resume-command"></span><h3>resume<a class="headerlink" href="#resume" title="Permalink to this headline">¶</a></h3>
+<p><tt class="docutils literal"><span class="pre">resume</span></tt> is similar to <tt class="docutils literal"><span class="pre">run</span></tt>.
+There is nothing <tt class="docutils literal"><span class="pre">resume</span></tt> can do that <tt class="docutils literal"><span class="pre">run</span></tt> cannot, but <tt class="docutils literal"><span class="pre">resume</span></tt> makes resuming interrupted session easier.
+There are two ways to call it.</p>
+<p>If you only pass a level,
+experimentator will try to resume the first section at that level that has been started but not finished.
+The syntax is:</p>
+<div class="highlight-python"><pre>exp resume &lt;exp-file&gt; &lt;level&gt;</pre>
+</div>
+<p>For example, to resume the first block that has been started but not finished:</p>
+<div class="highlight-python"><pre>exp resume example.dat block</pre>
+</div>
+<p>One can also use specific section numbers with <tt class="docutils literal"><span class="pre">resume</span></tt>:</p>
+<div class="highlight-python"><pre>exp resume &lt;exp-file&gt; (&lt;level&gt; &lt;n&gt;)...</pre>
+</div>
+<p>The specified section must have been started but not finished.
+For example:</p>
+<div class="highlight-python"><pre>exp resume example.dat participant 3 session 2</pre>
+</div>
+<p>The difference between the above example and using <tt class="docutils literal"><span class="pre">run</span></tt> is that with <tt class="docutils literal"><span class="pre">resume</span></tt>,
+experimentator will automatically start at the appropriate place;
+with <tt class="docutils literal"><span class="pre">run</span></tt>, experimentator will start at the beginning of the section
+(unless an explicit starting point is passed with <tt class="docutils literal"><span class="pre">--from</span></tt>).</p>
+<p><tt class="docutils literal"><span class="pre">resume</span></tt> takes the same <tt class="docutils literal"><span class="pre">options</span></tt> as <tt class="docutils literal"><span class="pre">run</span></tt>.</p>
+</div>
+<div class="section" id="export">
+<span id="export-command"></span><h3>export<a class="headerlink" href="#export" title="Permalink to this headline">¶</a></h3>
+<p><tt class="docutils literal"><span class="pre">export</span></tt> generates a text file with the experiment&#8217;s data.
+Its basic syntax is:</p>
+<div class="highlight-python"><pre>exp export &lt;exp-file&gt; &lt;data-file&gt;</pre>
+</div>
+<p>This one should be straightforward, but here is an example anyway:</p>
+<div class="highlight-python"><pre>exp export example.dat example.csv</pre>
+</div>
+<p>Its associated options:</p>
+<blockquote>
+<div><table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--no-index-label</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Don&#8217;t put column labels on index columns (e.g. participant, trial), for easier importing into R.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--delim=<var>&lt;sep&gt;</var></span></kbd></td>
+<td>Field delimiter [default: ,].</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--skip=<var>&lt;columns&gt;</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Comma-separated list of columns to skip.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--float=<var>&lt;format&gt;</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Format string for floating point numbers.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--nan=<var>&lt;rep&gt;</var></span></kbd></td>
+<td>Missing data representation.</td></tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>See <a class="reference external" href="http://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.to_csv.html#pandas.DataFrame.to_csv" title="(in pandas v0.14.0)"><tt class="xref py py-meth docutils literal"><span class="pre">pandas.DataFrame.to_csv</span></tt></a> for details on these options.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If your experiment has any complex data structures (e.g., a timeseries for every trial),
+it is not recommended to use the <tt class="docutils literal"><span class="pre">export</span></tt> command, as this will create an unparseable mess.
+Instead, access your data programmatically through the <tt class="xref py py-attr docutils literal"><span class="pre">Experiment.dataframe</span></tt> attribute.</p>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="api_reference.html" class="btn btn-neutral float-right" title="API reference"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="creation.html" class="btn btn-neutral" title="Creating an experiment"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2014, Henry S. Harrison.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
