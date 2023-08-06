@@ -1,0 +1,151 @@
+Metadata-Version: 1.0
+Name: pacer
+Version: 0.2.2
+Summary: `pacer` is a lightweight Python package for implementing distributed data processing workflows.
+Home-page: https://ssdmsource.ethz.ch/sis/emzed-ext-pacer/tree/master
+Author: Uwe Schmitt
+Author-email: uwe.schmitt@id.ethz.ch
+License: http://opensource.org/licenses/GPL-3.0
+Description: pacer
+        =====
+        
+        ``pacer`` is a lightweight Python package for implementing distributed
+        data processing workflows. Instead of defining a
+        `DAG <https://en.wikipedia.org/wiki/Directed_acyclic_graph>`__ which
+        models the data flow from sources to a final result ``pacer`` uses a
+        pull model which is very similar to nesting function calls. Running such
+        a workflow starts on the result node and recursively delegates work to
+        the inputs.
+        
+        Originally we developed ``pacer`` for running analysis pipelines in
+        `emzed <http://emzed.ethz.ch>`__, a framework for analyzing *LCMS* data.
+        `LCMS <http://en.wikipedia.org/wiki/Liquid_chromatography%E2%80%93mass_spectrometry>`__
+        is an abbreviation for "Liquid chromatography-mass spectrometry" and is
+        a very common measurement method in chemistry, molecular biology and
+        related fields.
+        
+        Under the hood ``pacer`` has two core components:
+        
+        -  one for chaining and managing distributed computations
+        -  a distributed cache which is retained on the file system
+        
+        Examples
+        ========
+        
+        We provide some simple examples which show how easy it is to use
+        ``pacer``. You find these examples which we extended to print more
+        logging information in the ``examples/`` folder in the git repository.
+        
+        In a real world *LCMS* workflow we would not use as simple functions as
+        used below but longer running computation steps such as running a LCMS
+        peak picker and a subsequent peak aligner.
+        
+        How to declare a pipeline
+        -------------------------
+        
+        In this case our input sources are a list of Python strings
+        ``["a", "bc", "def"]`` and a list of numbers ``[1, 2, 3]``. The very
+        simple example workflow computes the length of each string and
+        multiplies it with the number at the same posiition. This very simple
+        example could be implemented in pure Python as follows:
+        
+        ::
+        
+            def length(what):
+                return len(what)
+        
+            def multiply(a, b):
+                return a * b
+        
+            words = ["a", "bc", "def"]
+            multipliers = (1, 2, 3)
+        
+            result = [multiply(length(w), v) for (w, v) in zip(words, multipliers)]
+        
+            assert result == [1, 4, 9]
+        
+        In order to transform this computations to a smart parallel processing
+        pipeline we use the ``apply`` function decorator from ``pacer`` and
+        declare the dependencies among the single steps using function calls.
+        
+        ::
+        
+            from pacer import apply, Engine
+        
+            @apply
+            def length(what):
+                return len(what)
+        
+            @apply
+            def multiply(a, b):
+                return a * b
+        
+            words = ["a", "bc", "def"]
+            multipliers = (1, 2, 3)
+        
+            # it is easy to declare dependencies among processing steps:
+            step_1 = length(words)
+            workflow = multiply(step_1, multipliers)
+        
+            # in this example the structure of the workflow is simple, so we can
+            # declare it alternatively as follows:
+            workflow = multiply(length(words), multipliers)
+        
+        Running this workflow on three CPU cores in parallel is very easy now:
+        
+        ::
+        
+            Engine.set_number_of_processes(3)
+            result = [output.fetch() for output in workflow]
+        
+            assert result == [1, 4, 9]
+        
+        How to compute needed updates in case of modified input data
+        ------------------------------------------------------------
+        
+        In case of partial modifications of the inputs a ``pacer`` workflow does
+        not determine needed update computations but uses a distributed cache
+        for mapping the input values of single processing steps to their final
+        result. So a repeated run of the workflow with unchanged inputs will run
+        the full workflow with all processing steps returning already known
+        results immediately. Running the workflow with unknown or modified
+        inputs will only execute the needed computations and update the cache.
+        
+        Here we use decorators again. Leveraging the example above only needs
+        few adjustments:
+        
+        ::
+        
+            from pacer import apply, Engine, CacheBuilder
+        
+            cache = CacheBuiler("/tmp/cache_000")
+        
+            @apply
+            @cache
+            def length(what):
+                return len(what)
+        
+            @apply
+            @cache
+            def multiply(a, b):
+                return a * b
+        
+        
+            # inputs to workflow
+            words = ["a", "bc", "def"]
+            multipliers = (1, 2)
+        
+            workflow = multiply(length(words), multipliers)
+        
+            # run workflow
+            Engine.set_number_of_processes(3)
+        
+            result = [output.fetch() for output in workflow]
+        
+            assert result == [1, 4, 9]
+        
+        If you run these examples from a command line you see logging results
+        showing the parallel execution of single steps and cache hits avoiding
+        recomputations.
+        
+Platform: UNKNOWN
