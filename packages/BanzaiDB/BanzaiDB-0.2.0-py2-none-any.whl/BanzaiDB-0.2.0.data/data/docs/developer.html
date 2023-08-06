@@ -1,0 +1,262 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>BanzaiDB Developer HOWTO &mdash; BanzaiDB 0.1.2 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="BanzaiDB 0.1.2 documentation" href="index.html" />
+    <link rel="prev" title="BanzaiDB.fabfile package" href="BanzaiDB.fabfile.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="BanzaiDB.fabfile.html" title="BanzaiDB.fabfile package"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">BanzaiDB 0.1.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="banzaidb-developer-howto">
+<h1>BanzaiDB Developer HOWTO<a class="headerlink" href="#banzaidb-developer-howto" title="Permalink to this headline">¶</a></h1>
+<p>In addition to what is described here, <a class="reference external" href="http://www.contribution-guide.org">this document by Jeff Forcier</a> and
+<a class="reference external" href="http://pyvideo.org/video/2637/set-your-code-free-releasing-and-maintaining-an">this talk from Carl Meyer</a> provide wonderful footings for developing on/in
+open source projects.</p>
+<div class="section" id="maintaining-a-consistent-development-environment">
+<h2>Maintaining a consistent development environment<a class="headerlink" href="#maintaining-a-consistent-development-environment" title="Permalink to this headline">¶</a></h2>
+<p><strong>1)</strong> Ensure all development in performed within a virtualenv. A good way too
+bootstrap this is via <a class="reference external" href="https://github.com/brainsik/virtualenv-burrito">virtualenv-burrito</a>.</p>
+<p>Execute the installation using:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ curl -sL https://raw.githubusercontent.com/brainsik/virtualenv-burrito/master/virtualenv-burrito.sh | $SHELL
+</pre></div>
+</div>
+<p><strong>2)</strong> Make a virtualenv called BanzaiDB:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ mkvirtualenv BanzaiDB
+</pre></div>
+</div>
+<p><strong>3)</strong> Install <a class="reference external" href="https://github.com/kennethreitz/autoenv">autoenv</a>:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ git clone git://github.com/kennethreitz/autoenv.git ~/.autoenv
+$ echo &#39;source ~/.autoenv/activate.sh&#39; &gt;&gt; ~/.bashrc
+</pre></div>
+</div>
+</div>
+<div class="section" id="get-the-current-code-from-github">
+<h2>Get the current code from GitHub<a class="headerlink" href="#get-the-current-code-from-github" title="Permalink to this headline">¶</a></h2>
+<p>Something like this:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ cd $PATH_WHERE_I_KEEP_MY_REPOS
+$ git clone https://github.com/mscook/BanzaiDB.git
+</pre></div>
+</div>
+</div>
+<div class="section" id="install-dependencies">
+<h2>Install dependencies<a class="headerlink" href="#install-dependencies" title="Permalink to this headline">¶</a></h2>
+<p>Something like this:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ cd BanzaiDB
+$ # Assuming you installed autoenv -
+$ # You&#39;ll want to say &#39;y&#39; as this will activate the virtualenv each time you enter the code directory
+$ # Otherwise -
+$ # workon BanzaiDB
+$ pip install -r requirements.txt
+$ pip install -r requirements-dev.txt
+</pre></div>
+</div>
+</div>
+<div class="section" id="familiarise-yourself-with-the-code">
+<h2>Familiarise yourself with the code<a class="headerlink" href="#familiarise-yourself-with-the-code" title="Permalink to this headline">¶</a></h2>
+<p>The BanzaiDB/BanzaiDB.py is the core module. It handles database insertion,
+deletion and updating.</p>
+<p>For example:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ ~/BanzaiDB/BanzaiDB$ python BanzaiDB.py -h
+usage: BanzaiDB.py [-h] [-v] {init,populate,update,query} ...
+
+BanzaiDB v 0.1.1 - Database for Banzai NGS pipeline tool (http://github.com/mscook/BanzaiDB)
+
+positional arguments:
+  {init,populate,update,query}
+                        Available commands:
+    init                Initialise a DB
+    populate            Populates a database with results of an experiment
+    update              Updates a database with results from a new experiment
+    query               List available or provide database query functions
+
+optional arguments:
+    -h, --help            show this help message and exit
+    -v, --verbose         verbose output
+
+Licence: ECL 2.0 by Mitchell Stanton-Cook &lt;m.stantoncook@gmail.com&gt;
+</pre></div>
+</div>
+<p>Listing help on populate:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ python BanzaiDB.py populate -h
+usage: BanzaiDB.py populate [-h] {qc,mapping,assembly,ordering,annotation} run_path
+
+positional arguments:
+  {qc,mapping,assembly,ordering,annotation}
+                    Populate the database with data from the given pipeline step
+    run_path              Full path to a directory containing finished experiments from a pipeline run
+
+optional arguments:
+    -h, --help            show this help message and exit
+</pre></div>
+</div>
+<p>The fabfile (Fabric file) in fabfile directory contains query pre-written
+functions.</p>
+<p>You can list them like this:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ ~/BanzaiDB$ fab -l
+Available commands:
+
+    variants.get_variants_by_keyword           Return variants with a match in the &quot;Product&quot; with the regular_expression
+    variants.get_variants_in_range             Return all the variants in given [start:end] range (inclusive of)
+    variants.plot_variant_positions            Generate a PDF of SNP positions for given strains using GenomeDiagram
+    variants.strain_variant_stats              Print the number of variants and variant classes for all strains
+    variants.variant_hotspots                  Return the (default = 100) prevalent variant positions
+    variants.variant_positions_within_atleast  Return positions that have at least this many variants
+    variants.what_differentiates_strains       Provide variant positions that differentiate two given sets of strains
+</pre></div>
+</div>
+<p><strong>Note:</strong> python BanzaiDB.py query simply calls the fabfile discussed above.</p>
+</div>
+<div class="section" id="development-workflow">
+<h2>Development workflow<a class="headerlink" href="#development-workflow" title="Permalink to this headline">¶</a></h2>
+<p>Use GitHub. You will have already cloned the BanzaiDB repo (if you followed
+instructions above). To make things easier, please fork
+(<a class="reference external" href="https://github.com/mscook/BanzaiDB/fork">https://github.com/mscook/BanzaiDB/fork</a>) and update your local copy to point to
+your fork.</p>
+<p>Something like this:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ # Assuming your fork is like this
+$ # https://github.com/$YOUR_USERNAME/BanzaiDB/
+$ vi .git/config
+$ # Replace:
+    $ # url = git@github.com:mscook/BanzaiDB.git
+$ #  with:
+$ # url = git@github.com:$YOUR_USERNAME/BanzaiDB.git
+</pre></div>
+</div>
+<p>With this setup you will be able to push development changes to your fork and
+submit Pull Requests to the core BanzaiDB repo when you&#8217;re happy.</p>
+<p><strong>Important Note:</strong> Upstream changes will not be synced to your fork by
+default. Please, before submitting a pull request please sync your fork with
+any upstream changes (specifically handle any merge conflicts). Info on
+syncing a fork can be found <a class="reference external" href="https://help.github.com/articles/syncing-a-fork">here</a>.</p>
+</div>
+<div class="section" id="code-style-testing-continuous-integration">
+<h2>Code style/testing/Continuous Integration<a class="headerlink" href="#code-style-testing-continuous-integration" title="Permalink to this headline">¶</a></h2>
+<p>We try to make joining and/or modifying the BanzaiDB project simple.</p>
+<dl class="docutils">
+<dt>General:</dt>
+<dd><ul class="first last simple">
+<li>As close to PEP8 as possible but I ain&#8217;t no Saint. Just a long as it&#8217;s
+clean and readable,</li>
+<li>Using standard lib UnitTest. There are convenience functions
+check_coverage.sh &amp; tests/run_tests.sh respectively. We would prefer
+SMART test vs 100 % coverage.</li>
+</ul>
+</dd>
+<dt>In the master GitHub repository we use hooks that call:</dt>
+<dd><ul class="first last simple">
+<li>landscape.io (code QC)</li>
+<li>drone.io (continuous integration)</li>
+<li>ReadTheDocs (documentation building)</li>
+</ul>
+</dd>
+</dl>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">BanzaiDB Developer HOWTO</a><ul>
+<li><a class="reference internal" href="#maintaining-a-consistent-development-environment">Maintaining a consistent development environment</a></li>
+<li><a class="reference internal" href="#get-the-current-code-from-github">Get the current code from GitHub</a></li>
+<li><a class="reference internal" href="#install-dependencies">Install dependencies</a></li>
+<li><a class="reference internal" href="#familiarise-yourself-with-the-code">Familiarise yourself with the code</a></li>
+<li><a class="reference internal" href="#development-workflow">Development workflow</a></li>
+<li><a class="reference internal" href="#code-style-testing-continuous-integration">Code style/testing/Continuous Integration</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="BanzaiDB.fabfile.html"
+                        title="previous chapter">BanzaiDB.fabfile package</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/developer.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="BanzaiDB.fabfile.html" title="BanzaiDB.fabfile package"
+             >previous</a> |</li>
+        <li><a href="index.html">BanzaiDB 0.1.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Mitchell Stanton-Cook.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
