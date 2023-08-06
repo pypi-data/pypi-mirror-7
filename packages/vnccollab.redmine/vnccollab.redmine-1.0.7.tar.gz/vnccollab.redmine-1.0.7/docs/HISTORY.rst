@@ -1,0 +1,65 @@
+Changelog
+=========
+
+1.0.7 - July 02, 2014
+------------------
+
+- Cleans setup [11083].
+  [Jose Dinuncio]
+
+1.0.6 - April 11, 2014
+----------------------
+
+- Improvement in dependencies [10960].
+  [Jose Dinuncio]
+
+1.0.5 - April 02, 2014
+----------------------
+
+- Changes registry configuration [10763].
+  [Jose Dinuncio]
+
+- Adds tests [10657]
+  [Jose Dinuncio, Marcin Staniszczak]
+
+- Cleans code for OS release [16010]
+  [Jose Dinuncio]
+
+1.0.4 - March 07, 2014
+----------------------
+
+- Adds version.txt.
+  [Jose Dinuncio]
+
+1.0.3 - November 20, 2013
+-------------------------
+
+- Includes collective.customizablePersonalizeForm into configure.zcml
+  [Jose Dinuncio]
+
+1.0.2 - October 24, 2013
+------------------------
+
+- Fixes license and adds AUTHORS.txt.
+  [Jose Dinuncio]
+
+- Update redmine url.
+  [Vitaliy Podoba]
+
+1.0.1 - March 20, 2013
+----------------------
+
+- Adds options to docuentation or RedmineUtil.
+  [Jose]
+
+- Sets Journal.notes to "" instead of None.
+  [Jose]
+
+1.0 - March 6, 2013
+-------------------
+
+- Added basic utilities to work with redmine.
+  [Jose Dinuncio]
+
+- Package created using templer
+  [Jose Dinuncio]
