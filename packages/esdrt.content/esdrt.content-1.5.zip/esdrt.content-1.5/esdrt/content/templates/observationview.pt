@@ -1,0 +1,327 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:metal="http://xml.zope.org/namespaces/metal"
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+      lang="en"
+      metal:use-macro="context/main_template/macros/master"
+      i18n:domain="esdrt.content">
+
+
+  <tal:block metal:fill-slot="javascript_head_slot">
+    <script type="text/javascript">
+
+    $(document).ready(function(){
+
+        $('#observation-delete').prepOverlay(
+        {
+            subtype: 'ajax',
+            filter: common_content_filter,
+            formselector: '#delete_confirmation',
+            noform: function(el) {return $.plonepopups.noformerrorshow(el, 'redirect');},
+            redirect: $.plonepopups.redirectbasehref,
+            closeselector: '[name="form.button.Cancel"]',
+            width:'50%'
+        }
+        );
+
+        $('#add-question-link').click(function(e){
+          e.preventDefault();
+          $('#question-add-form').toggle();
+        });
+
+
+    });
+
+
+
+</script>
+  </tal:block>
+
+
+<body>
+
+<metal:main fill-slot="content-core">
+  <metal:content-core define-macro="content-core"
+
+      tal:define="toLocalizedTime nocall:here/@@plone/toLocalizedTime">
+
+  <metal:observation define-macro="observation-info"
+    tal:define="toLocalizedTime nocall:here/@@plone/toLocalizedTime">
+    <div class="esdDiv">
+      <div class="row">
+        <div class="cell position-0 width-4 esdLabel">Ref. Number</div>
+        <div class="cell position-4 width-13 esdLabel">Observation</div>
+      </div>
+      <div class="row">
+        <div class="cell position-0 width-4 value">
+          <span tal:content="context/id">
+             UK-WAS-13-001
+          </span>
+        </div>
+        <div class="cell position-4 width-13 value">
+          <span tal:content="context/title">
+             Title
+          </span>
+        </div>
+      </div>
+      <div class="row">
+        <div class="cell position-4 width-2 esdLabel">Country</div>
+        <div class="cell position-6 width-2 esdLabel">Sector</div>
+        <div class="cell position-8 width-2 esdLabel">Gas</div>
+        <div class="cell position-10 width-3 esdLabel">Inventory year</div>
+        <div class="cell position-13 width-3 esdLabel">WF Location</div>
+      </div>
+      <div class="row">
+        <div class="cell position-4 width-2" tal:content="context/country_value">Country</div>
+        <div class="cell position-6 width-2" tal:content="context/ghg_source_sectors_value">Sector</div>
+        <div class="cell position-8 width-2" tal:content="context/gas_value">Gas</div>
+        <div class="cell position-10 width-3" tal:content="context/year">Year of emission</div>
+        <div class="cell position-13 width-3" tal:content="context/wf_location">Year of emission</div>
+      </div>
+    </div>
+    <div class="esdDiv observationDetailsRow">
+      <table class="estTable">
+        <thead>
+          <tr>
+            <th>Public Electricity and Heat Production (Gg CO<sub>2</sub> eq)</th>
+            <th>CO<sub>2</sub></th>
+            <th>CH<sub>4</sub></th>
+            <th>N<sub>2</sub>O</th>
+            <th>NO<sub>x</sub></th>
+            <th>CO</th>
+            <th>NMVOC</th>
+            <th>SO<sub>2</sub></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr tal:repeat="row context/ghg_estimations">
+            <td class="esdesdLabel" tal:content="row/line_title">
+              Original estimate
+            </td>
+            <td style="text-align:center" tal:content="row/co2">
+              10.492,24
+            </td>
+            <td style="text-align:center" tal:content="row/ch4">
+              0,41
+            </td>
+            <td style="text-align:center" tal:content="row/n2o">
+              0,36
+            </td>
+            <td style="text-align:center" tal:content="row/nox">
+              11,36
+            </td>
+            <td style="text-align:center" tal:content="row/co">
+              5,32
+            </td>
+            <td style="text-align:center" tal:content="row/nmvoc">
+              0,95
+            </td>
+            <td style="text-align:center" tal:content="row/so2">
+              2,96
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="esdDiv">
+      <div class="row observationDetailsRow">
+        <div class="cell position-0 width-8 esdLabel">GHG source category</div>
+        <div class="cell position-8 width-4 esdLabel">CRF code</div>
+        <div class="cell position-12 width-4 esdLabel">Parameter</div>
+      </div>
+      <div class="row observationDetailsRow">
+        <div class="cell position-0 width-8" tal:content="context/ghg_source_category_value">GHG source category</div>
+        <div class="cell position-8 width-4" tal:content="context/crf_code_value">CRF code</div>
+        <div class="cell position-12 width-4" tal:content="context/parameter_value">Parameter</div>
+      </div>
+      <div class="row observationDetailsRow">
+        <div class="cell position-0 width-4 esdLabel">Review Year</div>
+        <div class="cell position-4 width-4 esdLabel">Key category</div>
+        <div class="cell position-8 width-4 esdLabel">Status flag</div>
+        <div class="cell position-12 width-4 esdLabel">Last update</div>
+      </div>
+      <div class="row observationDetailsRow">
+        <div class="cell position-0 width-4" tal:content="context/review_year">Year</div>
+        <div class="cell position-4 width-4" tal:content="context/ghg_source_sectors_value">Key category</div>
+        <div class="cell position-8 width-4" tal:content="context/highlight_value">Status flag</div>
+        <div class="cell position-12 width-4" tal:content="python:toLocalizedTime(context.ModificationDate())">Last update</div>
+      </div>
+      <div class="row showObservationDetailsRow">
+        <div class="cell position-0 width-16">
+          <a href="#" id="showObservationDetails">[-]</a>
+        </div>
+      </div>
+    </div>
+  </metal:observation>
+
+
+  <div class="esdDiv description"
+    tal:condition="view/show_description">
+    <div class="esdLabel">
+      Description
+    </div>
+    <span
+    tal:replace="structure context/text/output">
+      Here goes the description
+    </span>
+  </div>
+
+  <div class="esdDiv">
+    <div class="row">
+      <div class="cell position-0 width-16" style="overflow-x:auto">
+        <table style="table-layout: fixed" id="workflowTable">
+          <tr>
+            <tal:item tal:repeat="item context/myHistory">   
+              <td 
+                tal:condition="python:not(item['review_state'] == 'pending' and item['object'] ==  'observation' and item['action'] == 'approve')"
+                define="toLocalizedTime nocall:here/@@plone/toLocalizedTime;">
+                  <span class="border"></span>
+                  <span class="eea-icon eea-icon-lg wfPoint"></span><br/>
+                  <span class="eea-icon eea-icon-lg wfRole"><!-- --></span>
+                  <span tal:content="item/role"></span><br/>
+                  <a 
+                    tal:condition="context/is_secretariat"
+                    tal:attributes="href python:'http://www.eionet.europa.eu/directory/user?uid='+item['actor']"
+                    tal:content="item/author"></a>
+                  <br tal:condition="context/is_secretariat"/>
+                  <span class="eea-icon eea-icon-lg wfStep"><!-- --></span>
+                  <span tal:content="item/state"></span><br/>
+                  <span class="eea-icon eea-icon-lg wfTime"><!-- --></span>
+                  <span tal:attributes="title python:toLocalizedTime(item['time'], True)" class="datetimeWF">
+                    <span tal:replace="item/time"></span>
+                  </span><br/>
+              </td>                                                        
+            </tal:item>
+          </tr>
+        </table>
+      </div>
+    </div>  
+  </div>
+
+  <div class="edit actions" tal:condition="view/can_edit">
+      <a href=""
+          tal:attributes="href string:${here/absolute_url}/modifications"
+          class="standardButton">
+          Edit
+      </a>
+
+  </div>
+
+  <div class="actions" tal:define="actions view/get_menu_actions">
+    <tal:block  tal:repeat="action actions">
+        <a href=""
+          tal:attributes="href action/action"
+          class="standardButton"
+          tal:content="action/title">
+          Action
+        </a>
+    </tal:block>
+
+    <tal:block condition="view/can_delete_observation">
+      <a href="./delete_confirmation"
+        id="observation-delete"
+        tal:attributes="href string:${here/absolute_url}/delete_confirmation"
+        class="standardButton">
+        Delete observation
+      </a>
+    </tal:block>
+  </div>
+
+  <div class="subscription actions" tal:define="actions view/subscription_options"
+    tal:replace="nothing">
+    <tal:block  tal:repeat="action actions">
+        <a href=""
+          tal:attributes="href action/action"
+          class="standardButton"
+          i18n:translate=""
+          tal:content="action/title">
+          Action
+        </a>
+    </tal:block>
+  </div>
+
+    <ul class="eea-tabs" tal:condition="python: view.isManager() or view.get_questions()">
+      <li>Question chat room</li>
+      <li tal:condition="view/isManager" style="width: 150px;">Technical corrections</li>
+    </ul>
+    <div class="eea-tabs-panels">
+      <div class="eea-tabs-panel questions">
+        <div class="row" tal:condition="view/get_questions">
+          <div class="cell position-0 width-7 esdLabel">Question</div>
+          <div class="cell position-7 width-2 esdLabel">Author</div>
+          <div class="cell position-9 width-1 esdLabel">Status</div>
+          <div class="cell position-10 width-3 esdLabel">Sent to MS</div>
+          <div class="cell position-13 width-3 esdLabel">Last update</div>
+        </div>
+        <tal:question repeat="question_item view/get_questions">
+          <tal:block
+              tal:define="question question_item/getObject;
+                          first_comment question/getFirstComment;
+                          cropText nocall:view/@@plone/cropText;
+                          toLocalizedTime nocall:here/@@plone/toLocalizedTime;
+                        "
+              >
+            <tal:comment condition="nocall:question">
+              <div class="row">
+                <div class="cell position-0 width-7">
+                  <a href=""
+                    tal:attributes="href first_comment/absolute_url"
+                    tal:content="first_comment/@@text-transform/text/text/plain">
+                    Text of the question
+                  </a>
+                </div>
+                <div class="cell position-7 width-2">
+                  <span tal:replace="python:view.get_user_name(question.Creator())">
+                    Mikel
+                  </span>
+                </div>
+                <div class="cell position-9 width-1">
+                  <span tal:replace="question/get_status">
+                    Pending
+                  </span>
+                </div>
+                <div class="cell position-10 width-3">
+                  <tal:effective condition="first_comment/effective_date">
+                    <span tal:replace="python:toLocalizedTime(first_comment.EffectiveDate(), True)">
+                      2014-01-01
+                    </span>
+                  </tal:effective>
+                  <tal:noteffective condition="not:first_comment/effective_date">
+                    Not sent to MS yet.
+                  </tal:noteffective>
+                </div>
+                <div class="cell position-13 width-3">
+                  <span tal:replace="python:toLocalizedTime(question.modified(), True)">
+                    2014-01-01
+                  </span>
+                </div>
+              </div>
+            </tal:comment>
+          </tal:block>
+        </tal:question>
+        <div class="actions" tal:condition="view/can_add_question">
+          <a id="add-question-link"
+            tal:attributes="href string:${here/absolute_url}/++add++Question"
+            class="standardButton">
+            Add new question
+          </a>
+        </div>
+
+        <div id="question-add-form" style="display: none" tal:condition="view/can_add_question">
+          <span tal:replace="structure view/add_question_form" />
+        </div>
+
+
+      </div>
+      <div class="eea-tabs-panel" tal:condition="view/isManager"
+        tal:content="structure context/technical_corrections/output|nothing">
+      </div>
+    </div>
+  </metal:content-core>
+</metal:main>
+
+
+
+</body>
+</html>
+

@@ -1,0 +1,82 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"
+      lang="en"
+      metal:use-macro="context/main_template/macros/master"
+      i18n:domain="plone">
+
+<head>
+
+</head>
+
+<body>
+<metal:main fill-slot="main"
+     tal:define="context_state context/@@plone_context_state">
+
+    <h1 class="documentFirstHeading"
+        i18n:translate="heading_assign_counterpart">
+        Send to your counterpart
+    </h1>
+
+    <div class="documentDescription"
+       i18n:translate="description_assign_counterpart">
+        You can select which users can be your counterpart
+        (only users from the same sector and country of the observation)
+    </div>
+
+    <div tal:replace="structure provider:plone.abovecontentbody" tal:condition="not:ajax_load" />
+
+    <div id="content-core">
+
+        <tal:block condition="not:view/get_counterpart_users">
+          Sorry: there are no experts for this country and sector.
+          Please, contact the EEA Secretariat for further assistance.
+
+        </tal:block>
+
+
+        <tal:block condition="view/get_counterpart_users">
+          <form method="post"
+                tal:attributes="action string:${context/absolute_url}/@@assign_counterpart_form">
+
+              <input type="hidden" name="form.submitted:boolean" value="True" />
+            <div id="user-group-sharing-container">
+
+              <div class="field" tal:repeat="member view/get_counterpart_users">
+                <label tal:attributes="for member/getId">
+                  <input type="radio"
+                    name="counterpart"
+                    id=""
+                    tal:attributes="value member/getId; id member/getId;" />
+                    <span tal:content="python:member.getProperty('fullname', member.getId())"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="comments" tal:replace="nothing">
+
+              <h2>
+                Send comments
+              </h2>
+
+              <div class="documentDescription">
+                Now you can send them comments about this observations
+                and ask for their input. <br/>
+
+                Until you fill this form, users will not be able to provide
+                their input. You can leave the comment box empty if you want.
+
+              </div>
+
+              <textarea name="comments" rows="8" cols="20" id="assign_comment"></textarea>
+
+            </div>
+
+              <input class="standalone" type="submit" name="send" value="Send"/>
+                <input tal:replace="structure context/@@authenticator/authenticator" />
+
+          </form>
+
+        </tal:block>
+      </div>
+</metal:main>
+</body>
+</html>
