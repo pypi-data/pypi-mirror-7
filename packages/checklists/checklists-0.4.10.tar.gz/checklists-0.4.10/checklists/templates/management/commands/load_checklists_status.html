@@ -1,0 +1,42 @@
+Load checklists command
+Date: {% now "d-m-Y" %}
+Time: {% now "H:i" %}
+{% if filtered %}
++---------------------+
+  Checklists filtered
++---------------------+
+The following checklists were not loaded because they matched an entry in the
+filter table:
+{% for path, checklist, match in filtered %}
+{{ checklist.date }} {% if checklist.protocol.time %}{{ checklist.protocol.time }}{% else %}--:--{% endif %} {{ checklist.location.name }}
+    Matching Filter: {{ match.0 }}
+    Matching Value: "{{ match.1 }}"{% endfor %}
+{% endif %}
+{% if added %}
++-------------------+
+  Checklists added
++-------------------+
+The following checklists were successfully loaded into the checklists table:
+{% for path, checklist, messages in added %}
+{{ checklist.date }} {% if checklist.protocol.time %}{{ checklist.protocol.time }}{% else %}--:--{% endif %} {{ checklist.location.name }}
+    {% for message in messages %}{{ message }}
+    {% endfor %}{% endfor %}
+{% endif %}
+{% if updated %}
++---------------------+
+  Checklists updated
++---------------------+
+The following checklists were successfully updated:
+{% for path, checklist, messages in updated %}
+{{ checklist.date }} {% if checklist.protocol.time %}{{ checklist.protocol.time }}{% else %}--:--{% endif %} {{ checklist.location.name }}
+    {% for message in messages %}{{ message }}
+    {% endfor %}{% endfor %}
+{% endif %}
+{% if errors %}
++--------+
+  Errors
++--------+
+An error occurred while loading the following checklist files:
+{% for path, error in errors %}
+File: {{ path }}
+{{ error }}{% endfor %}{% endif %}
