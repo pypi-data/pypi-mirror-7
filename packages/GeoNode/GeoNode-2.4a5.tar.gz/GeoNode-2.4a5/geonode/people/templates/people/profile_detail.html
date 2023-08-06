@@ -1,0 +1,130 @@
+{% extends "people/profile_base.html" %}
+{% load static %}
+{% load friendly_loader %}
+{% friendly_load i18n avatar_tags relationship_tags activity_tags %}
+{% load pagination_tags %}
+
+{% block title %} {% trans "Profile of " %}{{ profile.first_name|default_if_none:profile.username }}{% endblock %}
+
+{% block body_class %}people explore{% endblock %}
+
+{% block body %}
+<div class="row">
+  <div class="col-md-12">
+    <h2 class="page-title">{{ profile.first_name|default_if_none:profile.username }}</h2>
+  </div>
+  <div class="col-md-2">
+    {% avatar profile 140 %}
+  </div>
+  <div class="col-md-6">
+    <dl class="dl-horizontal profile-details">
+      <dt><i class="fa fa-user"></i></dt>
+      <dd>{{ profile.username }}
+        {% if profile.position %} | {{ profile.position }}{% endif %}
+        {% if profile.organization %} @ {{ profile.organization }}{% endif %}
+        {% if profile.profile %}<br />{{ profile.profile }}{% endif %}</dd>
+        <dt><i class="fa fa-map-marker"></i></dt>
+        <dd>{% if profile.delivery %}{{ profile.delivery }}, {% endif %}
+          {% if profile.profile %}{{ profile.zipcode }} {% endif %}
+          {% if profile.city %}{{ profile.city }} {% endif %}
+          {% if profile.area %}{{ profile.area }} {% endif %}
+          {{ profile.country|default_if_none:"not available" }}</dd>
+        {% if user.is_authenticated %}
+        {% if profile.voice %}
+        <dt><i class="fa fa-phone"></i></dt>
+        <dd>{{ profile.voice }}</dd>
+        {% endif %}
+        {% if profile.fax %}
+        <dt><i class="fa fa-print"></i></dt>
+        <dd>{{ profile.fax }}</dd>
+        {% endif %}
+        {% endif %}
+        <dt><i class="fa fa-tag"></i></dt>
+        <dd>{% for tag in profile.keywords.all %}
+              {{ tag.name }}
+            {% endfor %}
+        </dd>
+      </dl>
+  </div>
+
+  <div class="col-md-4">
+    
+    {% if user == profile %}
+    <ul class="list-group">
+      <li class="list-group-item"><a href="{% url "profile_edit" user.username %}">{% trans "Edit profile" %}</a></li>
+      <li class="list-group-item"><a href="{% url "account_settings" %}">{% trans "Account Settings" %}</a></li>
+      <li class="list-group-item"><a href="{% url "account_password" %}">{% trans "Change password" %}</a></li>
+      <li class="list-group-item"><a href="{% url "layer_upload" %}">{% trans "Upload new layers" %}</a></li>
+      <li class="list-group-item"><a href="{% url "new_map" %}">{% trans "Create a new map" %}</a></li>
+      {% if_has_tag actor_url %}
+      <li class="list-group-item"><a href="{% actor_url profile %}">{% trans "My Activities" %}</a></li>
+      {% endif_has_tag %}
+    </ul>
+      {% if_has_tag if_relationship %}
+        {% include "relationships/_manage_connections.html" %}
+      {% endif_has_tag %}
+    {% else %}
+      {% if_has_tag if_relationship %}
+        {% include "relationships/_profile_follow.html" %}
+      {% endif_has_tag %}
+    {% endif %}
+
+    {% if_has_tag if_relationship %}
+      {% include "relationships/_list_connections.html" %}
+    {% endif_has_tag %}
+
+  </div>
+
+</div>
+
+<div class="col-md-8">
+  <h3>Resources</h3>
+  {% include "people/_profile_filters.html" %}
+</div>
+
+<div class="col-md-8">
+    <div class="tab-content span12 paginate paginate-auto">
+      {% if object_list|length > 0 %}
+      <div class="tab-pane active list paginate-contents" id="all">
+          {% autopaginate object_list 5 %}
+            {% for obj in object_list %}
+            <article>
+              <div class="content">
+                <div class="item-header">
+                <img class="thumb" src="{{ obj.thumbnail_url}}" />
+                {% if obj.class_name = 'Map' %}
+                <h3><i class="fa fa-map-marker"></i>
+                {% endif %}
+                {% if obj.class_name = 'Layer' %}
+                <h3><i class="fa fa-square-o rotate-45"></i>
+                {% endif %}
+                {% if obj.class_name = 'Document' %}
+                <h3><i class="fa fa-file-text-alt"></i>
+                {% endif %}
+                  <a href="{{ obj.detail_url }}">{{ obj.title }}</a>
+                </h3>
+              </div>
+              <div class="details">
+                <div class="meta">
+                  <p class="resources-abstract">{{ obj.abstract }}</p>
+                  <p class="sharing-date">{% trans "Shared on" %} {{ obj.date|date:"d b Y" }}</p>
+                </div>
+              </div>
+            </article>
+            {% endfor %}
+        </div>
+          {% paginate %}
+      </div>
+      {% else %}
+      </div>
+      <article>
+        <p>{% trans "No contents found." %}</p>
+      </article>
+    {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+
