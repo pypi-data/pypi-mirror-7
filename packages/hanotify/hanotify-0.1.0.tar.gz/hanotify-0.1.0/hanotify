@@ -1,0 +1,110 @@
+#!/usr/bin/env python
+
+import mandrill
+import logging
+import time
+import argparse
+from datetime import datetime
+
+from hockeylib import app
+from hockeylib import crash
+from hanotifylib import watch
+from hanotifylib import report
+
+LOG_LEVEL_OUTPUT = 25
+DEFAULT_RUN_INTERVAL = 1800.0
+
+parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
+description="" \
+"  _    _                   _   _  __       \n"
+" | |  | |                 | | (_)/ _|      \n"
+" | |__| | __ _ _ __   ___ | |_ _| |_ _   _ \n"
+" |  __  |/ _` | '_ \ / _ \| __| |  _| | | |\n"
+" | |  | | (_| | | | | (_) | |_| | | | |_| |\n"
+" |_|  |_|\__,_|_| |_|\___/ \__|_|_|  \__, |\n"
+"                                      __/ |\n"
+"                                     |___/ \n"
+"     -HockeyApp Crash Notifications-         ")
+parsers_com = parser.add_subparsers(dest="com",metavar="")
+
+parser_help = parsers_com.add_parser("help",help='Display a list of commands for the cli')
+parser_run = parsers_com.add_parser("run",help='Start polling for changes from hockeyapp')
+parser_run.add_argument("-o","--output",help="Specify where log messages should be outputed",choices=["file","terminal","none"],default="none")
+parser_run.add_argument("-i","--interval",help="Specify the polling interval",default=DEFAULT_RUN_INTERVAL,type=float)
+
+parser_watch = parsers_com.add_parser("watch",help="Watch for any crash reports from an app")
+parser_watch.add_argument("-i","--id",help="ID of the app to watch",required=True)
+parser_watch.add_argument("-v","--version",help="Version code of the app to watch")
+parser_watch.add_argument("-t","--threshold",help="The crash count threshold")
+
+parser_unwatch = parsers_com.add_parser("unwatch",help="Unwatch any existing applications")
+unwatch_group_filter = parser_unwatch.add_mutually_exclusive_group(required=True)
+unwatch_group_filter.add_argument("-i","--id",help="ID of the app to unwatch")
+unwatch_group_filter.add_argument("-v","--version",help="Version code of the app to unwatch")
+
+parser_list = parsers_com.add_parser("list",help="List all applications being watched")
+
+args = parser.parse_args()
+
+if args.com == "help":
+    parser.print_help()
+
+elif args.com == "watch":
+    watch.watch_app(args.id,args.version)
+
+elif args.com == "unwatch":
+    watch.unwatch_app(args.id,args.version)
+
+elif args.com == "run":
+
+    level = LOG_LEVEL_OUTPUT if args.output != "none" else logging.NOTSET
+    filename = "logs.txt" if args.output == "file" else None
+    logging.basicConfig(filename=filename,level=level)
+
+    logging.log(LOG_LEVEL_OUTPUT,"{0} Booting up the hanotify crash watcher...".format(datetime.now()))
+    try:
+        watchlist = watch.get_watchlist()
+
+        while True:
+            logging.log(LOG_LEVEL_OUTPUT,"{0} Polling HockeyApp".format(datetime.now()))
+
+            for watch in watchlist:
+                watch_app = app.get_app(appid=watch.appId())
+                crashes = watch_app.crashes(watch.appVersion(),50,"last_crash_at","desc")
+
+                logging.log(LOG_LEVEL_OUTPUT,"{0} Checking crash logs for {1} version {2}".format(datetime.now(),watch_app.title(),watch.appVersion()))
+                for crash in crashes:
+                    if int(crash.crashCount()) >= int(watch.countThreshold()):
+                        if not report.has_record(crash):
+                            logging.log(LOG_LEVEL_OUTPUT,"{0} Reporting crash {1}".format(datetime.now(),crash.id()))
+                            report.send_report(crash,watch_app)
+                        else:
+                            logging.log(LOG_LEVEL_OUTPUT,"{0} Crash {1} has already been reported".format(datetime.now(),crash.id()))
+
+            time.sleep(float(args.interval))
+    except KeyboardInterrupt:
+        logging.log(LOG_LEVEL_OUTPUT,"{0} Shutting down hanotify watcher...".format(datetime.now()))
+
+elif args.com == "list":
+    watchlist = watch.get_watchlist()
+    
+    appid_width = 10
+    appname_width = 15
+    appversion_width = 15
+    threshold_width = 10
+
+    print "\nApplications being Watched\n"
+    print "app_id".ljust(appid_width)+ \
+          "app_name".ljust(appname_width) + \
+          "app_version".ljust(appversion_width)+ \
+          "threshold".ljust(threshold_width)
+    print "-"*(appid_width+appname_width+appversion_width+threshold_width)
+
+    for watch in watchlist:
+
+        print watch.appId().ljust(appid_width)+ \
+              watch.appName().ljust(appname_width)+ \
+              watch.appVersion().ljust(appversion_width)+ \
+              str(watch.countThreshold()).ljust(threshold_width)
+    print ""
+
