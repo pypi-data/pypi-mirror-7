@@ -1,0 +1,682 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ztpserver.topology &mdash; ZTP Server 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="ZTP Server 1.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">ZTP Server 1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for ztpserver.topology</h1><div class="highlight"><pre>
+<span class="c"># vim: tabstop=4 expandtab shiftwidth=4 softtabstop=4</span>
+<span class="c"># pylint: disable=W0614</span>
+<span class="c">#</span>
+<span class="c"># Copyright (c) 2014, Arista Networks, Inc.</span>
+<span class="c"># All rights reserved.</span>
+<span class="c">#</span>
+<span class="c"># Redistribution and use in source and binary forms, with or without</span>
+<span class="c"># modification, are permitted provided that the following conditions are</span>
+<span class="c"># met:</span>
+<span class="c">#</span>
+<span class="c">#   Redistributions of source code must retain the above copyright notice,</span>
+<span class="c">#   this list of conditions and the following disclaimer.</span>
+<span class="c">#</span>
+<span class="c">#   Redistributions in binary form must reproduce the above copyright</span>
+<span class="c">#   notice, this list of conditions and the following disclaimer in the</span>
+<span class="c">#   documentation and/or other materials provided with the distribution.</span>
+<span class="c">#</span>
+<span class="c">#   Neither the name of Arista Networks nor the names of its</span>
+<span class="c">#   contributors may be used to endorse or promote products derived from</span>
+<span class="c">#   this software without specific prior written permission.</span>
+<span class="c">#</span>
+<span class="c"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS</span>
+<span class="c"># &quot;AS IS&quot; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT</span>
+<span class="c"># LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR</span>
+<span class="c"># A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL ARISTA NETWORKS</span>
+<span class="c"># BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR</span>
+<span class="c"># CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF</span>
+<span class="c"># SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR</span>
+<span class="c"># BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,</span>
+<span class="c"># WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE</span>
+<span class="c"># OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN</span>
+<span class="c"># IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+<span class="c">#</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">ztpserver.config</span>
+<span class="kn">import</span> <span class="nn">ztpserver.serializers</span>
+
+<span class="kn">from</span> <span class="nn">ztpserver.constants</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">DEVICENAME_PARSER_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&quot;:(?=[Ethernet|\d+(?/)(?\d+)|\*])&quot;</span><span class="p">)</span>
+<span class="n">ANYDEVICE_PARSER_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&quot;:(?=[any])&quot;</span><span class="p">)</span>
+<span class="n">FUNC_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&quot;(?P&lt;function&gt;\w+)(?=\(\S+\))\([\&#39;|</span><span class="se">\&quot;</span><span class="s">](?P&lt;arg&gt;.+?)[\&#39;|</span><span class="se">\&quot;</span><span class="s">]\)&quot;</span><span class="p">)</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+<span class="n">serializer</span> <span class="o">=</span> <span class="n">ztpserver</span><span class="o">.</span><span class="n">serializers</span><span class="o">.</span><span class="n">Serializer</span><span class="p">()</span> <span class="c"># pylint: disable=C0103</span>
+
+<div class="viewcode-block" id="Collection"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.Collection">[docs]</a><span class="k">class</span> <span class="nc">Collection</span><span class="p">(</span><span class="n">collections</span><span class="o">.</span><span class="n">Mapping</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">Callable</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="c">#pylint: disable=W0221</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">is</span> <span class="bp">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="OrderedCollection"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.OrderedCollection">[docs]</a><span class="k">class</span> <span class="nc">OrderedCollection</span><span class="p">(</span><span class="n">collections</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">Callable</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="c">#pylint: disable=W0221</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">is</span> <span class="bp">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="DataFileError"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.DataFileError">[docs]</a><span class="k">class</span> <span class="nc">DataFileError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="DataFileMixin"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.DataFileMixin">[docs]</a><span class="k">class</span> <span class="nc">DataFileMixin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+<div class="viewcode-block" id="DataFileMixin.load"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.DataFileMixin.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fobj</span><span class="p">,</span> <span class="n">content_type</span><span class="o">=</span><span class="n">CONTENT_TYPE_OTHER</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="DataFileMixin.loads"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.DataFileMixin.loads">[docs]</a>    <span class="k">def</span> <span class="nf">loads</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">content_type</span><span class="o">=</span><span class="n">CONTENT_TYPE_OTHER</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="DataFileMixin.dump"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.DataFileMixin.dump">[docs]</a>    <span class="k">def</span> <span class="nf">dump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fobj</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">content_type</span><span class="o">=</span><span class="n">CONTENT_TYPE_OTHER</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="DataFileMixin.dumps"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.DataFileMixin.dumps">[docs]</a>    <span class="k">def</span> <span class="nf">dumps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">content_type</span><span class="o">=</span><span class="n">CONTENT_TYPE_OTHER</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="DataFileMixin.serialize"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.DataFileMixin.serialize">[docs]</a>    <span class="k">def</span> <span class="nf">serialize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="DataFileMixin.deserialize"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.DataFileMixin.deserialize">[docs]</a>    <span class="k">def</span> <span class="nf">deserialize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div></div>
+<div class="viewcode-block" id="NodeErrror"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.NodeErrror">[docs]</a><span class="k">class</span> <span class="nc">NodeErrror</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="Node"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.Node">[docs]</a><span class="k">class</span> <span class="nc">Node</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="n">Neighbor</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">namedtuple</span><span class="p">(</span><span class="s">&quot;Neighbor&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;device&#39;</span><span class="p">,</span> <span class="s">&#39;port&#39;</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;model&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">systemmac</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;systemmac&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">serialnumber</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;serialnumber&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;version&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span> <span class="o">=</span> <span class="n">OrderedCollection</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s">&#39;neighbors&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_neighbors</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;neighbors&#39;</span><span class="p">])</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">Node</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;Node(neighbors=</span><span class="si">%d</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Node.convert"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.Node.convert">[docs]</a>    <span class="k">def</span> <span class="nf">convert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">convert</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()))</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">Iterable</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)(</span><span class="nb">map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">convert</span><span class="p">,</span> <span class="n">data</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">data</span>
+</div>
+<div class="viewcode-block" id="Node.add_neighbors"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.Node.add_neighbors">[docs]</a>    <span class="k">def</span> <span class="nf">add_neighbors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">neighbors</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">interface</span><span class="p">,</span> <span class="n">neighbor_list</span> <span class="ow">in</span> <span class="n">neighbors</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">collection</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">neighbor_list</span><span class="p">:</span>
+                <span class="n">collection</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Neighbor</span><span class="p">(</span><span class="o">**</span><span class="n">neighbor</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span><span class="p">[</span><span class="n">interface</span><span class="p">]</span> <span class="o">=</span> <span class="n">collection</span>
+</div>
+<div class="viewcode-block" id="Node.hasneighbors"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.Node.hasneighbors">[docs]</a>    <span class="k">def</span> <span class="nf">hasneighbors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+</div>
+<div class="viewcode-block" id="Node.serialize"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.Node.serialize">[docs]</a>    <span class="k">def</span> <span class="nf">serialize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">attrs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">prop</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;model&#39;</span><span class="p">,</span> <span class="s">&#39;systemmac&#39;</span><span class="p">,</span> <span class="s">&#39;serialnumber&#39;</span><span class="p">,</span> <span class="s">&#39;version&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">attrs</span><span class="p">[</span><span class="n">prop</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="p">)</span>
+
+        <span class="n">neighbors</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasneighbors</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">interface</span><span class="p">,</span> <span class="n">neighbors</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">collection</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">neighbors</span><span class="p">:</span>
+                    <span class="n">collection</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">neighbor</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+                                           <span class="n">port</span><span class="o">=</span><span class="n">neighbor</span><span class="o">.</span><span class="n">port</span><span class="p">))</span>
+                <span class="n">neighbors</span><span class="p">[</span><span class="n">interface</span><span class="p">]</span> <span class="o">=</span> <span class="n">collection</span>
+        <span class="n">attrs</span><span class="p">[</span><span class="s">&#39;neighbors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">neighbors</span>
+</div></div>
+<div class="viewcode-block" id="Resources"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.Resources">[docs]</a><span class="k">class</span> <span class="nc">Resources</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">filepath</span> <span class="o">=</span> <span class="n">ztpserver</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">default</span><span class="o">.</span><span class="n">data_root</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">workingdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s">&quot;resources&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Resources.load"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.Resources.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fobj</span><span class="p">,</span> <span class="n">content_type</span><span class="o">=</span><span class="n">CONTENT_TYPE_YAML</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">contents</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">fobj</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">content_type</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">DataFileError</span><span class="p">(</span><span class="s">&#39;unable to load file&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">contents</span>
+</div>
+<div class="viewcode-block" id="Resources.loads"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.Resources.loads">[docs]</a>    <span class="k">def</span> <span class="nf">loads</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">content_type</span><span class="o">=</span><span class="n">CONTENT_TYPE_YAML</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">contents</span> <span class="o">=</span> <span class="n">serializer</span><span class="o">.</span><span class="n">deserialize</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">content_type</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">contents</span>
+        <span class="k">except</span> <span class="n">ztpserver</span><span class="o">.</span><span class="n">serializers</span><span class="o">.</span><span class="n">SerializerError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">DataFileError</span><span class="p">(</span><span class="s">&#39;unable to load data&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Resources.dumps"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.Resources.dumps">[docs]</a>    <span class="k">def</span> <span class="nf">dumps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">pool</span><span class="p">,</span> <span class="n">content_type</span><span class="o">=</span><span class="n">CONTENT_TYPE_YAML</span><span class="p">):</span>
+        <span class="n">fobj</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">pool</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">fobj</span><span class="p">,</span> <span class="n">content_type</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Resources.dump"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.Resources.dump">[docs]</a>    <span class="k">def</span> <span class="nf">dump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">fobj</span><span class="p">,</span> <span class="n">content_type</span><span class="o">=</span><span class="n">CONTENT_TYPE_YAML</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">contents</span> <span class="o">=</span> <span class="n">serializer</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">content_type</span><span class="p">)</span>
+            <span class="n">fobj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">contents</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">DataFileError</span><span class="p">(</span><span class="s">&quot;unable to write file&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Resources.allocate"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.Resources.allocate">[docs]</a>    <span class="k">def</span> <span class="nf">allocate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pool</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lookup</span><span class="p">(</span><span class="n">pool</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Found allocated resources, returning </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">match</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">match</span>
+
+        <span class="n">fp</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">workingdir</span><span class="p">,</span> <span class="n">pool</span><span class="p">)</span>
+        <span class="n">contents</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">fp</span><span class="p">))</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">contents</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">)</span>
+            <span class="n">contents</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">systemmac</span>
+        <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ResourcesError</span><span class="p">(</span><span class="s">&#39;no resources available in pool&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">contents</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">key</span>
+</div>
+<div class="viewcode-block" id="Resources.lookup"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.Resources.lookup">[docs]</a>    <span class="k">def</span> <span class="nf">lookup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pool</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Looking up resource for node </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">node</span><span class="o">.</span><span class="n">systemmac</span><span class="p">)</span>
+        <span class="n">fp</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">workingdir</span><span class="p">,</span> <span class="n">pool</span><span class="p">)</span>
+        <span class="n">contents</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">fp</span><span class="p">))</span>
+        <span class="n">matches</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">):</span> <span class="n">v</span> <span class="o">==</span> <span class="n">node</span><span class="o">.</span><span class="n">systemmac</span><span class="p">,</span> <span class="n">contents</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="o">=</span> <span class="n">matches</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">matches</span> <span class="k">else</span> <span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">key</span>
+
+</div></div>
+<div class="viewcode-block" id="Functions"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.Functions">[docs]</a><span class="k">class</span> <span class="nc">Functions</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Functions.exact"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.Functions.exact">[docs]</a>    <span class="k">def</span> <span class="nf">exact</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">arg</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">arg</span> <span class="o">==</span> <span class="n">value</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Functions.regex"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.Functions.regex">[docs]</a>    <span class="k">def</span> <span class="nf">regex</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">arg</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">True</span> <span class="k">if</span> <span class="n">match</span> <span class="k">else</span> <span class="bp">False</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Functions.includes"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.Functions.includes">[docs]</a>    <span class="k">def</span> <span class="nf">includes</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">arg</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">value</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Functions.excludes"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.Functions.excludes">[docs]</a>    <span class="k">def</span> <span class="nf">excludes</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">arg</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">arg</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">value</span>
+
+</div></div>
+<div class="viewcode-block" id="TopologyError"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.TopologyError">[docs]</a><span class="k">class</span> <span class="nc">TopologyError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="Topology"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.Topology">[docs]</a><span class="k">class</span> <span class="nc">Topology</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">contents</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">patterns</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;globals&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(),</span> <span class="s">&#39;nodes&#39;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">()}</span>
+
+        <span class="k">if</span> <span class="n">contents</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">deserialize</span><span class="p">(</span><span class="n">contents</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;Topology(globals=</span><span class="si">%d</span><span class="s">, nodes=</span><span class="si">%d</span><span class="s">)&quot;</span> <span class="o">%</span> \
+            <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">patterns</span><span class="p">[</span><span class="s">&#39;globals&#39;</span><span class="p">]),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">patterns</span><span class="p">[</span><span class="s">&#39;nodes&#39;</span><span class="p">]))</span>
+
+<div class="viewcode-block" id="Topology.load"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.Topology.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fobj</span><span class="p">,</span> <span class="n">content_type</span><span class="o">=</span><span class="n">CONTENT_TYPE_YAML</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">fobj</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">content_type</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">TopologyError</span><span class="p">(</span><span class="s">&#39;unable to load file&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Topology.loads"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.Topology.loads">[docs]</a>    <span class="k">def</span> <span class="nf">loads</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">content_type</span><span class="o">=</span><span class="n">CONTENT_TYPE_YAML</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">contents</span> <span class="o">=</span> <span class="n">serializer</span><span class="o">.</span><span class="n">deserialize</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">content_type</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">deserialize</span><span class="p">(</span><span class="n">contents</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">ztpserver</span><span class="o">.</span><span class="n">serializers</span><span class="o">.</span><span class="n">SerializerError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">TopologyError</span><span class="p">(</span><span class="s">&#39;unable to load data&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Topology.deserialize"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.Topology.deserialize">[docs]</a>    <span class="k">def</span> <span class="nf">deserialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">contents</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="o">=</span> <span class="n">contents</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;variables&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s">&#39;any&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="ow">or</span> <span class="s">&#39;none&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;cannot assign value to reserved word&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s">&#39;any&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+                <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s">&#39;any&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s">&#39;none&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+                <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s">&#39;none&#39;</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">contents</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;patterns&#39;</span><span class="p">):</span>
+            <span class="n">pattern</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_pattern</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Topology.add_pattern"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.Topology.add_pattern">[docs]</a>    <span class="k">def</span> <span class="nf">add_pattern</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pattern</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="n">Pattern</span><span class="p">(</span><span class="o">**</span><span class="n">pattern</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">obj</span><span class="o">.</span><span class="n">interfaces</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">device</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="s">&#39;any&#39;</span><span class="p">]</span> <span class="ow">and</span> \
+                        <span class="n">item</span><span class="o">.</span><span class="n">device</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+                        <span class="n">item</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">device</span><span class="p">]</span>
+
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Unable to parse pattern entry&#39;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="s">&#39;node&#39;</span> <span class="ow">in</span> <span class="n">pattern</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">patterns</span><span class="p">[</span><span class="s">&#39;nodes&#39;</span><span class="p">][</span><span class="n">obj</span><span class="o">.</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">obj</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">patterns</span><span class="p">[</span><span class="s">&#39;globals&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="Topology.get_patterns"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.Topology.get_patterns">[docs]</a>    <span class="k">def</span> <span class="nf">get_patterns</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; returns a list of possible patterns for a given node &quot;&quot;&quot;</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Searching for systemmac </span><span class="si">%s</span><span class="s"> in patterns&quot;</span> <span class="o">%</span> <span class="n">node</span><span class="o">.</span><span class="n">systemmac</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Available node patterns: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">patterns</span><span class="p">[</span><span class="s">&#39;nodes&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">systemmac</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">patterns</span><span class="p">[</span><span class="s">&#39;nodes&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">pattern</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">patterns</span><span class="p">[</span><span class="s">&#39;nodes&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">systemmac</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Returning node pattern[</span><span class="si">%s</span><span class="s">] for node[</span><span class="si">%s</span><span class="s">]&quot;</span> <span class="o">%</span> \
+                <span class="p">(</span><span class="n">pattern</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">systemmac</span><span class="p">))</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">pattern</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Returning node pattern[globals] patterns for node[</span><span class="si">%s</span><span class="s">]&quot;</span>\
+                <span class="o">%</span> <span class="n">node</span><span class="o">.</span><span class="n">systemmac</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">patterns</span><span class="p">[</span><span class="s">&#39;globals&#39;</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="Topology.match_node"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.Topology.match_node">[docs]</a>    <span class="k">def</span> <span class="nf">match_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns a list of :py:class:`Pattern` classes satisfied</span>
+<span class="sd">        by the :py:class:`Node` argument</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">matches</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_patterns</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Attempting to match Pattern [</span><span class="si">%s</span><span class="s">]&#39;</span> <span class="o">%</span> <span class="n">pattern</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">pattern</span><span class="o">.</span><span class="n">match_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">):</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Match for [</span><span class="si">%s</span><span class="s">] was successful&#39;</span> <span class="o">%</span> <span class="n">pattern</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="n">matches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Failed to match [</span><span class="si">%s</span><span class="s">]&quot;</span> <span class="o">%</span> <span class="n">pattern</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">matches</span>
+
+</div></div>
+<div class="viewcode-block" id="PatternError"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.PatternError">[docs]</a><span class="k">class</span> <span class="nc">PatternError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="Pattern"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.Pattern">[docs]</a><span class="k">class</span> <span class="nc">Pattern</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">definition</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">definition</span> <span class="o">=</span> <span class="n">definition</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">node</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;node&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;variables&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">interfaces</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s">&#39;interfaces&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_interfaces</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;interfaces&#39;</span><span class="p">])</span>
+
+<div class="viewcode-block" id="Pattern.load"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.Pattern.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">content_type</span><span class="o">=</span><span class="n">CONTENT_TYPE_YAML</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Loading pattern from </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">filename</span><span class="p">)</span>
+            <span class="n">contents</span> <span class="o">=</span> <span class="n">serializer</span><span class="o">.</span><span class="n">deserialize</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span>
+                                              <span class="n">content_type</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">deserialize</span><span class="p">(</span><span class="n">contents</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">PatternError</span>
+</div>
+<div class="viewcode-block" id="Pattern.deserialize"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.Pattern.deserialize">[docs]</a>    <span class="k">def</span> <span class="nf">deserialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">contents</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">contents</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;name&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">definition</span> <span class="o">=</span> <span class="n">contents</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;definition&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">node</span> <span class="o">=</span> <span class="n">contents</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;node&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="o">=</span> <span class="n">contents</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;variables&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">interfaces</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s">&#39;interfaces&#39;</span> <span class="ow">in</span> <span class="n">contents</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_interfaces</span><span class="p">(</span><span class="n">contents</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;interfaces&#39;</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Pattern.serialize"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.Pattern.serialize">[docs]</a>    <span class="k">def</span> <span class="nf">serialize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">definition</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">definition</span><span class="p">)</span>
+        <span class="n">data</span><span class="p">[</span><span class="s">&#39;variables&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="ow">or</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s">&#39;node&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node</span>
+
+        <span class="n">interfaces</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">interfaces</span><span class="p">:</span>
+            <span class="n">interfaces</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="n">entry</span><span class="o">.</span><span class="n">interface</span><span class="p">:</span> <span class="n">entry</span><span class="o">.</span><span class="n">serialize</span><span class="p">()})</span>
+        <span class="n">data</span><span class="p">[</span><span class="s">&#39;interfaces&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">interfaces</span>
+        <span class="k">return</span> <span class="n">data</span>
+</div>
+<div class="viewcode-block" id="Pattern.add_interface"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.Pattern.add_interface">[docs]</a>    <span class="k">def</span> <span class="nf">add_interface</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interface</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interfaces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">InterfacePattern</span><span class="p">(</span><span class="n">interface</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">tags</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Pattern.add_interfaces"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.Pattern.add_interfaces">[docs]</a>    <span class="k">def</span> <span class="nf">add_interfaces</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interfaces</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">interface</span> <span class="ow">in</span> <span class="n">interfaces</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">interface</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_interface</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Adding interface to pattern with args </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_interface</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="c">#pylint: disable=W0142</span>
+</div>
+    <span class="k">def</span> <span class="nf">_parse_interface</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interface</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;parse_interface[</span><span class="si">%s</span><span class="s">]: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">interface</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">values</span><span class="p">)))</span>
+
+        <span class="n">device</span> <span class="o">=</span> <span class="n">port</span> <span class="o">=</span> <span class="n">tags</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">device</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;device&#39;</span><span class="p">)</span>
+            <span class="n">port</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;port&#39;</span><span class="p">)</span>
+            <span class="n">tags</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;tags&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">values</span> <span class="o">==</span> <span class="s">&#39;any&#39;</span> <span class="ow">or</span> <span class="n">device</span> <span class="o">==</span> <span class="s">&#39;any&#39;</span><span class="p">:</span>
+            <span class="n">device</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">tags</span> <span class="o">=</span> <span class="s">&#39;any&#39;</span><span class="p">,</span> <span class="s">&#39;any&#39;</span><span class="p">,</span> <span class="bp">None</span>
+
+        <span class="k">elif</span> <span class="n">values</span> <span class="o">==</span> <span class="s">&#39;none&#39;</span> <span class="ow">or</span> <span class="n">device</span> <span class="o">==</span> <span class="s">&#39;none&#39;</span><span class="p">:</span>
+            <span class="n">device</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">tags</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">device</span><span class="p">,</span> <span class="n">port</span> <span class="o">=</span> <span class="n">DEVICENAME_PARSER_RE</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="n">device</span><span class="p">,</span> <span class="n">port</span> <span class="o">=</span> <span class="n">ANYDEVICE_PARSER_RE</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+            <span class="n">port</span><span class="p">,</span> <span class="n">tags</span> <span class="o">=</span> <span class="n">port</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;:&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="s">&#39;:&#39;</span> <span class="ow">in</span> <span class="n">port</span> <span class="k">else</span> <span class="p">(</span><span class="n">port</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+
+        <span class="c">#perform variable substitution</span>
+        <span class="k">if</span> <span class="n">device</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="s">&#39;any&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">device</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+            <span class="n">device</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">device</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">interface</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">tags</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Pattern.match_node"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.Pattern.match_node">[docs]</a>    <span class="k">def</span> <span class="nf">match_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">variables</span><span class="o">=</span><span class="p">{}):</span>
+
+        <span class="n">neighbors</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">neighbors</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">intfpattern</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">interfaces</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Attempting to match </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">intfpattern</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Available neighbors: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">neighbors</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+            <span class="c"># check for device none</span>
+            <span class="k">if</span> <span class="n">intfpattern</span><span class="o">.</span><span class="n">device</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;InterfacePattern device is &#39;none&#39;&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">intfpattern</span><span class="o">.</span><span class="n">interface</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">neighbors</span>
+
+            <span class="n">variables</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span>
+            <span class="n">matches</span> <span class="o">=</span> <span class="n">intfpattern</span><span class="o">.</span><span class="n">match_neighbors</span><span class="p">(</span><span class="n">neighbors</span><span class="p">,</span> <span class="n">variables</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">matches</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;InterfacePattern failed to match interface[</span><span class="si">%s</span><span class="s">]&quot;</span> \
+                    <span class="o">%</span> <span class="n">intfpattern</span><span class="o">.</span><span class="n">interface</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">False</span>
+
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;InterfacePattern matched interfaces </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">matches</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">matches</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Removing interface </span><span class="si">%s</span><span class="s"> from available pool&quot;</span> <span class="o">%</span> <span class="n">match</span><span class="p">)</span>
+                <span class="k">del</span> <span class="n">neighbors</span><span class="p">[</span><span class="n">match</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="bp">True</span>
+</div></div>
+<div class="viewcode-block" id="InterfacePattern"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.InterfacePattern">[docs]</a><span class="k">class</span> <span class="nc">InterfacePattern</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interface</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">interface</span> <span class="o">=</span> <span class="n">interface</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interfaces</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="n">interface</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">port</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ports</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="n">port</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tags</span> <span class="o">=</span> <span class="n">tags</span> <span class="ow">or</span> <span class="nb">list</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;InterfacePattern(interface=</span><span class="si">%s</span><span class="s">, device=</span><span class="si">%s</span><span class="s">, port=</span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> \
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">interface</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">)</span>
+
+<div class="viewcode-block" id="InterfacePattern.serialize"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.InterfacePattern.serialize">[docs]</a>    <span class="k">def</span> <span class="nf">serialize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">obj</span><span class="p">[</span><span class="s">&#39;device&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;none&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">obj</span><span class="p">[</span><span class="s">&#39;device&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span>
+            <span class="n">obj</span><span class="p">[</span><span class="s">&#39;port&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tags</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">obj</span><span class="p">[</span><span class="s">&#39;tags&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tags</span>
+        <span class="k">return</span> <span class="n">obj</span>
+</div>
+<div class="viewcode-block" id="InterfacePattern.range"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.InterfacePattern.range">[docs]</a>    <span class="k">def</span> <span class="nf">range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interface_range</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">interface_range</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">interface_range</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;Ethernet&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">interface_range</span><span class="p">]</span>
+
+        <span class="n">indicies</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;[a-zA-Z]*&quot;</span><span class="p">,</span> <span class="n">interface_range</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">indicies</span> <span class="o">=</span> <span class="n">indicies</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)</span>
+
+        <span class="n">interfaces</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">indicies</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s">&#39;-&#39;</span> <span class="ow">in</span> <span class="n">index</span><span class="p">:</span>
+                <span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;-&#39;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">start</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">stop</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="n">interfaces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;Ethernet</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">index</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">interfaces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;Ethernet</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">index</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">interfaces</span>
+</div>
+<div class="viewcode-block" id="InterfacePattern.match_neighbors"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.InterfacePattern.match_neighbors">[docs]</a>    <span class="k">def</span> <span class="nf">match_neighbors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">neighbors</span><span class="p">,</span> <span class="n">variables</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">interface</span> <span class="o">==</span> <span class="s">&#39;any&#39;</span><span class="p">:</span>
+            <span class="n">interfaces</span> <span class="o">=</span> <span class="n">neighbors</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">interfaces</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">interfaces</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">neighbors</span><span class="p">()]</span>
+
+        <span class="n">matches</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">interface</span> <span class="ow">in</span> <span class="n">interfaces</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">device</span><span class="p">,</span> <span class="n">port</span> <span class="ow">in</span> <span class="n">neighbors</span><span class="p">(</span><span class="n">interface</span><span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">match_device</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">variables</span><span class="p">)</span> <span class="ow">and</span> \
+                   <span class="bp">self</span><span class="o">.</span><span class="n">match_port</span><span class="p">(</span><span class="n">port</span><span class="p">):</span>
+                    <span class="n">matches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">interface</span><span class="p">)</span>
+                    <span class="k">break</span>
+        <span class="k">if</span> <span class="n">matches</span> <span class="o">!=</span> <span class="n">interfaces</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">interface</span> <span class="o">!=</span> <span class="s">&#39;any&#39;</span><span class="p">:</span>
+            <span class="n">matches</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">matches</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="InterfacePattern.match_device"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.InterfacePattern.match_device">[docs]</a>    <span class="k">def</span> <span class="nf">match_device</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">variables</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">==</span> <span class="s">&#39;any&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="n">pattern</span> <span class="o">=</span> <span class="n">variables</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">FUNC_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&#39;function&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">match</span> <span class="k">else</span> <span class="s">&#39;exact&#39;</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">Functions</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
+        <span class="n">arg</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&#39;arg&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">match</span> <span class="k">else</span> <span class="n">pattern</span>
+        <span class="k">return</span> <span class="n">method</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="InterfacePattern.match_port"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.InterfacePattern.match_port">[docs]</a>    <span class="k">def</span> <span class="nf">match_port</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">port</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">==</span> <span class="s">&#39;any&#39;</span><span class="p">)</span> <span class="ow">or</span> \
+           <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">==</span> <span class="s">&#39;any&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="n">port</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ports</span>
+
+</div></div>
+<div class="viewcode-block" id="create_node"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.create_node">[docs]</a><span class="k">def</span> <span class="nf">create_node</span><span class="p">(</span><span class="n">nodeattrs</span><span class="p">):</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="o">**</span><span class="n">nodeattrs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">systemmac</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">systemmac</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">systemmac</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;:&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Created node object </span><span class="si">%r</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">node</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">node</span>
+</div>
+<span class="n">neighbordb</span> <span class="o">=</span> <span class="n">Topology</span><span class="p">()</span>
+
+<div class="viewcode-block" id="clear"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.clear">[docs]</a><span class="k">def</span> <span class="nf">clear</span><span class="p">():</span>
+    <span class="k">global</span> <span class="n">neighbordb</span>
+    <span class="n">neighbordb</span> <span class="o">=</span> <span class="n">Topology</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="default_filename"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.default_filename">[docs]</a><span class="k">def</span> <span class="nf">default_filename</span><span class="p">():</span>
+    <span class="n">filepath</span> <span class="o">=</span> <span class="n">ztpserver</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">default</span><span class="o">.</span><span class="n">data_root</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">ztpserver</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">neighbordb</span><span class="o">.</span><span class="n">filename</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="loads"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.loads">[docs]</a><span class="k">def</span> <span class="nf">loads</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">content_type</span><span class="o">=</span><span class="n">CONTENT_TYPE_YAML</span><span class="p">):</span>
+    <span class="n">clear</span><span class="p">()</span>
+    <span class="k">global</span> <span class="n">neighbordb</span>
+    <span class="n">neighbordb</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">content_type</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Loaded neighbordb [</span><span class="si">%r</span><span class="s">]&quot;</span> <span class="o">%</span> <span class="n">neighbordb</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="load"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.load">[docs]</a><span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">content_type</span><span class="o">=</span><span class="n">CONTENT_TYPE_YAML</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">default_filename</span><span class="p">()</span>
+    <span class="n">fobj</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="n">loads</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">content_type</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="resources"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.topology.resources">[docs]</a><span class="k">def</span> <span class="nf">resources</span><span class="p">(</span><span class="n">attributes</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Start processing resources with attributes: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">attributes</span><span class="p">)</span>
+    <span class="n">_attributes</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="n">_resources</span> <span class="o">=</span> <span class="n">Resources</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">attributes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">resources</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">_value</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+                <span class="n">match</span> <span class="o">=</span> <span class="n">FUNC_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+                    <span class="n">method</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">_resources</span><span class="p">,</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&#39;function&#39;</span><span class="p">))</span>
+                    <span class="n">_value</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">method</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&#39;arg&#39;</span><span class="p">),</span> <span class="n">node</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">_value</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">_value</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">match</span> <span class="o">=</span> <span class="n">FUNC_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+                <span class="n">method</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">_resources</span><span class="p">,</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&#39;function&#39;</span><span class="p">))</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">method</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&#39;arg&#39;</span><span class="p">),</span> <span class="n">node</span><span class="p">)</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Allocated value </span><span class="si">%s</span><span class="s"> for attribute </span><span class="si">%s</span><span class="s"> from pool </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> \
+                    <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&#39;arg&#39;</span><span class="p">)))</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Setting </span><span class="si">%s</span><span class="s"> to </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+        <span class="n">_attributes</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="k">return</span> <span class="n">_attributes</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">ZTP Server 1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Arista Networks.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

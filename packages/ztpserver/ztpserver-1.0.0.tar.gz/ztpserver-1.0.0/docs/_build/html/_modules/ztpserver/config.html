@@ -1,0 +1,412 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ztpserver.config &mdash; ZTP Server 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="ZTP Server 1.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">ZTP Server 1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for ztpserver.config</h1><div class="highlight"><pre>
+<span class="c"># vim: tabstop=4 expandtab shiftwidth=4 softtabstop=4</span>
+<span class="c">#</span>
+<span class="c"># Copyright (c) 2013, Arista Networks</span>
+<span class="c"># All rights reserved.</span>
+<span class="c">#</span>
+<span class="c"># Redistribution and use in source and binary forms, with or without modification,</span>
+<span class="c"># are permitted provided that the following conditions are met:</span>
+<span class="c">#</span>
+<span class="c">#   Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c">#   list of conditions and the following disclaimer.</span>
+<span class="c">#</span>
+<span class="c">#   Redistributions in binary form must reproduce the above copyright notice, this</span>
+<span class="c">#   list of conditions and the following disclaimer in the documentation and/or</span>
+<span class="c">#   other materials provided with the distribution.</span>
+<span class="c">#</span>
+<span class="c">#   Neither the name of the {organization} nor the names of its</span>
+<span class="c">#   contributors may be used to endorse or promote products derived from</span>
+<span class="c">#   this software without specific prior written permission.</span>
+<span class="c">#</span>
+<span class="c"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot; AND</span>
+<span class="c"># ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED</span>
+<span class="c"># WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE</span>
+<span class="c"># DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR</span>
+<span class="c"># ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES</span>
+<span class="c"># (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;</span>
+<span class="c"># LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON</span>
+<span class="c"># ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT</span>
+<span class="c"># (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS</span>
+<span class="c"># SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+<span class="c">#</span>
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">ConfigParser</span>
+
+<span class="kn">import</span> <span class="nn">ztpserver.types</span>
+
+<div class="viewcode-block" id="Attr"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.config.Attr">[docs]</a><span class="k">class</span> <span class="nc">Attr</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Base Attribute class for deriving all attributes for a Config object</span>
+
+<span class="sd">    :param name: required argument specifies attribute name</span>
+<span class="sd">    :param type: optional keyword argument specifies attribute type.  the</span>
+<span class="sd">                 default argument type is String</span>
+<span class="sd">    :param group: optional keyword argument specifies attribute group.  All</span>
+<span class="sd">                  attribute names must be unique within the group</span>
+<span class="sd">    :param default: optional keyword argument specifies the default value for</span>
+<span class="sd">                    the attribute.  The default value is None</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;type&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">ztpserver</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">String</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;group&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="s">&#39;default&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;default&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;Attr(name=</span><span class="si">%s</span><span class="s">, group=</span><span class="si">%s</span><span class="s">, default=</span><span class="si">%s</span><span class="s">)&#39;</span> <span class="o">%</span>\
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">default</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="StrAttr"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.config.StrAttr">[docs]</a><span class="k">class</span> <span class="nc">StrAttr</span><span class="p">(</span><span class="n">Attr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; String attribute class derived from Attr</span>
+
+<span class="sd">    :param choices: optional keyword argument specifies valid choices</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">choices</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">choices</span> <span class="o">=</span> <span class="n">choices</span>
+        <span class="nb">type</span> <span class="o">=</span> <span class="n">ztpserver</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">choices</span><span class="o">=</span><span class="n">choices</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">StrAttr</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">type</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="IntAttr"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.config.IntAttr">[docs]</a><span class="k">class</span> <span class="nc">IntAttr</span><span class="p">(</span><span class="n">Attr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Integer attribute class derived from Attr</span>
+
+<span class="sd">    :param minvalue: specifies the min value.  the default is None</span>
+<span class="sd">    :param maxvalue: specifies the max value.  the default is None</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">minvalue</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">maxvalue</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">minvalue</span> <span class="o">=</span> <span class="n">minvalue</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxvalue</span> <span class="o">=</span> <span class="n">maxvalue</span>
+        <span class="nb">type</span> <span class="o">=</span> <span class="n">ztpserver</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">Integer</span><span class="p">(</span><span class="n">minvalue</span><span class="o">=</span><span class="n">minvalue</span><span class="p">,</span> <span class="n">maxvalue</span><span class="o">=</span><span class="n">maxvalue</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">IntAttr</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">type</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="BoolAttr"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.config.BoolAttr">[docs]</a><span class="k">class</span> <span class="nc">BoolAttr</span><span class="p">(</span><span class="n">Attr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Boolean attribute class derived from Attr &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">type</span> <span class="o">=</span> <span class="n">ztpserver</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">Boolean</span><span class="p">()</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BoolAttr</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">type</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ListAttr"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.config.ListAttr">[docs]</a><span class="k">class</span> <span class="nc">ListAttr</span><span class="p">(</span><span class="n">Attr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; List attribute class derived from Attr</span>
+
+<span class="sd">    :param delimiter: specifies the delimiter character to split the string on</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s">&#39;,&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">type</span> <span class="o">=</span> <span class="n">ztpserver</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">List</span><span class="p">(</span><span class="n">delimiter</span><span class="o">=</span><span class="n">delimiter</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ListAttr</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">type</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Group"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.config.Group">[docs]</a><span class="k">class</span> <span class="nc">Group</span><span class="p">(</span><span class="n">collections</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; The Group class provides a logical grouping of attributes in a</span>
+<span class="sd">    Config object.   Group names must be unique for each Config instance</span>
+<span class="sd">    and cannot be assigned values.</span>
+
+<span class="sd">    :param name: the name of the group</span>
+<span class="sd">    :param config: the config object the group is associated with</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">_get_attribute</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__getattr__</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_keys</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_keys</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">key</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="k">if</span> <span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Group.add_attribute"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.config.Group.add_attribute">[docs]</a>    <span class="k">def</span> <span class="nf">add_attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">add_attribute</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="Config"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.config.Config">[docs]</a><span class="k">class</span> <span class="nc">Config</span><span class="p">(</span><span class="n">collections</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; The Config class represents the configuration for collection.  &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_attributes</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_groups</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_attribute</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_attribute</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_attributes</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_attributes</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;Config&#39;</span>
+
+    <span class="k">def</span> <span class="nf">_get_attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">group</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_groups</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Group</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attributes</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s">&#39;attribute </span><span class="si">%s</span><span class="s"> does not exist&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+
+        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attributes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;value&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Config.add_attribute"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.config.Config.add_attribute">[docs]</a>    <span class="k">def</span> <span class="nf">add_attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+
+        <span class="n">obj</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">_metadata</span><span class="o">=</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">group</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="s">&#39;group&#39;</span><span class="p">):</span>
+            <span class="n">group</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">group</span>
+
+        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">group</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_groups</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_group</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attributes</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s">&#39;item already exists&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_attributes</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">obj</span>
+        <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">obj</span><span class="p">[</span><span class="s">&#39;value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">default</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Config.add_group"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.config.Config.add_group">[docs]</a>    <span class="k">def</span> <span class="nf">add_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">Group</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_groups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">group</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">group</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_groups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">item</span><span class="p">[</span><span class="s">&#39;_metadata&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Config.set_value"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.config.Config.set_value">[docs]</a>    <span class="k">def</span> <span class="nf">set_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">group</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_groups</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s">&#39;cannot set a value for a group&#39;</span><span class="p">)</span>
+
+        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attributes</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">group</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s">&#39;item does not exist&#39;</span><span class="p">)</span>
+        <span class="n">item</span><span class="p">[</span><span class="s">&#39;value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Config.clear_value"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.config.Config.clear_value">[docs]</a>    <span class="k">def</span> <span class="nf">clear_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; clears the attributes value and resets it to default &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">group</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">self_groups</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s">&#39;cannot clear values for a group&#39;</span><span class="p">)</span>
+
+        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attributes</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">group</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="s">&#39;_metadata&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">default</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">item</span><span class="p">[</span><span class="s">&#39;value&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">item</span><span class="p">[</span><span class="s">&#39;value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">item</span><span class="p">[</span><span class="s">&#39;_metadata&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">default</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Config.read"><a class="viewcode-back" href="../../ztpserver.html#ztpserver.config.Config.read">[docs]</a>    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="n">cp</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="o">.</span><span class="n">ConfigParser</span><span class="p">()</span>
+        <span class="n">cp</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">section</span> <span class="ow">in</span> <span class="n">cp</span><span class="o">.</span><span class="n">sections</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">cp</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="n">section</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">set_value</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">section</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                    <span class="k">continue</span>
+</div></div>
+<span class="n">runtime</span> <span class="o">=</span> <span class="n">Config</span><span class="p">()</span>
+
+<span class="c"># Group: default</span>
+<span class="n">runtime</span><span class="o">.</span><span class="n">add_attribute</span><span class="p">(</span><span class="n">StrAttr</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s">&#39;data_root&#39;</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="s">&#39;/var/lib/ztpserver&#39;</span>
+<span class="p">))</span>
+
+<span class="n">runtime</span><span class="o">.</span><span class="n">add_attribute</span><span class="p">(</span><span class="n">StrAttr</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s">&#39;hostdb&#39;</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="s">&#39;hostdb&#39;</span>
+<span class="p">))</span>
+
+<span class="n">runtime</span><span class="o">.</span><span class="n">add_attribute</span><span class="p">(</span><span class="n">StrAttr</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s">&#39;bootstrap_file&#39;</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="s">&#39;default&#39;</span>
+<span class="p">))</span>
+
+<span class="n">runtime</span><span class="o">.</span><span class="n">add_attribute</span><span class="p">(</span><span class="n">StrAttr</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s">&#39;default_profile&#39;</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="s">&#39;default&#39;</span>
+<span class="p">))</span>
+
+<span class="n">runtime</span><span class="o">.</span><span class="n">add_attribute</span><span class="p">(</span><span class="n">StrAttr</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s">&#39;identifier&#39;</span><span class="p">,</span>
+    <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;systemmac&#39;</span><span class="p">,</span> <span class="s">&#39;serialnum&#39;</span><span class="p">],</span>
+    <span class="n">default</span><span class="o">=</span><span class="s">&#39;systemmac&#39;</span>
+<span class="p">))</span>
+
+<span class="n">runtime</span><span class="o">.</span><span class="n">add_attribute</span><span class="p">(</span><span class="n">StrAttr</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s">&#39;server_url&#39;</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="s">&#39;http://ztpserver:8080&#39;</span>
+<span class="p">))</span>
+
+<span class="n">runtime</span><span class="o">.</span><span class="n">add_attribute</span><span class="p">(</span><span class="n">BoolAttr</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s">&#39;logging&#39;</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="bp">False</span>
+<span class="p">))</span>
+
+<span class="n">runtime</span><span class="o">.</span><span class="n">add_attribute</span><span class="p">(</span><span class="n">BoolAttr</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s">&#39;console_logging&#39;</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="bp">True</span>
+<span class="p">))</span>
+
+<span class="c"># Group: syslog</span>
+<span class="n">runtime</span><span class="o">.</span><span class="n">add_attribute</span><span class="p">(</span><span class="n">BoolAttr</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s">&#39;enabled&#39;</span><span class="p">,</span>
+    <span class="n">group</span><span class="o">=</span><span class="s">&#39;syslog&#39;</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="bp">False</span>
+<span class="p">))</span>
+
+<span class="n">runtime</span><span class="o">.</span><span class="n">add_attribute</span><span class="p">(</span><span class="n">ListAttr</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s">&#39;servers&#39;</span><span class="p">,</span>
+    <span class="n">group</span><span class="o">=</span><span class="s">&#39;syslog&#39;</span>
+<span class="p">))</span>
+
+<span class="n">runtime</span><span class="o">.</span><span class="n">add_attribute</span><span class="p">(</span><span class="n">StrAttr</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s">&#39;level&#39;</span><span class="p">,</span>
+    <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;info&#39;</span><span class="p">,</span> <span class="s">&#39;debug&#39;</span><span class="p">],</span>
+    <span class="n">default</span><span class="o">=</span><span class="s">&#39;debug&#39;</span><span class="p">,</span>
+    <span class="n">group</span><span class="o">=</span><span class="s">&#39;syslog&#39;</span>
+<span class="p">))</span>
+
+<span class="c"># Group: server</span>
+<span class="n">runtime</span><span class="o">.</span><span class="n">add_attribute</span><span class="p">(</span><span class="n">StrAttr</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s">&#39;interface&#39;</span><span class="p">,</span>
+    <span class="n">group</span><span class="o">=</span><span class="s">&#39;server&#39;</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="s">&#39;0.0.0.0&#39;</span>
+<span class="p">))</span>
+
+<span class="n">runtime</span><span class="o">.</span><span class="n">add_attribute</span><span class="p">(</span><span class="n">IntAttr</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s">&#39;port&#39;</span><span class="p">,</span>
+    <span class="n">group</span><span class="o">=</span><span class="s">&#39;server&#39;</span><span class="p">,</span>
+    <span class="n">minvalue</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">maxvalue</span><span class="o">=</span><span class="mi">65534</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="mi">8080</span>
+<span class="p">))</span>
+
+<span class="c"># Group: db</span>
+<span class="n">runtime</span><span class="o">.</span><span class="n">add_attribute</span><span class="p">(</span><span class="n">StrAttr</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s">&#39;nodedb&#39;</span><span class="p">,</span>
+    <span class="n">group</span><span class="o">=</span><span class="s">&#39;db&#39;</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="s">&#39;/var/lib/ztpserver/db/nodedb&#39;</span>
+<span class="p">))</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">ZTP Server 1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Arista Networks.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
