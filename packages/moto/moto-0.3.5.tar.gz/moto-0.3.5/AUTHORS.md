@@ -1,0 +1,25 @@
+## Moto Contributors
+
+Moto is written by Steve Pulec with contributions from:
+
+* [Zach Smith](https://github.com/zmsmith)
+* [Dilshod Tadjibaev](https://github.com/antimora)
+* [Dan Berglund](https://github.com/cheif)
+* [Lincoln de Sousa](https://github.com/clarete)
+* [mhock](https://github.com/mhock)
+* [Ilya Sukhanov](https://github.com/IlyaSukhanov)
+* [Lucian Branescu Mihaila](https://github.com/lucian1900)
+* [Konstantinos Koukopoulos](https://github.com/kouk)
+* [attili](https://github.com/attili)
+* [JJ Zeng](https://github.com/jjofseattle)
+* [Jon Haddad](https://github.com/rustyrazorblade)
+* [Andres Riancho](https://github.com/andresriancho)
+* [Michael Ossareh](https://github.com/ossareh)
+* [JeffMGreg](https://github.com/JeffMGreg)
+* [Hugo Lopes Tavares](https://github.com/hltbra)
+* [Chris St. Pierre](https://github.com/stpierre)
+* [Frank Mata](https://github.com/matafc)
+* [Clint Ecker](https://github.com/clintecker)
+* [Richard Eames](https://github.com/Naddiseo)
+* [Kevin Glisson](https://github.com/kevgliss)
+* [Shawn Falkner-Horine](https://github.com/DreadPirateShawn)
