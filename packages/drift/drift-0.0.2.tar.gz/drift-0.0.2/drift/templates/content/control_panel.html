@@ -1,0 +1,87 @@
+{% load url from future %}
+{% if user.is_staff %}
+<div id="content_control_panel">
+
+<div class="control menu first">
+    <a class="btn btn-xs dropdown-toggle" data-toggle="dropdown" href="#">
+        <i class="glyphicon glyphicon-align-justify"></i>
+    </a>
+    <ul class="dropdown-menu">
+        {% for name, href in content.get_menu %}
+        {% if name == '-' %}
+            <li class="divider"></li>
+        {% else %}
+            {% if href %}
+                <li><a href="{{ href }}">{{ name }}</a></li>
+            {% endif %}
+        {% endif %}
+        {% endfor %}
+    </ul>
+</div>
+
+<div class="content_name">
+    {{ content.name }}
+</div>
+
+{% if content.instance %}
+{% if edit %}
+<div class="control save">
+<input type="submit" class="btn btn-xs btn-primary nowarn" value="Save">
+or <a class="nowarn" href="{{ content.instance.get_absolute_url }}">Cancel</a>
+</div>
+{% else %}
+<div class="control edit">
+    <a href="{{ content.get_edit_url }}" class="btn btn-xs btn-primary"><i class="icon-pencil"></i> Edit</a>
+</div>
+<div>
+{% block publish_form %}
+    {% if content.is_published %}
+        <span class="btn btn-xs disabled">Published</span>
+    {% else %}
+        <form action="{{ content.get_publish_url }}" method="post">
+        {% csrf_token %}
+        <input type="submit" class='btn btn-xs btn-success' value='Publish'>
+        </form>
+    {% endif %}
+{% endblock %}
+</div>
+
+{% for panel in content.get_panels %}
+<div>
+   {{ panel.get_header }}
+</div>
+{% endfor %}
+{% endif %}
+{% endif %} {# if content has instance #}
+
+<div class="right">
+    <div>
+    Hey there, {{ user.username }}
+    </div>
+</div>
+
+{% if content.instance %}
+{% if edit %}
+{% else %}
+{% for panel in content.get_panels %}
+{% include panel.get_panel_template_name %}
+{% endfor %}
+{% endif %}
+{% endif %} {# if content has instance #}
+</div>
+
+
+<div id="content_control_footer">
+{% if content.instance %}
+{% block version_footer %}
+    <div>
+        Version <strong>{{ content.get_version }}</strong>, created <strong>{{ content.get_created|timesince }} ago</strong>, owned by <strong>{{ content.get_owner }}</strong>
+    </div>
+{% endblock version_footer %}
+{% endif %} {# if content has instance #}
+<div class="right">
+</div>
+</div>
+{% else %}
+{# Nothing to see if you arent logged in #}
+{% endif %}
