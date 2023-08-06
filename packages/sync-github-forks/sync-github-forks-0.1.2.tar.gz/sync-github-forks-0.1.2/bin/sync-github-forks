@@ -1,0 +1,202 @@
+#!/usr/bin/env python
+from __future__ import print_function
+from os import environ as env, makedirs, mkdir
+from os.path import isdir, join as path_join
+from shutil import rmtree
+import argparse
+import logging
+import logging.handlers
+import sys
+
+from github import enable_console_debug_logging, Github
+from github.GithubException import TwoFactorException
+from osext.pushdcontext import pushd
+from sh import git
+from yaml.parser import ParserError
+import sh
+
+from ugf.config import (
+    Configuration,
+    ConfigurationError,
+    CONFIG_FILE_PATH,
+)
+
+
+EXAMPLE_CONFIG_FILE = '''Example file:
+
+---
+username: mygithubusername
+password: apassword1
+
+# For forks so diverged they are nearly impossible to merge
+# Full names (e.g. myname/myproject)
+blacklisted_forks: []'''
+
+# FIXME Can't get .bake() to accept multiple arguments
+#git_add_upstream = git.bake(['remote', 'add', 'upstream'])
+
+def git_add_upstream(url, _cwd=None):
+    git(['remote', 'add', 'upstream', url], _cwd=_cwd)
+
+
+def git_fetch_upstream():
+    git(['fetch', 'upstream'])
+
+
+def git_pull_ff(_cwd=None):
+    git(['pull', '--ff-only'], _cwd=_cwd)
+
+
+def git_clone(url, target_dir):
+    git(['clone', url, target_dir])
+
+
+def git_pull(branch, target_dir):
+    git(['checkout', '-f', branch], _cwd=target_dir)
+    git(['pull', '--ff-only'], _cwd=target_dir)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser('Update all of your forks\' default '
+                                     'branches')
+
+    parser.add_argument('-v', '--verbose',
+                        help='Verbose mode',
+                        action='store_true')
+    parser.add_argument('-d', '--debug',
+                        help='Debug mode',
+                        action='store_true')
+    parser.add_argument('-s', '--syslog',
+                        help='Log to system log',
+                        action='store_true')
+    parser.add_argument('--stop-on-error',
+                        action='store_true',
+                        help='Stop on first error')
+
+    args = parser.parse_args()
+    logger = logging.getLogger('ugf')
+    cache_dir = path_join(env['HOME'], '.ugf-cache')
+    git_checkout = git.bake('checkout -f')
+    stop_on_first_error = args.stop_on_error
+
+    if args.verbose:
+        logger.setLevel(logging.INFO)
+    if args.debug:
+        #enable_console_debug_logging()
+        sh.logging_enabled = True
+        logger.setLevel(logging.DEBUG)
+
+    if args.verbose or args.debug:
+        ch = logging.StreamHandler(sys.stdout)
+        formatter = logging.Formatter('%(levelname)s - %(message)s')
+
+        ch.setFormatter(formatter)
+        logger.addHandler(ch)
+
+    if args.syslog:
+        ch = logging.handlers.SysLogHandler(address='/dev/log')
+        logger.setLevel(logging.INFO if not args.debug else logging.DEBUG)
+        logger.addHandler(ch)
+
+    try:
+        config = Configuration()
+    except (IOError, ParserError):
+        print('You must have a YAML file at %s with the keys "username" and '
+              '"password"' % EXAMPLE_CONFIG_FILE, file=sys.stderr)
+        sys.exit(1)
+    except (TypeError, ConfigurationError) as e:
+        print('%s\n%s' % (str(e), EXAMPLE_CONFIG_FILE), file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        mkdir(cache_dir)
+    except OSError:
+        pass  # Assume it exists
+
+    gh = Github(config.get_user(), config.get_password())
+
+    try:
+        user = gh.get_user()
+    except TwoFactorException:
+        print('Please set up an application token for this and use that for'
+              'your password. See https://github.com/settings/applications',
+              file=sys.stderr)
+        sys.exit(1)
+
+    logger.info('Login: %s' % user.login)
+
+    for repo in user.get_repos():
+        if not repo.fork:
+            logger.debug('Repository "%s" is not a fork' % repo.full_name)
+            continue
+
+        if config.is_blacklisted(repo.full_name):
+            logger.debug('Repository "%s" is blacklisted' % repo.full_name)
+            continue
+
+        parent = repo.parent
+        logger.info('Repository "%s" is forked from "%s"' % (repo.full_name, parent.full_name,))
+
+        target_dir = path_join(cache_dir, repo.full_name.replace('/', '__'))
+
+        if not isdir(target_dir):
+            print('Cloning "%s"' % (repo.full_name,))
+            logger.debug('Cloning "%s" (%s) to "%s"' % (repo.full_name, repo.ssh_url, target_dir,))
+
+            try:
+                git_clone(repo.ssh_url, target_dir)
+            except KeyboardInterrupt:
+                logger.debug('Recursively deleting "%s"' % (target_dir,))
+                rmtree(target_dir)
+                break
+        else:
+            print('Updating "%s"' % (repo.full_name,))
+            logger.debug('Updating "%s" (%s) at "%s"' % (repo.full_name, repo.ssh_url, target_dir,))
+
+            try:
+                git_pull(parent.default_branch, target_dir)
+            except KeyboardInterrupt:
+                logger.debug('Recursively deleting "%s"' % (target_dir,))
+                rmtree(target_dir)
+                break
+            except sh.ErrorReturnCode_1:
+                logger.debug('Caught error while pulling. Probably in the middle of a merge? Cleaning and re-cloning')
+                rmtree(target_dir)
+                try:
+                    git_clone(repo.ssh_url, target_dir)
+                except KeyboardInterrupt:
+                    logger.debug('Recursively deleting "%s" (attempt at clone)' % (target_dir,))
+                    rmtree(target_dir)
+                    break
+
+        with pushd(target_dir):
+            has_upstream = False
+            with open('./.git/config') as f:
+                filtered_lines = [x for x in f.readlines() if x.startswith('[remote "upstream"')]
+                has_upstream = len(filtered_lines) > 0
+
+        if not has_upstream:
+            logger.debug('upstream remote not added')
+            logger.info('Adding remote "upstream" "%s"' % (parent.clone_url,))
+            git_add_upstream(parent.clone_url, _cwd=target_dir)
+
+        logger.debug('Fetching upstream')
+        git(['fetch', 'upstream'], _cwd=target_dir)
+
+        logger.info('Checking out branch %s' % (parent.default_branch,))
+        git(['checkout', '-f', parent.default_branch], _cwd=target_dir)
+        logger.info('Merging upstream branch %s' % (parent.default_branch,))
+        try:
+            git(['merge', 'upstream/%s' % (parent.default_branch,)], _cwd=target_dir)
+        except sh.ErrorReturnCode_1 as e:
+            msg = 'Error merging upstream with "%s". Resolve this manually in a local copy. Probably a merge conflict\nstdout: %s\nstderr: %s' % (repo.full_name, e.stdout, e.stderr)
+            print(msg, file=sys.stderr)
+            logger.debug('Recursively deleting "%s"' % (target_dir,))
+            rmtree(target_dir)
+            if stop_on_first_error:
+                sys.exit(1)
+            continue
+
+        # Push!
+        print('Pushing "%s" branch to fork "%s"' % (parent.default_branch, repo.full_name,))
+        git(['push', '-u', 'origin', parent.default_branch], _cwd=target_dir)
