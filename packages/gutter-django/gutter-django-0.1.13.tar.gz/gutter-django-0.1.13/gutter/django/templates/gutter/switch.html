@@ -1,0 +1,33 @@
+{% load replace from gutter_helpers %}
+{% load greyout from gutter_helpers %}
+
+<table>
+<button class='button' data-action='reveal' id='{{switch.name.value|replace:":,-"}}'>></button>
+&nbsp;<span class='switch-name'>{% autoescape off %}{{switch.name.value|greyout}}{% endautoescape %}</span>
+&nbsp;<span class='switch-conditions'>{{switch.conditions|length}} conditions</span>
+</table>
+<form action="{% url 'gutter:update' %}" method="post" id='{{switch.name.value|replace:":,-"}}-form'>
+    {% csrf_token %}
+    {{ switch.as_p }}
+
+    <section class="conditions">
+        {{ switch.conditions.management_form }}
+
+        <label for="conditions">Conditions:</label>
+        <ul class="conditions">
+        {% for condition_form in switch.conditions.forms %}
+        <li>
+            <section class="condition">{{ condition_form }}</section>
+            <button data-action="remove">Remove</button>
+        </li>
+        {% endfor %}
+        </ul>
+
+        <button data-action="add">Add</button>
+    </section>
+
+    <section class="actions">
+        <input type="submit" value="Save Switch">
+    </section>
+
+</form>
