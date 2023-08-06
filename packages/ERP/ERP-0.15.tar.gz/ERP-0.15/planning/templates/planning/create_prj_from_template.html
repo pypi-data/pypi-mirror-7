@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block main %}
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('select').selectBox();
+        });
+    </script>
+<form label="PRJ_Create" id="item-create-form" action="" method="post">{% csrf_token %}
+    {{ form.as_p }}
+    {% if template.req_tasks %}
+        <h3>Обязательные задачи</h3>
+    {% endif %}
+    {% for task_template in template.req_tasks.all %}
+        <p>{{task_template.name}}</p>
+    {% empty %}
+        <p>Обязательных задач нет.</p>
+    {% endfor %}
+    {% if template.opt_tasks %}
+        <h3>Опциональные задачи</h3>
+    {% endif %}
+    {% for task_template in template.opt_tasks.all %}
+        <p>
+            <input type="checkbox" name="opt_tasks" value="{{task_template.id}}">{{task_template.name}}
+        </p>
+    {% empty %}
+        <p>Опциональных задач нет.</p>
+    {% endfor %}
+    <p>
+        Публичный проект:
+        <input type="radio" name="private" id="radio1" value="True"><label class="short-label" for="radio1">Да</label>
+        <input type="radio" name="private" id="radio1" value="False"><label class="short-label" for="radio2">Нет</label><br>
+    </p>
+    <input type='hidden' name='tmpl_id' value='{{template.id}}' />
+    <p><input type="submit" class="button" value="Создать"></p>
+</form>
+{% endblock main %}

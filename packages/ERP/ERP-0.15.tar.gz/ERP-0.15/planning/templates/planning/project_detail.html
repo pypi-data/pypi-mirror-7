@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block main %}
+    <script type="text/javascript">
+      $(document).ready(function() {
+        $(".pop-up-on-click").click(function(){
+            $(".pop-up").addClass('visible');
+            $("#task-create-content").load("/pm/task/create", 
+                function() {
+                    $("select").selectBox();
+                    
+                    $("#create-choice-form").append("<input type='hidden' name='prj' value='{{project.id}}' />");
+                    
+                    $('#create-choice-form select').selectBox().change(function () {
+                        if ($(this).val() != '') {
+                          $('#create-choice-form').attr('action','/pm/prj/create/from_template');
+                          console.log("шаблон");
+                        }
+                        else{
+                          $('#create-choice-form').attr('action','/pm/prj/create/form');
+                          console.log("умолчание");
+                        }
+                    });
+                });
+        });
+        $(".close").click(function(){
+            $(".pop-up").removeClass('visible');
+        })
+      })
+    </script>
+    {% for t in  request.session.to_create.all %}
+        <p>
+            {{t}}
+        </p>
+    {% empty %}
+        <p>Задач создавать не надо</p>
+    {% endfor %}
+    <h1>{{project.name}}</h1>
+    <p>{{project.desc}}</p>
+    <p>Проект создал {{project.owner}}</p>
+    {% if project.public == true %}
+        <p>
+            Закрытый проект
+        </p>
+    {% endif %}
+    {% if project.responsible %}
+        <p>
+            Ответственная за проект группа {{project.responsible}}
+        </p>
+    {% endif %}
+    <p>Исполнитель {{project.performer}}</p>
+    <p>Начат {{project.started_at}}</p>
+    {% if project.deadline %}
+        <p>Должен быть закончен {{project.deadline}}</p>
+    {% endif %}
+    {% if project.done_at %}
+        <p>
+            Закончен {{project.done_at }}
+        </p>
+    {% endif %}
+    {% if project.users %}
+        <p>Связанные пользователи
+            <ul>
+                {% for user in project.users.all %}
+                    <li>{{user}}</li>
+                {% endfor %}
+            </ul>
+        </p>
+    {% endif %}
+    {% if project.item_type  %}
+        <p>
+            Тип проекта {{project.item_type}}
+        </p>
+    {% endif %}
+    <p><input type="button" class="button pop-up-on-click" value="Добавить задачу"></p>
+    <div class="task-create-master pop-up">
+        <div class="close">х</div>
+        <div id="task-create-content" />
+    </div>
+{% endblock main %}
+{% block content %}
+{% endblock content %}

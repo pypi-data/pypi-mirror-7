@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block main %}
+  <script type="text/javascript">
+    $(document).ready(function() {
+      
+      $('select').selectBox();
+      
+      $('#create-choice-form select').selectBox().change(function () {
+        if ($(this).val() != '') {
+          $('#create-choice-form').attr('action','/pm/{{item_type}}/create/from_template');
+          console.log("шаблон");
+        }
+        else{
+          $('#create-choice-form').attr('action','/pm/{{item_type}}/create/form');
+          console.log("умолчание");
+        }
+      });
+    });
+  </script>
+<form id="create-choice-form" action="/pm/{{item_type}}/create/form" method="get">{% csrf_token %}
+<div>
+  Выберите шаблон или создайте
+  {% if item_type == "task" %}
+    {{ "свою задачу" }}
+  {% else %}
+      {% if item_type == "prj" %}
+          {{ "свой проект" }}
+      {% else %}
+      {% endif %}
+  {% endif %}
+</div>
+<select id="tmp" name="tmpl_id">
+  <option  value="" selected="selected">---SELECT---</option>
+  {% for template in templates %}
+   <option value="{{template.id}}">{{template.name}}</option>
+  {% endfor %}
+</select>
+<p><input type="submit" class="button" value="Отправить"></p>
+</form>
+{% endblock main %}
