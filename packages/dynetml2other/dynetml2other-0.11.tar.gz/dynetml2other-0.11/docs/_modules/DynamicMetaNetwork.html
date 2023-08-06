@@ -1,0 +1,299 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>DynamicMetaNetwork &mdash; dynetml2other 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/better.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="dynetml2other 0.1 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  </head>
+  <body>
+    <header id="pageheader"><h1><a href="../index.html ">
+        dynetml2other 0.1 documentation
+    </a></h1></header>
+  <div class="related top">
+  <nav id="rellinks">
+    <ul>
+    </ul>
+  </nav>
+  <nav id="breadcrumbs">
+    <ul>
+      <li><a href="../index.html">dynetml2other 0.1 documentation</a></li>
+      <li>
+        <a href="index.html">Module code</a>
+      </li> 
+    </ul>
+  </nav>
+  </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for DynamicMetaNetwork</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: dynetml2other</span>
+<span class="sd">:synopsis: Imports DyNetML into NetworkX, igraph, or Python dictionaries.</span>
+
+<span class="sd">.. moduleauthor:: Peter M. Landwehr &lt;plandweh@cs.cmu.edu&gt;</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Peter M. Landwehr &lt;plandweh@cs.cmu.edu&gt;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">codecs</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">import</span> <span class="nn">dynetmlparsingutils</span> <span class="kn">as</span> <span class="nn">dmlpu</span>
+<span class="kn">from</span> <span class="nn">lxml</span> <span class="kn">import</span> <span class="n">etree</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+
+<div class="viewcode-block" id="DynamicMetaNetwork"><a class="viewcode-back" href="../DynamicMetaNetwork.html#DynamicMetaNetwork.DynamicMetaNetwork">[docs]</a><span class="k">class</span> <span class="nc">DynamicMetaNetwork</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The DynamicMetaNetwork class is a container for dynamic meta-networks extracted from DyNetML. It bundles together a</span>
+<span class="sd">    set of Meta-Networks collected at different times.</span>
+
+<span class="sd">    :ivar __network_format: the format in which the networks should be stored:&quot;dict&quot;, &quot;igraph&quot; or &quot;networkx&quot;. \</span>
+<span class="sd">    It cannot be changed after initialization.</span>
+<span class="sd">    :ivar attributes: A dictionary of attributes associated with the dynamic network</span>
+<span class="sd">    :ivar metanetworks: The list of the Meta-Networks associated with the dynamic meta-network.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">network_format</span><span class="o">=</span><span class="s">&quot;dict&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes a DynamicMetaNetwork</span>
+
+<span class="sd">        :param str|unicode network_format: Format in which graphs should be stored: &quot;dict&quot;, &quot;igraph&quot; or &quot;networkx&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">network_format</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">unicode</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;network_format must be a str or unicode&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__network_format</span> <span class="o">=</span> <span class="n">network_format</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__network_format</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;dict&#39;</span><span class="p">,</span> <span class="s">&#39;igraph&#39;</span><span class="p">,</span> <span class="s">&#39;networkx&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;network_format must be blank, &quot;dict&quot;, &quot;igraph&quot; or &quot;networkx&quot;; got {0}&#39;</span><span class="o">.</span>
+                             <span class="n">format</span><span class="p">(</span><span class="n">network_format</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metanetworks</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="DynamicMetaNetwork.get_network_format"><a class="viewcode-back" href="../DynamicMetaNetwork.html#DynamicMetaNetwork.DynamicMetaNetwork.get_network_format">[docs]</a>    <span class="k">def</span> <span class="nf">get_network_format</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the network format&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__network_format</span>
+</div>
+<div class="viewcode-block" id="DynamicMetaNetwork.load_from_dynetml"><a class="viewcode-back" href="../DynamicMetaNetwork.html#DynamicMetaNetwork.DynamicMetaNetwork.load_from_dynetml">[docs]</a>    <span class="k">def</span> <span class="nf">load_from_dynetml</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dmn_text</span><span class="p">,</span> <span class="n">properties_to_include</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">properties_to_ignore</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                          <span class="n">nodeclasses_to_include</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">nodeclasses_to_ignore</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">networks_to_include</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                          <span class="n">networks_to_ignore</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">start_date</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parses and loads the contents of an XML containing a dynamic meta-network</span>
+
+<span class="sd">        :param str|unicode dmn_text: XML containing a dynamic meta-network</span>
+<span class="sd">        :param list properties_to_include: a list of nodeclass properties that should be included</span>
+<span class="sd">        :param list properties_to_ignore: a list of nodeclass properties that should be ignored</span>
+<span class="sd">        :param list nodeclasses_to_include: a list of nodeclasses that should be included</span>
+<span class="sd">        :param list nodeclasses_to_ignore: a list of nodeclasses that should be ignored</span>
+<span class="sd">        :param list networks_to_include: a list of networks that should be included</span>
+<span class="sd">        :param list networks_to_ignore: a list of networks that should be ignored</span>
+<span class="sd">        :param datetime.datetime start_date: Meta-Networks from before this datetime should not be imported</span>
+<span class="sd">        :param datetime.datetime end_date: MetaNetworks from after this datetime should not be imported</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dmn_text</span><span class="p">,</span> <span class="p">(</span><span class="nb">unicode</span><span class="p">,</span> <span class="nb">str</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;load_from_dynetml needs text containing XML; got {0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">dmn_text</span><span class="p">)))</span>
+
+        <span class="n">dmn_tag</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">XML</span><span class="p">(</span><span class="n">dmn_text</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">dmn_tag</span><span class="o">.</span><span class="n">tag</span> <span class="o">!=</span> <span class="s">&#39;DynamicMetaNetwork&#39;</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_from_tag</span><span class="p">(</span><span class="n">dmn_tag</span><span class="p">,</span> <span class="n">properties_to_include</span><span class="p">,</span> <span class="n">properties_to_ignore</span><span class="p">,</span> <span class="n">nodeclasses_to_include</span><span class="p">,</span>
+                           <span class="n">nodeclasses_to_ignore</span><span class="p">,</span> <span class="n">networks_to_include</span><span class="p">,</span> <span class="n">networks_to_ignore</span><span class="p">,</span> <span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="DynamicMetaNetwork.load_from_tag"><a class="viewcode-back" href="../DynamicMetaNetwork.html#DynamicMetaNetwork.DynamicMetaNetwork.load_from_tag">[docs]</a>    <span class="k">def</span> <span class="nf">load_from_tag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dmn_tag</span><span class="p">,</span> <span class="n">properties_to_include</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">properties_to_ignore</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">nodeclasses_to_include</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                      <span class="n">nodeclasses_to_ignore</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">networks_to_include</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">networks_to_ignore</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">start_date</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                      <span class="n">end_date</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parses and loads the contents of an :class:`lxml._Element` containing a dynamic meta-network</span>
+
+<span class="sd">        :param lxml._Element dmn_tag: A tag containing a dynamic meta-network</span>
+<span class="sd">        :param list properties_to_include: a list of nodeclass properties that should be included</span>
+<span class="sd">        :param list properties_to_ignore: a list of nodeclass properties that should be ignored</span>
+<span class="sd">        :param list nodeclasses_to_include: a list of nodeclasses that should be included</span>
+<span class="sd">        :param list nodeclasses_to_ignore: a list of nodeclasses that should be ignored</span>
+<span class="sd">        :param list networks_to_include: a list of networks that should be included</span>
+<span class="sd">        :param list networks_to_ignore: a list of networks that should be ignored</span>
+<span class="sd">        :param datetime.datetime start_date: MetaNetworks from before this datetime should not be imported</span>
+<span class="sd">        :param datetime.datetime end_date: MetaNetworks from after this datetime should not be imported</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c">#if not isinstance(dmn_tag, (unicode, str)):</span>
+        <span class="c">#    raise TypeError(&#39;load_from_dynetml needs text containing XML; got {0}&#39;.format(type(dnn_text)))</span>
+        <span class="k">for</span> <span class="n">attrib_key</span> <span class="ow">in</span> <span class="n">dmn_tag</span><span class="o">.</span><span class="n">attrib</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="n">attrib_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">dmlpu</span><span class="o">.</span><span class="n">format_prop</span><span class="p">(</span><span class="n">dmn_tag</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="n">attrib_key</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__network_format</span> <span class="o">==</span> <span class="s">&#39;networkx&#39;</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">MetaNetworkNetworkX</span> <span class="kn">import</span> <span class="n">MetaNetworkNX</span> <span class="k">as</span> <span class="n">MetaNetwork</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">__network_format</span> <span class="o">==</span> <span class="s">&#39;igraph&#39;</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">MetaNetworkIGraph</span> <span class="kn">import</span> <span class="n">MetaNetworkIG</span> <span class="k">as</span> <span class="n">MetaNetwork</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">MetaNetwork</span> <span class="kn">import</span> <span class="n">MetaNetwork</span>
+
+        <span class="k">for</span> <span class="n">mn_tag</span> <span class="ow">in</span> <span class="n">dmn_tag</span><span class="o">.</span><span class="n">iterfind</span><span class="p">(</span><span class="s">&#39;MetaNetwork&#39;</span><span class="p">):</span>
+
+            <span class="k">if</span> <span class="n">start_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">start_date</span> <span class="o">&gt;</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">mn_tag</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">],</span> <span class="s">&#39;%Y%m</span><span class="si">%d</span><span class="s">T%H:%M:%S&#39;</span><span class="p">):</span>
+                    <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">end_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">end_date</span> <span class="o">&lt;</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">mn_tag</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">],</span> <span class="s">&#39;%Y%m</span><span class="si">%d</span><span class="s">T%H:%M:%S&#39;</span><span class="p">):</span>
+                    <span class="k">continue</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">metanetworks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">MetaNetwork</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">metanetworks</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">load_from_tag</span><span class="p">(</span><span class="n">mn_tag</span><span class="p">,</span> <span class="n">properties_to_include</span><span class="p">,</span> <span class="n">properties_to_ignore</span><span class="p">,</span>
+                                                <span class="n">nodeclasses_to_include</span><span class="p">,</span> <span class="n">nodeclasses_to_ignore</span><span class="p">,</span> <span class="n">networks_to_include</span><span class="p">,</span>
+                                                <span class="n">networks_to_ignore</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="DynamicMetaNetwork.drop_metanetworks_before"><a class="viewcode-back" href="../DynamicMetaNetwork.html#DynamicMetaNetwork.DynamicMetaNetwork.drop_metanetworks_before">[docs]</a>    <span class="k">def</span> <span class="nf">drop_metanetworks_before</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_date</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;:param datetime.datetime start_date: Drop meta-networks that occur before this datetime.&quot;&quot;&quot;</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metanetworks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> \
+                <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metanetworks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">],</span> <span class="s">&#39;%Y%m</span><span class="si">%d</span><span class="s">T%H:%M:%S&#39;</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">start_date</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">metanetworks</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="DynamicMetaNetwork.drop_metanetworks_after"><a class="viewcode-back" href="../DynamicMetaNetwork.html#DynamicMetaNetwork.DynamicMetaNetwork.drop_metanetworks_after">[docs]</a>    <span class="k">def</span> <span class="nf">drop_metanetworks_after</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">end_date</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;:param datetime.datetime end_date: Drop meta-networks that occur after this datetime.&quot;&quot;&quot;</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metanetworks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> \
+                <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metanetworks</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">],</span> <span class="s">&#39;%Y%m</span><span class="si">%d</span><span class="s">T%H:%M:%S&#39;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">end_date</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">metanetworks</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="DynamicMetaNetwork.drop_metanetworks_for_ranges"><a class="viewcode-back" href="../DynamicMetaNetwork.html#DynamicMetaNetwork.DynamicMetaNetwork.drop_metanetworks_for_ranges">[docs]</a>    <span class="k">def</span> <span class="nf">drop_metanetworks_for_ranges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">range_tuples</span><span class="p">,</span> <span class="n">keep_in_range</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param list range_tuples: A list of tuples containing of a  start date and end date pair</span>
+<span class="sd">        :param list keep_in_range: If true, dates outside of any tuple are dropped. If false, dates within any tuple \</span>
+<span class="sd">        are dropped.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dmlpu</span><span class="o">.</span><span class="n">check_contained_types</span><span class="p">(</span><span class="n">range_tuples</span><span class="p">,</span> <span class="s">&#39;range_tuples&#39;</span><span class="p">,</span> <span class="n">datetime</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">mn</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metanetworks</span><span class="p">:</span>
+            <span class="n">date_val</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metanetworks</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">],</span> <span class="s">&#39;%Y%m</span><span class="si">%d</span><span class="s">T%H:%M:%S&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">r_t</span> <span class="ow">in</span> <span class="n">range_tuples</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">keep_in_range</span> <span class="ow">and</span> <span class="n">r_t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">date_val</span> <span class="ow">or</span> <span class="n">r_t</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">date_val</span><span class="p">)</span> <span class="ow">or</span> \
+                        <span class="p">(</span><span class="n">keep_in_range</span> <span class="ow">is</span> <span class="bp">False</span> <span class="ow">and</span> <span class="n">r_t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">date_val</span> <span class="o">&lt;=</span> <span class="n">r_t</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">metanetworks</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">mn</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="DynamicMetaNetwork.write_dynetml"><a class="viewcode-back" href="../DynamicMetaNetwork.html#DynamicMetaNetwork.DynamicMetaNetwork.write_dynetml">[docs]</a>    <span class="k">def</span> <span class="nf">write_dynetml</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out_file_path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;:param str|unicode out_file_path: Write the dynamic meta-network to this path.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">out_file_path</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">unicode</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;out_file_path must be str or unicode&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">out_file_path</span><span class="p">)</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">out_file_path</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s">&#39;out_file_path cannot be a directory&#39;</span><span class="p">)</span>
+
+        <span class="c"># bs = self.convert_to_dynetml(True)</span>
+        <span class="c">#</span>
+        <span class="c"># with codecs.open(out_file_path, &#39;w&#39;, &#39;utf8&#39;) as outfile:</span>
+        <span class="c">#     outfile.write(bs.prettify())</span>
+        <span class="n">xml_root</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_to_dynetml</span><span class="p">()</span>
+
+        <span class="k">with</span> <span class="n">codecs</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">out_file_path</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">,</span> <span class="s">&#39;utf8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+            <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;&lt;?xml version=&quot;1.0&quot; standalone=&quot;yes&quot;?&gt;</span><span class="se">\n\n</span><span class="s">&#39;</span><span class="p">)</span>
+            <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">etree</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">xml_root</span><span class="p">,</span> <span class="n">pretty_print</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="DynamicMetaNetwork.convert_to_dynetml"><a class="viewcode-back" href="../DynamicMetaNetwork.html#DynamicMetaNetwork.DynamicMetaNetwork.convert_to_dynetml">[docs]</a>    <span class="k">def</span> <span class="nf">convert_to_dynetml</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the dynamic meta-network as an :class:`lxml._Element`&quot;&quot;&quot;</span>
+        <span class="c"># bs = BeautifulSoup(features=&#39;xml&#39;)</span>
+        <span class="c"># bs.append(bs.new_tag(&#39;DynamicMetaNetwork&#39;))</span>
+        <span class="c"># for attr in self.attributes:</span>
+        <span class="c">#     bs.DynamicMetaNetwork[attr] = dmlpu.unformat_prop(self.attributes[attr])</span>
+        <span class="c">#</span>
+        <span class="c"># for mn in self.metanetworks:</span>
+        <span class="c">#     bs.DynamicMetaNetwork.append(mn.convert_to_dynetml())</span>
+        <span class="c">#</span>
+        <span class="c"># if not is_entire_file:</span>
+        <span class="c">#     bs = bs.DynamicMetaNetwork</span>
+        <span class="c">#</span>
+        <span class="c"># return bs</span>
+        <span class="n">dmn</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s">&#39;DynamicMetaNetwork&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span><span class="p">:</span>
+            <span class="n">dmn</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="n">dmlpu</span><span class="o">.</span><span class="n">unformat_prop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="n">attr</span><span class="p">])</span>
+
+        <span class="k">for</span> <span class="n">mn</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metanetworks</span><span class="p">:</span>
+            <span class="n">etree</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="n">dmn</span><span class="p">,</span> <span class="n">mn</span><span class="o">.</span><span class="n">convert_to_dynetml</span><span class="p">())</span>
+
+        <span class="k">return</span> <span class="n">dmn</span>
+</div>
+<div class="viewcode-block" id="DynamicMetaNetwork.pretty_print"><a class="viewcode-back" href="../DynamicMetaNetwork.html#DynamicMetaNetwork.DynamicMetaNetwork.pretty_print">[docs]</a>    <span class="k">def</span> <span class="nf">pretty_print</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Pretty-print the dynamic meta-network&quot;&quot;&quot;</span>
+        <span class="k">print</span> <span class="s">&#39;= Dynamic Meta-Network =&#39;</span>
+        <span class="k">print</span> <span class="s">&#39;= Properties =&#39;</span>
+        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">u&#39; {0}: {1}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="n">attr</span><span class="p">])</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf8&#39;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">mm</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metanetworks</span><span class="p">:</span>
+            <span class="n">mm</span><span class="o">.</span><span class="n">pretty_print</span><span class="p">()</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <div class="related bottom">
+  <nav id="rellinks">
+    <ul>
+    </ul>
+  </nav>
+  <nav id="breadcrumbs">
+    <ul>
+      <li><a href="../index.html">dynetml2other 0.1 documentation</a></li>
+      <li>
+        <a href="index.html">Module code</a>
+      </li> 
+    </ul>
+  </nav>
+  </div>
+  <footer id="pagefooter">&copy; 2014, Peter M. Landwehr.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a>
+      1.2.2
+        with the <a href="http://github.com/irskep/sphinx-better-theme">
+          better</a> theme.
+
+  </footer>
+
+  
+  </body>
+</html>

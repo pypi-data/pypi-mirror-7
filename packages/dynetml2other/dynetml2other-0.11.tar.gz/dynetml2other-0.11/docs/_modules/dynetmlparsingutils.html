@@ -1,0 +1,403 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>dynetmlparsingutils &mdash; dynetml2other 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/better.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="dynetml2other 0.1 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  </head>
+  <body>
+    <header id="pageheader"><h1><a href="../index.html ">
+        dynetml2other 0.1 documentation
+    </a></h1></header>
+  <div class="related top">
+  <nav id="rellinks">
+    <ul>
+    </ul>
+  </nav>
+  <nav id="breadcrumbs">
+    <ul>
+      <li><a href="../index.html">dynetml2other 0.1 documentation</a></li>
+      <li>
+        <a href="index.html">Module code</a>
+      </li> 
+    </ul>
+  </nav>
+  </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for dynetmlparsingutils</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># -*- coding: utf-8 -*-</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Peter M. Landwehr &lt;plandweh@cs.cmu.edu&gt;&#39;</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">lxml</span> <span class="kn">import</span> <span class="n">etree</span>
+
+
+<div class="viewcode-block" id="node_tuple"><a class="viewcode-back" href="../dynetmlparsingutils.html#dynetmlparsingutils.node_tuple">[docs]</a><span class="k">def</span> <span class="nf">node_tuple</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :returns: The tuple that defines a node</span>
+<span class="sd">    :rtype: :class:`tuple_(dict, dict)`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">{},</span> <span class="p">{}</span>  <span class="c"># attrs, properties</span>
+
+</div>
+<div class="viewcode-block" id="nodeset_tuple"><a class="viewcode-back" href="../dynetmlparsingutils.html#dynetmlparsingutils.nodeset_tuple">[docs]</a><span class="k">def</span> <span class="nf">nodeset_tuple</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :returns: The tuple that defines a nodeset</span>
+<span class="sd">    :rtype: :class:`tuple_(dict, defaultdict(node_tuple))`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">{},</span> <span class="n">defaultdict</span><span class="p">(</span><span class="n">node_tuple</span><span class="p">)</span>  <span class="c"># property identities, list of nodes</span>
+
+</div>
+<div class="viewcode-block" id="nodeclass_dict"><a class="viewcode-back" href="../dynetmlparsingutils.html#dynetmlparsingutils.nodeclass_dict">[docs]</a><span class="k">def</span> <span class="nf">nodeclass_dict</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :returns: The defaultdict that defines a nodeclass</span>
+<span class="sd">    :rtype: :class:`defaultdict(nodeset_tuple)`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">defaultdict</span><span class="p">(</span><span class="n">nodeset_tuple</span><span class="p">)</span>  <span class="c"># nodesets</span>
+
+</div>
+<div class="viewcode-block" id="node_tree"><a class="viewcode-back" href="../dynetmlparsingutils.html#dynetmlparsingutils.node_tree">[docs]</a><span class="k">def</span> <span class="nf">node_tree</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :returns: The default dict that define</span>
+<span class="sd">    :rtype: :class:`defaultdict(nodeclass_dict)`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">defaultdict</span><span class="p">(</span><span class="n">nodeclass_dict</span><span class="p">)</span> <span class="c"># node tree</span>
+
+</div>
+<div class="viewcode-block" id="check_key"><a class="viewcode-back" href="../dynetmlparsingutils.html#dynetmlparsingutils.check_key">[docs]</a><span class="k">def</span> <span class="nf">check_key</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">var_name</span><span class="p">,</span> <span class="n">used_map</span><span class="p">,</span> <span class="n">map_name</span><span class="p">,</span> <span class="n">check_if_in_map</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper function for checking if a key is in a map</span>
+
+<span class="sd">    :param var: the variable which needs to be checked</span>
+<span class="sd">    :param str|unicode var_name: the name of the variable</span>
+<span class="sd">    :param used_map: the map</span>
+<span class="sd">    :param str|unicode map_name: the name of the map</span>
+<span class="sd">    :param bool check_if_in_map: if True, verify that var is in map. If False, check if var is not in map</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">check_if_in_map</span> <span class="ow">and</span> <span class="n">var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">used_map</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s">&#39;{0} not in {1}; looked for {2}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">map_name</span><span class="p">,</span> <span class="n">var</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">check_if_in_map</span> <span class="ow">and</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">used_map</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s">&#39;{0} in {1}; looked for {2}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">map_name</span><span class="p">,</span> <span class="n">var</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="check_type"><a class="viewcode-back" href="../dynetmlparsingutils.html#dynetmlparsingutils.check_type">[docs]</a><span class="k">def</span> <span class="nf">check_type</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">var_name</span><span class="p">,</span> <span class="n">allowable_types</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper function for checking a variable&#39;s type</span>
+
+<span class="sd">    :param var: the variable which needs its type checked</span>
+<span class="sd">    :param str|unicode var_name: the name of the variable</span>
+<span class="sd">    :param allowable_types: a type or tuple of types that var can be</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">allowable_types</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;{0} must be of type {1}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">allowable_types</span><span class="p">)))</span>
+
+</div>
+<div class="viewcode-block" id="check_contained_types"><a class="viewcode-back" href="../dynetmlparsingutils.html#dynetmlparsingutils.check_contained_types">[docs]</a><span class="k">def</span> <span class="nf">check_contained_types</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">iterable_name</span><span class="p">,</span> <span class="n">allowable_types</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper function for validating that an iterable object only contains allowed types.</span>
+
+<span class="sd">    :param tuple|list iterable: the tuple or list to be evaluated</span>
+<span class="sd">    :param str|unicode iterable_name: the name of the iterable</span>
+<span class="sd">    :param allowable_types: the types the iterable can be.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;{0} must be a tuple or list&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">iterable_name</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">iterable</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">allowable_types</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;{0} can only contain types {1}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">iterable_name</span><span class="p">,</span> <span class="n">allowable_types</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="validate_and_get_inclusion_test"><a class="viewcode-back" href="../dynetmlparsingutils.html#dynetmlparsingutils.validate_and_get_inclusion_test">[docs]</a><span class="k">def</span> <span class="nf">validate_and_get_inclusion_test</span><span class="p">(</span><span class="n">include_tuple</span><span class="p">,</span> <span class="n">ignore_tuple</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A method for validating variables and then returning an inclusion test</span>
+
+<span class="sd">    :param tuple include_tuple: A two element tuple, the first element is a list of strings, the second is the list&#39;s \</span>
+<span class="sd">    name</span>
+<span class="sd">    :param tuple ignore_tuple: A two element tuple, the first element is a list of strings, the second is the list&#39;s \</span>
+<span class="sd">    name</span>
+<span class="sd">    :returns: a test for whether or not an item should be included</span>
+<span class="sd">    :rtype: lambda</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">include_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">include_tuple</span> <span class="o">=</span> <span class="p">[],</span> <span class="s">&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">ignore_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">ignore_tuple</span> <span class="o">=</span> <span class="p">[],</span> <span class="s">&#39;&#39;</span>
+
+    <span class="k">for</span> <span class="n">pair</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="n">include_tuple</span><span class="p">,</span> <span class="s">&#39;include_tuple&#39;</span><span class="p">),</span> <span class="p">(</span><span class="n">ignore_tuple</span><span class="p">,</span> <span class="s">&#39;ignore_tuple&#39;</span><span class="p">):</span>
+        <span class="n">check_contained_types</span><span class="p">(</span><span class="n">pair</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">unicode</span><span class="p">))</span>
+        <span class="c">#check_contained_types(pair[1], name, (str, unicode))</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">include_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">ignore_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;{0} and {1} cannot both contain values&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">include_tuple</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ignore_tuple</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">include_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">good_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">include_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">return</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">good_set</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">ignore_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">bad_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">ignore_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">return</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">bad_set</span>
+
+    <span class="k">return</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">True</span>
+
+</div>
+<div class="viewcode-block" id="format_prop"><a class="viewcode-back" href="../dynetmlparsingutils.html#dynetmlparsingutils.format_prop">[docs]</a><span class="k">def</span> <span class="nf">format_prop</span><span class="p">(</span><span class="n">prop_str</span><span class="p">,</span> <span class="n">prop_type</span><span class="o">=</span><span class="nb">str</span><span class="p">()):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A method for converting properties to appropriate formats. Currently just covers dates (bools handled elsewhere)</span>
+
+<span class="sd">    :param str|unicode prop_str: a property to be converted</span>
+<span class="sd">    :param str|unicode prop_type: str or unicode specifying the type of property</span>
+<span class="sd">    :returns: a property value that has been converted to the appropriate type.</span>
+<span class="sd">    :rtype: bool|float|datetime|str|unicode</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prop_type</span><span class="p">,</span> <span class="p">(</span><span class="nb">unicode</span><span class="p">,</span> <span class="nb">str</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;prop_type must be unicode or str&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">prop_type</span> <span class="o">==</span> <span class="s">&#39;bool&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">prop_str</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;true&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">elif</span> <span class="n">prop_str</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;false&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Bad value for bool prop_type: {0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">prop_str</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">prop_type</span> <span class="o">==</span> <span class="s">&#39;number&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">prop_str</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">prop_type</span> <span class="o">==</span> <span class="s">&#39;date&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">prop_str</span><span class="p">,</span> <span class="s">&#39;%Y-%m-</span><span class="si">%d</span><span class="s"> %H:%M:%S&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">prop_str</span>  <span class="c"># &#39;text&#39;, &#39;categoryText&#39;, and &#39;URI&#39; caught here</span>
+
+</div>
+<div class="viewcode-block" id="unformat_prop"><a class="viewcode-back" href="../dynetmlparsingutils.html#dynetmlparsingutils.unformat_prop">[docs]</a><span class="k">def</span> <span class="nf">unformat_prop</span><span class="p">(</span><span class="n">prop</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A method for un-formatting properties back to strings. Currently covers dates and bools.</span>
+
+<span class="sd">    :param prop: a property storied in a properties dictionary, of unknown type.</span>
+<span class="sd">    :returns: the property value transformed to a string containing equivalent dynetml contents</span>
+<span class="sd">    :rtype: unicode or str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="p">(</span><span class="nb">unicode</span><span class="p">,</span> <span class="nb">str</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="n">prop</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="n">datetime</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">prop</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&#39;%Y-%m-</span><span class="si">%d</span><span class="s"> %H:%M:%S&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">prop</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">return</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">prop</span><span class="p">)</span>  <span class="c"># &#39;number&#39;, &#39;numberCategory&#39;, and &#39;URI&#39; caught here</span>
+
+</div>
+<div class="viewcode-block" id="get_property_identities_tag"><a class="viewcode-back" href="../dynetmlparsingutils.html#dynetmlparsingutils.get_property_identities_tag">[docs]</a><span class="k">def</span> <span class="nf">get_property_identities_tag</span><span class="p">(</span><span class="n">property_identities_dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reads a dictionary of Property Identities and converts it to a propertyIdentities tag</span>
+
+<span class="sd">    :param dict property_identities_dict: a dictionary containing propertyIndentity values</span>
+<span class="sd">    :returns: a propertyIdentities tag</span>
+<span class="sd">    :rtype: :class:`lxml._Element`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># property_identities_tag = BeautifulSoup(features=&#39;xml&#39;).new_tag(&#39;propertyIdentities&#39;)</span>
+    <span class="c">#</span>
+    <span class="c"># if not isinstance(property_identities_dict, dict):</span>
+    <span class="c">#     return property_identities_tag</span>
+    <span class="c">#</span>
+    <span class="c"># for key in property_identities_dict:</span>
+    <span class="c">#</span>
+    <span class="c">#     if not isinstance(property_identities_dict[key], tuple) or len(property_identities_dict[key]) != 2:</span>
+    <span class="c">#         continue</span>
+    <span class="c">#</span>
+    <span class="c">#     prop_ident_tag = BeautifulSoup(features=&#39;xml&#39;).new_tag(&#39;propertyIdentity&#39;)</span>
+    <span class="c">#     prop_ident_tag[&#39;id&#39;] = key</span>
+    <span class="c">#     prop_ident_tag[&#39;type&#39;] = property_identities_dict[key][0]</span>
+    <span class="c">#     prop_ident_tag[&#39;singleValued&#39;] = unformat_prop(property_identities_dict[key][1])</span>
+    <span class="c">#     property_identities_tag.append(prop_ident_tag)</span>
+    <span class="c">#</span>
+    <span class="c"># return property_identities_tag</span>
+    <span class="n">property_identities_tag</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s">&#39;propertyIdentities&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">property_identities_dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">property_identities_tag</span>
+
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">property_identities_dict</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">property_identities_dict</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">property_identities_dict</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">etree</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="n">property_identities_tag</span><span class="p">,</span> <span class="s">&#39;propertyIdentity&#39;</span><span class="p">,</span>
+                         <span class="n">attrib</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="n">key</span><span class="p">,</span>
+                                 <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="n">property_identities_dict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                                 <span class="s">&#39;singleValued&#39;</span><span class="p">:</span> <span class="n">unformat_prop</span><span class="p">(</span><span class="n">property_identities_dict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">1</span><span class="p">])})</span>
+
+    <span class="k">return</span> <span class="n">property_identities_tag</span>
+
+</div>
+<div class="viewcode-block" id="get_property_identities_dict"><a class="viewcode-back" href="../dynetmlparsingutils.html#dynetmlparsingutils.get_property_identities_dict">[docs]</a><span class="k">def</span> <span class="nf">get_property_identities_dict</span><span class="p">(</span><span class="n">property_identities_tag</span><span class="p">,</span> <span class="n">inclusion_test</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reads in a propertyIdentities tag and converts it to a dictionary of property identities</span>
+
+<span class="sd">    :param lxml._Element property_identities_tag: a tag containing propertyIdentities, or None</span>
+<span class="sd">    :param lambda inclusion_test: a test for whether or not to include a particular property. Defaults to including all.</span>
+<span class="sd">    :returns: A dictionary of property identities, or an empty dictionary</span>
+<span class="sd">    :rtype: dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">property_identities_dict</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">if</span> <span class="n">inclusion_test</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">inclusion_test</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">True</span>
+
+    <span class="k">if</span> <span class="n">property_identities_tag</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">property_identities_dict</span>
+
+    <span class="k">for</span> <span class="n">p_i</span> <span class="ow">in</span> <span class="n">property_identities_tag</span><span class="o">.</span><span class="n">iterfind</span><span class="p">(</span><span class="s">&#39;propertyIdentity&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">inclusion_test</span><span class="p">(</span><span class="n">p_i</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">]):</span>
+            <span class="n">property_identities_dict</span><span class="p">[</span><span class="n">p_i</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">]]</span> <span class="o">=</span> \
+                <span class="n">p_i</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;type&#39;</span><span class="p">],</span> <span class="n">p_i</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;singleValued&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;true&#39;</span>
+
+    <span class="k">return</span> <span class="n">property_identities_dict</span>
+
+</div>
+<div class="viewcode-block" id="get_properties_tag"><a class="viewcode-back" href="../dynetmlparsingutils.html#dynetmlparsingutils.get_properties_tag">[docs]</a><span class="k">def</span> <span class="nf">get_properties_tag</span><span class="p">(</span><span class="n">properties_dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reads in a dictionary of properties and converts it to a properties tag</span>
+
+<span class="sd">    :param properties_dict: a dictionary of properties</span>
+<span class="sd">    :returns: A &lt;properties&gt; tag</span>
+<span class="sd">    :rtype: :class:`lxml._Element`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># properties_tag = BeautifulSoup(features=&#39;xml&#39;).new_tag(&#39;properties&#39;)</span>
+    <span class="c">#</span>
+    <span class="c"># if not isinstance(properties_dict, dict):</span>
+    <span class="c">#     return properties_tag</span>
+    <span class="c">#</span>
+    <span class="c"># for key in properties_dict:</span>
+    <span class="c">#     prop_tag = BeautifulSoup(features=&#39;xml&#39;).new_tag(&#39;property&#39;)</span>
+    <span class="c">#     prop_tag[&#39;id&#39;] = key</span>
+    <span class="c">#     prop_tag[&#39;value&#39;] = unformat_prop(properties_dict[key])</span>
+    <span class="c">#     properties_tag.append(prop_tag)</span>
+    <span class="c">#</span>
+    <span class="c"># return properties_tag</span>
+    <span class="n">properties_tag</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s">&#39;properties&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">properties_dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">properties_tag</span>
+
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">properties_dict</span><span class="p">:</span>
+        <span class="n">etree</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="n">properties_tag</span><span class="p">,</span> <span class="s">&#39;property&#39;</span><span class="p">,</span> <span class="n">attrib</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="n">key</span><span class="p">,</span> <span class="s">&#39;value&#39;</span><span class="p">:</span> <span class="n">unformat_prop</span><span class="p">(</span><span class="n">properties_dict</span><span class="p">[</span><span class="n">key</span><span class="p">])})</span>
+
+    <span class="k">return</span> <span class="n">properties_tag</span>
+
+</div>
+<div class="viewcode-block" id="get_nodeset_tuple"><a class="viewcode-back" href="../dynetmlparsingutils.html#dynetmlparsingutils.get_nodeset_tuple">[docs]</a><span class="k">def</span> <span class="nf">get_nodeset_tuple</span><span class="p">(</span><span class="n">nodeclass_tag</span><span class="p">,</span> <span class="n">property_inclusion_test</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param nodeclass_tag: An lxml._Element extracted from the &lt;nodeclass&gt; tag in a DyNetML file</span>
+<span class="sd">    :param lambda property_inclusion_test: Test for whether a node property should be included</span>
+<span class="sd">    :returns: :class:`dict`, :class:`Collections.defaultdict(node_tuple)`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">property_inclusion_test</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">property_inclusion_test</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">True</span>
+
+    <span class="n">p_i_dict</span> <span class="o">=</span> <span class="n">get_property_identities_dict</span><span class="p">(</span><span class="n">nodeclass_tag</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;propertyIdentities&#39;</span><span class="p">),</span> <span class="n">property_inclusion_test</span><span class="p">)</span>
+    <span class="n">node_tuples</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="n">node_tuple</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodeclass_tag</span><span class="o">.</span><span class="n">iterfind</span><span class="p">(</span><span class="s">&#39;node&#39;</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">attrib_key</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">attrib</span><span class="p">:</span>
+            <span class="n">node_tuples</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">]][</span><span class="mi">0</span><span class="p">][</span><span class="n">attrib_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">format_prop</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="n">attrib_key</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">prop</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">iterfind</span><span class="p">(</span><span class="s">&#39;property&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">property_inclusion_test</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">]):</span>
+                <span class="n">node_tuples</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">]][</span><span class="mi">1</span><span class="p">][</span><span class="n">prop</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">]]</span> <span class="o">=</span> \
+                    <span class="n">format_prop</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;value&#39;</span><span class="p">],</span> <span class="n">p_i_dict</span><span class="p">[</span><span class="n">prop</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">]][</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">p_i_dict</span><span class="p">,</span> <span class="n">node_tuples</span>
+
+</div>
+<div class="viewcode-block" id="get_nodeclass_dict"><a class="viewcode-back" href="../dynetmlparsingutils.html#dynetmlparsingutils.get_nodeclass_dict">[docs]</a><span class="k">def</span> <span class="nf">get_nodeclass_dict</span><span class="p">(</span><span class="n">nodes_tag</span><span class="p">,</span> <span class="n">prop_inclusion_test</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">nodeclass_inclusion_test</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param lxml._Element nodes_tag: An lxml._Element extracted from the  &lt;nodes&gt; tag in a DynetML file</span>
+<span class="sd">    :param lambda prop_inclusion_test: Test for whether a node property should be included</span>
+<span class="sd">    :param lambda nodeclass_inclusion_test: Test for whether a nodeclass should be included</span>
+<span class="sd">    :returns: A dictionary defining a nodeclass</span>
+<span class="sd">    :rtype: :class:`Collections.defaultdict(dict)`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">nodeclass_inclusion_test</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">nodeclass_inclusion_test</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">True</span>
+
+    <span class="n">new_nodeclass_dict</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">nc_tag</span> <span class="ow">in</span> <span class="n">nodes_tag</span><span class="o">.</span><span class="n">iterfind</span><span class="p">(</span><span class="s">&#39;nodeclass&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">nodeclass_inclusion_test</span><span class="p">(</span><span class="n">nc_tag</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">]):</span>
+            <span class="k">continue</span>
+        <span class="n">new_nodeclass_dict</span><span class="p">[</span><span class="n">nc_tag</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;type&#39;</span><span class="p">]][</span><span class="n">nc_tag</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">get_nodeset_tuple</span><span class="p">(</span><span class="n">nc_tag</span><span class="p">,</span> <span class="n">prop_inclusion_test</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">new_nodeclass_dict</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <div class="related bottom">
+  <nav id="rellinks">
+    <ul>
+    </ul>
+  </nav>
+  <nav id="breadcrumbs">
+    <ul>
+      <li><a href="../index.html">dynetml2other 0.1 documentation</a></li>
+      <li>
+        <a href="index.html">Module code</a>
+      </li> 
+    </ul>
+  </nav>
+  </div>
+  <footer id="pagefooter">&copy; 2014, Peter M. Landwehr.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a>
+      1.2.2
+        with the <a href="http://github.com/irskep/sphinx-better-theme">
+          better</a> theme.
+
+  </footer>
+
+  
+  </body>
+</html>

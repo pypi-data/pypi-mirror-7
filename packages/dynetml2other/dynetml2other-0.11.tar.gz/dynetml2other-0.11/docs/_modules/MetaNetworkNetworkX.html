@@ -1,0 +1,213 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>MetaNetworkNetworkX &mdash; dynetml2other 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/better.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="dynetml2other 0.1 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  </head>
+  <body>
+    <header id="pageheader"><h1><a href="../index.html ">
+        dynetml2other 0.1 documentation
+    </a></h1></header>
+  <div class="related top">
+  <nav id="rellinks">
+    <ul>
+    </ul>
+  </nav>
+  <nav id="breadcrumbs">
+    <ul>
+      <li><a href="../index.html">dynetml2other 0.1 documentation</a></li>
+      <li>
+        <a href="index.html">Module code</a>
+      </li> 
+    </ul>
+  </nav>
+  </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for MetaNetworkNetworkX</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># -*- coding: utf-8 -*-</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Peter M. Landwehr &lt;plandweh@cs.cmu.edu&gt;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">dynetmlparsingutils</span> <span class="kn">as</span> <span class="nn">dmlpu</span>
+<span class="kn">from</span> <span class="nn">lxml</span> <span class="kn">import</span> <span class="n">etree</span>
+<span class="kn">from</span> <span class="nn">MetaNetwork</span> <span class="kn">import</span> <span class="n">MetaNetwork</span>
+<span class="kn">from</span> <span class="nn">networkx</span> <span class="kn">import</span> <span class="n">nx</span>
+
+
+<div class="viewcode-block" id="MetaNetworkNX"><a class="viewcode-back" href="../MetaNetworkNetworkX.html#MetaNetworkNetworkX.MetaNetworkNX">[docs]</a><span class="k">class</span> <span class="nc">MetaNetworkNX</span> <span class="p">(</span><span class="n">MetaNetwork</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A subclass of the MetaNetwork class that handles networks by storing them as instances of :class:`networkx.Graph` \</span>
+<span class="sd">    and :class:`networkx.DiGraph`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_rename_network_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodeclass_name</span><span class="p">,</span> <span class="n">nodeset_name</span><span class="p">,</span> <span class="n">node_name</span><span class="p">,</span> <span class="n">new_node_name</span><span class="p">):</span>
+        <span class="n">new_mapping</span> <span class="o">=</span> <span class="p">{</span><span class="n">node_name</span><span class="p">:</span> <span class="n">new_node_name</span><span class="p">}</span>
+        <span class="k">for</span> <span class="n">nk</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">networks</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">nk</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s">&#39;sourceType&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">nodeclass_name</span> <span class="ow">and</span> <span class="n">nk</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s">&#39;source&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">nodeset_name</span> <span class="ow">or</span> \
+                                    <span class="n">nk</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s">&#39;targetType&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">nodeclass_name</span> <span class="ow">and</span> <span class="n">nk</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s">&#39;target&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">nodeset_name</span><span class="p">:</span>
+                <span class="n">nx</span><span class="o">.</span><span class="n">relabel_nodes</span><span class="p">(</span><span class="n">nk</span><span class="p">,</span> <span class="n">new_mapping</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_parse_and_add_graph_tag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nk_tag</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">nk_tag</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;isDirected&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;true&#39;</span><span class="p">:</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+
+        <span class="n">g</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s">&#39;sourceType&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nk_tag</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;sourceType&#39;</span><span class="p">]</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s">&#39;source&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nk_tag</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;source&#39;</span><span class="p">]</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s">&#39;targetType&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nk_tag</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;targetType&#39;</span><span class="p">]</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s">&#39;target&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nk_tag</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;target&#39;</span><span class="p">]</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nk_tag</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">]</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s">&#39;isDirected&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nk_tag</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;isDirected&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;true&#39;</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s">&#39;allowSelfLoops&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nk_tag</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;allowSelfLoops&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;true&#39;</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s">&#39;isBinary&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nk_tag</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;isBinary&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;true&#39;</span>
+        <span class="c">#for attrib_key in nk_tag.attrib:</span>
+        <span class="c">#   g.graph[attrib_key] = format_prop(nk_tag.attrib[attrib_key])</span>
+
+        <span class="n">link_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">g</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s">&#39;isBinary&#39;</span><span class="p">]:</span>
+            <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">nk_tag</span><span class="o">.</span><span class="n">iterfind</span><span class="p">(</span><span class="s">&#39;link&#39;</span><span class="p">):</span>
+                <span class="n">link_list</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">link</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;source&#39;</span><span class="p">],</span> <span class="n">link</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;target&#39;</span><span class="p">]))</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">link_list</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">nk_tag</span><span class="o">.</span><span class="n">iterfind</span><span class="p">(</span><span class="s">&#39;link&#39;</span><span class="p">):</span>
+                <span class="n">weight</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;value&#39;</span><span class="p">])</span> <span class="k">if</span> <span class="s">&#39;value&#39;</span> <span class="ow">in</span> <span class="n">link</span><span class="o">.</span><span class="n">attrib</span> <span class="k">else</span> <span class="mf">1.0</span>
+                <span class="n">link_list</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">link</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;source&#39;</span><span class="p">],</span> <span class="n">link</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;target&#39;</span><span class="p">],</span> <span class="n">weight</span><span class="p">))</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">add_weighted_edges_from</span><span class="p">(</span><span class="n">link_list</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">networks</span><span class="p">[</span><span class="n">nk_tag</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">g</span>
+
+    <span class="k">def</span> <span class="nf">_get_networks_tag</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># bs = BeautifulSoup()</span>
+        <span class="c"># networks_tag = bs.new_tag(&#39;networks&#39;)</span>
+        <span class="c"># for key in self.networks:</span>
+        <span class="c">#     network_tag = bs.new_tag(&#39;network&#39;)</span>
+        <span class="c">#     network_tag[&#39;sourceType&#39;] = self.networks[key].graph[&#39;sourceType&#39;]</span>
+        <span class="c">#     network_tag[&#39;source&#39;] = self.networks[key].graph[&#39;source&#39;]</span>
+        <span class="c">#     network_tag[&#39;targetType&#39;] = self.networks[key].graph[&#39;targetType&#39;]</span>
+        <span class="c">#     network_tag[&#39;target&#39;] = self.networks[key].graph[&#39;target&#39;]</span>
+        <span class="c">#     network_tag[&#39;id&#39;] = key</span>
+        <span class="c">#     network_tag[&#39;isDirected&#39;] = dmlpu.unformat_prop(self.networks[key].graph[&#39;isDirected&#39;])</span>
+        <span class="c">#     network_tag[&#39;allowSelfLoops&#39;] = dmlpu.unformat_prop(self.networks[key].graph[&#39;allowSelfLoops&#39;])</span>
+        <span class="c">#     network_tag[&#39;isBinary&#39;] = dmlpu.unformat_prop(self.networks[key].graph[&#39;isBinary&#39;])</span>
+        <span class="c">#</span>
+        <span class="c">#     if self.networks[key].graph[&#39;isBinary&#39;]:</span>
+        <span class="c">#         for edge in self.networks[key].edges_iter(data=True):</span>
+        <span class="c">#             network_tag.append(bs.new_tag(&#39;link&#39;, source=edge[0], target=edge[1], value=edge[2][&#39;weight&#39;]))</span>
+        <span class="c">#     else:</span>
+        <span class="c">#         for edge in self.networks[key].edges_iter():</span>
+        <span class="c">#             network_tag.append(bs.new_tag(&#39;link&#39;, source=edge[0], target=edge[1]))</span>
+        <span class="c">#</span>
+        <span class="c">#     networks_tag.append(network_tag)</span>
+        <span class="c">#</span>
+        <span class="c"># return networks_tag</span>
+        <span class="n">networks_tag</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s">&#39;networks&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">networks</span><span class="p">:</span>
+            <span class="n">network_tag</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="n">networks_tag</span><span class="p">,</span> <span class="s">&#39;network&#39;</span><span class="p">,</span> <span class="n">attrib</span><span class="o">=</span><span class="p">{</span>
+                <span class="s">&#39;sourceType&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">networks</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s">&#39;sourceType&#39;</span><span class="p">],</span> <span class="s">&#39;source&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">networks</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s">&#39;source&#39;</span><span class="p">],</span>
+                <span class="s">&#39;targetType&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">networks</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s">&#39;targetType&#39;</span><span class="p">],</span> <span class="s">&#39;target&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">networks</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s">&#39;target&#39;</span><span class="p">],</span>
+                <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="n">key</span><span class="p">,</span> <span class="s">&#39;isDirected&#39;</span><span class="p">:</span> <span class="n">dmlpu</span><span class="o">.</span><span class="n">unformat_prop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">networks</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s">&#39;isDirected&#39;</span><span class="p">]),</span>
+                <span class="s">&#39;allowSelfLoops&#39;</span><span class="p">:</span> <span class="n">dmlpu</span><span class="o">.</span><span class="n">unformat_prop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">networks</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s">&#39;isBinary&#39;</span><span class="p">])</span>
+            <span class="p">})</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">networks</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s">&#39;isBinary&#39;</span><span class="p">]:</span>
+                <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">networks</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+                    <span class="n">etree</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="n">network_tag</span><span class="p">,</span> <span class="s">&#39;link&#39;</span><span class="p">,</span> <span class="n">attrib</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;source&#39;</span><span class="p">:</span> <span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s">&#39;target&#39;</span><span class="p">:</span> <span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                                                  <span class="s">&#39;value&#39;</span><span class="p">:</span> <span class="n">edge</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="s">&#39;weight&#39;</span><span class="p">]})</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">networks</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">():</span>
+                    <span class="n">etree</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="n">network_tag</span><span class="p">,</span> <span class="s">&#39;link&#39;</span><span class="p">,</span> <span class="n">attrib</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;source&#39;</span><span class="p">:</span> <span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s">&#39;target&#39;</span><span class="p">:</span> <span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">]})</span>
+
+        <span class="k">return</span> <span class="n">networks_tag</span>
+
+    <span class="k">def</span> <span class="nf">_pretty_print_networks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span> <span class="s">&#39; == Networks ==&#39;</span>
+        <span class="n">network_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">nk_key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">networks</span><span class="p">:</span>
+            <span class="n">nk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">networks</span><span class="p">[</span><span class="n">nk_key</span><span class="p">]</span>
+            <span class="k">print</span> <span class="s">u&#39;  Network {0}: {1}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">network_count</span><span class="p">,</span> <span class="n">nk_key</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf8&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">prop</span> <span class="ow">in</span> <span class="n">nk</span><span class="o">.</span><span class="n">graph</span><span class="p">:</span>
+                <span class="k">print</span> <span class="s">u&#39;   {0}: {1}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="n">nk</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="n">prop</span><span class="p">])</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf8&#39;</span><span class="p">)</span>
+            <span class="k">print</span> <span class="s">&#39;   {0} nodes&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nk</span><span class="o">.</span><span class="n">nodes</span><span class="p">()))</span>
+            <span class="k">print</span> <span class="s">&#39;   {0} edges&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nk</span><span class="o">.</span><span class="n">edges</span><span class="p">()))</span>
+            <span class="n">network_count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">network_count</span> <span class="o">+=</span> <span class="mi">1</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <div class="related bottom">
+  <nav id="rellinks">
+    <ul>
+    </ul>
+  </nav>
+  <nav id="breadcrumbs">
+    <ul>
+      <li><a href="../index.html">dynetml2other 0.1 documentation</a></li>
+      <li>
+        <a href="index.html">Module code</a>
+      </li> 
+    </ul>
+  </nav>
+  </div>
+  <footer id="pagefooter">&copy; 2014, Peter M. Landwehr.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a>
+      1.2.2
+        with the <a href="http://github.com/irskep/sphinx-better-theme">
+          better</a> theme.
+
+  </footer>
+
+  
+  </body>
+</html>

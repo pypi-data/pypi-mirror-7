@@ -1,0 +1,208 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Import DyNetML into Python, NetworkX, and igraph &mdash; dynetml2other 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/better.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="dynetml2other 0.1 documentation" href="#" />
+    <link rel="next" title="DynamicMetaNetwork" href="DynamicMetaNetwork.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  </head>
+  <body>
+    <header id="pageheader"><h1><a href="# ">
+        dynetml2other 0.1 documentation
+    </a></h1></header>
+  <div class="related top">
+  <nav id="rellinks">
+    <ul>
+        <li>
+          <a href="DynamicMetaNetwork.html" title="Next document">DynamicMetaNetwork</a>
+          &rarr;
+        </li>
+    </ul>
+  </nav>
+  <nav id="breadcrumbs">
+    <ul>
+      <li><a href="#">dynetml2other 0.1 documentation</a></li> 
+    </ul>
+  </nav>
+  </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="import-dynetml-into-python-networkx-and-igraph">
+<h1>Import <a class="reference external" href="http://www.casos.cs.cmu.edu/projects/dynetml/">DyNetML</a> into <a class="reference external" href="http://www.python.org">Python</a>, <a class="reference external" href="http://networkx.github.io">NetworkX</a>, and <a class="reference external" href="http://igraph.org/python/">igraph</a><a class="headerlink" href="#import-dynetml-into-python-networkx-and-igraph" title="Permalink to this headline">¶</a></h1>
+<p>dynetml2other provides an importer and a set of wrapper classes for DyNetML files that allow them to be
+used with several Python graph libraries. These wrapper classes also support exporting data in DyNetML format, meaning
+that it can be created, used with this package, and then save out for analysis with other tools.</p>
+<p>The current way to use the module is by giving the dynetml2other method the path to the file you
+want to parse:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">dynetml2other</span> <span class="kn">import</span> <span class="n">dynetml2other</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dmn_with_graphs_as_networkx</span> <span class="o">=</span> <span class="n">dynetml2other</span><span class="p">(</span><span class="s">&#39;path_to_dynamic_metanetwork_from_twitter.xml&#39;</span><span class="p">,</span> <span class="s">&#39;networkx&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dmn_with_graphs_as_igraphs</span> <span class="o">=</span> <span class="n">dynetml2other</span><span class="p">(</span><span class="s">&#39;path_to_dynamic_metanetwork_from_twitter.xml&#39;</span><span class="p">,</span> <span class="s">&#39;igraph&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dmn_with_graphs_as_dicts</span> <span class="o">=</span> <span class="n">dynetml2other</span><span class="p">(</span><span class="s">&#39;path_to_dynamic_metanetwork_from_twitter.xml&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dmn_with_graphs_as_dicts</span>
+<span class="go">&lt;dynetml2other.DynamicMetaNetwork.DynamicMetaNetwork instance at 0x10e857950&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mn_with_graphs_as_dicts</span> <span class="o">=</span> <span class="n">dynetml2other</span><span class="p">(</span><span class="s">&#39;vanilla_metanetwork_for_some_project.xml&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mn_with_graphs_as_dicts</span>
+<span class="go">&lt;dynetml2other.MetaNetwork.MetaNetwork instance at 0x10e857098&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dmn_with_graphs_as_dicts</span><span class="o">.</span><span class="n">attributes</span>
+<span class="go">{&#39;id&#39;: &#39;Twitter JSON - 1 Hour&#39;}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dmn_with_graphs_as_dicts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">&lt;dynetml2other.MetaNetwork.MetaNetwork instance at 0x10e857cb0&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">dmn_with_graphs_as_dicts</span><span class="o">.</span><span class="n">metanetworks</span>
+<span class="go">23</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dmn_with_graphs_as_dicts</span><span class="o">.</span><span class="n">metanetworks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">attributes</span>
+<span class="go">{&#39;date&#39;: &#39;20130503T10:00:00&#39;, &#39;id&#39;: &#39;2013-05-03 10 AM&#39;}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dmn_with_graphs_as_dicts</span><span class="o">.</span><span class="n">metanetworks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">propertyIdentities</span>
+<span class="go">{&#39;importFile&#39;: (&#39;text&#39;, False), &#39;importLastTweetDate&#39;: (&#39;date&#39;, False), &#39;lastTweetDate&#39;: (&#39;dat</span>
+<span class="go">e&#39;, False), &#39;importAggregationPeriod&#39;: (&#39;text&#39;, False), &#39;importFirstTweetDate&#39;: (&#39;date&#39;, False</span>
+<span class="go">), &#39;firstTweetDate&#39;: (&#39;date&#39;, False), &#39;importFileFormat&#39;: (&#39;text&#39;, False)}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dmn_with_graphs_as_dicts</span><span class="o">.</span><span class="n">write_dynetml</span><span class="p">(</span><span class="s">&#39;a_copy_of_the_dynetml.xml&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To define the method properly:</p>
+<span class="target" id="module-dynetml2other"></span><p>Imports a DyNetML file into a wrapper class that uses NetworkX, igraph, or Python dictionaries to contain the networks.</p>
+<dl class="function">
+<dt id="dynetml2other.main">
+<tt class="descclassname">dynetml2other.</tt><tt class="descname">main</tt><big>(</big><em>dynetml_path</em>, <em>network_format='dict'</em><big>)</big><a class="reference internal" href="_modules/dynetml2other.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dynetml2other.main" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>dynetml_path</strong> (<em>str|unicode</em>) &#8211; Path to a dynetml file</li>
+<li><strong>network_format</strong> (<em>str|unicode</em>) &#8211; The network format; we expect &#8220;networkx&#8221;, &#8220;igraph&#8221;, or nothing (&#8220;dict&#8221;)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The data wrapped in the appropriate class and stored in the specified graph library</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">DynamicMetaNetwork|MetaNetwork|None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="docutils">
+<dt>If the file contains a meta-network, and based on t will be parsed into an instance of <a class="reference internal" href="MetaNetwork.html"><em>MetaNetwork</em></a>, which stores graph data in dictionaries, or into one of its SubClasses:</dt>
+<dd><ul class="first last simple">
+<li><a class="reference internal" href="MetaNetworkNetworkX.html"><em>MetaNetworkNX</em></a>, which stores graph data in <a class="reference external" href="http://networkx.github.io/documentation/latest/reference/classes.graph.html#networkx.Graph">networkx.Graphs</a> and <a class="reference external" href="http://networkx.github.io/documentation/latest/reference/classes.digraph.html#networkx.DiGraph">networkx.DiGraphs</a></li>
+<li><a class="reference internal" href="MetaNetworkIGraph.html"><em>MetaNetworkIG</em></a>, which stores graph data in <a class="reference external" href="http://igraph.org/python/doc/igraph.Graph-class.html">igraph.Graphs</a></li>
+</ul>
+</dd>
+</dl>
+<p>If the file contains a dynamic meta-network, it will be parsed into a instance of <a class="reference internal" href="DynamicMetaNetwork.html"><em>DynamicMetaNetwork</em></a>, which
+contains a list of MetaNetworks or of one of MetaNetwork&#8217;s SubClasses. Types of MetaNetworks cannot be mixed within a
+DynamicMetaNetwor.</p>
+</div>
+<div class="section" id="contents">
+<h1>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="DynamicMetaNetwork.html">DynamicMetaNetwork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MetaNetwork.html">MetaNetwork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MetaNetworkNetworkX.html">MetaNetworkNetworkX</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MetaNetworkIGraph.html">MetaNetworkIGraph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dynetmlparsingutils.html">dynetmlparsingutilities</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
+<li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
+<li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Import DyNetML into Python, NetworkX, and igraph</a></li>
+<li><a class="reference internal" href="#contents">Contents</a></li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+  <h4>Next topic</h4>
+  <p class="topless"><a href="DynamicMetaNetwork.html"
+                        title="next chapter">DynamicMetaNetwork</a></p>
+<div class="sourcelink">
+  <a href="_sources/index.txt" rel="nofollow">
+    Show page source
+  </a>
+</div>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <div class="related bottom">
+  <nav id="rellinks">
+    <ul>
+        <li>
+          <a href="DynamicMetaNetwork.html" title="Next document">DynamicMetaNetwork</a>
+          &rarr;
+        </li>
+    </ul>
+  </nav>
+  <nav id="breadcrumbs">
+    <ul>
+      <li><a href="#">dynetml2other 0.1 documentation</a></li> 
+    </ul>
+  </nav>
+  </div>
+  <footer id="pagefooter">&copy; 2014, Peter M. Landwehr.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a>
+      1.2.2
+        with the <a href="http://github.com/irskep/sphinx-better-theme">
+          better</a> theme.
+
+  </footer>
+
+  
+  </body>
+</html>
