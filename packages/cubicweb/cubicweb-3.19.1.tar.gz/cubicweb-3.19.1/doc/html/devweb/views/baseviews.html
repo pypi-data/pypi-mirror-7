@@ -1,0 +1,542 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Base views &mdash; CubicWeb 3.18.3</title>
+    
+    <link rel="stylesheet" href="../../_static/lglb-sphinx-doc.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '3.18.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="CubicWeb 3.18.3" href="../../index.html" />
+    <link rel="up" title="The View system" href="index.html" />
+    <link rel="next" title="Startup views" href="startup.html" />
+    <link rel="prev" title="The “Click and Edit” (also reledit) View" href="reledit.html" /> 
+  </head>
+  <body>
+<div class="header">
+ <a href="http://www.cubicweb.org">
+  <img alt="cubicweb logo" src="../../_static/cubicweb.png"/>
+ </a>
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="startup.html" title="Startup views"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="reledit.html" title="The “Click and Edit” (also reledit) View"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">CubicWeb 3.18.3</a> &raquo;</li>
+          <li><a href="../index.html" >Web side development</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">The View system</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Base views</a><ul>
+<li><a class="reference internal" href="#html-views">HTML views</a><ul>
+<li><a class="reference internal" href="#special-views">Special views</a></li>
+<li><a class="reference internal" href="#base-entity-views">Base entity views</a></li>
+<li><a class="reference internal" href="#list-entity-views">List entity views</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#text-entity-views">Text entity views</a></li>
+<li><a class="reference internal" href="#pagination">Pagination</a></li>
+<li><a class="reference internal" href="#previous-next-navigation">Previous / next navigation</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="reledit.html"
+                        title="previous chapter">The &#8220;Click and Edit&#8221; (also <cite>reledit</cite>) View</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="startup.html"
+                        title="next chapter">Startup views</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/devweb/views/baseviews.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="base-views">
+<h1>Base views<a class="headerlink" href="#base-views" title="Permalink to this headline">¶</a></h1>
+<p><em>CubicWeb</em> provides a lot of standard views, that can be found in
+<tt class="xref py py-mod docutils literal"><span class="pre">cubicweb.web.views</span></tt> sub-modules.</p>
+<p>A certain number of views are used to build the web interface, which apply to one
+or more entities. As other appobjects, their identifier is what distinguish them
+from each others. The most generic ones, found in
+<a class="reference internal" href="#module-cubicweb.web.views.baseviews" title="cubicweb.web.views.baseviews"><tt class="xref py py-mod docutils literal"><span class="pre">cubicweb.web.views.baseviews</span></tt></a>, are described below.</p>
+<p>You&#8217;ll probably want to customize one or more of the described views which are
+default, generic, implementations.</p>
+<span class="target" id="module-cubicweb.web.views.baseviews"></span><div class="section" id="html-views">
+<h2>HTML views<a class="headerlink" href="#html-views" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="special-views">
+<h3>Special views<a class="headerlink" href="#special-views" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="cubicweb.web.views.baseviews.NullView">
+<em class="property">class </em><tt class="descclassname">cubicweb.web.views.baseviews.</tt><tt class="descname">NullView</tt><big>(</big><em>req=None</em>, <em>rset=None</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.baseviews.NullView" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">__regid__ :</th><td class="field-body"><em>null</em></td>
+</tr>
+</tbody>
+</table>
+<p>This view is the default view used when nothing needs to be rendered. It is
+always applicable and is usually used as fallback view when calling
+<tt class="xref py py-meth docutils literal"><span class="pre">_cw.view()</span></tt> to display nothing if the result set is empty.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="cubicweb.web.views.baseviews.NoResultView">
+<em class="property">class </em><tt class="descclassname">cubicweb.web.views.baseviews.</tt><tt class="descname">NoResultView</tt><big>(</big><em>req=None</em>, <em>rset=None</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.baseviews.NoResultView" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">__regid__ :</th><td class="field-body"><em>noresult</em></td>
+</tr>
+</tbody>
+</table>
+<p>This view is the default view to be used when no result has been found
+(i.e. empty result set).</p>
+<p>It&#8217;s usually used as fallback view when calling <tt class="xref py py-meth docutils literal"><span class="pre">_cw.view()</span></tt> to display
+&#8220;no results&#8221; if the result set is empty.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="cubicweb.web.views.baseviews.FinalView">
+<em class="property">class </em><tt class="descclassname">cubicweb.web.views.baseviews.</tt><tt class="descname">FinalView</tt><big>(</big><em>req=None</em>, <em>rset=None</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.baseviews.FinalView" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">__regid__ :</th><td class="field-body"><em>final</em></td>
+</tr>
+</tbody>
+</table>
+<p>Display the value of a result set cell with minimal transformations
+(i.e. you&#8217;ll get a number for entities). It is applicable on any result set,
+though usually dedicated for cells containing an attribute&#8217;s value.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="base-entity-views">
+<h3>Base entity views<a class="headerlink" href="#base-entity-views" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="cubicweb.web.views.baseviews.InContextView">
+<em class="property">class </em><tt class="descclassname">cubicweb.web.views.baseviews.</tt><tt class="descname">InContextView</tt><big>(</big><em>req=None</em>, <em>rset=None</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.baseviews.InContextView" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">__regid__ :</th><td class="field-body"><em>incontext</em></td>
+</tr>
+</tbody>
+</table>
+<p>This view is used when the entity should be considered as displayed in its
+context. By default it produces the result of <tt class="docutils literal"><span class="pre">entity.dc_title()</span></tt> wrapped in a
+link leading to the primary view of the entity.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="cubicweb.web.views.baseviews.OutOfContextView">
+<em class="property">class </em><tt class="descclassname">cubicweb.web.views.baseviews.</tt><tt class="descname">OutOfContextView</tt><big>(</big><em>req=None</em>, <em>rset=None</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.baseviews.OutOfContextView" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">__regid__ :</th><td class="field-body"><em>outofcontext</em></td>
+</tr>
+</tbody>
+</table>
+<p>This view is used when the entity should be considered as displayed out of
+its context. By default it produces the result of <tt class="docutils literal"><span class="pre">entity.dc_long_title()</span></tt>
+wrapped in a link leading to the primary view of the entity.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="cubicweb.web.views.baseviews.OneLineView">
+<em class="property">class </em><tt class="descclassname">cubicweb.web.views.baseviews.</tt><tt class="descname">OneLineView</tt><big>(</big><em>req=None</em>, <em>rset=None</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.baseviews.OneLineView" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">__regid__ :</th><td class="field-body"><em>oneline</em></td>
+</tr>
+</tbody>
+</table>
+<p>This view is used when we can&#8217;t tell if the entity should be considered as
+displayed in or out of context. By default it produces the result of the
+<cite>text</cite> view in a link leading to the primary view of the entity.</p>
+</dd></dl>
+
+<p>Those are used to display a link to an entity, whose label depends on the entity
+having to be displayed in or out of context (of another entity): some entities
+make sense in the context of another entity. For instance, the <cite>Version</cite> of a
+<cite>Project</cite> in forge. So one may expect that &#8216;incontext&#8217; will be called when
+display a version from within the context of a project, while &#8216;outofcontext&#8221;&#8217;
+will be called in other cases. In our example, the &#8216;incontext&#8217; view of the
+version would be something like &#8216;0.1.2&#8217;, while the &#8216;outofcontext&#8217; view would
+include the project name, e.g. &#8216;baz 0.1.2&#8217; (since only a version number without
+the associated project doesn&#8217;t make sense if you don&#8217;t know yet that you&#8217;re
+talking about the famous &#8216;baz&#8217; project. <em>CubicWeb</em> tries to make guess and call
+&#8216;incontext&#8217;/&#8217;outofcontext&#8217; nicely. When it can&#8217;t know, the &#8216;oneline&#8217; view should
+be used.</p>
+</div>
+<div class="section" id="list-entity-views">
+<h3>List entity views<a class="headerlink" href="#list-entity-views" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="cubicweb.web.views.baseviews.ListView">
+<em class="property">class </em><tt class="descclassname">cubicweb.web.views.baseviews.</tt><tt class="descname">ListView</tt><big>(</big><em>req=None</em>, <em>rset=None</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.baseviews.ListView" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">__regid__ :</th><td class="field-body"><em>list</em></td>
+</tr>
+</tbody>
+</table>
+<p>This view displays a list of entities by creating a HTML list (<cite>&lt;ul&gt;</cite>) and
+call the view <cite>listitem</cite> for each entity of the result set. The &#8216;list&#8217; view
+will generate HTML like:</p>
+<div class="highlight-html"><div class="highlight"><pre><span class="nt">&lt;ul</span> <span class="na">class=</span><span class="s">&quot;section&quot;</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;li&gt;</span>&quot;result of &#39;subvid&#39; view for a row<span class="nt">&lt;/li&gt;</span>
+  ...
+<span class="nt">&lt;/ul&gt;</span>
+</pre></div>
+</div>
+<p>If you wish to use a different view for each entity, either subclass and
+change the <tt class="xref py py-attr docutils literal"><span class="pre">item_vid</span></tt> class attribute or specify a <cite>subvid</cite> argument
+when calling this view.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="cubicweb.web.views.baseviews.SimpleListView">
+<em class="property">class </em><tt class="descclassname">cubicweb.web.views.baseviews.</tt><tt class="descname">SimpleListView</tt><big>(</big><em>req=None</em>, <em>rset=None</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.baseviews.SimpleListView" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">__regid__ :</th><td class="field-body"><em>simplelist</em></td>
+</tr>
+</tbody>
+</table>
+<p>Similar to :class:~cubicweb.web.views.baseviews.ListView but using &#8216;&lt;div&gt;&#8217;
+instead of &#8216;&lt;ul&gt;&#8217;. It rely on &#8216;&lt;div&gt;&#8217; behaviour to separate items. HTML will
+look like</p>
+<div class="highlight-html"><div class="highlight"><pre><span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;section&quot;</span><span class="nt">&gt;</span>&quot;result of &#39;subvid&#39; view for a row<span class="nt">&lt;/div&gt;</span>
+...
+</pre></div>
+</div>
+<p>It relies on base <a class="reference internal" href="views.html#cubicweb.view.View" title="cubicweb.view.View"><tt class="xref py py-class docutils literal"><span class="pre">View</span></tt></a> class implementation of the
+<tt class="xref py py-meth docutils literal"><span class="pre">call()</span></tt> method to insert those &lt;div&gt;.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="cubicweb.web.views.baseviews.SameETypeListView">
+<em class="property">class </em><tt class="descclassname">cubicweb.web.views.baseviews.</tt><tt class="descname">SameETypeListView</tt><big>(</big><em>req=None</em>, <em>rset=None</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.baseviews.SameETypeListView" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">__regid__ :</th><td class="field-body"><em>sameetypelist</em></td>
+</tr>
+</tbody>
+</table>
+<p>This view displays a list of entities of the same type, in HTML section
+(&#8216;&lt;div&gt;&#8217;) and call the view <cite>sameetypelistitem</cite> for each entity of the
+result set. It&#8217;s designed to get a more adapted global list when displayed
+entities are all of the same type (for instance, display gallery if there
+are only images entities).</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="cubicweb.web.views.baseviews.CSVView">
+<em class="property">class </em><tt class="descclassname">cubicweb.web.views.baseviews.</tt><tt class="descname">CSVView</tt><big>(</big><em>req=None</em>, <em>rset=None</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.baseviews.CSVView" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">__regid__ :</th><td class="field-body"><em>csv</em></td>
+</tr>
+</tbody>
+</table>
+<p>This view displays each entity in a coma separated list. It is NOT related
+to the well-known text file format.</p>
+</dd></dl>
+
+<p>Those list views can be given a &#8216;subvid&#8217; arguments, telling the view to use of
+each item in the list. When not specified, the value of the &#8216;redirect_vid&#8217;
+attribute of <tt class="xref py py-class docutils literal"><span class="pre">ListItemView</span></tt> (for &#8216;listview&#8217;) or of
+<a class="reference internal" href="#cubicweb.web.views.baseviews.SimpleListView" title="cubicweb.web.views.baseviews.SimpleListView"><tt class="xref py py-class docutils literal"><span class="pre">SimpleListView</span></tt></a> will be used. This default to &#8216;outofcontext&#8217; for &#8216;list&#8217;
+/ &#8216;incontext&#8217; for &#8216;simplelist&#8217;</p>
+</div>
+</div>
+<div class="section" id="text-entity-views">
+<h2>Text entity views<a class="headerlink" href="#text-entity-views" title="Permalink to this headline">¶</a></h2>
+<p>Basic HTML view have some variants to be used when generating raw text, not HTML
+(for notifications for instance). Also, as explained above, some of the HTML
+views use those text views as a basis.</p>
+<dl class="class">
+<dt id="cubicweb.web.views.baseviews.TextView">
+<em class="property">class </em><tt class="descclassname">cubicweb.web.views.baseviews.</tt><tt class="descname">TextView</tt><big>(</big><em>req=None</em>, <em>rset=None</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.baseviews.TextView" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">__regid__ :</th><td class="field-body"><em>text</em></td>
+</tr>
+</tbody>
+</table>
+<p>This is the simplest text view for an entity. By default it returns the
+result of the entity&#8217;s <cite>dc_title()</cite> method, which is cut to fit the
+<cite>navigation.short-line-size</cite> property if necessary.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="cubicweb.web.views.baseviews.InContextTextView">
+<em class="property">class </em><tt class="descclassname">cubicweb.web.views.baseviews.</tt><tt class="descname">InContextTextView</tt><big>(</big><em>req=None</em>, <em>rset=None</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.baseviews.InContextTextView" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">__regid__ :</th><td class="field-body"><em>textincontext</em></td>
+</tr>
+</tbody>
+</table>
+<p>Similar to the <cite>text</cite> view, but called when an entity is considered in
+context (see description of incontext HTML view for more information on
+this). By default it displays what&#8217;s returned by the <cite>dc_title()</cite> method of
+the entity.</p>
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><tt class="descclassname">cubicweb.web.views.baseviews.</tt><tt class="descname">OutOfContextView</tt><big>(</big><em>req=None</em>, <em>rset=None</em>, <em>**kwargs</em><big>)</big></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">__regid__ :</th><td class="field-body"><em>outofcontext</em></td>
+</tr>
+</tbody>
+</table>
+<p>This view is used when the entity should be considered as displayed out of
+its context. By default it produces the result of <tt class="docutils literal"><span class="pre">entity.dc_long_title()</span></tt>
+wrapped in a link leading to the primary view of the entity.</p>
+</dd></dl>
+
+</div>
+<p>You will also find modules providing some specific services:</p>
+<span class="target" id="module-cubicweb.web.views.navigation"></span><p>This module provides some generic components to navigate in the web
+application.</p>
+<div class="section" id="pagination">
+<h2>Pagination<a class="headerlink" href="#pagination" title="Permalink to this headline">¶</a></h2>
+<p>Several implementations for large result set pagination are provided:</p>
+<dl class="class">
+<dt id="cubicweb.web.views.navigation.PageNavigation">
+<em class="property">class </em><tt class="descclassname">cubicweb.web.views.navigation.</tt><tt class="descname">PageNavigation</tt><big>(</big><em>req</em>, <em>rset</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.navigation.PageNavigation" title="Permalink to this definition">¶</a></dt>
+<dd><p>The default pagination component: display link to pages where each pages
+is identified by the item number of its first and last elements.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="cubicweb.web.views.navigation.PageNavigationSelect">
+<em class="property">class </em><tt class="descclassname">cubicweb.web.views.navigation.</tt><tt class="descname">PageNavigationSelect</tt><big>(</big><em>req</em>, <em>rset</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.navigation.PageNavigationSelect" title="Permalink to this definition">¶</a></dt>
+<dd><p>This pagination component displays a result-set by page as
+<a class="reference internal" href="#cubicweb.web.views.navigation.PageNavigation" title="cubicweb.web.views.navigation.PageNavigation"><tt class="xref py py-class docutils literal"><span class="pre">PageNavigation</span></tt></a> but in a &lt;select&gt;, which is better when there are a
+lot of results.</p>
+<p>By default it will be selected when there are more than 4 pages to be
+displayed.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="cubicweb.web.views.navigation.SortedNavigation">
+<em class="property">class </em><tt class="descclassname">cubicweb.web.views.navigation.</tt><tt class="descname">SortedNavigation</tt><big>(</big><em>req</em>, <em>rset</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.navigation.SortedNavigation" title="Permalink to this definition">¶</a></dt>
+<dd><p>This pagination component will be selected by default if there are less
+than 4 pages and if the result set is sorted.</p>
+<p>Displayed links to navigate accross pages of a result set are done according
+to the first variable on which the sort is done, and looks like:</p>
+<blockquote>
+<div>[ana - cro] | [cro - ghe] | ... | [tim - zou]</div></blockquote>
+<p>You may want to override this component to customize display in some cases.</p>
+<dl class="method">
+<dt id="cubicweb.web.views.navigation.SortedNavigation.sort_on">
+<tt class="descname">sort_on</tt><big>(</big><big>)</big><a class="headerlink" href="#cubicweb.web.views.navigation.SortedNavigation.sort_on" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return entity column number / attr name to use for nice display by
+inspecting the rset&#8217;syntax tree.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cubicweb.web.views.navigation.SortedNavigation.display_func">
+<tt class="descname">display_func</tt><big>(</big><em>rset</em>, <em>col</em>, <em>attrname</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.navigation.SortedNavigation.display_func" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a function that will be called with a row number as argument
+and should return a string to use as link for it.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cubicweb.web.views.navigation.SortedNavigation.format_link_content">
+<tt class="descname">format_link_content</tt><big>(</big><em>startstr</em>, <em>stopstr</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.navigation.SortedNavigation.format_link_content" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return text for a page link, where <cite>startstr</cite> and <cite>stopstr</cite> are the
+text for the lower/upper boundaries of the page.</p>
+<p>By default text are stripped down to <tt class="xref py py-attr docutils literal"><span class="pre">nb_chars</span></tt> characters.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cubicweb.web.views.navigation.SortedNavigation.write_links">
+<tt class="descname">write_links</tt><big>(</big><em>basepath</em>, <em>params</em>, <em>blocklist</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.navigation.SortedNavigation.write_links" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return HTML for the whole navigation: <cite>blocklist</cite> is a list of HTML
+snippets for each page, <cite>basepath</cite> and <cite>params</cite> will be necessary to
+build previous/next links.</p>
+</dd></dl>
+
+<p>Below an example from the tracker cube:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">TicketsNavigation</span><span class="p">(</span><span class="n">navigation</span><span class="o">.</span><span class="n">SortedNavigation</span><span class="p">):</span>
+    <span class="n">__select__</span> <span class="o">=</span> <span class="p">(</span><span class="n">navigation</span><span class="o">.</span><span class="n">SortedNavigation</span><span class="o">.</span><span class="n">__select__</span>
+                  <span class="o">&amp;</span> <span class="o">~</span><span class="n">paginated_rset</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">is_instance</span><span class="p">(</span><span class="s">&#39;Ticket&#39;</span><span class="p">))</span>
+    <span class="k">def</span> <span class="nf">sort_on</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">col</span><span class="p">,</span> <span class="n">attrname</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">TicketsNavigation</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">sort_on</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">col</span> <span class="o">==</span> <span class="mi">6</span><span class="p">:</span>
+            <span class="c"># sort on state, we don&#39;t want that</span>
+            <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+        <span class="k">return</span> <span class="n">col</span><span class="p">,</span> <span class="n">attrname</span>
+</pre></div>
+</div>
+<p>The idea is that in trackers&#8217;ticket tables, result set is first ordered on
+ticket&#8217;s state while this doesn&#8217;t make any sense in the navigation. So we
+override <a class="reference internal" href="#cubicweb.web.views.navigation.SortedNavigation.sort_on" title="cubicweb.web.views.navigation.SortedNavigation.sort_on"><tt class="xref py py-meth docutils literal"><span class="pre">sort_on()</span></tt></a> so that if we detect such sorting, we disable the
+feature to go back to item number in the pagination.</p>
+<p>Also notice the <cite>~paginated_rset(4)</cite> in the selector so that if there are
+more than 4 pages to display, <a class="reference internal" href="#cubicweb.web.views.navigation.PageNavigationSelect" title="cubicweb.web.views.navigation.PageNavigationSelect"><tt class="xref py py-class docutils literal"><span class="pre">PageNavigationSelect</span></tt></a> will still be
+selected.</p>
+</dd></dl>
+
+<p>Pagination will appear when needed according to the <cite>page-size</cite> ui property.</p>
+<p>This module monkey-patch the <a class="reference internal" href="#cubicweb.web.views.navigation.paginate" title="cubicweb.web.views.navigation.paginate"><tt class="xref py py-func docutils literal"><span class="pre">paginate()</span></tt></a> function to the base <tt class="xref py py-class docutils literal"><span class="pre">View</span></tt>
+class, so that you can ask pagination explicitly on every result-set based views.</p>
+<dl class="function">
+<dt id="cubicweb.web.views.navigation.paginate">
+<tt class="descclassname">cubicweb.web.views.navigation.</tt><tt class="descname">paginate</tt><big>(</big><em>view</em>, <em>show_all_option=True</em>, <em>w=None</em>, <em>page_size=None</em>, <em>rset=None</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.navigation.paginate" title="Permalink to this definition">¶</a></dt>
+<dd><p>paginate results if the view is paginable</p>
+</dd></dl>
+
+</div>
+<div class="section" id="previous-next-navigation">
+<h2>Previous / next navigation<a class="headerlink" href="#previous-next-navigation" title="Permalink to this headline">¶</a></h2>
+<p>An adapter and its related component for the somewhat usal &#8220;previous / next&#8221;
+navigation are provided.</p>
+<blockquote>
+<div><dl class="class">
+<dt id="cubicweb.web.views.navigation.IPrevNextAdapter">
+<em class="property">class </em><tt class="descclassname">cubicweb.web.views.navigation.</tt><tt class="descname">IPrevNextAdapter</tt><big>(</big><em>_cw</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.navigation.IPrevNextAdapter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interface for entities which can be linked to a previous and/or next
+entity</p>
+<dl class="method">
+<dt id="cubicweb.web.views.navigation.IPrevNextAdapter.next_entity">
+<tt class="descname">next_entity</tt><big>(</big><big>)</big><a class="headerlink" href="#cubicweb.web.views.navigation.IPrevNextAdapter.next_entity" title="Permalink to this definition">¶</a></dt>
+<dd><p>return the &#8216;next&#8217; entity</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cubicweb.web.views.navigation.IPrevNextAdapter.previous_entity">
+<tt class="descname">previous_entity</tt><big>(</big><big>)</big><a class="headerlink" href="#cubicweb.web.views.navigation.IPrevNextAdapter.previous_entity" title="Permalink to this definition">¶</a></dt>
+<dd><p>return the &#8216;previous&#8217; entity</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="cubicweb.web.views.navigation.NextPrevNavigationComponent">
+<em class="property">class </em><tt class="descclassname">cubicweb.web.views.navigation.</tt><tt class="descname">NextPrevNavigationComponent</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.navigation.NextPrevNavigationComponent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Entities adaptable to the &#8216;IPrevNext&#8217; should have this component
+automatically displayed. You may want to override this component to have a
+different look and feel.</p>
+</dd></dl>
+
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="startup.html" title="Startup views"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="reledit.html" title="The “Click and Edit” (also reledit) View"
+             >previous</a> |</li>
+        <li><a href="../../index.html">CubicWeb 3.18.3</a> &raquo;</li>
+          <li><a href="../index.html" >Web side development</a> &raquo;</li>
+          <li><a href="index.html" >The View system</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2001-2014, Logilab.
+      Last updated on Mar 11, 2014.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

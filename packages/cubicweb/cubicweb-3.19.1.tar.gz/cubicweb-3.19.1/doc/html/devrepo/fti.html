@@ -1,0 +1,274 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>10. Full Text Indexing in CubicWeb &mdash; CubicWeb 3.18.3</title>
+    
+    <link rel="stylesheet" href="../_static/lglb-sphinx-doc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '3.18.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="CubicWeb 3.18.3" href="../index.html" />
+    <link rel="up" title="Repository development" href="index.html" />
+    <link rel="next" title="Web side development" href="../devweb/index.html" />
+    <link rel="prev" title="9. Profiling and performance" href="profiling.html" /> 
+  </head>
+  <body>
+<div class="header">
+ <a href="http://www.cubicweb.org">
+  <img alt="cubicweb logo" src="../_static/cubicweb.png"/>
+ </a>
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../devweb/index.html" title="Web side development"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="profiling.html" title="9. Profiling and performance"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">CubicWeb 3.18.3</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Repository development</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">10. Full Text Indexing in CubicWeb</a><ul>
+<li><a class="reference internal" href="#standard-fti-process">10.1. Standard FTI process</a></li>
+<li><a class="reference internal" href="#yams-and-fulltext-container">10.2. Yams and <tt class="docutils literal"><span class="pre">fulltext_container</span></tt></a></li>
+<li><a class="reference internal" href="#customizing-how-entities-are-fetched-during-db-rebuild-fti">10.3. Customizing how entities are fetched during <tt class="docutils literal"><span class="pre">db-rebuild-fti</span></tt></a></li>
+<li><a class="reference internal" href="#customizing-get-words">10.4. Customizing <tt class="docutils literal"><span class="pre">get_words()</span></tt></a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="profiling.html"
+                        title="previous chapter">9. Profiling and performance</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../devweb/index.html"
+                        title="next chapter">Web side development</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/devrepo/fti.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="full-text-indexing-in-cubicweb">
+<span id="fti"></span><h1>10. Full Text Indexing in CubicWeb<a class="headerlink" href="#full-text-indexing-in-cubicweb" title="Permalink to this headline">¶</a></h1>
+<p>When an attribute is tagged as <em>fulltext-indexable</em> in the datamodel,
+CubicWeb will automatically trigger hooks to update the internal
+fulltext index (i.e the <tt class="docutils literal"><span class="pre">appears</span></tt> SQL table) each time this attribute
+is modified.</p>
+<p>CubicWeb also provides a <tt class="docutils literal"><span class="pre">db-rebuild-fti</span></tt> command to rebuild the whole
+fulltext on demand:</p>
+<div class="highlight-bash"><div class="highlight"><pre>cubicweb@esope~<span class="nv">$ </span>cubicweb db-rebuild-fti my_tracker_instance
+</pre></div>
+</div>
+<p>You can also rebuild the fulltext index for a given set of entity types:</p>
+<div class="highlight-bash"><div class="highlight"><pre>cubicweb@esope~<span class="nv">$ </span>cubicweb db-rebuild-fti my_tracker_instance Ticket Version
+</pre></div>
+</div>
+<p>In the above example, only fulltext index of entity types <tt class="docutils literal"><span class="pre">Ticket</span></tt> and <tt class="docutils literal"><span class="pre">Version</span></tt>
+will be rebuilt.</p>
+<div class="section" id="standard-fti-process">
+<h2>10.1. Standard FTI process<a class="headerlink" href="#standard-fti-process" title="Permalink to this headline">¶</a></h2>
+<p>Considering an entity type <tt class="docutils literal"><span class="pre">ET</span></tt>, the default <em>fti</em> process is to :</p>
+<ol class="arabic simple">
+<li>fetch all entities of type <tt class="docutils literal"><span class="pre">ET</span></tt></li>
+<li>for each entity, adapt it to <tt class="docutils literal"><span class="pre">IFTIndexable</span></tt> (see
+<a class="reference internal" href="entityclasses/adapters.html#cubicweb.entities.adapters.IFTIndexableAdapter" title="cubicweb.entities.adapters.IFTIndexableAdapter"><tt class="xref py py-class docutils literal"><span class="pre">IFTIndexableAdapter</span></tt></a>)</li>
+<li>call
+<a class="reference internal" href="entityclasses/adapters.html#cubicweb.entities.adapters.IFTIndexableAdapter.get_words" title="cubicweb.entities.adapters.IFTIndexableAdapter.get_words"><tt class="xref py py-meth docutils literal"><span class="pre">get_words()</span></tt></a> on
+the adapter which is supposed to return a dictionary <em>weight</em> -&gt;
+<em>list of words</em> as expected by
+<tt class="xref py py-meth docutils literal"><span class="pre">index_object()</span></tt>. The
+tokenization of each attribute value is done by
+<tt class="xref py py-meth docutils literal"><span class="pre">tokenize()</span></tt>.</li>
+</ol>
+<p>See <a class="reference internal" href="entityclasses/adapters.html#cubicweb.entities.adapters.IFTIndexableAdapter" title="cubicweb.entities.adapters.IFTIndexableAdapter"><tt class="xref py py-class docutils literal"><span class="pre">IFTIndexableAdapter</span></tt></a> for more documentation.</p>
+</div>
+<div class="section" id="yams-and-fulltext-container">
+<h2>10.2. Yams and <tt class="docutils literal"><span class="pre">fulltext_container</span></tt><a class="headerlink" href="#yams-and-fulltext-container" title="Permalink to this headline">¶</a></h2>
+<p>It is possible in the datamodel to indicate that fulltext-indexed
+attributes defined for an entity type will be used to index not the
+entity itself but a related entity. This is especially useful for
+composite entities. Let&#8217;s take a look at (a simplified version of)
+the base schema defined in CubicWeb (see <tt class="xref py py-mod docutils literal"><span class="pre">cubicweb.schemas.base</span></tt>):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">CWUser</span><span class="p">(</span><span class="n">WorkflowableEntityType</span><span class="p">):</span>
+    <span class="n">login</span>     <span class="o">=</span> <span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">maxsize</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
+    <span class="n">upassword</span> <span class="o">=</span> <span class="n">Password</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">EmailAddress</span><span class="p">(</span><span class="n">EntityType</span><span class="p">):</span>
+    <span class="n">address</span> <span class="o">=</span> <span class="n">String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>  <span class="n">fulltextindexed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                     <span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">maxsize</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">use_email_relation</span><span class="p">(</span><span class="n">RelationDefinition</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;use_email&#39;</span>
+    <span class="n">subject</span> <span class="o">=</span> <span class="s">&#39;CWUser&#39;</span>
+    <span class="nb">object</span> <span class="o">=</span> <span class="s">&#39;EmailAddress&#39;</span>
+    <span class="n">cardinality</span> <span class="o">=</span> <span class="s">&#39;*?&#39;</span>
+    <span class="n">composite</span> <span class="o">=</span> <span class="s">&#39;subject&#39;</span>
+</pre></div>
+</div>
+<p>The schema above states that there is a relation between <tt class="docutils literal"><span class="pre">CWUser</span></tt> and <tt class="docutils literal"><span class="pre">EmailAddress</span></tt>
+and that the <tt class="docutils literal"><span class="pre">address</span></tt> field of <tt class="docutils literal"><span class="pre">EmailAddress</span></tt> is fulltext indexed. Therefore,
+in your application, if you use fulltext search to look for an email address, CubicWeb
+will return the <tt class="docutils literal"><span class="pre">EmailAddress</span></tt> itself. But the objects we&#8217;d like to index
+are more likely to be the associated <tt class="docutils literal"><span class="pre">CWUser</span></tt> than the <tt class="docutils literal"><span class="pre">EmailAddress</span></tt> itself.</p>
+<p>The simplest way to achieve that is to tag the <tt class="docutils literal"><span class="pre">use_email</span></tt> relation in
+the datamodel:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">use_email</span><span class="p">(</span><span class="n">RelationType</span><span class="p">):</span>
+    <span class="n">fulltext_container</span> <span class="o">=</span> <span class="s">&#39;subject&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="customizing-how-entities-are-fetched-during-db-rebuild-fti">
+<h2>10.3. Customizing how entities are fetched during <tt class="docutils literal"><span class="pre">db-rebuild-fti</span></tt><a class="headerlink" href="#customizing-how-entities-are-fetched-during-db-rebuild-fti" title="Permalink to this headline">¶</a></h2>
+<p><tt class="docutils literal"><span class="pre">db-rebuild-fti</span></tt> will call the
+<a class="reference internal" href="#cubicweb.entities.AnyEntity.cw_fti_index_rql_queries" title="cubicweb.entities.AnyEntity.cw_fti_index_rql_queries"><tt class="xref py py-meth docutils literal"><span class="pre">cw_fti_index_rql_queries()</span></tt></a> class
+method on your entity type.</p>
+<dl class="classmethod">
+<dt id="cubicweb.entities.AnyEntity.cw_fti_index_rql_queries">
+<em class="property">classmethod </em><tt class="descclassname">AnyEntity.</tt><tt class="descname">cw_fti_index_rql_queries</tt><big>(</big><em>req</em><big>)</big><a class="headerlink" href="#cubicweb.entities.AnyEntity.cw_fti_index_rql_queries" title="Permalink to this definition">¶</a></dt>
+<dd><p>return the list of rql queries to fetch entities to FT-index</p>
+<p>The default is to fetch all entities at once and to prefetch
+indexable attributes but one could imagine iterating over
+&#8220;smaller&#8221; resultsets if the table is very big or returning
+a subset of entities that match some business-logic condition.</p>
+</dd></dl>
+
+<p>Now, suppose you&#8217;ve got a _huge_ table to index, you probably don&#8217;t want to
+get all entities at once. So here&#8217;s a simple customized example that will
+process block of 10000 entities:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyEntityClass</span><span class="p">(</span><span class="n">AnyEntity</span><span class="p">):</span>
+    <span class="n">__regid__</span> <span class="o">=</span> <span class="s">&#39;MyEntityClass&#39;</span>
+
+<span class="nd">@classmethod</span>
+<span class="k">def</span> <span class="nf">cw_fti_index_rql_queries</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">req</span><span class="p">):</span>
+    <span class="c"># get the default RQL method and insert LIMIT / OFFSET instructions</span>
+    <span class="n">base_rql</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">SearchIndex</span><span class="p">,</span> <span class="n">cls</span><span class="p">)</span><span class="o">.</span><span class="n">cw_fti_index_rql_queries</span><span class="p">(</span><span class="n">req</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">selected</span><span class="p">,</span> <span class="n">restrictions</span> <span class="o">=</span> <span class="n">base_rql</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; WHERE &#39;</span><span class="p">)</span>
+    <span class="n">rql_template</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s"> ORDERBY X LIMIT </span><span class="si">%%</span><span class="s">(limit)s OFFSET </span><span class="si">%%</span><span class="s">(offset)s WHERE </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+        <span class="n">selected</span><span class="p">,</span> <span class="n">restrictions</span><span class="p">)</span>
+    <span class="c"># count how many entities you&#39;ll have to index</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s">&#39;Any COUNT(X) WHERE X is MyEntityClass&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="c"># iterate by blocks of 10000 entities</span>
+    <span class="n">chunksize</span> <span class="o">=</span> <span class="mi">10000</span>
+    <span class="k">for</span> <span class="n">offset</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">count</span><span class="p">,</span> <span class="n">chunksize</span><span class="p">):</span>
+        <span class="k">print</span> <span class="s">&#39;SENDING&#39;</span><span class="p">,</span> <span class="n">rql_template</span> <span class="o">%</span> <span class="p">{</span><span class="s">&#39;limit&#39;</span><span class="p">:</span> <span class="n">chunksize</span><span class="p">,</span> <span class="s">&#39;offset&#39;</span><span class="p">:</span> <span class="n">offset</span><span class="p">}</span>
+        <span class="k">yield</span> <span class="n">rql_template</span> <span class="o">%</span> <span class="p">{</span><span class="s">&#39;limit&#39;</span><span class="p">:</span> <span class="n">chunksize</span><span class="p">,</span> <span class="s">&#39;offset&#39;</span><span class="p">:</span> <span class="n">offset</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>Since you have access to <tt class="docutils literal"><span class="pre">req</span></tt>, you can more or less fetch whatever you want.</p>
+</div>
+<div class="section" id="customizing-get-words">
+<h2>10.4. Customizing <a class="reference internal" href="entityclasses/adapters.html#cubicweb.entities.adapters.IFTIndexableAdapter.get_words" title="cubicweb.entities.adapters.IFTIndexableAdapter.get_words"><tt class="xref py py-meth docutils literal"><span class="pre">get_words()</span></tt></a><a class="headerlink" href="#customizing-get-words" title="Permalink to this headline">¶</a></h2>
+<p>You can also customize the FTI process by providing your own <tt class="docutils literal"><span class="pre">get_words()</span></tt>
+implementation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">cubicweb.entities.adapters</span> <span class="kn">import</span> <span class="n">IFTIndexableAdapter</span>
+
+<span class="k">class</span> <span class="nc">SearchIndexAdapter</span><span class="p">(</span><span class="n">IFTIndexableAdapter</span><span class="p">):</span>
+    <span class="n">__regid__</span> <span class="o">=</span> <span class="s">&#39;IFTIndexable&#39;</span>
+    <span class="n">__select__</span> <span class="o">=</span> <span class="n">is_instance</span><span class="p">(</span><span class="s">&#39;MyEntityClass&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">fti_containers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_done</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;this should yield any entity that must be considered to</span>
+<span class="sd">        fulltext-index self.entity</span>
+
+<span class="sd">        CubicWeb&#39;s default implementation will look for yams&#39;</span>
+<span class="sd">        ``fulltex_container`` property.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">entity</span>
+        <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">entity</span><span class="o">.</span><span class="n">some_related_entity</span>
+
+
+    <span class="k">def</span> <span class="nf">get_words</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># implement any logic here</span>
+        <span class="c"># see http://www.postgresql.org/docs/9.1/static/textsearch-controls.html</span>
+        <span class="c"># for the actual signification of &#39;C&#39;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s">&#39;C&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;any&#39;</span><span class="p">,</span> <span class="s">&#39;word&#39;</span><span class="p">,</span> <span class="s">&#39;I&#39;</span><span class="p">,</span> <span class="s">&#39;want&#39;</span><span class="p">]}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../devweb/index.html" title="Web side development"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="profiling.html" title="9. Profiling and performance"
+             >previous</a> |</li>
+        <li><a href="../index.html">CubicWeb 3.18.3</a> &raquo;</li>
+          <li><a href="index.html" >Repository development</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2001-2014, Logilab.
+      Last updated on Mar 11, 2014.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

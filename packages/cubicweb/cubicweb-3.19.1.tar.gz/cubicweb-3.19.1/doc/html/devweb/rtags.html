@@ -1,0 +1,290 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Configuring the user interface &mdash; CubicWeb 3.18.3</title>
+    
+    <link rel="stylesheet" href="../_static/lglb-sphinx-doc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '3.18.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="CubicWeb 3.18.3" href="../index.html" />
+    <link rel="up" title="Web side development" href="index.html" />
+    <link rel="next" title="Ajax" href="ajax.html" />
+    <link rel="prev" title="Online documentation system" href="views/wdoc.html" /> 
+  </head>
+  <body>
+<div class="header">
+ <a href="http://www.cubicweb.org">
+  <img alt="cubicweb logo" src="../_static/cubicweb.png"/>
+ </a>
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="ajax.html" title="Ajax"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="views/wdoc.html" title="Online documentation system"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">CubicWeb 3.18.3</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Web side development</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Configuring the user interface</a><ul>
+<li><a class="reference internal" href="#module-cubicweb.rtags">Relation tags</a></li>
+<li><a class="reference internal" href="#the-uicfg-module">The uicfg module</a></li>
+<li><a class="reference internal" href="#module-cubicweb.web.uihelper">The uihelper module</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="views/wdoc.html"
+                        title="previous chapter">Online documentation system</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="ajax.html"
+                        title="next chapter">Ajax</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/devweb/rtags.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="configuring-the-user-interface">
+<h1>Configuring the user interface<a class="headerlink" href="#configuring-the-user-interface" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-cubicweb.rtags">
+<span id="id1"></span><span id="relation-tags"></span><h2>Relation tags<a class="headerlink" href="#module-cubicweb.rtags" title="Permalink to this headline">¶</a></h2>
+<p>A RelationTag object is an object which allows to link a configuration
+information to a relation definition. For instance, the standard
+primary view uses a RelationTag object (uicfg.primaryview_section) to
+get the section to display relations.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># display ``entry_of`` relations in the ``relations`` section in the ``BlogEntry`` primary view</span>
+<span class="n">uicfg</span><span class="o">.</span><span class="n">primaryview_section</span><span class="o">.</span><span class="n">tag_subject_of</span><span class="p">((</span><span class="s">&#39;BlogEntry&#39;</span><span class="p">,</span> <span class="s">&#39;entry_of&#39;</span><span class="p">,</span> <span class="s">&#39;*&#39;</span><span class="p">),</span>
+                                          <span class="s">&#39;relations&#39;</span><span class="p">)</span>
+
+<span class="c"># hide every relation ``entry_of`` in the ``Blog`` primary view</span>
+<span class="n">uicfg</span><span class="o">.</span><span class="n">primaryview_section</span><span class="o">.</span><span class="n">tag_object_of</span><span class="p">((</span><span class="s">&#39;*&#39;</span><span class="p">,</span> <span class="s">&#39;entry_of&#39;</span><span class="p">,</span> <span class="s">&#39;Blog&#39;</span><span class="p">),</span> <span class="s">&#39;hidden&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Three primitives are defined:</dt>
+<dd><ul class="first last simple">
+<li><tt class="docutils literal"><span class="pre">tag_subject_of</span></tt> tag a relation in the subject&#8217;s context</li>
+<li><tt class="docutils literal"><span class="pre">tag_object_of</span></tt> tag a relation in the object&#8217;s context</li>
+<li><tt class="docutils literal"><span class="pre">tag_attribute</span></tt> shortcut for tag_subject_of</li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="the-uicfg-module">
+<span id="uicfg"></span><h2>The uicfg module<a class="headerlink" href="#the-uicfg-module" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The part of uicfg that deals with primary views is in the
+<a class="reference internal" href="views/primary.html#primary-view-configuration"><em>Primary view configuration</em></a> chapter.</p>
+</div>
+<span class="target" id="module-cubicweb.web.uicfg"></span><p>This module has been moved to web.views.uicfg.</p>
+</div>
+<div class="section" id="module-cubicweb.web.uihelper">
+<span id="the-uihelper-module"></span><h2>The uihelper module<a class="headerlink" href="#module-cubicweb.web.uihelper" title="Permalink to this headline">¶</a></h2>
+<p>This module provide highlevel helpers to avoid uicfg boilerplate
+for most common tasks such as fields ordering, widget customization, etc.</p>
+<p>Here are a few helpers to customize <em>action box</em> rendering:</p>
+<dl class="function">
+<dt id="cubicweb.web.uihelper.append_to_addmenu">
+<tt class="descclassname">cubicweb.web.uihelper.</tt><tt class="descname">append_to_addmenu</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.uihelper.append_to_addmenu" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="cubicweb.web.uihelper.remove_from_addmenu">
+<tt class="descclassname">cubicweb.web.uihelper.</tt><tt class="descname">remove_from_addmenu</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.uihelper.remove_from_addmenu" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>and a few other ones for <em>form configuration</em>:</p>
+<dl class="function">
+<dt id="cubicweb.web.uihelper.set_fields_order">
+<tt class="descclassname">cubicweb.web.uihelper.</tt><tt class="descname">set_fields_order</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.uihelper.set_fields_order" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="cubicweb.web.uihelper.hide_field">
+<tt class="descclassname">cubicweb.web.uihelper.</tt><tt class="descname">hide_field</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.uihelper.hide_field" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="cubicweb.web.uihelper.hide_fields">
+<tt class="descclassname">cubicweb.web.uihelper.</tt><tt class="descname">hide_fields</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.uihelper.hide_fields" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="cubicweb.web.uihelper.set_field_kwargs">
+<tt class="descclassname">cubicweb.web.uihelper.</tt><tt class="descname">set_field_kwargs</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.uihelper.set_field_kwargs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="cubicweb.web.uihelper.set_field">
+<tt class="descclassname">cubicweb.web.uihelper.</tt><tt class="descname">set_field</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.uihelper.set_field" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="cubicweb.web.uihelper.edit_inline">
+<tt class="descclassname">cubicweb.web.uihelper.</tt><tt class="descname">edit_inline</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.uihelper.edit_inline" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="cubicweb.web.uihelper.edit_as_attr">
+<tt class="descclassname">cubicweb.web.uihelper.</tt><tt class="descname">edit_as_attr</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.uihelper.edit_as_attr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="cubicweb.web.uihelper.set_muledit_editable">
+<tt class="descclassname">cubicweb.web.uihelper.</tt><tt class="descname">set_muledit_editable</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.uihelper.set_muledit_editable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>The module also provides a <a class="reference internal" href="#cubicweb.web.uihelper.FormConfig" title="cubicweb.web.uihelper.FormConfig"><tt class="xref py py-class docutils literal"><span class="pre">FormConfig</span></tt></a> base class that lets you gather
+uicfg declaration in the scope of a single class, which can sometimes
+be clearer to read than a bunch of sequential function calls.</p>
+<dl class="class">
+<dt id="cubicweb.web.uihelper.FormConfig">
+<em class="property">class </em><tt class="descclassname">cubicweb.web.uihelper.</tt><tt class="descname">FormConfig</tt><a class="headerlink" href="#cubicweb.web.uihelper.FormConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>helper base class to define uicfg rules on a given entity type.</p>
+<blockquote>
+<div><p>In all descriptions below, attributes list can either be a list of
+attribute names of a list of 2-tuples (relation name, role of
+the edited entity in the relation).</p>
+<p><strong>Attributes</strong></p>
+<dl class="docutils">
+<dt><tt class="xref py py-attr docutils literal"><span class="pre">etype</span></tt></dt>
+<dd>which entity type the form config is for. This attribute is <strong>mandatory</strong></dd>
+<dt><tt class="xref py py-attr docutils literal"><span class="pre">formtype</span></tt></dt>
+<dd>the formtype the class tries toc customize (i.e. <em>main</em>, <em>inlined</em>, or <em>muledit</em>),
+default is <em>main</em>.</dd>
+<dt><tt class="xref py py-attr docutils literal"><span class="pre">hidden</span></tt></dt>
+<dd>the list of attributes or relations to hide.</dd>
+<dt><tt class="xref py py-attr docutils literal"><span class="pre">rels_as_attrs</span></tt></dt>
+<dd>the list of attributes to edit in the <em>attributes</em> section.</dd>
+<dt><tt class="xref py py-attr docutils literal"><span class="pre">inlined</span></tt></dt>
+<dd>the list of attributes to edit in the <em>inlined</em> section.</dd>
+<dt><tt class="xref py py-attr docutils literal"><span class="pre">fields_order</span></tt></dt>
+<dd>the list of attributes to edit, in the desired order. Unspecified
+fields will be displayed after specified ones, their order
+being consistent with the schema definition.</dd>
+<dt><tt class="xref py py-attr docutils literal"><span class="pre">widgets</span></tt></dt>
+<dd>a dictionary mapping attribute names to widget instances.</dd>
+<dt><tt class="xref py py-attr docutils literal"><span class="pre">fields</span></tt></dt>
+<dd>a dictionary mapping attribute names to field instances.</dd>
+<dt><tt class="xref py py-attr docutils literal"><span class="pre">uicfg_afs</span></tt></dt>
+<dd>an instance of <tt class="docutils literal"><span class="pre">cubicweb.web.uicfg.AutoformSectionRelationTags</span></tt>
+Default is None, meaning <tt class="docutils literal"><span class="pre">cubicweb.web.uicfg.autoform_section</span></tt> is used.</dd>
+<dt><tt class="xref py py-attr docutils literal"><span class="pre">uicfg_aff</span></tt></dt>
+<dd>an instance of <tt class="docutils literal"><span class="pre">cubicweb.web.uicfg.AutoformFieldTags</span></tt>
+Default is None, meaning <tt class="docutils literal"><span class="pre">cubicweb.web.uicfg.autoform_field</span></tt> is used.</dd>
+<dt><tt class="xref py py-attr docutils literal"><span class="pre">uicfg_affk</span></tt></dt>
+<dd>an instance of <tt class="docutils literal"><span class="pre">cubicweb.web.uicfg.AutoformFieldKwargsTags</span></tt>
+Default is None, meaning <tt class="docutils literal"><span class="pre">cubicweb.web.uicfg.autoform_field_kwargs</span></tt> is used.</dd>
+</dl>
+<p>Examples:</p>
+</div></blockquote>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">cubicweb.web</span> <span class="kn">import</span> <span class="n">uihelper</span><span class="p">,</span> <span class="n">formwidgets</span> <span class="k">as</span> <span class="n">fwdgs</span>
+
+<span class="k">class</span> <span class="nc">LinkFormConfig</span><span class="p">(</span><span class="n">uihelper</span><span class="o">.</span><span class="n">FormConfig</span><span class="p">):</span>
+    <span class="n">etype</span> <span class="o">=</span> <span class="s">&#39;Link&#39;</span>
+    <span class="n">hidden</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;title&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">,</span> <span class="s">&#39;embed&#39;</span><span class="p">)</span>
+    <span class="n">widgets</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">url</span><span class="o">=</span><span class="n">fwdgs</span><span class="o">.</span><span class="n">TextInput</span><span class="p">(</span><span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;size&#39;</span><span class="p">:</span><span class="mi">40</span><span class="p">}),</span>
+        <span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">UserFormConfig</span><span class="p">(</span><span class="n">uihelper</span><span class="o">.</span><span class="n">FormConfig</span><span class="p">):</span>
+    <span class="n">etype</span> <span class="o">=</span> <span class="s">&#39;CWUser&#39;</span>
+    <span class="n">hidden</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;login&#39;</span><span class="p">,)</span>
+    <span class="n">rels_as_attrs</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;in_group&#39;</span><span class="p">,)</span>
+    <span class="n">fields_order</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;firstname&#39;</span><span class="p">,</span> <span class="s">&#39;surname&#39;</span><span class="p">,</span> <span class="s">&#39;in_group&#39;</span><span class="p">,</span> <span class="s">&#39;use_email&#39;</span><span class="p">)</span>
+    <span class="n">inlined</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;use_email&#39;</span><span class="p">,)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="ajax.html" title="Ajax"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="views/wdoc.html" title="Online documentation system"
+             >previous</a> |</li>
+        <li><a href="../index.html">CubicWeb 3.18.3</a> &raquo;</li>
+          <li><a href="index.html" >Web side development</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2001-2014, Logilab.
+      Last updated on Mar 11, 2014.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

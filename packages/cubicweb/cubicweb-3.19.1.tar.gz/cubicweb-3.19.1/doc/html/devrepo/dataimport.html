@@ -1,0 +1,157 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Dataimport &mdash; CubicWeb 3.18.3</title>
+    
+    <link rel="stylesheet" href="../_static/lglb-sphinx-doc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '3.18.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="CubicWeb 3.18.3" href="../index.html" /> 
+  </head>
+  <body>
+<div class="header">
+ <a href="http://www.cubicweb.org">
+  <img alt="cubicweb logo" src="../_static/cubicweb.png"/>
+ </a>
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">CubicWeb 3.18.3</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Dataimport</a><ul>
+<li><a class="reference internal" href="#objectstore">ObjectStore</a></li>
+<li><a class="reference internal" href="#rqlobjectstore">RQLObjectStore</a></li>
+<li><a class="reference internal" href="#nohookrqlobjectstore">NoHookRQLObjectStore</a></li>
+<li><a class="reference internal" href="#sqlgenobjectstore">SQLGenObjectStore</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/devrepo/dataimport.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <p>. -<em>- coding: utf-8 -</em>-</p>
+<div class="section" id="dataimport">
+<span id="id1"></span><h1>Dataimport<a class="headerlink" href="#dataimport" title="Permalink to this headline">¶</a></h1>
+<p><em>CubicWeb</em> is designed to manipulate huge of amount of data, and provides helper functions to do so.
+These functions insert data within different levels of the <em>CubicWeb</em> API,
+allowing different speed/security tradeoffs. Those keeping all the <em>CubicWeb</em> hooks
+and security will be slower but the possible errors in insertion
+(bad data types, integrity error, ...) will be raised.</p>
+<p>These dataimport function are provided in the file <cite>dataimport.py</cite>.</p>
+<p>All the stores have the following API:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">store</span> <span class="o">=</span> <span class="n">ObjectStore</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">user</span> <span class="o">=</span> <span class="n">store</span><span class="o">.</span><span class="n">create_entity</span><span class="p">(</span><span class="s">&#39;CWUser&#39;</span><span class="p">,</span> <span class="n">login</span><span class="o">=</span><span class="s">u&#39;johndoe&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">group</span> <span class="o">=</span> <span class="n">store</span><span class="o">.</span><span class="n">create_entity</span><span class="p">(</span><span class="s">&#39;CWUser&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">u&#39;unknown&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">store</span><span class="o">.</span><span class="n">relate</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">eid</span><span class="p">,</span> <span class="s">&#39;in_group&#39;</span><span class="p">,</span> <span class="n">group</span><span class="o">.</span><span class="n">eid</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="section" id="objectstore">
+<h2>ObjectStore<a class="headerlink" href="#objectstore" title="Permalink to this headline">¶</a></h2>
+<p>This store keeps objects in memory for <em>faster</em> validation. It may be useful
+in development mode. However, as it will not enforce the constraints of the schema,
+it may miss some problems.</p>
+</div>
+<div class="section" id="rqlobjectstore">
+<h2>RQLObjectStore<a class="headerlink" href="#rqlobjectstore" title="Permalink to this headline">¶</a></h2>
+<p>This store works with an actual RQL repository, and it may be used in production mode.</p>
+</div>
+<div class="section" id="nohookrqlobjectstore">
+<h2>NoHookRQLObjectStore<a class="headerlink" href="#nohookrqlobjectstore" title="Permalink to this headline">¶</a></h2>
+<p>This store works similarly to the <em>RQLObjectStore</em> but bypasses some <em>CubicWeb</em> hooks to be faster.</p>
+</div>
+<div class="section" id="sqlgenobjectstore">
+<h2>SQLGenObjectStore<a class="headerlink" href="#sqlgenobjectstore" title="Permalink to this headline">¶</a></h2>
+<p>This store relies on <em>COPY FROM</em>/execute many sql commands to directly push data using SQL commands
+rather than using the whole <em>CubicWeb</em> API. For now, <strong>it only works with PostgresSQL</strong> as it requires
+the <em>COPY FROM</em> command.</p>
+<p>The API is similar to the other stores, but <strong>it requires a flush</strong> after some imports to copy data
+in the database (these flushes may be multiples through the processes, or be done only once at the
+end if there is no memory issue):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">store</span> <span class="o">=</span> <span class="n">SQLGenObjectStore</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">store</span><span class="o">.</span><span class="n">create_entity</span><span class="p">(</span><span class="s">&#39;Person&#39;</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">store</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">CubicWeb 3.18.3</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2001-2014, Logilab.
+      Last updated on Mar 11, 2014.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

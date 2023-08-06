@@ -1,0 +1,724 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Table views &mdash; CubicWeb 3.18.3</title>
+    
+    <link rel="stylesheet" href="../../_static/lglb-sphinx-doc.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '3.18.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="CubicWeb 3.18.3" href="../../index.html" />
+    <link rel="up" title="The View system" href="index.html" />
+    <link rel="next" title="XML and RSS views" href="xmlrss.html" />
+    <link rel="prev" title="Boxes" href="boxes.html" /> 
+  </head>
+  <body>
+<div class="header">
+ <a href="http://www.cubicweb.org">
+  <img alt="cubicweb logo" src="../../_static/cubicweb.png"/>
+ </a>
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="xmlrss.html" title="XML and RSS views"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="boxes.html" title="Boxes"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">CubicWeb 3.18.3</a> &raquo;</li>
+          <li><a href="../index.html" >Web side development</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">The View system</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Table views</a><ul>
+<li><a class="reference internal" href="#example">Example</a></li>
+<li><a class="reference internal" href="#pro-cons-of-each-approach">Pro/cons of each approach</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="boxes.html"
+                        title="previous chapter">Boxes</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="xmlrss.html"
+                        title="next chapter">XML and RSS views</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/devweb/views/table.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-cubicweb.web.views.tableview">
+<span id="table-views"></span><h1>Table views<a class="headerlink" href="#module-cubicweb.web.views.tableview" title="Permalink to this headline">¶</a></h1>
+<p>This module contains table views, with the following features that may be
+provided (depending on the used implementation):</p>
+<ul class="simple">
+<li>facets filtering</li>
+<li>pagination</li>
+<li>actions menu</li>
+<li>properly sortable content</li>
+<li>odd/row/hover line styles</li>
+</ul>
+<p>The three main implementation are described below. Each implementation is
+suitable for a particular case, but they each attempt to display tables that
+looks similar.</p>
+<dl class="class">
+<dt id="cubicweb.web.views.tableview.RsetTableView">
+<em class="property">class </em><tt class="descclassname">cubicweb.web.views.tableview.</tt><tt class="descname">RsetTableView</tt><big>(</big><em>req=None</em>, <em>rset=None</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.tableview.RsetTableView" title="Permalink to this definition">¶</a></dt>
+<dd><p>This table view accepts any non-empty rset. It uses introspection on the
+result set to compute column names and the proper way to display the cells.</p>
+<p>It is highly configurable and accepts a wealth of options, but take care to
+check what you&#8217;re trying to achieve wouldn&#8217;t be a job for the
+<a class="reference internal" href="#cubicweb.web.views.tableview.EntityTableView" title="cubicweb.web.views.tableview.EntityTableView"><tt class="xref py py-class docutils literal"><span class="pre">EntityTableView</span></tt></a>. Basically the question is: does this view should
+be tied to the result set query&#8217;s shape or no? If yes, than you&#8217;re fine. If
+no, you should take a look at the other table implementation.</p>
+<p>The following class attributes may be used to control the table:</p>
+<ul class="simple">
+<li><cite>finalvid</cite>, a view identifier that should be called on final entities
+(e.g. attribute values). Default to &#8216;final&#8217;.</li>
+<li><cite>nonfinalvid</cite>, a view identifier that should be called on
+entities. Default to &#8216;incontext&#8217;.</li>
+<li><cite>displaycols</cite>, if not <cite>None</cite>, should be a list of rset&#8217;s columns to be
+displayed.</li>
+<li><cite>headers</cite>, if not <cite>None</cite>, should be a list of headers for the table&#8217;s
+columns.  <cite>None</cite> values in the list will be replaced by computed column
+names.</li>
+<li><cite>cellvids</cite>, if not <cite>None</cite>, should be a dictionary with table column index
+as key and a view identifier as value, telling the view that should be
+used in the given column.</li>
+</ul>
+<p>Notice <cite>displaycols</cite>, <cite>headers</cite> and <cite>cellvids</cite> may be specified at selection
+time but then the table won&#8217;t have pagination and shouldn&#8217;t be configured to
+display the facets filter nor actions (as they wouldn&#8217;t behave as expected).</p>
+<p>This table class use the <a class="reference internal" href="#cubicweb.web.views.tableview.RsetTableView.RsetTableColRenderer" title="cubicweb.web.views.tableview.RsetTableView.RsetTableColRenderer"><tt class="xref py py-class docutils literal"><span class="pre">RsetTableColRenderer</span></tt></a> as default column
+renderer.</p>
+<dl class="class">
+<dt id="cubicweb.web.views.tableview.RsetTableView.RsetTableColRenderer">
+<em class="property">class </em><tt class="descname">RsetTableColRenderer</tt><big>(</big><em>cellvid</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.tableview.RsetTableView.RsetTableColRenderer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default renderer for <a class="reference internal" href="#cubicweb.web.views.tableview.RsetTableView" title="cubicweb.web.views.tableview.RsetTableView"><tt class="xref py py-class docutils literal"><span class="pre">RsetTableView</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cubicweb.web.views.tableview.RsetTableView.default_column_renderer_class">
+<tt class="descclassname">RsetTableView.</tt><tt class="descname">default_column_renderer_class</tt><a class="headerlink" href="#cubicweb.web.views.tableview.RsetTableView.default_column_renderer_class" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#cubicweb.web.views.tableview.RsetTableView.RsetTableColRenderer" title="cubicweb.web.views.tableview.RsetTableView.RsetTableColRenderer"><tt class="xref py py-class docutils literal"><span class="pre">RsetTableColRenderer</span></tt></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cubicweb.web.views.tableview.RsetTableView.main_var_index">
+<tt class="descclassname">RsetTableView.</tt><tt class="descname">main_var_index</tt><big>(</big><big>)</big><a class="headerlink" href="#cubicweb.web.views.tableview.RsetTableView.main_var_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the index of the first non-attribute variable among the RQL
+selected variables</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cubicweb.web.views.tableview.RsetTableView.table_size">
+<tt class="descclassname">RsetTableView.</tt><tt class="descname">table_size</tt><a class="headerlink" href="#cubicweb.web.views.tableview.RsetTableView.table_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>return the number of rows (header excluded) to be displayed</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="cubicweb.web.views.tableview.EntityTableView">
+<em class="property">class </em><tt class="descclassname">cubicweb.web.views.tableview.</tt><tt class="descname">EntityTableView</tt><big>(</big><em>req=None</em>, <em>rset=None</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.tableview.EntityTableView" title="Permalink to this definition">¶</a></dt>
+<dd><p>This abstract table view is designed to be used with an
+<tt class="xref py py-class docutils literal"><span class="pre">is_instance()</span></tt> or <tt class="xref py py-class docutils literal"><span class="pre">adaptable</span></tt> predicate, hence doesn&#8217;t depend
+the result set shape as the <a class="reference internal" href="#cubicweb.web.views.tableview.RsetTableView" title="cubicweb.web.views.tableview.RsetTableView"><tt class="xref py py-class docutils literal"><span class="pre">RsetTableView</span></tt></a> does.</p>
+<p>It will display columns that should be defined using the <cite>columns</cite> class
+attribute containing a list of column ids. By default, each column is
+renderered by <a class="reference internal" href="#cubicweb.web.views.tableview.EntityTableView.EntityTableColRenderer" title="cubicweb.web.views.tableview.EntityTableView.EntityTableColRenderer"><tt class="xref py py-class docutils literal"><span class="pre">EntityTableColRenderer</span></tt></a> which consider that the column
+id is an attribute of the table&#8217;s main entity (ie the one for which the view
+is selected).</p>
+<p>You may wish to specify <a class="reference internal" href="#cubicweb.web.views.tableview.MainEntityColRenderer" title="cubicweb.web.views.tableview.MainEntityColRenderer"><tt class="xref py py-class docutils literal"><span class="pre">MainEntityColRenderer</span></tt></a> or
+<a class="reference internal" href="#cubicweb.web.views.tableview.RelatedEntityColRenderer" title="cubicweb.web.views.tableview.RelatedEntityColRenderer"><tt class="xref py py-class docutils literal"><span class="pre">RelatedEntityColRenderer</span></tt></a> renderer for a column in the
+<tt class="xref py py-attr docutils literal"><span class="pre">column_renderers</span></tt> dictionary.</p>
+<dl class="class">
+<dt id="cubicweb.web.views.tableview.EntityTableView.EntityTableColRenderer">
+<em class="property">class </em><tt class="descname">EntityTableColRenderer</tt><big>(</big><em>renderfunc=None</em>, <em>sortfunc=None</em>, <em>sortable=None</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.tableview.EntityTableView.EntityTableColRenderer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default column renderer for <a class="reference internal" href="#cubicweb.web.views.tableview.EntityTableView" title="cubicweb.web.views.tableview.EntityTableView"><tt class="xref py py-class docutils literal"><span class="pre">EntityTableView</span></tt></a>.</p>
+<p>You may use the <tt class="xref py py-meth docutils literal"><span class="pre">entity()</span></tt> method to retrieve the main entity for a
+given row number.</p>
+<dl class="method">
+<dt id="cubicweb.web.views.tableview.EntityTableView.EntityTableColRenderer.EntityTableColRenderer.entity">
+<tt class="descclassname">EntityTableColRenderer.</tt><tt class="descname">entity</tt><big>(</big><em>rownum</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.tableview.EntityTableView.EntityTableColRenderer.EntityTableColRenderer.entity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience method returning the table&#8217;s main entity.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cubicweb.web.views.tableview.EntityTableView.EntityTableColRenderer.EntityTableColRenderer.render_entity">
+<tt class="descclassname">EntityTableColRenderer.</tt><tt class="descname">render_entity</tt><big>(</big><em>w</em>, <em>entity</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.tableview.EntityTableView.EntityTableColRenderer.EntityTableColRenderer.render_entity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sort value if <cite>renderfunc</cite> nor <cite>sortfunc</cite> specified at
+initialization.</p>
+<p>This default implementation consider column id is an entity attribute
+and print its value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cubicweb.web.views.tableview.EntityTableView.EntityTableColRenderer.EntityTableColRenderer.entity_sortvalue">
+<tt class="descclassname">EntityTableColRenderer.</tt><tt class="descname">entity_sortvalue</tt><big>(</big><em>entity</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.tableview.EntityTableView.EntityTableColRenderer.EntityTableColRenderer.entity_sortvalue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cell rendering implementation if <cite>renderfunc</cite> nor <cite>sortfunc</cite>
+specified at initialization.</p>
+<p>This default implementation consider column id is an entity attribute
+and return its sort value by calling <cite>entity.sortvalue(colid)</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="cubicweb.web.views.tableview.MainEntityColRenderer">
+<em class="property">class </em><tt class="descclassname">cubicweb.web.views.tableview.</tt><tt class="descname">MainEntityColRenderer</tt><big>(</big><em>vid='incontext'</em>, <em>addcount=True</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.tableview.MainEntityColRenderer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Renderer to be used for the column displaying the &#8216;main entity&#8217; of a
+<a class="reference internal" href="#cubicweb.web.views.tableview.EntityTableView" title="cubicweb.web.views.tableview.EntityTableView"><tt class="xref py py-class docutils literal"><span class="pre">EntityTableView</span></tt></a>.</p>
+<p>By default display it using the &#8216;incontext&#8217; view. You may specify another
+view identifier using the <cite>vid</cite> argument.</p>
+<p>If header not specified, it would be built using entity types in the main
+column.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="cubicweb.web.views.tableview.RelatedEntityColRenderer">
+<em class="property">class </em><tt class="descclassname">cubicweb.web.views.tableview.</tt><tt class="descname">RelatedEntityColRenderer</tt><big>(</big><em>getrelated</em>, <em>addcount=False</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.tableview.RelatedEntityColRenderer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Renderer to be used for column displaying an entity related the &#8216;main
+entity&#8217; of a <a class="reference internal" href="#cubicweb.web.views.tableview.EntityTableView" title="cubicweb.web.views.tableview.EntityTableView"><tt class="xref py py-class docutils literal"><span class="pre">EntityTableView</span></tt></a>.</p>
+<p>By default display it using the &#8216;incontext&#8217; view. You may specify another
+view identifier using the <cite>vid</cite> argument.</p>
+<p>If header not specified, it would be built by translating the column id.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="cubicweb.web.views.tableview.RelationColRenderer">
+<em class="property">class </em><tt class="descclassname">cubicweb.web.views.tableview.</tt><tt class="descname">RelationColRenderer</tt><big>(</big><em>role='subject'</em>, <em>vid='csv'</em>, <em>subvid=None</em>, <em>fallbackvid='empty-cell'</em>, <em>is_rtype_view=False</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.tableview.RelationColRenderer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Renderer to be used for column displaying a list of entities related the
+&#8216;main entity&#8217; of a <a class="reference internal" href="#cubicweb.web.views.tableview.EntityTableView" title="cubicweb.web.views.tableview.EntityTableView"><tt class="xref py py-class docutils literal"><span class="pre">EntityTableView</span></tt></a>. By default, the main entity is
+considered as the subject of the relation but you may specify otherwise
+using the <cite>role</cite> argument.</p>
+<p>By default display the related rset using the &#8216;csv&#8217; view, using
+&#8216;outofcontext&#8217; sub-view for each entity. You may specify another view
+identifier using respectivly the <cite>vid</cite> and <cite>subvid</cite> arguments.</p>
+<p>If you specify a &#8216;rtype view&#8217;, such as &#8216;reledit&#8217;, you should add a
+is_rtype_view=True parameter.</p>
+<p>If header not specified, it would be built by translating the column id,
+properly considering role.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cubicweb.web.views.tableview.EntityTableView.default_column_renderer_class">
+<tt class="descclassname">EntityTableView.</tt><tt class="descname">default_column_renderer_class</tt><a class="headerlink" href="#cubicweb.web.views.tableview.EntityTableView.default_column_renderer_class" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#cubicweb.web.views.tableview.EntityTableView.EntityTableColRenderer" title="cubicweb.web.views.tableview.EntityTableView.EntityTableColRenderer"><tt class="xref py py-class docutils literal"><span class="pre">EntityTableColRenderer</span></tt></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cubicweb.web.views.tableview.EntityTableView.entity">
+<tt class="descclassname">EntityTableView.</tt><tt class="descname">entity</tt><big>(</big><em>rownum</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.tableview.EntityTableView.entity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the table&#8217;s main entity</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="cubicweb.web.views.pyviews.PyValTableView">
+<em class="property">class </em><tt class="descclassname">cubicweb.web.views.pyviews.</tt><tt class="descname">PyValTableView</tt><big>(</big><em>req</em>, <em>pyvalue</em>, <em>headers=None</em>, <em>cssclass=None</em>, <em>header_column_idx=None</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.pyviews.PyValTableView" title="Permalink to this definition">¶</a></dt>
+<dd><p>This table view is designed to be used a list of list of unicode values
+given as a mandatory <cite>pyvalue</cite> argument. Take care, content is NOT
+xml-escaped.</p>
+<p>It&#8217;s configured through the following selection arguments.</p>
+<p>If <cite>headers</cite> is specified, it is expected to be a list of headers to be
+inserted as first row (in &lt;thead&gt;).</p>
+<p><cite>header_column_idx</cite> may be used to specify a column index or a set of column
+indiced where values should be inserted inside &lt;th&gt; tag instead of &lt;td&gt;.</p>
+<p><cite>cssclass</cite> is the CSS class used on the &lt;table&gt; tag, and default to
+&#8216;listing&#8217; (so that the table will look similar to those generated by the
+table view).</p>
+<dl class="attribute">
+<dt id="cubicweb.web.views.pyviews.PyValTableView.default_column_renderer_class">
+<tt class="descname">default_column_renderer_class</tt><a class="headerlink" href="#cubicweb.web.views.pyviews.PyValTableView.default_column_renderer_class" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <tt class="xref py py-class docutils literal"><span class="pre">PyValTableColRenderer</span></tt></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cubicweb.web.views.pyviews.PyValTableView.table_size">
+<tt class="descname">table_size</tt><a class="headerlink" href="#cubicweb.web.views.pyviews.PyValTableView.table_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>return the number of rows (header excluded) to be displayed</p>
+</dd></dl>
+
+</dd></dl>
+
+<p>All those classes are rendered using a <em>layout</em>:</p>
+<dl class="class">
+<dt id="cubicweb.web.views.tableview.TableLayout">
+<em class="property">class </em><tt class="descclassname">cubicweb.web.views.tableview.</tt><tt class="descname">TableLayout</tt><big>(</big><em>req</em>, <em>view</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.tableview.TableLayout" title="Permalink to this definition">¶</a></dt>
+<dd><p>The default layout for table. When <cite>render</cite> is called, this will use
+the API described on <a class="reference internal" href="#cubicweb.web.views.tableview.TableMixIn" title="cubicweb.web.views.tableview.TableMixIn"><tt class="xref py py-class docutils literal"><span class="pre">TableMixIn</span></tt></a> to feed the generated table.</p>
+<p>This layout behaviour may be customized using the following attributes /
+selection arguments:</p>
+<ul class="simple">
+<li><cite>cssclass</cite>, a string that should be used as HTML class attribute. Default
+to &#8220;listing&#8221;.</li>
+<li><cite>needs_css</cite>, the CSS files that should be used together with this
+table. Default to (&#8216;cubicweb.tablesorter.css&#8217;, &#8216;cubicweb.tableview.css&#8217;).</li>
+<li><cite>needs_js</cite>, the Javascript files that should be used together with this
+table. Default to (&#8216;jquery.tablesorter.js&#8217;,)</li>
+<li><cite>display_filter</cite>, tells if the facets filter should be displayed when
+possible. Allowed values are:
+- <cite>None</cite>, don&#8217;t display it
+- &#8216;top&#8217;, display it above the table
+- &#8216;bottom&#8217;, display it below the table</li>
+<li><cite>display_actions</cite>, tells if a menu for available actions should be
+displayed when possible (see two following options). Allowed values are:
+- <cite>None</cite>, don&#8217;t display it
+- &#8216;top&#8217;, display it above the table
+- &#8216;bottom&#8217;, display it below the table</li>
+<li><cite>hide_filter</cite>, when true (the default), facets filter will be hidden by
+default, with an action in the actions menu allowing to show / hide it.</li>
+<li><cite>show_all_option</cite>, when true, a <em>show all results</em> link will be displayed
+below the navigation component.</li>
+<li><cite>add_view_actions</cite>, when true, actions returned by view.table_actions()
+will be included in the actions menu.</li>
+<li><cite>header_column_idx</cite>, if not <cite>None</cite>, should be a colum index or a set of
+column index where &lt;th&gt; tags should be generated instead of &lt;td&gt;</li>
+</ul>
+<dl class="attribute">
+<dt id="cubicweb.web.views.tableview.TableLayout.initial_load">
+<tt class="descname">initial_load</tt><a class="headerlink" href="#cubicweb.web.views.tableview.TableLayout.initial_load" title="Permalink to this definition">¶</a></dt>
+<dd><p>&lt;wrapped by the cachedproperty decorator&gt;
+We detect a bit heuristically if we are built for the first time or</p>
+<blockquote>
+<div>from subsequent calls by the form filter or by the pagination hooks.</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<p>There is by default only on table layout, using the &#8216;table_layout&#8217; identifier,
+that is referenced by table views
+<tt class="xref py py-attr docutils literal"><span class="pre">cubicweb.web.views.tableview.TableMixIn.layout_id</span></tt>.  If you want to
+customize the look and feel of your table, you can either replace the default
+one by yours, having multiple variants with proper selectors, or change the
+<cite>layout_id</cite> identifier of your table to use your table specific implementation.</p>
+<p>Notice you can gives options to the layout using a <cite>layout_args</cite> dictionary on
+your class.</p>
+<p>If you can still find a view that suit your needs, you should take a look at the
+class below that is the common abstract base class for the three views defined
+above and implements you own class.</p>
+<dl class="class">
+<dt id="cubicweb.web.views.tableview.TableMixIn">
+<em class="property">class </em><tt class="descclassname">cubicweb.web.views.tableview.</tt><tt class="descname">TableMixIn</tt><a class="headerlink" href="#cubicweb.web.views.tableview.TableMixIn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract mix-in class for layout based tables.</p>
+<p>This default implementation&#8217;s call method simply delegate to
+meth:<cite>layout_render</cite> that will select the renderer whose identifier is given
+by the <tt class="xref py py-attr docutils literal"><span class="pre">layout_id</span></tt> attribute.</p>
+<p>Then it provides some default implementation for various parts of the API
+used by that layout.</p>
+<p>Abstract method you will have to override is:</p>
+<dl class="method">
+<dt id="cubicweb.web.views.tableview.TableMixIn.build_column_renderers">
+<tt class="descname">build_column_renderers</tt><big>(</big><big>)</big><a class="headerlink" href="#cubicweb.web.views.tableview.TableMixIn.build_column_renderers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of column renderers, one for each column to be
+rendered. Prototype of a column renderer is described below:</p>
+<dl class="class">
+<dt id="cubicweb.web.views.tableview.TableMixIn.AbstractColumnRenderer">
+<em class="property">class </em><tt class="descname">AbstractColumnRenderer</tt><big>(</big><em>header=None</em>, <em>addcount=False</em>, <em>trheader=True</em>, <em>escapeheader=True</em>, <em>sortable=True</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.tableview.TableMixIn.AbstractColumnRenderer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract base class for column renderer. Interface of a column renderer follows:</p>
+<dl class="method">
+<dt id="cubicweb.web.views.tableview.TableMixIn.AbstractColumnRenderer.AbstractColumnRenderer.bind">
+<tt class="descclassname">AbstractColumnRenderer.</tt><tt class="descname">bind</tt><big>(</big><em>view</em>, <em>colid</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.tableview.TableMixIn.AbstractColumnRenderer.AbstractColumnRenderer.bind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bind the column renderer to its view. This is where <cite>_cw</cite>, <cite>view</cite>,
+<cite>colid</cite> are set and the method to override if you want to add more
+view/request depending attributes on your column render.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cubicweb.web.views.tableview.TableMixIn.AbstractColumnRenderer.AbstractColumnRenderer.render_header">
+<tt class="descclassname">AbstractColumnRenderer.</tt><tt class="descname">render_header</tt><big>(</big><em>w</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.tableview.TableMixIn.AbstractColumnRenderer.AbstractColumnRenderer.render_header" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write label for the specified column by calling w().</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cubicweb.web.views.tableview.TableMixIn.AbstractColumnRenderer.AbstractColumnRenderer.render_cell">
+<tt class="descclassname">AbstractColumnRenderer.</tt><tt class="descname">render_cell</tt><big>(</big><em>w</em>, <em>rownum</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.tableview.TableMixIn.AbstractColumnRenderer.AbstractColumnRenderer.render_cell" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write value for the specified cell by calling w().</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>rownum</strong> &#8211; the row number in the table</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cubicweb.web.views.tableview.TableMixIn.AbstractColumnRenderer.AbstractColumnRenderer.sortvalue">
+<tt class="descclassname">AbstractColumnRenderer.</tt><tt class="descname">sortvalue</tt><big>(</big><em>_rownum</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.tableview.TableMixIn.AbstractColumnRenderer.AbstractColumnRenderer.sortvalue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return typed value to be used for sorting on the specified column.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>rownum</strong> &#8211; the row number in the table</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<p>Attributes on this base class are:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Attr :</th><td class="field-body"><cite>header</cite>, the column header. If None, default to <cite>_(colid)</cite></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Attr :</th><td class="field-body"><cite>addcount</cite>, if True, add the table size in parenthezis beside the header</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Attr :</th><td class="field-body"><cite>trheader</cite>, should the header be translated</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Attr :</th><td class="field-body"><cite>escapeheader</cite>, should the header be xml_escaped</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Attr :</th><td class="field-body"><cite>sortable</cite>, tell if the column is sortable</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Attr :</th><td class="field-body"><cite>view</cite>, the table view</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Attr :</th><td class="field-body"><cite>_cw</cite>, the request object</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Attr :</th><td class="field-body"><cite>colid</cite>, the column identifier</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Attr :</th><td class="field-body"><cite>attributes</cite>, dictionary of attributes to put on the HTML tag when
+the cell is rendered</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<p>You may also want to overridde:</p>
+<dl class="attribute">
+<dt id="cubicweb.web.views.tableview.TableMixIn.table_size">
+<tt class="descclassname">TableMixIn.</tt><tt class="descname">table_size</tt><a class="headerlink" href="#cubicweb.web.views.tableview.TableMixIn.table_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the number of rows (header excluded) to be displayed.</p>
+<p>By default return the number of rows in the view&#8217;s result set. If your
+table isn&#8217;t reult set based, override this method.</p>
+</dd></dl>
+
+<p>The <tt class="xref py py-attr docutils literal"><span class="pre">has_headers</span></tt> boolean attribute tells if the table has some
+headers to be displayed. Default to <cite>True</cite>.</p>
+<dl class="method">
+<dt>
+<tt class="descclassname">TableMixIn.</tt><tt class="descname">build_column_renderers</tt><big>(</big><big>)</big></dt>
+<dd><p>Return a list of column renderers, one for each column to be
+rendered. Prototype of a column renderer is described below:</p>
+<dl class="class">
+<dt>
+<em class="property">class </em><tt class="descname">AbstractColumnRenderer</tt><big>(</big><em>header=None</em>, <em>addcount=False</em>, <em>trheader=True</em>, <em>escapeheader=True</em>, <em>sortable=True</em><big>)</big></dt>
+<dd><p>Abstract base class for column renderer. Interface of a column renderer follows:</p>
+<dl class="method">
+<dt>
+<tt class="descclassname">AbstractColumnRenderer.</tt><tt class="descname">bind</tt><big>(</big><em>view</em>, <em>colid</em><big>)</big></dt>
+<dd><p>Bind the column renderer to its view. This is where <cite>_cw</cite>, <cite>view</cite>,
+<cite>colid</cite> are set and the method to override if you want to add more
+view/request depending attributes on your column render.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descclassname">AbstractColumnRenderer.</tt><tt class="descname">render_header</tt><big>(</big><em>w</em><big>)</big></dt>
+<dd><p>Write label for the specified column by calling w().</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descclassname">AbstractColumnRenderer.</tt><tt class="descname">render_cell</tt><big>(</big><em>w</em>, <em>rownum</em><big>)</big></dt>
+<dd><p>Write value for the specified cell by calling w().</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>rownum</strong> &#8211; the row number in the table</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descclassname">AbstractColumnRenderer.</tt><tt class="descname">sortvalue</tt><big>(</big><em>_rownum</em><big>)</big></dt>
+<dd><p>Return typed value to be used for sorting on the specified column.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>rownum</strong> &#8211; the row number in the table</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<p>Attributes on this base class are:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Attr :</th><td class="field-body"><cite>header</cite>, the column header. If None, default to <cite>_(colid)</cite></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Attr :</th><td class="field-body"><cite>addcount</cite>, if True, add the table size in parenthezis beside the header</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Attr :</th><td class="field-body"><cite>trheader</cite>, should the header be translated</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Attr :</th><td class="field-body"><cite>escapeheader</cite>, should the header be xml_escaped</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Attr :</th><td class="field-body"><cite>sortable</cite>, tell if the column is sortable</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Attr :</th><td class="field-body"><cite>view</cite>, the table view</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Attr :</th><td class="field-body"><cite>_cw</cite>, the request object</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Attr :</th><td class="field-body"><cite>colid</cite>, the column identifier</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Attr :</th><td class="field-body"><cite>attributes</cite>, dictionary of attributes to put on the HTML tag when
+the cell is rendered</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="method">
+<dt id="cubicweb.web.views.tableview.TableMixIn.column_renderer">
+<tt class="descclassname">TableMixIn.</tt><tt class="descname">column_renderer</tt><big>(</big><em>colid</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.tableview.TableMixIn.column_renderer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a column renderer for column of the given id.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cubicweb.web.views.tableview.TableMixIn.domid">
+<tt class="descclassname">TableMixIn.</tt><tt class="descname">domid</tt><a class="headerlink" href="#cubicweb.web.views.tableview.TableMixIn.domid" title="Permalink to this definition">¶</a></dt>
+<dd><p>&lt;wrapped by the cachedproperty decorator&gt;</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cubicweb.web.views.tableview.TableMixIn.table_actions">
+<tt class="descclassname">TableMixIn.</tt><tt class="descname">table_actions</tt><big>(</big><big>)</big><a class="headerlink" href="#cubicweb.web.views.tableview.TableMixIn.table_actions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of actions (<tt class="xref py py-class docutils literal"><span class="pre">Link</span></tt>) that
+match the view&#8217;s result set, and return those in the &#8216;mainactions&#8217;
+category.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<tt class="descclassname">TableMixIn.</tt><tt class="descname">table_size</tt></dt>
+<dd><p>Return the number of rows (header excluded) to be displayed.</p>
+<p>By default return the number of rows in the view&#8217;s result set. If your
+table isn&#8217;t reult set based, override this method.</p>
+</dd></dl>
+
+</dd></dl>
+
+<div class="section" id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
+<p>Let us take an example from the timesheet cube:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">ActivityResourcesTable</span><span class="p">(</span><span class="n">EntityView</span><span class="p">):</span>
+    <span class="n">__regid__</span> <span class="o">=</span> <span class="s">&#39;activity.resources.table&#39;</span>
+    <span class="n">__select__</span> <span class="o">=</span> <span class="n">is_instance</span><span class="p">(</span><span class="s">&#39;Activity&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">showresource</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="n">eids</span> <span class="o">=</span> <span class="s">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cw_rset</span><span class="p">)</span>
+        <span class="n">rql</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;Any R,D,DUR,WO,DESCR,S,A, SN,RT,WT ORDERBY D DESC &#39;</span>
+               <span class="s">&#39;WHERE &#39;</span>
+               <span class="s">&#39;   A is Activity, A done_by R, R title RT, &#39;</span>
+               <span class="s">&#39;   A diem D, A duration DUR, &#39;</span>
+               <span class="s">&#39;   A done_for WO, WO title WT, &#39;</span>
+               <span class="s">&#39;   A description DESCR, A in_state S, S name SN, &#39;</span>
+               <span class="s">&#39;   A eid IN (</span><span class="si">%s</span><span class="s">)&#39;</span> <span class="o">%</span> <span class="n">eids</span><span class="p">)</span>
+        <span class="n">rset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cw</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">rql</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wview</span><span class="p">(</span><span class="s">&#39;resource.table&#39;</span><span class="p">,</span> <span class="n">rset</span><span class="p">,</span> <span class="s">&#39;null&#39;</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">ResourcesTable</span><span class="p">(</span><span class="n">RsetTableView</span><span class="p">):</span>
+    <span class="n">__regid__</span> <span class="o">=</span> <span class="s">&#39;resource.table&#39;</span>
+    <span class="c"># notice you may wish a stricter selector to check rql&#39;s shape</span>
+    <span class="n">__select__</span> <span class="o">=</span> <span class="n">is_instance</span><span class="p">(</span><span class="s">&#39;Resource&#39;</span><span class="p">)</span>
+    <span class="c"># my table headers</span>
+    <span class="n">headers</span>  <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Resource&#39;</span><span class="p">,</span> <span class="s">&#39;diem&#39;</span><span class="p">,</span> <span class="s">&#39;duration&#39;</span><span class="p">,</span> <span class="s">&#39;workpackage&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">,</span> <span class="s">&#39;state&#39;</span><span class="p">]</span>
+    <span class="c"># I want a table where attributes are editable (reledit inside)</span>
+    <span class="n">finalvid</span> <span class="o">=</span> <span class="s">&#39;editable-final&#39;</span>
+
+    <span class="n">cellvids</span> <span class="o">=</span> <span class="p">{</span><span class="mi">3</span><span class="p">:</span> <span class="s">&#39;editable-final&#39;</span><span class="p">}</span>
+    <span class="c"># display facets and actions with a menu</span>
+    <span class="n">layout_args</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;display_filter&#39;</span><span class="p">:</span> <span class="s">&#39;top&#39;</span><span class="p">,</span>
+                   <span class="s">&#39;add_view_actions&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>To obtain an editable table, you may specify the &#8216;editable-table&#8217; view identifier
+using some of <cite>cellvids</cite>, <cite>finalvid</cite> or <cite>nonfinalvid</cite>.</p>
+<p>The previous example results in:</p>
+<img alt="../../_images/views-table-shadow.png" src="../../_images/views-table-shadow.png" />
+<p>In order to activate table filter mechanism, the <cite>display_filter</cite> option is given
+as a layout argument. A small arrow will be displayed at the table&#8217;s top right
+corner. Clicking on <cite>show filter form</cite> action, will display the filter form as
+below:</p>
+<img alt="../../_images/views-table-filter-shadow.png" src="../../_images/views-table-filter-shadow.png" />
+<p>By the same way, you can display additional actions for the selected entities
+by setting <cite>add_view_actions</cite> layout option to <cite>True</cite>. This will add actions
+returned by the view&#8217;s <a class="reference internal" href="#cubicweb.web.views.tableview.TableMixIn.table_actions" title="cubicweb.web.views.tableview.TableMixIn.table_actions"><tt class="xref py py-meth docutils literal"><span class="pre">table_actions()</span></tt></a>.</p>
+<p>You can notice that all columns of the result set are not displayed. This is
+because of given <cite>headers</cite>, implying to display only columns from 0 to
+len(headers).</p>
+<p>Also Notice that the <cite>ResourcesTable</cite> view relies on a particular rql shape
+(which is not ensured by the way, the only checked thing is that the result set
+contains instance of the <cite>Resource</cite> type). That usually implies that you can&#8217;t
+use this view for user specific queries (e.g. generated by facets or typed
+manually).</p>
+<p>So another option would be to write this view using
+<a class="reference internal" href="#cubicweb.web.views.tableview.EntityTableView" title="cubicweb.web.views.tableview.EntityTableView"><tt class="xref py py-class docutils literal"><span class="pre">EntityTableView</span></tt></a>, as below.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">ResourcesTable</span><span class="p">(</span><span class="n">EntityTableView</span><span class="p">):</span>
+    <span class="n">__regid__</span> <span class="o">=</span> <span class="s">&#39;resource.table&#39;</span>
+    <span class="n">__select__</span> <span class="o">=</span> <span class="n">is_instance</span><span class="p">(</span><span class="s">&#39;Resource&#39;</span><span class="p">)</span>
+    <span class="c"># table columns definition</span>
+    <span class="n">columns</span>  <span class="o">=</span> <span class="p">[</span><span class="s">&#39;resource&#39;</span><span class="p">,</span> <span class="s">&#39;diem&#39;</span><span class="p">,</span> <span class="s">&#39;duration&#39;</span><span class="p">,</span> <span class="s">&#39;workpackage&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">,</span> <span class="s">&#39;in_state&#39;</span><span class="p">]</span>
+    <span class="c"># I want a table where attributes are editable (reledit inside)</span>
+    <span class="n">finalvid</span> <span class="o">=</span> <span class="s">&#39;editable-final&#39;</span>
+    <span class="c"># display facets and actions with a menu</span>
+    <span class="n">layout_args</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;display_filter&#39;</span><span class="p">:</span> <span class="s">&#39;top&#39;</span><span class="p">,</span>
+                   <span class="s">&#39;add_view_actions&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">workpackage_cell</span><span class="p">(</span><span class="n">entity</span><span class="p">):</span>
+        <span class="n">activity</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">reverse_done_in</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">activity</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="s">&#39;reledit&#39;</span><span class="p">,</span> <span class="n">rtype</span><span class="o">=</span><span class="s">&#39;done_for&#39;</span><span class="p">,</span> <span class="n">role</span><span class="o">=</span><span class="s">&#39;subject&#39;</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="n">w</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">workpackage_sortvalue</span><span class="p">(</span><span class="n">entity</span><span class="p">):</span>
+        <span class="n">activity</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">reverse_done_in</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">activity</span><span class="o">.</span><span class="n">done_for</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">sortvalue</span><span class="p">()</span>
+
+    <span class="n">column_renderers</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;resource&#39;</span><span class="p">:</span> <span class="n">MainEntityColRenderer</span><span class="p">(),</span>
+        <span class="s">&#39;workpackage&#39;</span><span class="p">:</span> <span class="n">EntityTableColRenderer</span><span class="p">(</span>
+           <span class="n">header</span><span class="o">=</span><span class="s">&#39;Workpackage&#39;</span><span class="p">,</span>
+           <span class="n">renderfunc</span><span class="o">=</span><span class="n">worpackage_cell</span><span class="p">,</span>
+           <span class="n">sortfunc</span><span class="o">=</span><span class="n">worpackage_sortvalue</span><span class="p">,),</span>
+        <span class="s">&#39;in_state&#39;</span><span class="p">:</span> <span class="n">EntityTableColRenderer</span><span class="p">(</span>
+           <span class="n">renderfunc</span><span class="o">=</span><span class="k">lambda</span> <span class="n">w</span><span class="p">,</span><span class="n">x</span><span class="p">:</span> <span class="n">w</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">cw_adapt_to</span><span class="p">(</span><span class="s">&#39;IWorkflowable&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">printable_state</span><span class="p">),</span>
+           <span class="n">sortfunc</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">cw_adapt_to</span><span class="p">(</span><span class="s">&#39;IWorkflowable&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">printable_state</span><span class="p">),</span>
+     <span class="p">}</span>
+</pre></div>
+</div>
+<p>Notice the following point:</p>
+<ul class="simple">
+<li><cite>cell_&lt;column&gt;(w, entity)</cite> will be searched for rendering the content of a
+cell. If not found, <cite>column</cite> is expected to be an attribute of <cite>entity</cite>.</li>
+<li><cite>cell_sortvalue_&lt;column&gt;(entity)</cite> should return a typed value to use for
+javascript sorting or None for not sortable columns (the default).</li>
+<li>The <tt class="xref py py-func docutils literal"><span class="pre">etable_entity_sortvalue()</span></tt> decorator will set a &#8216;sortvalue&#8217; function
+for the column containing the main entity (the one given as argument to all
+methods), which will call <cite>entity.sortvalue()</cite>.</li>
+<li>You can set a column header using the <tt class="xref py py-func docutils literal"><span class="pre">etable_header_title()</span></tt> decorator.
+This header will be translated. If it&#8217;s not an already existing msgid, think
+to mark it using <cite>_()</cite> (the example supposes headers are schema defined msgid).</li>
+</ul>
+</div>
+<div class="section" id="pro-cons-of-each-approach">
+<h2>Pro/cons of each approach<a class="headerlink" href="#pro-cons-of-each-approach" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="#cubicweb.web.views.tableview.EntityTableView" title="cubicweb.web.views.tableview.EntityTableView"><tt class="xref py py-class docutils literal"><span class="pre">EntityTableView</span></tt></a> and <tt class="xref py py-class docutils literal"><span class="pre">RsetableView</span></tt> provides basically the same
+set of features, though they don&#8217;t share the same properties. Let&#8217;s try to sum
+up pro and cons of each class.</p>
+<ul class="simple">
+<li><cite>EntityTableView</cite> view is:<ul>
+<li>more verbose, but usually easier to understand</li>
+<li>easily extended (easy to add/remove columns for instance)</li>
+<li>doesn&#8217;t rely on a particular rset shape. Simply give it a title and will be
+listed in the &#8216;possible views&#8217; box if any.</li>
+</ul>
+</li>
+<li><cite>RsetTableView</cite> view is:<ul>
+<li>hard to beat to display barely a result set, or for cases where some of
+<cite>headers</cite>, <cite>displaycols</cite> or <cite>cellvids</cite> could be defined to enhance the table
+while you don&#8217;t care about e.g. pagination or facets.</li>
+<li>hardly extensible, as you usually have to change places where the view is
+called to modify the RQL (hence the view&#8217;s result set shape).</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="xmlrss.html" title="XML and RSS views"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="boxes.html" title="Boxes"
+             >previous</a> |</li>
+        <li><a href="../../index.html">CubicWeb 3.18.3</a> &raquo;</li>
+          <li><a href="../index.html" >Web side development</a> &raquo;</li>
+          <li><a href="index.html" >The View system</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2001-2014, Logilab.
+      Last updated on Mar 11, 2014.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

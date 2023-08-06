@@ -1,0 +1,446 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Undoing changes in CubicWeb &mdash; CubicWeb 3.18.3</title>
+    
+    <link rel="stylesheet" href="../_static/lglb-sphinx-doc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '3.18.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="CubicWeb 3.18.3" href="../index.html" />
+    <link rel="up" title="Additional services" href="index.html" />
+    <link rel="next" title="Appendixes" href="../annexes/index.html" />
+    <link rel="prev" title="Additional services" href="index.html" /> 
+  </head>
+  <body>
+<div class="header">
+ <a href="http://www.cubicweb.org">
+  <img alt="cubicweb logo" src="../_static/cubicweb.png"/>
+ </a>
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../annexes/index.html" title="Appendixes"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Additional services"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">CubicWeb 3.18.3</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Additional services</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Undoing changes in CubicWeb</a><ul>
+<li><a class="reference internal" href="#what-s-undoing-in-a-cubicweb-application">What&#8217;s <em>undoing</em> in a CubicWeb application</a><ul>
+<li><a class="reference internal" href="#the-notion-transactions">The notion transactions</a></li>
+<li><a class="reference internal" href="#public-and-private-actions-within-a-transaction">Public and private actions within a transaction</a></li>
+<li><a class="reference internal" href="#in-dependent-transactions-the-simple-case">(In)dependent transactions : the simple case</a></li>
+<li><a class="reference internal" href="#more-complex-dependencies-between-transactions">More complex dependencies between transactions</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#the-undo-feature-for-cubicweb-end-users">The <em>undo feature</em> for CubicWeb end-users</a></li>
+<li><a class="reference internal" href="#the-undo-feature-for-cubicweb-application-developers">The <em>undo feature</em> for CubicWeb application developers</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#the-repository-side">The repository side</a></li>
+<li><a class="reference internal" href="#the-web-side">The web side</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#conclusion">Conclusion</a></li>
+<li><a class="reference internal" href="#notes">Notes</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Additional services</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../annexes/index.html"
+                        title="next chapter">Appendixes</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/additionnal_services/undo.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="undoing-changes-in-cubicweb">
+<h1>Undoing changes in CubicWeb<a class="headerlink" href="#undoing-changes-in-cubicweb" title="Permalink to this headline">¶</a></h1>
+<p>Many desktop applications offer the possibility for the user to
+undo its last changes : this <em>undo feature</em> has now been
+integrated into the CubicWeb framework. This document will
+introduce you to the <em>undo feature</em> both from the end-user and the
+application developer point of view.</p>
+<p>But because a semantic web application and a common desktop
+application are not the same thing at all, especially as far as
+undoing is concerned, we will first introduce <em>what</em> is the <em>undo
+feature</em> for now.</p>
+<div class="section" id="what-s-undoing-in-a-cubicweb-application">
+<h2>What&#8217;s <em>undoing</em> in a CubicWeb application<a class="headerlink" href="#what-s-undoing-in-a-cubicweb-application" title="Permalink to this headline">¶</a></h2>
+<p>What is an <em>undo feature</em> is quite intuitive in the context of a
+desktop application. But it is a bit subtler in the context of a
+Semantic Web application. This section introduces some of the main
+differences between a classical desktop and a Semantic Web
+applications to keep in mind in order to state precisely <em>what we
+want</em>.</p>
+<div class="section" id="the-notion-transactions">
+<h3>The notion transactions<a class="headerlink" href="#the-notion-transactions" title="Permalink to this headline">¶</a></h3>
+<p>A CubicWeb application acts upon an <em>Entity-Relationship</em> model,
+described by a schema. This allows to ensure some data integrity
+properties. It also implies that changes are made by all-or-none
+groups called <em>transactions</em>, such that the data integrity is
+preserved whether the transaction is completely applied <em>or</em> none
+of it is applied.</p>
+<p>A transaction can thus include more actions than just those
+directly required by the main purpose of the user.  For example,
+when a user <em>just</em> writes a new blog entry, the underlying
+<em>transaction</em> holds several <em>actions</em> as illustrated below :</p>
+<ul class="simple">
+<li>By admin on 2012/02/17 15:18 - Created Blog entry : Torototo<ol class="arabic">
+<li>Created Blog entry : Torototo</li>
+<li>Added relation : Torototo owned by admin</li>
+<li>Added relation : Torototo blog entry of Undo Blog</li>
+<li>Added relation : Torototo in state draft (draft)</li>
+<li>Added relation : Torototo created by admin</li>
+</ol>
+</li>
+</ul>
+<p>Because of the very nature (all-or-none) of the transactions, the
+&#8220;undoable stuff&#8221; are the transactions and not the actions !</p>
+</div>
+<div class="section" id="public-and-private-actions-within-a-transaction">
+<h3>Public and private actions within a transaction<a class="headerlink" href="#public-and-private-actions-within-a-transaction" title="Permalink to this headline">¶</a></h3>
+<p>Actually, within the <em>transaction</em> &#8220;Created Blog entry :
+Torototo&#8221;, two of those <em>actions</em> are said to be <em>public</em> and
+the others are said to be <em>private</em>. <em>Public</em> here means that the
+public actions (1 and 3) were directly requested by the end user ;
+whereas <em>private</em> means that the other actions (2, 4, 5) were
+triggered &#8220;under the hood&#8221; to fulfill various requirements for the
+user operation (ensuring integrity, security, ... ).</p>
+<p>And because quite a lot of actions can be triggered by a &#8220;simple&#8221;
+end-user request, most of which the end-user is not (and does not
+need or wish to be) aware, only the so-called public actions will
+appear <a class="footnote-reference" href="#id4" id="id1">[1]</a> in the description of the an undoable transaction.</p>
+<ul class="simple">
+<li>By admin on 2012/02/17 15:18 - Created Blog entry : Torototo<ol class="arabic">
+<li>Created Blog entry : Torototo</li>
+<li>Added relation : Torototo blog entry of Undo Blog</li>
+</ol>
+</li>
+</ul>
+<p>But note that both public and private actions will be undone
+together when the transaction is undone.</p>
+</div>
+<div class="section" id="in-dependent-transactions-the-simple-case">
+<h3>(In)dependent transactions : the simple case<a class="headerlink" href="#in-dependent-transactions-the-simple-case" title="Permalink to this headline">¶</a></h3>
+<p>A CubicWeb application can be used <em>simultaneously</em> by different users
+(whereas a single user works on an given office document at a
+given time), so that there is not always a single history
+time-line in the CubicWeb case. Moreover CubicWeb provides
+security through the mechanism of <em>permissions</em> granted to each
+user. This can lead to some transactions <em>not</em> being undoable in
+some contexts.</p>
+<p>In the simple case two (unprivileged) users Alice and Bob make
+relatively independent changes : then both Alice and Bob can undo
+their changes. But in some case there is a clean dependency
+between Alice&#8217;s and Bob&#8217;s actions or between actions of one of
+them. For example let&#8217;s suppose that :</p>
+<ul class="simple">
+<li>Alice has created a blog,</li>
+<li>then has published a first post inside,</li>
+<li>then Bob has published a second post in the same blog,</li>
+<li>and finally Alice has updated its post contents.</li>
+</ul>
+<p>Then it is clear that Alice can undo her contents changes and Bob
+can undo his post creation independently. But Alice can not undo
+her post creation while she has not first undone her changes.
+It is also clear that Bob should <em>not</em> have the
+permissions to undo any of Alice&#8217;s transactions.</p>
+</div>
+<div class="section" id="more-complex-dependencies-between-transactions">
+<h3>More complex dependencies between transactions<a class="headerlink" href="#more-complex-dependencies-between-transactions" title="Permalink to this headline">¶</a></h3>
+<p>But more surprising things can quickly happen. Going back to the
+previous example, Alice <em>can</em> undo the creation of the blog after
+Bob has published its post in it ! But this is possible only
+because the schema does not <em>require</em> for a post to be in a
+blog. Would the <em>blog entry of</em> relation have been mandatory, then
+Alice could not have undone the blog creation because it would
+have broken integrity constraint for Bob&#8217;s post.</p>
+<p>When a user attempts to undo a transaction the system will check
+whether a later transaction has explicit dependency on the
+would-be-undone transaction. In this case the system will not even
+attempt the undo operation and inform the user.</p>
+<p>If no such dependency is detected the system will attempt the undo
+operation but it can fail, typically because of integrity
+constraint violations. In such a case the undo operation is
+completely <a class="footnote-reference" href="#id6" id="id2">[3]</a> rollbacked.</p>
+</div>
+</div>
+<div class="section" id="the-undo-feature-for-cubicweb-end-users">
+<h2>The <em>undo feature</em> for CubicWeb end-users<a class="headerlink" href="#the-undo-feature-for-cubicweb-end-users" title="Permalink to this headline">¶</a></h2>
+<p>The exposition of the undo feature to the end-user through a Web
+interface is still quite basic and will be improved toward a
+greater usability. But it is already fully functional.  For now
+there are two ways to access the <em>undo feature</em> as long as the it
+has been activated in the instance configuration file with the
+option <em>undo-support=yes</em>.</p>
+<p>Immediately after having done the change to be canceled through
+the <strong>undo</strong> link in the message. This allows to undo an
+hastily action immediately. For example, just after having
+validated the creation of the blog entry <em>A second blog entry</em> we
+get the following message, allowing to undo the creation.</p>
+<img alt="Screenshot of the undo link in the message" class="align-center" src="../_images/undo_mesage_w600.png" style="width: 600px;" />
+<p>At any time we can access the <strong>undo-history view</strong> accessible from the
+start-up page.</p>
+<img alt="Screenshot of the startup menu with access to the history view" class="align-center" src="../_images/undo_startup-link_w600.png" style="width: 600px;" />
+<p>This view will provide inspection of the transaction and their (public)
+actions. Each transaction provides its own <strong>undo</strong> link. Only the
+transactions the user has permissions to see and undo will be shown.</p>
+<img alt="Screenshot of the undo history main view" class="align-center" src="../_images/undo_history-view_w600.png" style="width: 600px;" />
+<p>If the user attempts to undo a transaction which can&#8217;t be undone or
+whose undoing fails, then a message will explain the situation and
+no partial undoing will be left behind.</p>
+<p>This is all for the end-user side of the undo mechanism : this is
+quite simple indeed ! Now, in the following section, we are going
+to introduce the developer side of the undo mechanism.</p>
+</div>
+<div class="section" id="the-undo-feature-for-cubicweb-application-developers">
+<h2>The <em>undo feature</em> for CubicWeb application developers<a class="headerlink" href="#the-undo-feature-for-cubicweb-application-developers" title="Permalink to this headline">¶</a></h2>
+<p>A word of warning : this section is intended for developers,
+already having some knowledge of what&#8217;s under CubicWeb&#8217;s hood. If
+it is not <em>yet</em> the case, please refer to CubicWeb documentation
+<a class="reference external" href="http://docs.cubicweb.org/">http://docs.cubicweb.org/</a> .</p>
+<div class="section" id="overview">
+<h3>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h3>
+<p>The core of the undo mechanisms is at work in the <em>native source</em>,
+beyond the RQL. This does mean that <em>transactions</em> and <em>actions</em>
+are <em>no entities</em>. Instead they are represented at the SQL level
+and exposed through the <em>DB-API</em> supported by the repository
+<em>Connection</em> objects.</p>
+<p>Once the <em>undo feature</em> has been activated in the instance
+configuration file with the option <em>undo-support=yes</em>, each
+mutating operation (cf. <a class="footnote-reference" href="#id5" id="id3">[2]</a>) will be recorded in some special SQL
+table along with its associated transaction. Transaction are
+identified by a <em>txuuid</em> through which the functions of the
+<em>DB-API</em> handle them.</p>
+<p>On the web side the last commited transaction <em>txuuid</em> is
+remembered in the request&#8217;s data to allow for imediate undoing
+whereas the <em>undo-history view</em> relies upon the <em>DB-API</em> to list
+the accessible transactions. The actual undoing is performed by
+the <em>UndoController</em> accessible at URL of the form
+<cite>www.my.host/my/instance/undo?txuuid=...</cite></p>
+</div>
+<div class="section" id="the-repository-side">
+<h3>The repository side<a class="headerlink" href="#the-repository-side" title="Permalink to this headline">¶</a></h3>
+<p>Please refer to the file <cite>cubicweb/server/sources/native.py</cite> and
+<cite>cubicweb/transaction.py</cite> for the details.</p>
+<p>The undoing information is mainly stored in three SQL tables:</p>
+<dl class="docutils">
+<dt><cite>transactions</cite></dt>
+<dd>Stores the txuuid, the user eid and the date-and-time of
+the transaction. This table is referenced by the two others.</dd>
+<dt><cite>tx_entity_actions</cite></dt>
+<dd>Stores the undo information for actions on entities.</dd>
+<dt><cite>tx_relation_actions</cite></dt>
+<dd>Stores the undo information for the actions on relations.</dd>
+</dl>
+<p>When the undo support is activated, entries are added to those
+tables for each mutating operation on the data repository, and are
+deleted on each transaction undoing.</p>
+<p>Those table are accessible through the following methods of the
+repository <cite>Connection</cite> object :</p>
+<dl class="docutils">
+<dt><cite>undoable_transactions</cite></dt>
+<dd>Returns a list of <cite>Transaction</cite> objects accessible to the user
+and according to the specified filter(s) if any.</dd>
+<dt><cite>tx_info</cite></dt>
+<dd>Returns a <cite>Transaction</cite> object from a <cite>txuuid</cite></dd>
+<dt><cite>undo_transaction</cite></dt>
+<dd><p class="first">Returns the list of <cite>Action</cite> object for the given <cite>txuuid</cite>.</p>
+<p class="last">NB:  By default it only return <em>public</em> actions.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="the-web-side">
+<h3>The web side<a class="headerlink" href="#the-web-side" title="Permalink to this headline">¶</a></h3>
+<p>The exposure of the <em>undo feature</em> to the end-user through the Web
+interface relies on the <em>DB-API</em> introduced above. This implies
+that the <em>transactions</em> and <em>actions</em> are not <em>entities</em> linked by
+<em>relations</em> on which the usual views can be applied directly.</p>
+<p>That&#8217;s why the file <cite>cubicweb/web/views/undohistory.py</cite> defines
+some dedicated views to access the undo information :</p>
+<dl class="docutils">
+<dt><cite>UndoHistoryView</cite></dt>
+<dd>This is a <em>StartupView</em>, the one accessible from the home
+page of the instance which list all transactions.</dd>
+<dt><cite>UndoableTransactionView</cite></dt>
+<dd>This view handles the display of a single <cite>Transaction</cite> object.</dd>
+<dt><cite>UndoableActionBaseView</cite></dt>
+<dd>This (abstract) base class provides private methods to build
+the display of actions whatever their nature.</dd>
+<dt><cite>Undoable[Add|Remove|Create|Delete|Update]ActionView</cite></dt>
+<dd>Those views all inherit from <cite>UndoableActionBaseView</cite> and
+each handles a specific kind of action.</dd>
+<dt><cite>UndoableActionPredicate</cite></dt>
+<dd>This predicate is used as a <em>selector</em> to pick the appropriate
+view for actions.</dd>
+</dl>
+<p>Apart from this main <em>undo-history view</em> a <cite>txuuid</cite> is stored in
+the request&#8217;s data <cite>last_undoable_transaction</cite> in order to allow
+immediate undoing of a hastily validated operation. This is
+handled in <cite>cubicweb/web/application.py</cite> in the <cite>main_publish</cite> and
+<cite>add_undo_link_to_msg</cite> methods for the storing and displaying
+respectively.</p>
+<p>Once the undo information is accessible, typically through a
+<cite>txuuid</cite> in an <em>undo</em> URL, the actual undo operation can be
+performed by the <cite>UndoController</cite> defined in
+<cite>cubicweb/web/views/basecontrollers.py</cite>. This controller basically
+extracts the <cite>txuuid</cite> and performs a call to <cite>undo_transaction</cite> and
+in case of an undo-specific error, lets the top level publisher
+handle it as a validation error.</p>
+</div>
+</div>
+<div class="section" id="conclusion">
+<h2>Conclusion<a class="headerlink" href="#conclusion" title="Permalink to this headline">¶</a></h2>
+<p>The undo mechanism relies upon a low level recording of the
+mutating operation on the repository. Those records are accessible
+through some method added to the <em>DB-API</em> and exposed to the
+end-user either through a whole history view of through an
+immediate undoing link in the message box.</p>
+<p>The undo feature is functional but the interface and configuration
+options are still quite reduced. One major improvement would be to
+be able to filter with a finer grain which transactions or actions
+one wants to see in the <em>undo-history view</em>. Another critical
+improvement would be to enable the undo feature on a part only of
+the entity-relationship schema to avoid storing too much useless
+data and reduce the underlying overhead.</p>
+<p>But both functionality are related to the strong design choice not
+to represent transactions and actions as entities and
+relations. This has huge benefits in terms of safety and conceptual
+simplicity but prevents from using lots of convenient CubicWeb
+features such as <em>facets</em> to access undo information.</p>
+<p>Before developing further the undo feature or eventually revising
+this design choice, it appears that some return of experience is
+strongly needed. So don&#8217;t hesitate to try the undo feature in your
+application and send us some feedback.</p>
+</div>
+<div class="section" id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Permalink to this headline">¶</a></h2>
+<table class="docutils footnote" frame="void" id="id4" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>The end-user Web interface could be improved to enable
+user to choose whether he wishes to see private actions.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id5" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id3">[2]</a></td><td><p class="first">There is only five kind of elementary actions (beyond
+merely accessing data for reading):</p>
+<ul class="last simple">
+<li><strong>C</strong> : creating an entity</li>
+<li><strong>D</strong> : deleting an entity</li>
+<li><strong>U</strong> : updating an entity attributes</li>
+<li><strong>A</strong> : adding a relation</li>
+<li><strong>R</strong> : removing a relation</li>
+</ul>
+</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id6" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[3]</a></td><td>Meaning none of the actions in the transaction is
+undone. Depending upon the application, it might make sense
+to enable <em>partial</em> undo. That is to say undo in which some
+actions could not be undo without preventing to undo the
+others actions in the transaction (as long as it does not
+break schema integrity). This is not forbidden by the
+back-end but is deliberately not supported by the front-end
+(for now at least).</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../annexes/index.html" title="Appendixes"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Additional services"
+             >previous</a> |</li>
+        <li><a href="../index.html">CubicWeb 3.18.3</a> &raquo;</li>
+          <li><a href="index.html" >Additional services</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2001-2014, Logilab.
+      Last updated on Mar 11, 2014.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

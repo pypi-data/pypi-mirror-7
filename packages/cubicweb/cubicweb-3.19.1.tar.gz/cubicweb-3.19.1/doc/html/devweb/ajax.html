@@ -1,0 +1,246 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Ajax &mdash; CubicWeb 3.18.3</title>
+    
+    <link rel="stylesheet" href="../_static/lglb-sphinx-doc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '3.18.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="CubicWeb 3.18.3" href="../index.html" />
+    <link rel="up" title="Web side development" href="index.html" />
+    <link rel="next" title="Javascript" href="js.html" />
+    <link rel="prev" title="Configuring the user interface" href="rtags.html" /> 
+  </head>
+  <body>
+<div class="header">
+ <a href="http://www.cubicweb.org">
+  <img alt="cubicweb logo" src="../_static/cubicweb.png"/>
+ </a>
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="js.html" title="Javascript"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="rtags.html" title="Configuring the user interface"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">CubicWeb 3.18.3</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Web side development</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="rtags.html"
+                        title="previous chapter">Configuring the user interface</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="js.html"
+                        title="next chapter">Javascript</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/devweb/ajax.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="ajax">
+<span id="id1"></span><h1>Ajax<a class="headerlink" href="#ajax" title="Permalink to this headline">¶</a></h1>
+<p>CubicWeb provides a few helpers to facilitate <em>javascript &lt;-&gt; python</em> communications.</p>
+<p>You can, for instance, register some python functions that will become
+callable from javascript through ajax calls. All the ajax URLs are handled
+by the <a class="reference internal" href="#cubicweb.web.views.ajaxcontroller.AjaxController" title="cubicweb.web.views.ajaxcontroller.AjaxController"><tt class="xref py py-class docutils literal"><span class="pre">cubicweb.web.views.ajaxcontroller.AjaxController</span></tt></a> controller.</p>
+<span class="target" id="module-cubicweb.web.views.ajaxcontroller"></span><p>The <tt class="docutils literal"><span class="pre">ajaxcontroller</span></tt> module defines the <a class="reference internal" href="#cubicweb.web.views.ajaxcontroller.AjaxController" title="cubicweb.web.views.ajaxcontroller.AjaxController"><tt class="xref py py-class docutils literal"><span class="pre">AjaxController</span></tt></a>
+controller and the <tt class="docutils literal"><span class="pre">ajax-func</span></tt> cubicweb registry.</p>
+<dl class="class">
+<dt id="cubicweb.web.views.ajaxcontroller.AjaxController">
+<em class="property">class </em><tt class="descclassname">cubicweb.web.views.ajaxcontroller.</tt><tt class="descname">AjaxController</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.ajaxcontroller.AjaxController" title="Permalink to this definition">¶</a></dt>
+<dd><p>AjaxController handles ajax remote calls from javascript</p>
+<p>The following javascript function call:</p>
+<div class="highlight-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">d</span> <span class="o">=</span> <span class="nx">asyncRemoteExec</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="s2">&quot;hello&quot;</span><span class="p">);</span>
+<span class="nx">d</span><span class="p">.</span><span class="nx">addCallback</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">alert</span><span class="p">(</span><span class="s1">&#39;server response is: &#39;</span> <span class="o">+</span> <span class="nx">result</span><span class="p">);</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+<p>will generate an ajax HTTP GET on the following url:</p>
+<div class="highlight-python"><pre>BASE_URL/ajax?fname=foo&amp;arg=12&amp;arg="hello"</pre>
+</div>
+<p>The AjaxController controller will therefore be selected to handle those URLs
+and will itself select the <a class="reference internal" href="#cubicweb.web.views.ajaxcontroller.AjaxFunction" title="cubicweb.web.views.ajaxcontroller.AjaxFunction"><tt class="xref py py-class docutils literal"><span class="pre">cubicweb.web.views.ajaxcontroller.AjaxFunction</span></tt></a>
+matching the <em>fname</em> parameter.</p>
+</dd></dl>
+
+<p><tt class="docutils literal"><span class="pre">ajax-funcs</span></tt> registry hosts exposed remote functions, that is
+functions that can be called from the javascript world.</p>
+<p>To register a new remote function, either decorate your function
+with the <a class="reference internal" href="#cubicweb.web.views.ajaxcontroller.ajaxfunc" title="cubicweb.web.views.ajaxcontroller.ajaxfunc"><tt class="xref py py-func docutils literal"><span class="pre">ajaxfunc()</span></tt></a> decorator:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">cubicweb.predicates</span> <span class="kn">import</span> <span class="n">mactch_user_groups</span>
+<span class="kn">from</span> <span class="nn">cubicweb.web.views.ajaxcontroller</span> <span class="kn">import</span> <span class="n">ajaxfunc</span>
+
+<span class="nd">@ajaxfunc</span><span class="p">(</span><span class="n">output_type</span><span class="o">=</span><span class="s">&#39;json&#39;</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="n">match_user_groups</span><span class="p">(</span><span class="s">&#39;managers&#39;</span><span class="p">))</span>
+<span class="k">def</span> <span class="nf">list_users</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">u</span> <span class="k">for</span> <span class="p">(</span><span class="n">u</span><span class="p">,)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cw</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s">&#39;Any L WHERE U login L&#39;</span><span class="p">)]</span>
+</pre></div>
+</div>
+<p>or inherit from <a class="reference internal" href="#cubicweb.web.views.ajaxcontroller.AjaxFunction" title="cubicweb.web.views.ajaxcontroller.AjaxFunction"><tt class="xref py py-class docutils literal"><span class="pre">AjaxFunction</span></tt></a> and
+implement the <tt class="docutils literal"><span class="pre">__call__</span></tt> method:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">cubicweb.web.views.ajaxcontroller</span> <span class="kn">import</span> <span class="n">AjaxFunction</span>
+<span class="k">class</span> <span class="nc">ListUser</span><span class="p">(</span><span class="n">AjaxFunction</span><span class="p">):</span>
+    <span class="n">__regid__</span> <span class="o">=</span> <span class="s">&#39;list_users&#39;</span> <span class="c"># __regid__ is the name of the exposed function</span>
+    <span class="n">__select__</span> <span class="o">=</span> <span class="n">match_user_groups</span><span class="p">(</span><span class="s">&#39;managers&#39;</span><span class="p">)</span>
+    <span class="n">output_type</span> <span class="o">=</span> <span class="s">&#39;json&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">u</span> <span class="k">for</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cw</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s">&#39;Any L WHERE U login L&#39;</span><span class="p">)]</span>
+</pre></div>
+</div>
+<dl class="class">
+<dt id="cubicweb.web.views.ajaxcontroller.AjaxFunction">
+<em class="property">class </em><tt class="descclassname">cubicweb.web.views.ajaxcontroller.</tt><tt class="descname">AjaxFunction</tt><big>(</big><em>req</em>, <em>**extra</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.ajaxcontroller.AjaxFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attributes on this base class are:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Attr :</th><td class="field-body"><p class="first"><cite>check_pageid</cite>: make sure the pageid received is valid before proceeding</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Attr :</th><td class="field-body"><p class="first"><cite>output_type</cite>:</p>
+<ul class="last">
+<li><p class="first"><em>None</em>: no processing, no change on content-type</p>
+</li>
+<li><dl class="first docutils">
+<dt><em>json</em>: serialize with <cite>json_dumps</cite> and set <em>application/json</em></dt>
+<dd><p class="first last">content-type</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><em>xhtml</em>: wrap result in an XML node and forces HTML / XHTML</dt>
+<dd><p class="first last">content-type (use <tt class="docutils literal"><span class="pre">_cw.html_content_type()</span></tt>)</p>
+</dd>
+</dl>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="cubicweb.web.views.ajaxcontroller.ajaxfunc">
+<tt class="descclassname">cubicweb.web.views.ajaxcontroller.</tt><tt class="descname">ajaxfunc</tt><big>(</big><em>implementation=None</em>, <em>selector=&lt;Predicate yes at 5279b90&gt;</em>, <em>output_type=None</em>, <em>check_pageid=False</em>, <em>regid=None</em><big>)</big><a class="headerlink" href="#cubicweb.web.views.ajaxcontroller.ajaxfunc" title="Permalink to this definition">¶</a></dt>
+<dd><p>promote a standard function to an <tt class="docutils literal"><span class="pre">AjaxFunction</span></tt> appobject.</p>
+<p>All parameters are optional:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>selector</strong> &#8211; a custom selector object if needed, default is <tt class="docutils literal"><span class="pre">yes()</span></tt></li>
+<li><strong>output_type</strong> &#8211; either None, &#8216;json&#8217; or &#8216;xhtml&#8217; to customize output
+content-type. Default is None</li>
+<li><strong>check_pageid</strong> &#8211; whether the function requires a valid <cite>pageid</cite> or not
+to proceed. Default is False.</li>
+<li><strong>regid</strong> &#8211; a custom __regid__ for the created <tt class="docutils literal"><span class="pre">AjaxFunction</span></tt> object. Default
+is to keep the wrapped function name.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p><tt class="docutils literal"><span class="pre">ajaxfunc</span></tt> can be used both as a standalone decorator:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@ajaxfunc</span>
+<span class="k">def</span> <span class="nf">my_function</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="mi">42</span>
+</pre></div>
+</div>
+<p>or as a parametrizable decorator:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@ajaxfunc</span><span class="p">(</span><span class="n">output_type</span><span class="o">=</span><span class="s">&#39;json&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">my_function</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="mi">42</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="js.html" title="Javascript"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="rtags.html" title="Configuring the user interface"
+             >previous</a> |</li>
+        <li><a href="../index.html">CubicWeb 3.18.3</a> &raquo;</li>
+          <li><a href="index.html" >Web side development</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2001-2014, Logilab.
+      Last updated on Mar 11, 2014.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

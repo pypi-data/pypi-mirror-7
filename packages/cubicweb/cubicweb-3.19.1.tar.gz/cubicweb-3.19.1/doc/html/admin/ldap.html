@@ -1,0 +1,241 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>9. LDAP integration &mdash; CubicWeb 3.18.3</title>
+    
+    <link rel="stylesheet" href="../_static/lglb-sphinx-doc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '3.18.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="CubicWeb 3.18.3" href="../index.html" />
+    <link rel="up" title="Administration" href="index.html" />
+    <link rel="next" title="10. Working with a distributed client (using Pyro)" href="pyro.html" />
+    <link rel="prev" title="8. Multiple sources of data" href="multisources.html" /> 
+  </head>
+  <body>
+<div class="header">
+ <a href="http://www.cubicweb.org">
+  <img alt="cubicweb logo" src="../_static/cubicweb.png"/>
+ </a>
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="pyro.html" title="10. Working with a distributed client (using Pyro)"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="multisources.html" title="8. Multiple sources of data"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">CubicWeb 3.18.3</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Administration</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">9. LDAP integration</a><ul>
+<li><a class="reference internal" href="#overview">9.1. Overview</a></li>
+<li><a class="reference internal" href="#configuration-of-an-ldapfeed-source">9.2. Configuration of an LDAPfeed source</a></li>
+<li><a class="reference internal" href="#options-of-an-ldapfeed-source">9.3. Options of an LDAPfeed source</a></li>
+<li><a class="reference internal" href="#other-notes">9.4. Other notes</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="multisources.html"
+                        title="previous chapter">8. Multiple sources of data</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="pyro.html"
+                        title="next chapter">10. Working with a distributed client (using Pyro)</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/admin/ldap.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="ldap-integration">
+<span id="ldap"></span><h1>9. LDAP integration<a class="headerlink" href="#ldap-integration" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>9.1. Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>Using LDAP as a source for user credentials and information is quite
+easy. The most difficult part lies in building an LDAP schema or
+using an existing one.</p>
+<p>At cube creation time, one is asked if more sources are wanted. LDAP
+is one possible option at this time. Of course, it is always possible
+to set it up later using the <cite>CWSource</cite> entity type, which we discuss
+there.</p>
+<p>It is possible to add as many LDAP sources as wanted, which translates
+in as many <cite>CWSource</cite> entities as needed.</p>
+<p>The general principle of the LDAP source is, given a proper
+configuration, to create local users matching the users available in
+the directory and deriving local user attributes from directory users
+attributes. Then a periodic task ensures local user information
+synchronization with the directory.</p>
+<p>Users handled by such a source should not be edited directly from
+within the application instance itself. Rather, updates should happen
+at the LDAP server level.</p>
+<p>Credential checks are _always_ done against the LDAP server.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>There are currently two ldap source types: the older <cite>ldapuser</cite> and
+the newer <cite>ldapfeed</cite>. The older will be deprecated anytime soon, as
+the newer has now gained all the features of the old and does not
+suffer from some of its illnesses.</p>
+<p class="last">The ldapfeed creates real <cite>CWUser</cite> entities, and then
+activate/deactivate them depending on their presence/absence in the
+corresponding LDAP source. Their attribute and state
+(activated/deactivated) are hence managed by the source mechanism;
+they should not be altered by other means (as such alterations may
+be overridden in some subsequent source synchronisation).</p>
+</div>
+</div>
+<div class="section" id="configuration-of-an-ldapfeed-source">
+<h2>9.2. Configuration of an LDAPfeed source<a class="headerlink" href="#configuration-of-an-ldapfeed-source" title="Permalink to this headline">¶</a></h2>
+<p>Additional sources are created at cube creation time or later through the
+user interface.</p>
+<p>Configure an <cite>ldapfeed</cite> source from the user interface under <cite>Manage</cite> then
+<cite>data sources</cite>:</p>
+<ul class="simple">
+<li>At this point <cite>type</cite> has been set to <cite>ldapfeed</cite>.</li>
+<li>The <cite>parser</cite> attribute shall be set to <cite>ldapfeed</cite>.</li>
+<li>The <cite>url</cite> attribute shall be set to an URL such as <a class="reference external" href="ldap://ldapserver.domain/">ldap://ldapserver.domain/</a>.</li>
+<li>The <cite>configuration</cite> attribute contains many options. They are described in
+detail in the next paragraph.</li>
+</ul>
+</div>
+<div class="section" id="options-of-an-ldapfeed-source">
+<h2>9.3. Options of an LDAPfeed source<a class="headerlink" href="#options-of-an-ldapfeed-source" title="Permalink to this headline">¶</a></h2>
+<p>Let us enumerate the options by categories (LDAP server connection,
+LDAP schema mapping information).</p>
+<p>LDAP server connection options:</p>
+<ul class="simple">
+<li><cite>auth-mode</cite>, (choices are simple, cram_md5, digest_md5, gssapi, support
+for the later being partial as of now)</li>
+<li><cite>auth-realm</cite>, realm to use when using gssapi/kerberos authentication</li>
+<li><cite>data-cnx-dn</cite>, user dn to use to open data connection to the ldap (eg
+used to respond to rql queries)</li>
+<li><cite>data-cnx-password</cite>, password to use to open data connection to the
+ldap (eg used to respond to rql queries)</li>
+</ul>
+<p>If the LDAP server accepts anonymous binds, then it is possible to
+leave data-cnx-dn and data-cnx-password empty. This is, however, quite
+unlikely in practice. Beware that the LDAP server might hide attributes
+such as &#8220;userPassword&#8221; while the rest of the attributes remain visible
+through an anonymous binding.</p>
+<p>LDAP schema mapping options:</p>
+<ul class="simple">
+<li><cite>user-base-dn</cite>, base DN to lookup for users</li>
+<li><cite>user-scope</cite>, user search scope (valid values: &#8220;BASE&#8221;, &#8220;ONELEVEL&#8221;,
+&#8220;SUBTREE&#8221;)</li>
+<li><cite>user-classes</cite>, classes of user (with Active Directory, you want to
+say &#8220;user&#8221; here)</li>
+<li><cite>user-filter</cite>, additional filters to be set in the ldap query to
+find valid users</li>
+<li><cite>user-login-attr</cite>, attribute used as login on authentication (with
+Active Directory, you want to use &#8220;sAMAccountName&#8221; here)</li>
+<li><cite>user-default-group</cite>, name of a group in which ldap users will be by
+default. You can set multiple groups by separating them by a comma</li>
+<li><cite>user-attrs-map</cite>, map from ldap user attributes to cubicweb
+attributes (with Active Directory, you want to use
+sAMAccountName:login,mail:email,givenName:firstname,sn:surname)</li>
+</ul>
+</div>
+<div class="section" id="other-notes">
+<h2>9.4. Other notes<a class="headerlink" href="#other-notes" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Cubicweb is able to start if ldap cannot be reached, even on
+cubicweb-ctl start ... If some source ldap server cannot be used
+while an instance is running, the corresponding users won&#8217;t be
+authenticated but their status will not change (e.g. they will not
+be deactivated)</li>
+<li>The user-base-dn is a key that helps cubicweb map CWUsers to LDAP
+users: beware updating it</li>
+<li>When a user is removed from an LDAP source, it is deactivated in the
+CubicWeb instance; when a deactivated user comes back in the LDAP
+source, it (automatically) is activated again</li>
+<li>You can use the <tt class="xref py py-class docutils literal"><span class="pre">CWSourceHostConfig</span></tt> to have variants for a source
+configuration according to the host the instance is running on. To do so
+go on the source&#8217;s view from the sources management view.</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="pyro.html" title="10. Working with a distributed client (using Pyro)"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="multisources.html" title="8. Multiple sources of data"
+             >previous</a> |</li>
+        <li><a href="../index.html">CubicWeb 3.18.3</a> &raquo;</li>
+          <li><a href="index.html" >Administration</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2001-2014, Logilab.
+      Last updated on Mar 11, 2014.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

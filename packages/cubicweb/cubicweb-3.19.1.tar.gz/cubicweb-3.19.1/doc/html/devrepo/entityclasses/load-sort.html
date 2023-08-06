@@ -1,0 +1,220 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>4.5. Loaded attributes and default sorting management &mdash; CubicWeb 3.18.3</title>
+    
+    <link rel="stylesheet" href="../../_static/lglb-sphinx-doc.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '3.18.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="CubicWeb 3.18.3" href="../../index.html" />
+    <link rel="up" title="4. Data as objects" href="index.html" />
+    <link rel="next" title="4.6. Interfaces and Adapters" href="adapters.html" />
+    <link rel="prev" title="4.1. Access to persistent data" href="data-as-objects.html" /> 
+  </head>
+  <body>
+<div class="header">
+ <a href="http://www.cubicweb.org">
+  <img alt="cubicweb logo" src="../../_static/cubicweb.png"/>
+ </a>
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="adapters.html" title="4.6. Interfaces and Adapters"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="data-as-objects.html" title="4.1. Access to persistent data"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">CubicWeb 3.18.3</a> &raquo;</li>
+          <li><a href="../index.html" >Repository development</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">4. Data as objects</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="data-as-objects.html"
+                        title="previous chapter">4.1. Access to persistent data</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="adapters.html"
+                        title="next chapter">4.6. Interfaces and Adapters</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/devrepo/entityclasses/load-sort.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="loaded-attributes-and-default-sorting-management">
+<span id="fetchattrs"></span><h1>4.5. Loaded attributes and default sorting management<a class="headerlink" href="#loaded-attributes-and-default-sorting-management" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li>The class attribute <cite>fetch_attrs</cite> allows to define in an entity class a list of
+names of attributes that should be automatically loaded when entities of this
+type are fetched from the database using ORM methods retrieving entity of this
+type (such as <tt class="xref py py-meth docutils literal"><span class="pre">related()</span></tt> and <tt class="xref py py-meth docutils literal"><span class="pre">unrelated()</span></tt>). You can also put relation
+names in there, but we are limited to <em>subject relations of cardinality `?` or
+`1`</em>.</li>
+<li>The <tt class="xref py py-meth docutils literal"><span class="pre">cw_fetch_order()</span></tt> and <tt class="xref py py-meth docutils literal"><span class="pre">cw_fetch_unrelated_order()</span></tt> class methods
+are respectively responsible to control how entities will be sorted when:<ul>
+<li>retrieving all entities of a given type, or entities related to another</li>
+<li>retrieving a list of entities for use in drop-down lists enabling relations
+creation in the editing view of an entity</li>
+</ul>
+</li>
+</ul>
+<p>By default entities will be listed on their modification date descending,
+i.e. you&#8217;ll get entities recently modified first. While this is usually a good
+default in drop-down list, you&#8217;ll probably want to change <cite>cw_fetch_order</cite>.</p>
+<p>This may easily be done using the <a class="reference internal" href="#cubicweb.entities.fetch_config" title="cubicweb.entities.fetch_config"><tt class="xref py py-func docutils literal"><span class="pre">fetch_config()</span></tt></a>
+function, which simplifies the definition of attributes to load and sorting by
+returning a list of attributes to pre-load (considering automatically the
+attributes of <cite>AnyEntity</cite>) and a sorting function as described below:</p>
+<dl class="function">
+<dt id="cubicweb.entities.fetch_config">
+<tt class="descclassname">cubicweb.entities.</tt><tt class="descname">fetch_config</tt><big>(</big><em>fetchattrs</em>, <em>mainattr=None</em>, <em>pclass=&lt;class 'cubicweb.entities.AnyEntity'&gt;</em>, <em>order='ASC'</em><big>)</big><a class="headerlink" href="#cubicweb.entities.fetch_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>function to ease basic configuration of an entity class ORM. Basic usage
+is:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyEntity</span><span class="p">(</span><span class="n">AnyEntity</span><span class="p">):</span>
+
+    <span class="n">fetch_attrs</span><span class="p">,</span> <span class="n">cw_fetch_order</span> <span class="o">=</span> <span class="n">fetch_config</span><span class="p">([</span><span class="s">&#39;attr1&#39;</span><span class="p">,</span> <span class="s">&#39;attr2&#39;</span><span class="p">])</span>
+    <span class="c"># uncomment line below if you want the same sorting for &#39;unrelated&#39; entities</span>
+    <span class="c"># cw_fetch_unrelated_order = cw_fetch_order</span>
+</pre></div>
+</div>
+<p>Using this, when using ORM methods retrieving this type of entity, &#8216;attr1&#8217;
+and &#8216;attr2&#8217; will be automatically prefetched and results will be sorted on
+&#8216;attr1&#8217; ascending (ie the first attribute in the list).</p>
+<p>This function will automatically add to fetched attributes those defined in
+parent class given using the <cite>pclass</cite> argument.</p>
+<p>Also, You can use <cite>mainattr</cite> and <cite>order</cite> argument to have a different
+sorting.</p>
+</dd></dl>
+
+<p>In you want something else (such as sorting on the result of a registered
+procedure), here is the prototype of those methods:</p>
+<dl class="classmethod">
+<dt id="cubicweb.entity.Entity.cw_fetch_order">
+<em class="property">classmethod </em><tt class="descclassname">Entity.</tt><tt class="descname">cw_fetch_order</tt><big>(</big><em>select</em>, <em>attr</em>, <em>var</em><big>)</big><a class="headerlink" href="#cubicweb.entity.Entity.cw_fetch_order" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class method may be used to control sort order when multiple
+entities of this type are fetched through ORM methods. Its arguments
+are:</p>
+<ul class="simple">
+<li><cite>select</cite>, the RQL syntax tree</li>
+<li><cite>attr</cite>, the attribute being watched</li>
+<li><cite>var</cite>, the variable through which this attribute&#8217;s value may be
+accessed in the query</li>
+</ul>
+<p>When you want to do some sorting on the given attribute, you should
+modify the syntax tree accordingly. For instance:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">rql</span> <span class="kn">import</span> <span class="n">nodes</span>
+
+<span class="k">class</span> <span class="nc">Version</span><span class="p">(</span><span class="n">AnyEntity</span><span class="p">):</span>
+    <span class="n">__regid__</span> <span class="o">=</span> <span class="s">&#39;Version&#39;</span>
+
+    <span class="n">fetch_attrs</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;num&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">,</span> <span class="s">&#39;in_state&#39;</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">cw_fetch_order</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">select</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">var</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">attr</span> <span class="o">==</span> <span class="s">&#39;num&#39;</span><span class="p">:</span>
+            <span class="n">func</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="s">&#39;version_sort_value&#39;</span><span class="p">)</span>
+            <span class="n">func</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">variable_ref</span><span class="p">(</span><span class="n">var</span><span class="p">))</span>
+            <span class="n">sterm</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">SortTerm</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">asc</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+            <span class="n">select</span><span class="o">.</span><span class="n">add_sort_term</span><span class="p">(</span><span class="n">sterm</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The default implementation call
+<a class="reference internal" href="#cubicweb.entity.Entity.cw_fetch_unrelated_order" title="cubicweb.entity.Entity.cw_fetch_unrelated_order"><tt class="xref py py-meth docutils literal"><span class="pre">cw_fetch_unrelated_order()</span></tt></a></p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="cubicweb.entity.Entity.cw_fetch_unrelated_order">
+<em class="property">classmethod </em><tt class="descclassname">Entity.</tt><tt class="descname">cw_fetch_unrelated_order</tt><big>(</big><em>select</em>, <em>attr</em>, <em>var</em><big>)</big><a class="headerlink" href="#cubicweb.entity.Entity.cw_fetch_unrelated_order" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class method may be used to control sort order when multiple entities of
+this type are fetched to use in edition (e.g. propose them to create a
+new relation on an edited entity).</p>
+<p>See <a class="reference internal" href="#cubicweb.entity.Entity.cw_fetch_unrelated_order" title="cubicweb.entity.Entity.cw_fetch_unrelated_order"><tt class="xref py py-meth docutils literal"><span class="pre">cw_fetch_unrelated_order()</span></tt></a> for a
+description of its arguments and usage.</p>
+<p>By default entities will be listed on their modification date descending,
+i.e. you&#8217;ll get entities recently modified first.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="adapters.html" title="4.6. Interfaces and Adapters"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="data-as-objects.html" title="4.1. Access to persistent data"
+             >previous</a> |</li>
+        <li><a href="../../index.html">CubicWeb 3.18.3</a> &raquo;</li>
+          <li><a href="../index.html" >Repository development</a> &raquo;</li>
+          <li><a href="index.html" >4. Data as objects</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2001-2014, Logilab.
+      Last updated on Mar 11, 2014.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
