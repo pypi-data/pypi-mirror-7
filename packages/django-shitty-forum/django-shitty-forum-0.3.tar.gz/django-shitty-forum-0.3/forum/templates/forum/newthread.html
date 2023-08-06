@@ -1,0 +1,25 @@
+{% extends "forum_base.html" %}
+{% load i18n %}
+
+{% block title %}{% blocktrans with forum.title as title %}New Thread in {{ title }}{% endblocktrans %}{% endblock %}
+
+{% block extrahead %}
+<link rel="alternate" type="application/rss+xml" title="{% blocktrans %}{{ forum.title }} Posts via RSS{% endblocktrans %}" href="{% url forum_index %}rss/{{ forum.slug }}/" />
+<link rel="alternate" type="application/atom+xml" title="{% blocktrans %}{{ forum.title }} Posts via ATOM{% endblocktrans %}" href="{% url forum_index %}atom/{{ forum.slug }}/" />
+{% endblock %}
+
+{% block pagetitle %}{% blocktrans with forum.title as title %}New Thread in {{ title }}{% endblocktrans %}{% endblock %}
+
+{% block breadcrumbs %} {% for title, url in forum.get_url_name %} &raquo; <a href='{{ url }}'>{{ title }}</a> {% endfor %} &raquo; {% trans "New Thread" %}{% endblock %}
+
+
+{% block content %}
+
+<h2>{% trans "Create a Thread" %}</h2>
+<form method='post' action='../preview/'>{% csrf_token %}
+<p><label>{% trans "Posting As" %}</label><span>{{ user.username }}</span></p>
+<ul>{{ form.as_ul }}</ul>
+<p><input type='submit' name='preview' value='{% trans "Preview your post!" %}' /></p>
+</form>
+
+{% endblock %}
