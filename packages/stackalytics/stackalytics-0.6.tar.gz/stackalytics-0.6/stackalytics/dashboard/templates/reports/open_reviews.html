@@ -1,0 +1,58 @@
+{% extends "reports/base_report.html" %}
+
+{% block title %}
+Open reviews report for {{ module }}
+{% endblock %}
+
+{% block scripts %}
+    <script type="text/javascript">
+        $(document).ready(function () {
+            renderBarChart("latest_revision_chart", [{{ latest_revision.chart_data }}]);
+            renderBarChart("first_revision_chart", [{{ first_revision.chart_data }}]);
+        });
+    </script>
+{% endblock %}
+
+{% block content %}
+<h1>Open reviews for {{ module }}</h1>
+
+<h3>Summary</h3>
+<ul>
+    <li>Total open reviews: {{ total_open }}</li>
+    <li>Waiting on submitter: {{ waiting_on_submitter }}</li>
+    <li>Waiting on reviewer: {{ waiting_on_reviewer }}</li>
+</ul>
+
+{% if total_open %}
+<h3>Stats since last revision</h3>
+
+<ul>
+    <li>Average wait time: {{ latest_revision.average }}</li>
+    <li>Max wait time: {{ latest_revision.max }}</li>
+</ul>
+
+<div id="latest_revision_chart" style="width: 100%; height: 350px;"></div>
+
+<ol>
+{% for item in latest_revision.reviews[:5] %}
+    <li>{{ item.updated_on_age }} <a href="{{ item.url }}">{{ item.url }}</a> {{ item.subject }} by {{ item.author_name }} ({{ item.company_name }})</li>
+{% endfor %}
+</ol>
+
+<h3>Stats since first revision</h3>
+
+<ul>
+    <li>Average wait time: {{ first_revision.average }}</li>
+    <li>Max wait time: {{ first_revision.max }}</li>
+</ul>
+
+<div id="first_revision_chart" style="width: 100%; height: 350px;"></div>
+
+<ol>
+{% for item in first_revision.reviews[:5] %}
+    <li>{{ item.date_age }} <a href="{{ item.url }}">{{ item.url }}</a> {{ item.subject }} by {{ item.author_name }} ({{ item.company_name }})</li>
+{% endfor %}
+</ol>
+
+{% endif %}
+{% endblock %}
