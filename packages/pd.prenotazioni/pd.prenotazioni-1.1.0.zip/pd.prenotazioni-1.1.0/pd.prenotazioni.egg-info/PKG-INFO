@@ -1,0 +1,158 @@
+Metadata-Version: 1.1
+Name: pd.prenotazioni
+Version: 1.1.0
+Summary: PD Prenotazioni
+Home-page: http://svn.plone.org/svn/collective/
+Author: RedTurtle Technology
+Author-email: sviluppoplone@redturtle.it
+License: gpl
+Description: .. contents::
+        
+        Introduction
+        ============
+        
+        PD Prenotazioni::
+        
+          zope-conf-additional +=
+            <product-config pd.prenotazioni>
+                logfile ${buildout:directory}/var/log/prenotazioni.log
+            </product-config>
+        
+        Searchable text for Prenotazione objects is customized.
+        In particular it adds the comments to the index.
+        
+        
+        
+        Credits
+        =======
+        
+        Developed with the support of `Comune di Padova`__;
+        Comune di Padova supports the `PloneGov initiative`__.
+        
+        .. image:: http://prenotazioni.comune.padova.it/++resource++pd.plonetheme.images/title.png
+           :alt: Comune di Padova's logo
+        
+        __ http://www.padovanet.it/
+        __ http://www.plonegov.it/
+        
+        Authors
+        =======
+        
+        This product was developed by RedTurtle Technology team.
+        
+        .. image:: http://www.redturtle.it/redturtle_banner.png
+           :alt: RedTurtle Technology Site
+              :target: http://www.redturtle.it/
+        
+        
+        
+        Change history
+        **************
+        
+        
+        
+        1.1.0 (unreleased)
+        ------------------
+        
+        - Index also revision history
+        - Added Tooltipster
+          [alert]
+        
+        
+        1.0.1 (2014-06-04)
+        ------------------
+        
+        - Patch per gestione di contentrules
+        - Modified search results for prenotazioni
+        - Small modifications on pdf
+        - Added a confirmation page for anonymous users.
+        - Readers can search bookings
+        - Requires rg.prenotazioni > 3.3.0.dev0
+          [alert]
+        
+        
+        1.0.0 (2014-05-05)
+        ------------------
+        
+        - Upgrade step for repositorytool profile [nicolasenno]
+        - Added to logger detail about modification, old value new value [nicolasenno]·
+        - Added logger for IPrenotazione objects modification [nicolasenno]
+        - Patching Prenotazione schema to allow modification to prenotazione objects
+          without email [alert]
+        - Removed buttons from the folder_contents view of PrenotazioniFolder [alert]
+        - Removed actions menu for Prenotazione [alert]
+        - Aggiunto validatore campi email, telefono e cellulare in form richiesta
+          prenotazioni [nicolasenno]
+        - Added events logger for IPrenotazione [nicolasenno]
+        - Rimosso campo email obbligatorio form richiesta prenotazioni [nicolasenno]
+        - Added event handler logger
+        - Package created using templer
+          [RedTurtle Technology]
+        
+        
+        Detailed Documentation
+        **********************
+        
+        Introduction
+        ============
+        
+        This is a full-blown functional test. The emphasis here is on testing what
+        the user may input and see, and the system is largely tested as a black box.
+        We use PloneTestCase to set up this test as well, so we have a full Plone site
+        to play with. We *can* inspect the state of the portal, e.g. using 
+        self.portal and self.folder, but it is often frowned upon since you are not
+        treating the system as a black box. Also, if you, for example, log in or set
+        roles using calls like self.setRoles(), these are not reflected in the test
+        browser, which runs as a separate session.
+        
+        Being a doctest, we can tell a story here.
+        
+        First, we must perform some setup. We use the testbrowser that is shipped
+        with Five, as this provides proper Zope 2 integration. Most of the 
+        documentation, though, is in the underlying zope.testbrower package.
+        
+            >>> from Products.Five.testbrowser import Browser
+            >>> browser = Browser()
+            >>> portal_url = self.portal.absolute_url()
+        
+        The following is useful when writing and debugging testbrowser tests. It lets
+        us see all error messages in the error_log.
+        
+            >>> self.portal.error_log._ignored_exceptions = ()
+        
+        With that in place, we can go to the portal front page and log in. We will
+        do this using the default user from PloneTestCase:
+        
+            >>> from Products.PloneTestCase.setup import portal_owner, default_password
+        
+        Because add-on themes or products may remove or hide the login portlet, this test will use the login form that comes with plone.  
+        
+            >>> browser.open(portal_url + '/login_form')
+            >>> browser.getControl(name='__ac_name').value = portal_owner
+            >>> browser.getControl(name='__ac_password').value = default_password
+            >>> browser.getControl(name='submit').click()
+        
+        Here, we set the value of the fields on the login form and then simulate a
+        submit click.  We then ensure that we get the friendly logged-in message:
+        
+            >>> "You are now logged in" in browser.contents
+            True
+        
+        Finally, let's return to the front page of our site before continuing
+        
+            >>> browser.open(portal_url)
+        
+        -*- extra stuff goes here -*-
+        
+        
+        Contributors
+        ************
+        
+        RedTurtle Technology, Author
+        
+        Download
+        ********
+        
+Platform: UNKNOWN
+Classifier: Framework :: Plone
+Classifier: Intended Audience :: Developers
