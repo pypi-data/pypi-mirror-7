@@ -1,0 +1,77 @@
+HeatTemplateFormatVersion: '2012-12-12'
+Description: 'Tie OpenStack components together'
+Parameters:
+  TemplateRoot:
+    Description: URL Base where all of our templates are available
+    Type: String
+  KeystoneAdminToken:
+    Description: Admin Token needed for keystone
+    Type: String
+    NoEcho: true
+Resources:
+  RabbitMQ:
+    Type: AWS::CloudFormation::Stack
+    TemplateURL:
+      Fn::Join:
+        - {Ref: TemplateRoot}
+        - rabbitmq.yaml
+    Parameters:
+      InstanceType: m1.small
+      KeyName: default
+      RabbitMQImage: image-rabbitmq
+  MySQL:
+    Type: AWS::CloudFormation::Stack
+    TemplateURL:
+      Fn::Join:
+        - {Ref: TemplateRoot}
+        - mysql.yaml
+    Parameters:
+      InstanceType: m1.small
+      KeyName: default
+      MySQLImage: image-mysql
+  Keystone:
+    Type: AWS::CloudFormation::Stack
+    TemplateURL:
+      Fn::Join:
+        - {Ref: TemplateRoot}
+        - keystone.yaml
+    Parameters:
+      AdminToken: {Ref: KeystoneAdminToken}
+      KeyName: default
+      KeystoneDSN:
+        Fn::Join:
+          - 'mysql://keystone:'
+          - {"Fn::GetAtt": [ MySQL , KeystonePassword ]}
+          - '@'
+          - {"Fn::GetAtt": [ MySQL , MySQLHost ]}
+          - '/keystone'
+  Glance:
+    Type: AWS::CloudFormation::Stack
+    TemplateURL:
+      Fn::Join:
+        - {Ref: TemplateRoot}
+        - glance.yaml
+    Parameters:
+      KeyName: default
+      HeatDSN:
+        Fn::Join:
+          - 'mysql://glance:'
+          - {"Fn::GetAtt": [ MySQL, GlancePassword ] }
+          - '@'
+          - {"Fn::GetAtt": [ MySQL, MySQLHost ]}
+          - '/glance'
+  Heat:
+    Type: AWS::CloudFormation::Stack
+    TemplateURL:
+      Fn::Join:
+        - {Ref: TemplateRoot}
+        - heat.yaml
+    Parameters:
+      KeyName: default
+      HeatDSN:
+        Fn::Join:
+          - 'mysql://heat:'
+          - {"Fn::GetAtt": [ MySQL, HeatPassword ] }
+          - '@'
+          - {"Fn::GetAtt": [ MySQL, MySQLHost ]}
+          - '/heat'
