@@ -1,0 +1,60 @@
+DTA Generator
+=============
+
+Generator library for Swiss DTA ("Datenträgeraustauschverfahren") electronic
+payment records.
+
+Features
+--------
+
+* Support for transaction types 826, 827, 836 and 890
+* Implements various integrity checks according to record description manual
+* Supports decimal and date input values
+
+Getting started
+---------------
+
+Generate a DTA file containing one transaction of type 826::
+
+  from datetime import date
+  from decimal import Decimal
+
+  from dta import DTA
+  from dta.records import DTAHeader, DTARecord826, DTARecord890
+
+  dta = DTA()
+
+  header = DTAHeader()
+  header.sequence_nr = 1
+  header.sender_id = 'ABCDE'
+  header.client_clearing_nr = '248'
+  header.creation_date = date(2013, 4, 23)
+  header.processing_date = date(2013, 5, 10)
+
+  record = DTARecord826(header)
+  record.reference = '002013-0058'
+  record.liability_account = '248 110079.01Z'
+  record.currency = 'CHF'
+  record.amount = Decimal('114.35')
+  record.client_address1 = 'LEUCHTER OPEN SOURCE SOLUTIONS'
+  record.client_address3 = 'WINKELRIEDSTRASSE 45'
+  record.client_address4 = '6003 LUZERN'
+  record.recipient_account = '010723327'
+  record.recipient_address1 = 'TESTLIEFERANT'
+  record.recipient_address3 = 'TESTSTRASSE 10'
+  record.recipient_address4 = '6005 LUZERN'
+  record.esr_reference = '182171015574297'
+  dta.records.append(record)
+
+  header = DTAHeader()
+  header.sequence_nr = 2
+  header.sender_id = 'ABCDE'
+  header.client_clearing_nr = '248'
+  header.creation_date = date(2013, 4, 23)
+
+  record = DTARecord890(header)
+  record.amount = Decimal('114.35')
+  dta.records.append(record)
+
+  with open('demo.leu', 'w') as f:
+      f.write(dta.generate())
