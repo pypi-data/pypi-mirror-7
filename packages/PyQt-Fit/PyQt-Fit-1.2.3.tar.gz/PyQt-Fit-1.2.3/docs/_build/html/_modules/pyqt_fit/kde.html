@@ -1,0 +1,633 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pyqt_fit.kde &mdash; PyQt-Fit 1.2.2 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.2.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="PyQt-Fit 1.2.2 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PyQt-Fit 1.2.2 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pyqt_fit.kde</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">:Author: Pierre Barbier de Reuille &lt;pierre.barbierdereuille@gmail.com&gt;</span>
+
+<span class="sd">Module implementing kernel-based estimation of density of probability.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">.kernels</span> <span class="kn">import</span> <span class="n">normal_kernel1d</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">namedtuple</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">kde_methods</span>
+<span class="kn">from</span> <span class="nn">.kde_bandwidth</span> <span class="kn">import</span> <span class="n">variance_bandwidth</span><span class="p">,</span> <span class="n">silverman_covariance</span><span class="p">,</span> <span class="n">scotts_covariance</span><span class="p">,</span> <span class="n">botev_bandwidth</span>
+
+
+<div class="viewcode-block" id="KDE1D"><a class="viewcode-back" href="../../mod_kde.html#pyqt_fit.kde.KDE1D">[docs]</a><span class="k">class</span> <span class="nc">KDE1D</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Perform a kernel based density estimation in 1D, possibly on a bounded</span>
+<span class="sd">    domain :math:`[L,U]`.</span>
+
+<span class="sd">    :param ndarray data: 1D array with the data points</span>
+
+<span class="sd">    Any other named argument will be equivalent to setting the property</span>
+<span class="sd">    after the fact. For example::</span>
+
+<span class="sd">        &gt;&gt;&gt; xs = [1,2,3]</span>
+<span class="sd">        &gt;&gt;&gt; k = KDE1D(xs, lower=0)</span>
+
+<span class="sd">    will be equivalent to::</span>
+
+<span class="sd">        &gt;&gt;&gt; k = KDE1D(xs)</span>
+<span class="sd">        &gt;&gt;&gt; k.lower = 0</span>
+
+<span class="sd">    The method rely on an estimator of kernel density given by:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        f(x) \triangleq \frac{1}{hW} \sum_{i=1}^n \frac{w_i}{\lambda_i}</span>
+<span class="sd">        K\left(\frac{X-x}{h\lambda_i}\right)</span>
+
+<span class="sd">        W = \sum_{i=1}^n w_i</span>
+
+<span class="sd">    where :math:`h` is the bandwidth of the kernel (:py:attr:`bandwidth`),</span>
+<span class="sd">    and :math:`K` is the kernel used for the density estimation</span>
+<span class="sd">    (:py:attr:`kernel`), :math:`w_i` are the weights of the data points</span>
+<span class="sd">    (:py:attr:`weights`) and :math:`\lambda_i` are the adaptation factor</span>
+<span class="sd">    of the kernel width (:py:attr:`lambdas`). :math:`K` should be a function</span>
+<span class="sd">    such that:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \begin{array}{rcl}</span>
+<span class="sd">        \int_\mathbb{R} K(z) &amp;=&amp; 1 \\</span>
+<span class="sd">        \int_\mathbb{R} zK(z)dz &amp;=&amp; 0 \\</span>
+<span class="sd">        \int_\mathbb{R} z^2K(z) dz &amp;&lt;&amp; \infty \quad (\approx 1)</span>
+<span class="sd">        \end{array}</span>
+
+<span class="sd">    Which translates into, the function should be of sum 1 (i.e.</span>
+<span class="sd">    a valid density of probability), of average 0 (i.e. centered) and of finite</span>
+<span class="sd">    variance. It is even recommanded that the variance is close to 1 to give</span>
+<span class="sd">    a uniform meaning to the bandwidth.</span>
+
+<span class="sd">    If the domain of the density estimation is bounded to the interval</span>
+<span class="sd">    :math:`[L,U]` (i.e. from :py:attr:`lower` to :py:attr:`upper`), the density</span>
+<span class="sd">    is then estimated with:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        f(x) \triangleq \frac{1}{hW} \sum_{i=1}^n \frac{w_i}{\lambda_i}</span>
+<span class="sd">        \hat{K}(x;X,\lambda_i h,L,U)</span>
+
+<span class="sd">    Where :math:`\hat{K}` is a modified kernel that depends on the exact method</span>
+<span class="sd">    used.</span>
+
+<span class="sd">    To express the various methods, we will refer to the following functions:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        a_0(l,u) = \int_l^u K(z) dz</span>
+
+<span class="sd">        a_1(l,u) = \int_l^u zK(z) dz</span>
+
+<span class="sd">        a_2(l,u) = \int_l^u z^2K(z) dz</span>
+
+
+<span class="sd">    The default methods are implemented in the `kde_methods` module.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xdata</span><span class="p">,</span> <span class="o">**</span><span class="n">kwords</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_xdata</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_upper</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lower</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kernel</span> <span class="o">=</span> <span class="n">normal_kernel1d</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bw_fct</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bw</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cov_fct</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_covariance</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_method</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="mf">1.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lambdas</span> <span class="o">=</span> <span class="mf">1.</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialized</span> <span class="o">=</span> <span class="bp">False</span>
+
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">kwords</span><span class="p">:</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">kwords</span><span class="p">[</span><span class="n">n</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">xdata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">xdata</span><span class="p">)</span>
+
+        <span class="n">has_bw</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_bw</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bw_fct</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">or</span>
+                  <span class="bp">self</span><span class="o">.</span><span class="n">_covariance</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cov_fct</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">has_bw</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">covariance</span> <span class="o">=</span> <span class="n">scotts_covariance</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_method</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">kde_methods</span><span class="o">.</span><span class="n">renormalization</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialized</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_bandwidth</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">initialized</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialized</span>
+
+<div class="viewcode-block" id="KDE1D.copy"><a class="viewcode-back" href="../../mod_kde.html#pyqt_fit.kde.KDE1D.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Shallow copy of the KDE object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">KDE1D</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">KDE1D</span><span class="p">)</span>
+        <span class="c"># Copy private members: start with a single &#39;_&#39;</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">m</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;_&#39;</span> <span class="ow">and</span> <span class="n">m</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s">&#39;_&#39;</span><span class="p">:</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">res</span>
+</div>
+<div class="viewcode-block" id="KDE1D.update_bandwidth"><a class="viewcode-back" href="../../mod_kde.html#pyqt_fit.kde.KDE1D.update_bandwidth">[docs]</a>    <span class="k">def</span> <span class="nf">update_bandwidth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Re-compute the bandwidth if it was specified as a function.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xdata</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bw_fct</span><span class="p">:</span>
+            <span class="n">_bw</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_bw_fct</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_xdata</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="p">))</span>
+            <span class="n">_cov</span> <span class="o">=</span> <span class="n">_bw</span> <span class="o">*</span> <span class="n">_bw</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cov_fct</span><span class="p">:</span>
+            <span class="n">_cov</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cov_fct</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_xdata</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="p">))</span>
+            <span class="n">_bw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">_cov</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_covariance</span> <span class="o">=</span> <span class="n">_cov</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bw</span> <span class="o">=</span> <span class="n">_bw</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">xdata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xdata</span>
+
+    <span class="nd">@xdata.setter</span>
+    <span class="k">def</span> <span class="nf">xdata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_xdata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_bandwidth</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">kernel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">        Kernel object. Should provide the following methods:</span>
+
+<span class="sd">        ``kernel.pdf(xs)``</span>
+<span class="sd">            Density of the kernel, denoted :math:`K(x)`</span>
+
+<span class="sd">        ``kernel.cdf(z)``</span>
+<span class="sd">            Cumulative density of probability, that is</span>
+<span class="sd">            :math:`F^K(z) = \int_{-\infty}^z K(x) dx`</span>
+
+<span class="sd">        ``kernel.pm1(z)``</span>
+<span class="sd">            First partial moment, defined by</span>
+<span class="sd">            :math:`\mathcal{M}^K_1(z) = \int_{-\infty}^z xK(x)dx`</span>
+
+<span class="sd">        ``kernel.pm2(z)``</span>
+<span class="sd">            Second partial moment, defined by</span>
+<span class="sd">            :math:`\mathcal{M}^K_2(z) = \int_{-\infty}^z x^2K(x)dx`</span>
+
+<span class="sd">        ``kernel.fft(z)``</span>
+<span class="sd">            FFT of the kernel on the points of ``z``. The points will always be</span>
+<span class="sd">            provided as a grid with :math:`2^n` points, representing the whole</span>
+<span class="sd">            frequency range to be explored. For convenience, the second half of</span>
+<span class="sd">            the points will be provided as negative values.</span>
+
+<span class="sd">        ``kernel.dct(z)``</span>
+<span class="sd">            DCT of the kernel on the points of ``z``. The points will always be</span>
+<span class="sd">            provided as a grid with :math:`2^n` points, representing the whole</span>
+<span class="sd">            frequency range to be explored.</span>
+
+<span class="sd">        By default, the kernel is an instance of</span>
+<span class="sd">        :py:class:`kernels.normal_kernel1d`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kernel</span>
+
+    <span class="nd">@kernel.setter</span>
+<div class="viewcode-block" id="KDE1D.kernel"><a class="viewcode-back" href="../../mod_kde.html#pyqt_fit.kde.KDE1D.kernel">[docs]</a>    <span class="k">def</span> <span class="nf">kernel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kernel</span> <span class="o">=</span> <span class="n">val</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">lower</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">        Lower bound of the density domain. If deleted, becomes set to</span>
+<span class="sd">        :math:`-\infty`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lower</span>
+
+    <span class="nd">@lower.setter</span>
+    <span class="k">def</span> <span class="nf">lower</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lower</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+
+    <span class="nd">@lower.deleter</span>
+<div class="viewcode-block" id="KDE1D.lower"><a class="viewcode-back" href="../../mod_kde.html#pyqt_fit.kde.KDE1D.lower">[docs]</a>    <span class="k">def</span> <span class="nf">lower</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lower</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">upper</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">        Upper bound of the density domain. If deleted, becomes set to</span>
+<span class="sd">        :math:`\infty`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_upper</span>
+
+    <span class="nd">@upper.setter</span>
+    <span class="k">def</span> <span class="nf">upper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_upper</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+
+    <span class="nd">@upper.deleter</span>
+<div class="viewcode-block" id="KDE1D.upper"><a class="viewcode-back" href="../../mod_kde.html#pyqt_fit.kde.KDE1D.upper">[docs]</a>    <span class="k">def</span> <span class="nf">upper</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_upper</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">weights</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Weigths associated to each data point. It can be either a single value,</span>
+<span class="sd">        or an array with a value per data point. If a single value is provided,</span>
+<span class="sd">        the weights will always be set to 1.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weights</span>
+
+    <span class="nd">@weights.setter</span>
+    <span class="k">def</span> <span class="nf">weights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ws</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">ws</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ws</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="mf">1.</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="n">ws</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_weights</span> <span class="o">=</span> <span class="n">ws</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_total_weights</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="nd">@weights.deleter</span>
+<div class="viewcode-block" id="KDE1D.weights"><a class="viewcode-back" href="../../mod_kde.html#pyqt_fit.kde.KDE1D.weights">[docs]</a>    <span class="k">def</span> <span class="nf">weights</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="mf">1.</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_total_weights</span> <span class="o">=</span> <span class="bp">None</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">total_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_weights</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weights</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weights</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xdata</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> \
+                    <span class="s">&quot;There must be as many weigths as data points&quot;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_total_weights</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_weights</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_total_weights</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_xdata</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_weights</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">lambdas</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Scaling of the bandwidth, per data point. It can be either a single</span>
+<span class="sd">        value or an array with one value per data point.</span>
+
+<span class="sd">        When deleted, the lamndas are reset to 1.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lambdas</span>
+
+    <span class="nd">@lambdas.setter</span>
+    <span class="k">def</span> <span class="nf">lambdas</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ls</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lambdas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">ls</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="n">ls</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ls</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lambdas</span> <span class="o">=</span> <span class="n">ls</span>
+
+    <span class="nd">@lambdas.deleter</span>
+<div class="viewcode-block" id="KDE1D.lambdas"><a class="viewcode-back" href="../../mod_kde.html#pyqt_fit.kde.KDE1D.lambdas">[docs]</a>    <span class="k">def</span> <span class="nf">lambdas</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lambdas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="mf">1.</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">bandwidth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Bandwidth of the kernel.</span>
+<span class="sd">        Can be set either as a fixed value or using a bandwidth calculator,</span>
+<span class="sd">        that is a function of signature ``w(xdata)`` that returns a single</span>
+<span class="sd">        value.</span>
+
+<span class="sd">        .. note::</span>
+
+<span class="sd">            A ndarray with a single value will be converted to a floating point</span>
+<span class="sd">            value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bw</span>
+
+    <span class="nd">@bandwidth.setter</span>
+<div class="viewcode-block" id="KDE1D.bandwidth"><a class="viewcode-back" href="../../mod_kde.html#pyqt_fit.kde.KDE1D.bandwidth">[docs]</a>    <span class="k">def</span> <span class="nf">bandwidth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bw</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bw_fct</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cov_fct</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">bw</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_bw_fct</span> <span class="o">=</span> <span class="n">bw</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_bandwidth</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">bw</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">bw</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_bw</span> <span class="o">=</span> <span class="n">bw</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_covariance</span> <span class="o">=</span> <span class="n">bw</span> <span class="o">*</span> <span class="n">bw</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">covariance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Covariance of the gaussian kernel.</span>
+<span class="sd">        Can be set either as a fixed value or using a bandwidth calculator,</span>
+<span class="sd">        that is a function of signature ``w(xdata)`` that returns a single</span>
+<span class="sd">        value.</span>
+
+<span class="sd">        .. note::</span>
+
+<span class="sd">            A ndarray with a single value will be converted to a floating point</span>
+<span class="sd">            value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_covariance</span>
+
+    <span class="nd">@covariance.setter</span>
+<div class="viewcode-block" id="KDE1D.covariance"><a class="viewcode-back" href="../../mod_kde.html#pyqt_fit.kde.KDE1D.covariance">[docs]</a>    <span class="k">def</span> <span class="nf">covariance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cov</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bw_fct</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cov_fct</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">cov</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cov_fct</span> <span class="o">=</span> <span class="n">cov</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_bandwidth</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cov</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">cov</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_covariance</span> <span class="o">=</span> <span class="n">cov</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_bw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">cov</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="KDE1D.evaluate"><a class="viewcode-back" href="../../mod_kde.html#pyqt_fit.kde.KDE1D.evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate the kernel on the set of points ``points``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="KDE1D.__call__"><a class="viewcode-back" href="../../mod_kde.html#pyqt_fit.kde.KDE1D.__call__">[docs]</a>    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method is an alias for :py:meth:`BoundedKDE1D.evaluate`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">output</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">method</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Select the method to use. Available methods in the :py:mod:`pyqt_fit.kde_methods` sub-module.</span>
+
+<span class="sd">        The method is an object that should provide the following:</span>
+
+<span class="sd">        ``method(kde, points, output)``</span>
+<span class="sd">            Evaluate the KDE defined by the ``kde`` object on the ``points``. If ``output`` is provided, it should have </span>
+<span class="sd">            the right shape and the result should be written in it.</span>
+
+<span class="sd">        ``method.grid(kde, N, cut)``</span>
+<span class="sd">            Evaluate the KDE defined by the ``kde`` object on a grid. See :py:fct:`pyqt_fit.kde_methods.generate_grid` </span>
+<span class="sd">            for a detailed explanation on how the grid is computed.</span>
+
+<span class="sd">        ``method.name``</span>
+<span class="sd">            Return a user-readable name for the method</span>
+
+<span class="sd">        ``str(method)``</span>
+<span class="sd">            Should return the method&#39;s name</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_method</span>
+
+    <span class="nd">@method.setter</span>
+<div class="viewcode-block" id="KDE1D.method"><a class="viewcode-back" href="../../mod_kde.html#pyqt_fit.kde.KDE1D.method">[docs]</a>    <span class="k">def</span> <span class="nf">method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_method</span> <span class="o">=</span> <span class="n">m</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="KDE1D.closed"><a class="viewcode-back" href="../../mod_kde.html#pyqt_fit.kde.KDE1D.closed">[docs]</a>    <span class="k">def</span> <span class="nf">closed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns true if the density domain is closed (i.e. lower and upper</span>
+<span class="sd">        are both finite)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span> <span class="o">&gt;</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">bounded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns true if the density domain is actually bounded</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span> <span class="o">&gt;</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+
+<div class="viewcode-block" id="KDE1D.grid"><a class="viewcode-back" href="../../mod_kde.html#pyqt_fit.kde.KDE1D.grid">[docs]</a>    <span class="k">def</span> <span class="nf">grid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cut</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate the density on a grid of N points spanning the whole dataset.</span>
+
+<span class="sd">        :returns: a tuple with the mesh on which the density is evaluated and</span>
+<span class="sd">        the density itself</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_method</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">cut</span><span class="p">)</span>
+</div></div>
+<span class="n">Transform</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s">&#39;Tranform&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;__call__&#39;</span><span class="p">,</span> <span class="s">&#39;inv&#39;</span><span class="p">,</span> <span class="s">&#39;Dinv&#39;</span><span class="p">])</span>
+
+<span class="n">LogTransform</span> <span class="o">=</span> <span class="n">Transform</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">)</span>
+<span class="n">ExpTransform</span> <span class="o">=</span> <span class="n">Transform</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">x</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">transform_distribution</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">Dfct</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Transform a distribution into another one by a change a variable.</span>
+
+<span class="sd">    Given a random variable :math:`X` of distribution :math:`f_X`, the random</span>
+<span class="sd">    variable :math:`Y = g(X)` has a distribution :math:`f_Y` given by:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        f_Y(y) = \left| \frac{1}{g&#39;(g^{-1}(y))} \right| \cdot f_X(g^{-1}(y))</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">Dfct</span><span class="p">(</span><span class="n">xs</span><span class="p">)),</span> <span class="n">ys</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">create_transform</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">inv</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">Dinv</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">Transform</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">obj</span>
+    <span class="n">fct</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">__call__</span>
+    <span class="k">if</span> <span class="n">inv</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s">&#39;inv&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s">&quot;Error, transform object must have a &#39;inv&#39; &quot;</span>
+                                 <span class="s">&quot;attribute or you must specify &#39;inv&#39;&quot;</span><span class="p">)</span>
+        <span class="n">inv</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">inv</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s">&#39;inv&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="n">inv</span>
+    <span class="k">if</span> <span class="n">Dinv</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">Dinv</span><span class="p">):</span>
+            <span class="n">Dinv</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">Dinv</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">Dinv</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asfarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                <span class="n">dx</span> <span class="o">=</span> <span class="n">x</span> <span class="o">*</span> <span class="mf">1e-9</span>
+                <span class="n">dx</span><span class="p">[</span><span class="n">x</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">dx</span><span class="p">[</span><span class="n">x</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">])</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">inv</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">dx</span><span class="p">)</span> <span class="o">-</span> <span class="n">inv</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">dx</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">dx</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Transform</span><span class="p">(</span><span class="n">fct</span><span class="p">,</span> <span class="n">inv</span><span class="p">,</span> <span class="n">Dinv</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="TransformKDE"><a class="viewcode-back" href="../../mod_kde.html#pyqt_fit.kde.TransformKDE">[docs]</a><span class="k">class</span> <span class="nc">TransformKDE</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Compute the Kernel Density Estimate of a dataset, transforming it first to</span>
+<span class="sd">    a domain where distances are &quot;more meaningful&quot;.</span>
+
+<span class="sd">    Often, KDE is best estimated in a different domain. This object takes a</span>
+<span class="sd">    KDE1D object (or one compatible), and a transformation function.</span>
+
+<span class="sd">    Given a random variable :math:`X` of distribution :math:`f_X`, the random</span>
+<span class="sd">    variable :math:`Y = g(X)` has a distribution :math:`f_Y` given by:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        f_Y(y) = \left| \frac{1}{g&#39;(g^{-1}(y))} \right| \cdot f_X(g^{-1}(y))</span>
+
+<span class="sd">    In our term, :math:`Y` is the random variable the user is interested in,</span>
+<span class="sd">    and :math:`X` the random variable we can estimate using the KDE. In this</span>
+<span class="sd">    case, :math:`g` is the transform from :math:`Y` to :math:`X`.</span>
+
+<span class="sd">    So to estimate the distribution on a set of points given in :math:`x`, we</span>
+<span class="sd">    need a total of three functions:</span>
+
+<span class="sd">        - Direct function: transform from the original space to the one in</span>
+<span class="sd">          which the KDE will be perform (i.e. :math:`g^{-1}: y \mapsto x`)</span>
+<span class="sd">        - Invert function: transform from the KDE space to the original one</span>
+<span class="sd">          (i.e. :math:`g: x \mapsto y`)</span>
+<span class="sd">        - Derivative of the invert function</span>
+
+<span class="sd">    If the derivative is not provided, it will be estimated numerically.</span>
+
+<span class="sd">    :param kde: KDE evaluation object</span>
+<span class="sd">    :param trans: Either a simple function, or a function object with</span>
+<span class="sd">        attributes `inv` and `Dinv` to use in case they are not provided</span>
+<span class="sd">        as arguments.</span>
+<span class="sd">    :param inv: Invert of the function. If not provided, `trans` must have</span>
+<span class="sd">        it as attribute.</span>
+<span class="sd">    :param Dinv: Derivative of the invert function.</span>
+
+<span class="sd">    Any unknown member is forwarded to the underlying KDE object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kde</span><span class="p">,</span> <span class="n">trans</span><span class="p">,</span> <span class="n">inv</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">Dinv</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span>
+        <span class="n">trans</span> <span class="o">=</span> <span class="n">create_transform</span><span class="p">(</span><span class="n">trans</span><span class="p">,</span> <span class="n">inv</span><span class="p">,</span> <span class="n">Dinv</span><span class="p">)</span>
+        <span class="n">d</span><span class="p">[</span><span class="s">&#39;trans&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">trans</span>
+        <span class="n">d</span><span class="p">[</span><span class="s">&#39;kde&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kde</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kde</span><span class="o">.</span><span class="n">xdata</span> <span class="o">=</span> <span class="n">trans</span><span class="p">(</span><span class="n">kde</span><span class="o">.</span><span class="n">xdata</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kde</span><span class="o">.</span><span class="n">lower</span> <span class="o">=</span> <span class="n">trans</span><span class="p">(</span><span class="n">kde</span><span class="o">.</span><span class="n">lower</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kde</span><span class="o">.</span><span class="n">upper</span> <span class="o">=</span> <span class="n">trans</span><span class="p">(</span><span class="n">kde</span><span class="o">.</span><span class="n">upper</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kde</span><span class="o">.</span><span class="n">update_bandwidth</span><span class="p">()</span>
+
+<div class="viewcode-block" id="TransformKDE.copy"><a class="viewcode-back" href="../../mod_kde.html#pyqt_fit.kde.TransformKDE.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a shallow copy of the TransformKDE object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">TransformKDE</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">TransformKDE</span><span class="p">)</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">__dict__</span>
+        <span class="n">d</span><span class="p">[</span><span class="s">&#39;trans&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trans</span>
+        <span class="n">d</span><span class="p">[</span><span class="s">&#39;kde&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kde</span>
+        <span class="k">return</span> <span class="n">res</span>
+</div>
+<div class="viewcode-block" id="TransformKDE.evaluate"><a class="viewcode-back" href="../../mod_kde.html#pyqt_fit.kde.TransformKDE.evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate the KDE on a set of points</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">trans</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trans</span>
+        <span class="n">pts</span> <span class="o">=</span> <span class="n">trans</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kde</span><span class="p">(</span><span class="n">pts</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">transform_distribution</span><span class="p">(</span><span class="n">pts</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">trans</span><span class="o">.</span><span class="n">Dinv</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="TransformKDE.__call__"><a class="viewcode-back" href="../../mod_kde.html#pyqt_fit.kde.TransformKDE.__call__">[docs]</a>    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate the KDE on a set of points</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="TransformKDE.grid"><a class="viewcode-back" href="../../mod_kde.html#pyqt_fit.kde.TransformKDE.grid">[docs]</a>    <span class="k">def</span> <span class="nf">grid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate the KDE on a grid of points with N points.</span>
+
+<span class="sd">        The grid is regular *in the transformed domain*, so as to use FFT or</span>
+<span class="sd">        CDT methods when applicable.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">xs</span><span class="p">,</span> <span class="n">ys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kde</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+        <span class="n">trans</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trans</span>
+        <span class="k">return</span> <span class="n">trans</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">xs</span><span class="p">),</span> <span class="n">transform_distribution</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">trans</span><span class="o">.</span><span class="n">Dinv</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kde</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kde</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PyQt-Fit 1.2.2 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Barbier de Reuille, Pierre.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
