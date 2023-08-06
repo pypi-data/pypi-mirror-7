@@ -1,0 +1,43 @@
+<div i18n:domain="raptus.article"
+     tal:condition="view/images"
+     class="imageSliderTeaser">
+
+
+    <div class="visualNoPrint scrollable"
+         tal:define="anonymous context/@@plone_portal_state/anonymous">
+
+        <ul tal:attributes="class string:items manageableList ${view/css_class}">
+            <li tal:repeat="item view/images"
+                tal:attributes="class string:${item/class}">
+                <metal:manage use-macro="context/raptus_article_macros/macros/manage" />
+
+                <a tal:omit-tag="python: not view.linkRelatedItems or item['link'] is None"
+                   href="#"
+                   tal:attributes="href item/link">
+                <span class="img"><img tal:attributes="src item/img_url;
+                                           alt item/caption;" /></span>
+
+                <span class="caption"
+                      tal:define="description python:view.showCaption and item['description'];
+                                  title python:view.showTitle and item['caption']"
+                      tal:condition="python: description or title">
+                    <span class="title" tal:condition="title" tal:content="item/caption" />
+                    <span class="description" tal:condition="description" tal:content="structure python:item.get('description').replace('\n', '<br />')" />
+                </span>
+                </a>
+            </li>
+        </ul>
+    </div>
+    <div class="navi" tal:condition="view/showNav"></div>
+    <tal:js tal:replace='structure string:&lt;script type="text/javascript" &gt;' />
+    $(function() {
+       var api = raptus.imageslider.initScrollable($('.imageSliderTeaser'),
+                                                   autoscroll={
+                                                       interval: <tal:value replace="view/haltTime" />,
+                                                       autopause: false
+                                                   });
+       api.getConf()['speed'] = <tal:value replace="view/fadeTime" />;
+    });
+    <tal:js tal:replace='structure string:&lt;/script&gt;' />
+
+</div>
