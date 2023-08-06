@@ -1,0 +1,64 @@
+=================
+HI Spectral Model
+=================
+
+Description:
+============
+
+This package provides routines for generating model profiles for the spatially-integrated spectral line of neutral hydrogen (HI) from a galaxy. The mathematics is described in
+
+    Stewart I. M., Blyth S-L. and de Blok W. J. G., 'A simple model for global HI profiles of gaalxies,' arXiv:1405.1838, (2014).
+
+Useage:
+=======
+
+* After you download and unpack the package you'll probably want to add its directory to your PYTHONPATH.
+
+* There's a test script in the bin/ subdirectory which lets you test the code (this is what requires matplotlib/pylab). This script, testbed.py, also gives examples of how to use the class HIProfileModel which does all the heavy lifting.
+
+* The central functionality is in the module named hi_profile.py. To use this, add to your code the line
+
+    from hispectrum import hi_profile
+
+* The class which sets up the model is called
+
+    hi_profile.HIProfileModel
+
+In order to make an instance of this, you have to tell it about the set of velocities you want the profile to span. The number of velocity channels, their spacing, ordering etc are stored in an instance of another class:
+
+    hi_profile.ChannelDesc
+
+An easy alternative to this is the subclass
+
+    hi_profile.SimpleVelChannelDesc
+
+for which you only need to know the velocities of the first and last channels, and the number of channels. (There's a fourth argument 'worldUnit' which has the default value of 'km/s'.)
+
+To instantiate hi_profile.HIProfileModel you also need to specify the parameters. The model has a minimum of 6, which are used to construct the line profile itself; additional parameters can be supplied if desired to construct a baseline. The simplest way to bundle up the required parameter information is in the class
+
+    hi_profile.HIVanillaParsSpec
+
+Once you have instantiated hi_profile.HIProfileModel, you can supply any desired values of the parameters to the method
+
+    hi_profile.HIVanillaParsSpec.calcModelValues(<numpy vector of 6+ parameter values>)
+
+Returned is a numpy vector of values in janskys of the model HI profile across the range of velocity channels earlier supplied.
+
+* If you want to change the velocity channels, you will need new instances of hi_profile.ChannelDesc and hi_profile.HIProfileModel.
+
+* To summarize, a bare-bones procedure is as follows:
+
+1. Decide the number of channels desired, and the velocities to assign to the first and last channels.
+
+2. Instantiate classes something like as follows:
+
+    parsSpecObj = hi_profile.HIVanillaParsSpec()
+    channelDesc = hi_profile.SimpleVelChannelDesc(velFirstChan, velLastChan, numChansDesired)
+    profileObj  = hi_profile.HIProfileModel(parsSpecObj, channelDesc)
+
+3. Choose parameter values.
+
+4. Generate the spectrum via
+
+    spectrumValues = profileObj.calcModelValues(<parameter values>)
+
