@@ -1,0 +1,150 @@
+Title Dependencies of submodules
+
+package edeposit.amqp.ftp {
+    package edeposit.amqp.ftp.decoders {
+        class "_​_init__.py" as dec_init <<M, Green>>{
+            Decoders package wrapper.
+            This provides interface
+            to all submodules, validation
+            and exceptions.
+
+            parse_meta(filename, data)
+        }
+        class "validator.py" as validator <<M, Green>>{
+            Validation of given
+            data and so on.
+            ---
+            check_structure(data)
+            class Field
+            class FieldParser
+        }
+        class "parser_json.py" as parser_json <<M, Green>>{
+            decode(data)
+        }
+        class "parser_csv.py" as parser_csv <<M, Green>>{
+            decode(data)
+        }
+        class "parser_yaml.py" as parser_yaml <<M, Green>>{
+            decode(data)
+        }
+        class "parser_xml.py" as parser_xml <<M, Green>>{
+            decode(data)
+        }
+        
+        class "meta_exceptions.py" as meta_exceptions <<M, Green>>{
+            class MetaParsingException
+        }
+
+        validator -u-> parser_json
+        validator -u-> parser_csv
+        validator -u-> parser_yaml
+        validator -u-> parser_xml
+        
+        meta_exceptions -u-> validator
+
+        meta_exceptions -u--> parser_json
+        meta_exceptions -u--> parser_csv
+        meta_exceptions -u--> parser_yaml
+        meta_exceptions -u--> parser_xml
+
+        parser_json -u--> dec_init
+        parser_csv -u--> dec_init
+        parser_yaml -u--> dec_init
+        parser_xml -u--> dec_init
+        
+        validator -u--> dec_init
+    }
+
+    package "Usable scripts" as scripts <<Frame>> {
+        class "_​_init__.py" as init <<M, Green>>{
+            AMQP interface.
+
+            reactToAMQPMessage(message, UUID)
+        }
+        class "monitor.py" as monitor <<M, Green>>{
+            Log watcher - script which
+            monitors given source.
+            Used mainly for testing,
+            also it will be used in
+            edeposit.amqp.
+
+            process_log(file_iterator)
+            main(filename)
+        }
+        class "initializer.py" as initializer <<M, Green>>{
+            Used to initialize ProFTPD,
+            configuration files, logs,
+            permissons, directories.
+
+            add_or_update(data, item, value)
+            main()
+        }
+    }
+    class "api.py" as api <<M, Green>>{
+        Used to Add, Remove or Update users to
+        ProFTPD.
+
+        require_root(fn)
+        reload_configuration()
+        recursive_chmod(path, mode)
+        create_lock_file(path)
+        add_user(username, password)
+        remove_user(username)
+        change_password(username, new_password)
+        list_users()
+    }
+    class "request_parser.py" as request <<M, Green>>{
+        Provides API to watch the ProFTPD log.
+
+        process_import_request(username, path, timestamp, logger_handler)
+    }
+    class "passwd_reader.py" as passwd <<M, Green>>{
+        `passwd` file reader/writer.
+
+        load_users(path)
+        save_users(users, path)
+        get_ftp_uid()
+        set_permissions(filename, uid, gid, mode)
+        read_user_config(username, path)
+        save_user_config(username, conf_dict, path)
+    }
+    class "structures.py" as structures <<M, Green>>{
+        Contains all AMQP structures.
+        ___
+        class AddUser
+        class RemoveUser
+        class ChangePassword
+        class ListRegisteredUsers
+        class SetUserSettings
+        class GetUserSettings
+        class Userlist
+        class UserSettings
+        class ImportRequest
+        class MetadataFile
+        class EbookFile
+        class DataPair
+    }
+    class "settings.py" as settings <<M, Green>>{
+        Provides configuration for whole
+        package.
+        
+        Has dependecies to all packages.
+
+        conf_merger(user_dict, variable)
+        get_all_constants()
+        substitute_globals(config_dict)
+    }
+    
+    api -r-> init
+    structures -l> init
+    structures --> monitor
+    dec_init -u-> structures
+    
+    passwd ---> init
+    
+    request -u-> monitor
+    
+    passwd -l-> request
+    
+    api -u-> initializer
+}
