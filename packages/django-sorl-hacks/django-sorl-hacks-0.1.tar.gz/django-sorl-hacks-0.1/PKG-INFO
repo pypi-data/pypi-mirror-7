@@ -1,0 +1,90 @@
+Metadata-Version: 1.1
+Name: django-sorl-hacks
+Version: 0.1
+Summary: Some usefull hacks based on sorl-thumbnail
+Home-page: https://github.com/zerc/sorl_hacks
+Author: Vladimir Savin
+Author-email: zero13cool@yandex.ru
+License: MIT
+Description: ==================
+        django-sorl-hacks
+        ==================
+        
+        create_thumbs template tag
+        --------------------------
+        Parse your text on fly, finds images urls and replace it by thumb url:
+        
+        ::
+        
+            {% load sorl_hacks %}
+        
+            {% for text_block in post.blocks.all %}
+                <h4>{{ text_block }}</h4>
+                <p>{{ text_block.body|create_thumbs|safe }}</p>
+                <hr>
+            {% endfor %}
+        
+        
+        
+        ThumbedCkeditorImages
+        ---------------------
+        
+        Admin model mixin with post_save replacing.
+        
+        admin.py:
+        
+        .. code:: python
+        
+            from sorl_hacks.admin import ThumbedCkeditorImages
+        
+            class BlogPostAdmin(ThumbedCkeditorImages):
+                ...
+        
+        
+        ThumbMixin
+        -----------
+        Usefull in stadart Django templates. Add property ``my_model.get_thumb_WIDTHxHEIGHT`` to yours models.
+        
+        Example of ``my_model_detail.html``:
+        
+        ::
+        
+            {{ my_model.get_thumb_200x200.html }}
+        
+            {{ my_model.get_thumb_small.html }}
+        
+        
+        instead of:
+        
+        ::
+        
+            {% thumbnail my_model.pic "56x56" crop="center" as im %}
+                <img src="{{ im.url }}" width="56" height="56">
+            {% empty %}
+                <img src="{{ MISSING_IMAGE }}" width="56" height="56">
+            {% endthumbnail %}
+        
+        
+        **INSTALL**
+        
+        Your ``models.py``:
+        
+        .. code:: python
+        
+            from django.db import models
+            from sorl.thumbnail import ImageField
+            from sorl_hacks.models import ThumbMixin
+        
+            class Post(ThumbMixin, models.Model):
+                image = ImageField('image', upload_to='posts', **nullable)
+        
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Framework :: Django
+Classifier: Environment :: Web Environment
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Internet :: WWW/HTTP
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
