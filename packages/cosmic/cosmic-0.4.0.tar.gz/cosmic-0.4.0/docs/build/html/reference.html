@@ -1,0 +1,867 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Reference &mdash; Cosmic 0.3.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.3.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Cosmic 0.3.1 documentation" href="index.html" />
+    <link rel="prev" title="Guide" href="guide.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="guide.html" title="Guide"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Cosmic 0.3.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="reference">
+<h1>Reference<a class="headerlink" href="#reference" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-cosmic.api">
+<span id="apis"></span><h2>APIs<a class="headerlink" href="#module-cosmic.api" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="cosmic.api.BaseAPI">
+<em class="property">class </em><tt class="descclassname">cosmic.api.</tt><tt class="descname">BaseAPI</tt><big>(</big><em>spec</em><big>)</big><a class="headerlink" href="#cosmic.api.BaseAPI" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class represents the common interface for the server-side and the
+client-side API objects. It contains the API spec as well as a collection
+of functions for each API endpoint. On the server side, these functions
+are user-defined. On the client side, they are created automatically to
+execute HTTP calls.</p>
+<dl class="attribute">
+<dt id="cosmic.api.BaseAPI.spec">
+<tt class="descname">spec</tt><a class="headerlink" href="#cosmic.api.BaseAPI.spec" title="Permalink to this definition">¶</a></dt>
+<dd><p>The API spec, in its native form (see
+<a class="reference internal" href="#cosmic.types.APISpec" title="cosmic.types.APISpec"><tt class="xref py py-class docutils literal"><span class="pre">APISpec</span></tt></a>)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cosmic.api.BaseAPI.actions">
+<tt class="descname">actions</tt><a class="headerlink" href="#cosmic.api.BaseAPI.actions" title="Permalink to this definition">¶</a></dt>
+<dd><p>This stores the action functions as properties of a plain object:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">spelling</span><span class="o">.</span><span class="n">actions</span><span class="o">.</span><span class="n">correct</span><span class="p">(</span><span class="s">&#39;simpl&#39;</span><span class="p">)</span>
+<span class="go">&quot;simple&quot;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cosmic.api.BaseAPI.models">
+<tt class="descname">models</tt><a class="headerlink" href="#cosmic.api.BaseAPI.models" title="Permalink to this definition">¶</a></dt>
+<dd><p>Through this property you can access the model functions
+<tt class="xref py py-meth docutils literal"><span class="pre">get_by_id()</span></tt>, <tt class="xref py py-meth docutils literal"><span class="pre">get_list()</span></tt>, <tt class="xref py py-meth docutils literal"><span class="pre">create()</span></tt>, <tt class="xref py py-meth docutils literal"><span class="pre">update()</span></tt>
+and <tt class="xref py py-meth docutils literal"><span class="pre">delete()</span></tt>. They are accessed as attributes:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">quotes</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Quote</span><span class="o">.</span><span class="n">get_by_id</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">)</span>
+<span class="go">{&quot;text&quot;: &quot;Know thyself.&quot;, &quot;author&quot;: &quot;Socrates&quot;}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="cosmic.api.API">
+<em class="property">class </em><tt class="descclassname">cosmic.api.</tt><tt class="descname">API</tt><big>(</big><em>name</em>, <em>homepage=None</em><big>)</big><a class="headerlink" href="#cosmic.api.API" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cosmic.api.BaseAPI" title="cosmic.api.BaseAPI"><tt class="xref py py-class docutils literal"><span class="pre">cosmic.api.BaseAPI</span></tt></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>name</strong> &#8211; The API name is required, and should be unique</li>
+<li><strong>homepage</strong> &#8211; If you like, the API spec may include a link to your
+homepage</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="cosmic.api.API.run">
+<tt class="descname">run</tt><big>(</big><em>port=5000</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cosmic.api.API.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simple way to run the API in development. Uses Werkzeug&#8217;s
+<a class="reference external" href="http://werkzeug.pocoo.org/docs/serving/#werkzeug.serving.run_simple" title="(in Werkzeug v0.10)"><tt class="xref py py-func docutils literal"><span class="pre">run_simple()</span></tt></a> internally. See
+<a class="reference internal" href="guide.html#guide-serving"><em>Serving</em></a> for more options.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cosmic.api.API.action">
+<tt class="descname">action</tt><big>(</big><em>accepts=None</em>, <em>returns=None</em><big>)</big><a class="headerlink" href="#cosmic.api.API.action" title="Permalink to this definition">¶</a></dt>
+<dd><p>A decorator for registering actions with API.</p>
+<p>The <em>accepts</em> parameter is a schema that describes the input of the
+function, <em>returns</em> is a schema that describes the output of the
+function. The name of the function becomes the name of the action and
+the docstring serves as the action&#8217;s documentation.</p>
+<p>Once registered, an action will become accessible as an attribute of
+the <a class="reference internal" href="#cosmic.api.BaseAPI.actions" title="cosmic.api.BaseAPI.actions"><tt class="xref py py-data docutils literal"><span class="pre">actions</span></tt></a> object.</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">random</span> <span class="o">=</span> <span class="n">API</span><span class="p">(</span><span class="s">&quot;random&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@random.action</span><span class="p">(</span><span class="n">returns</span><span class="o">=</span><span class="n">Integer</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">def</span> <span class="nf">generate</span><span class="p">():</span>
+<span class="gp">... </span>    <span class="s">&quot;Random enough&quot;</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="mi">9</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">random</span><span class="o">.</span><span class="n">actions</span><span class="o">.</span><span class="n">generate</span><span class="p">()</span>
+<span class="go">9</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="cosmic.api.API.model">
+<tt class="descname">model</tt><big>(</big><em>model_cls</em><big>)</big><a class="headerlink" href="#cosmic.api.API.model" title="Permalink to this definition">¶</a></dt>
+<dd><p>A decorator for registering a model with an API. The name of the
+model class is used as the name of the resulting model. A subclass
+of <a class="reference internal" href="#cosmic.models.BaseModel" title="cosmic.models.BaseModel"><tt class="xref py py-class docutils literal"><span class="pre">BaseModel</span></tt></a> is used to supply the necessary
+metadata and functions to the API.</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">dictionary</span> <span class="o">=</span> <span class="n">API</span><span class="p">(</span><span class="s">&quot;dictionary&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@dictionary.model</span>
+<span class="gp">... </span><span class="k">class</span> <span class="nc">Word</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="n">properties</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span>       <span class="n">required</span><span class="p">(</span><span class="s">&quot;text&quot;</span><span class="p">,</span> <span class="n">String</span><span class="p">)</span>
+<span class="gp">... </span>   <span class="p">]</span>
+<span class="gp">...</span>
+</pre></div>
+</div>
+<p>Once registered, a model will become accessible as an attribute of the
+<a class="reference internal" href="#cosmic.api.BaseAPI.models" title="cosmic.api.BaseAPI.models"><tt class="xref py py-data docutils literal"><span class="pre">models</span></tt></a> object.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-cosmic.models">
+<span id="models"></span><h2>Models<a class="headerlink" href="#module-cosmic.models" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="cosmic.models.BaseModel">
+<em class="property">class </em><tt class="descclassname">cosmic.models.</tt><tt class="descname">BaseModel</tt><a class="headerlink" href="#cosmic.models.BaseModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclasses of this class are fed into the <a class="reference internal" href="#cosmic.api.API.model" title="cosmic.api.API.model"><tt class="xref py py-meth docutils literal"><span class="pre">model()</span></tt></a>
+decorator to attach models to an API. The API object doesn&#8217;t care about
+how you implement this class, it just copies the necessary properties and
+leaves the class alone.</p>
+<dl class="attribute">
+<dt id="cosmic.models.BaseModel.properties">
+<tt class="descname">properties</tt><a class="headerlink" href="#cosmic.models.BaseModel.properties" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of properties which, along with
+<a class="reference internal" href="#cosmic.models.BaseModel.links" title="cosmic.models.BaseModel.links"><tt class="xref py py-data docutils literal"><span class="pre">links</span></tt></a> below, will be used for the
+model&#8217;s representation and patch, defined in the same way Teleport
+Struct fields are defined:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="n">properties</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">required</span><span class="p">(</span><span class="s">&#39;name&#39;</span><span class="p">,</span> <span class="n">String</span><span class="p">),</span>
+    <span class="n">optional</span><span class="p">(</span><span class="s">&#39;age&#39;</span><span class="p">,</span> <span class="n">Integer</span><span class="p">),</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="#cosmic.types.Representation" title="cosmic.types.Representation"><tt class="xref py py-class docutils literal"><span class="pre">Representation</span></tt></a> and
+<a class="reference internal" href="#cosmic.types.Patch" title="cosmic.types.Patch"><tt class="xref py py-class docutils literal"><span class="pre">Patch</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cosmic.models.BaseModel.links">
+<tt class="descname">links</tt><a class="headerlink" href="#cosmic.models.BaseModel.links" title="Permalink to this definition">¶</a></dt>
+<dd><p>Similar to properties, but encodes a relationship between this model
+and another. In database terms this would be a foreign key. Use
+<tt class="xref py py-func docutils literal"><span class="pre">required_link()</span></tt> and
+<tt class="xref py py-func docutils literal"><span class="pre">optional_link()</span></tt> to specify them.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cosmic.models.BaseModel.methods">
+<tt class="descname">methods</tt><a class="headerlink" href="#cosmic.models.BaseModel.methods" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of methods that this model supports. Possible values are
+<tt class="docutils literal"><span class="pre">'get_by_id'</span></tt>, <tt class="docutils literal"><span class="pre">'create'</span></tt>, <tt class="docutils literal"><span class="pre">'update'</span></tt>, <tt class="docutils literal"><span class="pre">'delete'</span></tt> and
+<tt class="docutils literal"><span class="pre">'get_list'</span></tt>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cosmic.models.BaseModel.query_fields">
+<tt class="descname">query_fields</tt><a class="headerlink" href="#cosmic.models.BaseModel.query_fields" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of properties for the <a class="reference internal" href="#cosmic.models.BaseModel.get_list" title="cosmic.models.BaseModel.get_list"><tt class="xref py py-meth docutils literal"><span class="pre">get_list()</span></tt></a> handler. They are defined
+in the same way as <a class="reference internal" href="#cosmic.models.BaseModel.properties" title="cosmic.models.BaseModel.properties"><tt class="xref py py-data docutils literal"><span class="pre">properties</span></tt></a> above.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cosmic.models.BaseModel.list_metadata">
+<tt class="descname">list_metadata</tt><a class="headerlink" href="#cosmic.models.BaseModel.list_metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of properties that can be returned along with the usual response
+for <a class="reference internal" href="#cosmic.models.BaseModel.get_list" title="cosmic.models.BaseModel.get_list"><tt class="xref py py-meth docutils literal"><span class="pre">get_list()</span></tt></a>. These can be used for
+things like pagination.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="cosmic.models.BaseModel.get_by_id">
+<em class="property">classmethod </em><tt class="descname">get_by_id</tt><big>(</big><em>id</em><big>)</big><a class="headerlink" href="#cosmic.models.BaseModel.get_by_id" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>id</strong> &#8211; </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Model representation</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Raises <a class="reference internal" href="#cosmic.exceptions.NotFound" title="cosmic.exceptions.NotFound">cosmic.exceptions.NotFound</a>:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="cosmic.models.BaseModel.get_list">
+<em class="property">classmethod </em><tt class="descname">get_list</tt><big>(</big><em>**kwargs</em><big>)</big><a class="headerlink" href="#cosmic.models.BaseModel.get_list" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kwargs</strong> &#8211; Defined by             <a class="reference internal" href="#cosmic.models.BaseModel.query_fields" title="cosmic.models.BaseModel.query_fields"><tt class="xref py py-data docutils literal"><span class="pre">query_fields</span></tt></a></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">If model does not define             <a class="reference internal" href="#cosmic.models.BaseModel.list_metadata" title="cosmic.models.BaseModel.list_metadata"><tt class="xref py py-data docutils literal"><span class="pre">list_metadata</span></tt></a>, returns a list of
+tuples of models ids and representations. Otherwise returns a
+tuple where the first element is the above list, and the second is
+a dict as specified by             <a class="reference internal" href="#cosmic.models.BaseModel.list_metadata" title="cosmic.models.BaseModel.list_metadata"><tt class="xref py py-data docutils literal"><span class="pre">list_metadata</span></tt></a>.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="cosmic.models.BaseModel.create">
+<em class="property">classmethod </em><tt class="descname">create</tt><big>(</big><em>**valid_patch</em><big>)</big><a class="headerlink" href="#cosmic.models.BaseModel.create" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>validated_patch</strong> &#8211; The model patch.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A tuple of model id and model representation.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="cosmic.models.BaseModel.update">
+<em class="property">classmethod </em><tt class="descname">update</tt><big>(</big><em>id</em>, <em>**valid_patch</em><big>)</big><a class="headerlink" href="#cosmic.models.BaseModel.update" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>id</strong> &#8211; </li>
+<li><strong>validated_patch</strong> &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The model representation after patch has been applied.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Raises <a class="reference internal" href="#cosmic.exceptions.NotFound" title="cosmic.exceptions.NotFound">cosmic.exceptions.NotFound</a>:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="cosmic.models.BaseModel.delete">
+<em class="property">classmethod </em><tt class="descname">delete</tt><big>(</big><em>id</em><big>)</big><a class="headerlink" href="#cosmic.models.BaseModel.delete" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>id</strong> &#8211; </td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Raises <a class="reference internal" href="#cosmic.exceptions.NotFound" title="cosmic.exceptions.NotFound">cosmic.exceptions.NotFound</a>:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="cosmic.models.BaseModel.validate_patch">
+<em class="property">classmethod </em><tt class="descname">validate_patch</tt><big>(</big><em>patch</em><big>)</big><a class="headerlink" href="#cosmic.models.BaseModel.validate_patch" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>patch</strong> &#8211; The model patch</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Raises cosmic.exceptions.ValidationError:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>Run before any <a class="reference internal" href="#cosmic.models.BaseModel.create" title="cosmic.models.BaseModel.create"><tt class="xref py py-meth docutils literal"><span class="pre">create()</span></tt></a> or
+<a class="reference internal" href="#cosmic.models.BaseModel.update" title="cosmic.models.BaseModel.update"><tt class="xref py py-meth docutils literal"><span class="pre">update()</span></tt></a> call to validate the patch.
+All fields are made optional for the patch, so this method is a chance
+to ensure that the expected values were indeed passed in.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="types">
+<h2>Types<a class="headerlink" href="#types" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="cosmic.types.Model">
+<em class="property">class </em><tt class="descclassname">cosmic.types.</tt><tt class="descname">Model</tt><big>(</big><em>full_name</em><big>)</big><a class="headerlink" href="#cosmic.types.Model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">teleport.BasicWrapper</span></tt></p>
+<p>A Teleport type representing an API model. Its JSON form is a dotted
+string, the native form is an instance of this class.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="cosmic.types.Link">
+<em class="property">class </em><tt class="descclassname">cosmic.types.</tt><tt class="descname">Link</tt><big>(</big><em>param</em><big>)</big><a class="headerlink" href="#cosmic.types.Link" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">teleport.ParametrizedWrapper</span></tt></p>
+<p>A Teleport type representing a link to an object. Its native form is
+simply a resource id. It takes a <a class="reference internal" href="#cosmic.types.Model" title="cosmic.types.Model"><tt class="xref py py-class docutils literal"><span class="pre">Model</span></tt></a> as
+parameter:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Link</span><span class="p">(</span><span class="n">Model</span><span class="p">(</span><span class="s">&#39;places.City&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">to_json</span><span class="p">(</span><span class="s">&quot;3&quot;</span><span class="p">)</span>
+<span class="go">{&quot;href&quot;: &quot;/City/3&quot;}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Link</span><span class="p">(</span><span class="n">Model</span><span class="p">(</span><span class="s">&#39;places.City&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">from_json</span><span class="p">({</span><span class="s">&quot;href&quot;</span><span class="p">:</span> <span class="s">&quot;/City/3&quot;</span><span class="p">})</span>
+<span class="go">&quot;3&quot;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="cosmic.types.Representation">
+<em class="property">class </em><tt class="descclassname">cosmic.types.</tt><tt class="descname">Representation</tt><big>(</big><em>param</em><big>)</big><a class="headerlink" href="#cosmic.types.Representation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">cosmic.types.BaseRepresentation</span></tt></p>
+<p>A Teleport type representing a model representation. Its native form is
+a dict as defined by <a class="reference internal" href="#cosmic.models.BaseModel.properties" title="cosmic.models.BaseModel.properties"><tt class="xref py py-data docutils literal"><span class="pre">properties</span></tt></a> and
+<a class="reference internal" href="#cosmic.models.BaseModel.links" title="cosmic.models.BaseModel.links"><tt class="xref py py-data docutils literal"><span class="pre">links</span></tt></a>. Links are represented by plain
+string ids.</p>
+<p>It takes a <a class="reference internal" href="#cosmic.types.Model" title="cosmic.types.Model"><tt class="xref py py-class docutils literal"><span class="pre">Model</span></tt></a> as parameter.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="cosmic.types.Patch">
+<em class="property">class </em><tt class="descclassname">cosmic.types.</tt><tt class="descname">Patch</tt><big>(</big><em>param</em><big>)</big><a class="headerlink" href="#cosmic.types.Patch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">cosmic.types.BaseRepresentation</span></tt></p>
+<p>A Teleport type representing a model patch. Its native form is similar
+to that of <a class="reference internal" href="#cosmic.types.Representation" title="cosmic.types.Representation"><tt class="xref py py-class docutils literal"><span class="pre">Representation</span></tt></a>, except all fields are
+optional. To make a field required, use
+<a class="reference internal" href="#cosmic.models.BaseModel.validate_patch" title="cosmic.models.BaseModel.validate_patch"><tt class="xref py py-meth docutils literal"><span class="pre">validate_patch()</span></tt></a>.</p>
+<p>It takes a <a class="reference internal" href="#cosmic.types.Model" title="cosmic.types.Model"><tt class="xref py py-class docutils literal"><span class="pre">Model</span></tt></a> as parameter.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="cosmic.types.URLParams">
+<em class="property">class </em><tt class="descclassname">cosmic.types.</tt><tt class="descname">URLParams</tt><big>(</big><em>param</em><big>)</big><a class="headerlink" href="#cosmic.types.URLParams" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">teleport.ParametrizedWrapper</span></tt></p>
+<p>A Teleport type that behaves mostly like the <tt class="xref py py-class docutils literal"><span class="pre">Struct</span></tt>
+type, except it serializes the data into a query string:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">URLParams</span><span class="p">([</span>
+<span class="gp">... </span>    <span class="n">required</span><span class="p">(</span><span class="s">&quot;foo&quot;</span><span class="p">,</span> <span class="n">Boolean</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">required</span><span class="p">(</span><span class="s">&quot;bar&quot;</span><span class="p">,</span> <span class="n">Integer</span><span class="p">)</span>
+<span class="gp">... </span><span class="p">])</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">to_json</span><span class="p">({</span><span class="s">&quot;foo&quot;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span> <span class="s">&quot;bar&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">})</span>
+<span class="go">&#39;foo=true&amp;bar=3&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">from_json</span><span class="p">(</span><span class="s">&quot;foo=false&amp;bar=0&quot;</span><span class="p">)</span>
+<span class="go">{&#39;foo&#39;: False, &#39;bar&#39;: 0}</span>
+</pre></div>
+</div>
+<p>A string parameter or a parameter whose type is a wrapper over string will
+not require quotes:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cosmic.types</span> <span class="kn">import</span> <span class="n">DateTime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">URLParams</span><span class="p">([</span>
+<span class="gp">... </span>    <span class="n">required</span><span class="p">(</span><span class="s">&#39;birthday&#39;</span><span class="p">,</span> <span class="n">DateTime</span><span class="p">)</span>
+<span class="gp">... </span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span><span class="o">.</span><span class="n">from_json</span><span class="p">(</span><span class="s">&#39;birthday=1991-08-12T00%3A00%3A00&#39;</span><span class="p">)</span>
+<span class="go">{&#39;birthday&#39;: datetime.datetime(1991, 8, 12, 0, 0)}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="cosmic.types.APISpec">
+<em class="property">class </em><tt class="descclassname">cosmic.types.</tt><tt class="descname">APISpec</tt><a class="headerlink" href="#cosmic.types.APISpec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">teleport.BasicWrapper</span></tt></p>
+<p>The teleport type that encapsulates all metadata associated with an API.
+This type is used to prepare the output for the <tt class="docutils literal"><span class="pre">/spec.json</span></tt> endpoint,
+as well as to deserialize it when building an API client.</p>
+<p>What&#8217;s inside? Well, if you insist:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="n">Struct</span><span class="p">([</span>
+    <span class="n">required</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">,</span> <span class="n">String</span><span class="p">),</span>
+    <span class="n">optional</span><span class="p">(</span><span class="s">&quot;homepage&quot;</span><span class="p">,</span> <span class="n">String</span><span class="p">),</span>
+    <span class="n">required</span><span class="p">(</span><span class="s">&quot;actions&quot;</span><span class="p">,</span> <span class="n">OrderedMap</span><span class="p">(</span><span class="n">Struct</span><span class="p">([</span>
+        <span class="n">optional</span><span class="p">(</span><span class="s">&quot;accepts&quot;</span><span class="p">,</span> <span class="n">Schema</span><span class="p">),</span>
+        <span class="n">optional</span><span class="p">(</span><span class="s">&quot;returns&quot;</span><span class="p">,</span> <span class="n">Schema</span><span class="p">),</span>
+        <span class="n">optional</span><span class="p">(</span><span class="s">&quot;doc&quot;</span><span class="p">,</span> <span class="n">String</span><span class="p">)</span>
+    <span class="p">]))),</span>
+    <span class="n">required</span><span class="p">(</span><span class="s">&quot;models&quot;</span><span class="p">,</span> <span class="n">OrderedMap</span><span class="p">(</span><span class="n">Struct</span><span class="p">([</span>
+        <span class="n">required</span><span class="p">(</span><span class="s">&quot;properties&quot;</span><span class="p">,</span> <span class="n">OrderedMap</span><span class="p">(</span><span class="n">Struct</span><span class="p">([</span>
+            <span class="n">required</span><span class="p">(</span><span class="s">&quot;schema&quot;</span><span class="p">,</span> <span class="n">Schema</span><span class="p">),</span>
+            <span class="n">required</span><span class="p">(</span><span class="s">&quot;required&quot;</span><span class="p">,</span> <span class="n">Boolean</span><span class="p">),</span>
+            <span class="n">optional</span><span class="p">(</span><span class="s">&quot;doc&quot;</span><span class="p">,</span> <span class="n">String</span><span class="p">)</span>
+        <span class="p">]))),</span>
+        <span class="n">required</span><span class="p">(</span><span class="s">&quot;links&quot;</span><span class="p">,</span> <span class="n">OrderedMap</span><span class="p">(</span><span class="n">Struct</span><span class="p">([</span>
+            <span class="n">required</span><span class="p">(</span><span class="s">&quot;model&quot;</span><span class="p">,</span> <span class="n">Model</span><span class="p">),</span>
+            <span class="n">required</span><span class="p">(</span><span class="s">&quot;required&quot;</span><span class="p">,</span> <span class="n">Boolean</span><span class="p">),</span>
+            <span class="n">optional</span><span class="p">(</span><span class="s">&quot;doc&quot;</span><span class="p">,</span> <span class="n">String</span><span class="p">)</span>
+        <span class="p">]))),</span>
+        <span class="n">required</span><span class="p">(</span><span class="s">&quot;query_fields&quot;</span><span class="p">,</span> <span class="n">OrderedMap</span><span class="p">(</span><span class="n">Struct</span><span class="p">([</span>
+            <span class="n">required</span><span class="p">(</span><span class="s">&quot;schema&quot;</span><span class="p">,</span> <span class="n">Schema</span><span class="p">),</span>
+            <span class="n">required</span><span class="p">(</span><span class="s">&quot;required&quot;</span><span class="p">,</span> <span class="n">Boolean</span><span class="p">),</span>
+            <span class="n">optional</span><span class="p">(</span><span class="s">&quot;doc&quot;</span><span class="p">,</span> <span class="n">String</span><span class="p">)</span>
+        <span class="p">]))),</span>
+        <span class="n">required</span><span class="p">(</span><span class="s">&quot;methods&quot;</span><span class="p">,</span> <span class="n">Struct</span><span class="p">([</span>
+            <span class="n">required</span><span class="p">(</span><span class="s">&quot;get_by_id&quot;</span><span class="p">,</span> <span class="n">Boolean</span><span class="p">),</span>
+            <span class="n">required</span><span class="p">(</span><span class="s">&quot;get_list&quot;</span><span class="p">,</span> <span class="n">Boolean</span><span class="p">),</span>
+            <span class="n">required</span><span class="p">(</span><span class="s">&quot;create&quot;</span><span class="p">,</span> <span class="n">Boolean</span><span class="p">),</span>
+            <span class="n">required</span><span class="p">(</span><span class="s">&quot;update&quot;</span><span class="p">,</span> <span class="n">Boolean</span><span class="p">),</span>
+            <span class="n">required</span><span class="p">(</span><span class="s">&quot;delete&quot;</span><span class="p">,</span> <span class="n">Boolean</span><span class="p">),</span>
+            <span class="p">])),</span>
+        <span class="n">required</span><span class="p">(</span><span class="s">&quot;list_metadata&quot;</span><span class="p">,</span> <span class="n">OrderedMap</span><span class="p">(</span><span class="n">Struct</span><span class="p">([</span>
+            <span class="n">required</span><span class="p">(</span><span class="s">&quot;schema&quot;</span><span class="p">,</span> <span class="n">Schema</span><span class="p">),</span>
+            <span class="n">required</span><span class="p">(</span><span class="s">&quot;required&quot;</span><span class="p">,</span> <span class="n">Boolean</span><span class="p">),</span>
+            <span class="n">optional</span><span class="p">(</span><span class="s">&quot;doc&quot;</span><span class="p">,</span> <span class="n">String</span><span class="p">)</span>
+        <span class="p">])))</span>
+    <span class="p">])))</span>
+<span class="p">])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="http-endpoints">
+<h2>HTTP Endpoints<a class="headerlink" href="#http-endpoints" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="cosmic.http.ActionEndpoint">
+<em class="property">class </em><tt class="descclassname">cosmic.http.</tt><tt class="descname">ActionEndpoint</tt><big>(</big><em>api_spec</em>, <em>action_name</em>, <em>func=None</em><big>)</big><a class="headerlink" href="#cosmic.http.ActionEndpoint" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Request:</th><td class="field-body"><table class="first docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Method:</th><td class="field-body"><tt class="docutils literal"><span class="pre">POST</span></tt></td>
+</tr>
+<tr class="field-even field"><th class="field-name">URL:</th><td class="field-body"><tt class="docutils literal"><span class="pre">/actions/&lt;action&gt;</span></tt> where <em>action</em> is the action name.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Body:</th><td class="field-body">The action parameters as a JSON-encoded string or empty if the
+action expects no parameters.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">ContentType:</th><td class="field-body"><tt class="docutils literal"><span class="pre">application/json</span></tt> if body is not empty.</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Response:</th><td class="field-body"><table class="first last docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Code:</th><td class="field-body"><tt class="docutils literal"><span class="pre">200</span></tt> or <tt class="docutils literal"><span class="pre">204</span></tt> if body is empty.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Body:</th><td class="field-body">The return value as a JSON-encoded string or empty if the actions
+has no return value.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">ContentType:</th><td class="field-body"><tt class="docutils literal"><span class="pre">application/json</span></tt> if body is not empty.</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="cosmic.http.GetByIdEndpoint">
+<em class="property">class </em><tt class="descclassname">cosmic.http.</tt><tt class="descname">GetByIdEndpoint</tt><big>(</big><em>api_spec</em>, <em>model_name</em>, <em>func=None</em><big>)</big><a class="headerlink" href="#cosmic.http.GetByIdEndpoint" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Request:</th><td class="field-body"><table class="first docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Method:</th><td class="field-body"><tt class="docutils literal"><span class="pre">GET</span></tt></td>
+</tr>
+<tr class="field-even field"><th class="field-name">URL:</th><td class="field-body"><tt class="docutils literal"><span class="pre">/&lt;model&gt;/&lt;id&gt;</span></tt> where <em>model</em> is the model name.</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Response:</th><td class="field-body"><table class="first last docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Code:</th><td class="field-body"><tt class="docutils literal"><span class="pre">200</span></tt> or <tt class="docutils literal"><span class="pre">404</span></tt> if object is not found.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Body:</th><td class="field-body">The object representation as a JSON-encoded string.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">ContentType:</th><td class="field-body"><tt class="docutils literal"><span class="pre">application/json</span></tt> if body is not empty.</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="cosmic.http.CreateEndpoint">
+<em class="property">class </em><tt class="descclassname">cosmic.http.</tt><tt class="descname">CreateEndpoint</tt><big>(</big><em>api_spec</em>, <em>model_name</em>, <em>func=None</em><big>)</big><a class="headerlink" href="#cosmic.http.CreateEndpoint" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Request:</th><td class="field-body"><table class="first docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Method:</th><td class="field-body"><tt class="docutils literal"><span class="pre">POST</span></tt></td>
+</tr>
+<tr class="field-even field"><th class="field-name">URL:</th><td class="field-body"><tt class="docutils literal"><span class="pre">/&lt;model&gt;</span></tt> where <em>model</em> is the model name.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Body:</th><td class="field-body">Corresponding model patch as a JSON-encoded string.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">ContentType:</th><td class="field-body"><tt class="docutils literal"><span class="pre">application/json</span></tt></td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Response:</th><td class="field-body"><table class="first last docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Code:</th><td class="field-body"><tt class="docutils literal"><span class="pre">201</span></tt></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Body:</th><td class="field-body">New model representation as a JSON-encoded string.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">ContentType:</th><td class="field-body"><tt class="docutils literal"><span class="pre">application/json</span></tt></td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="cosmic.http.UpdateEndpoint">
+<em class="property">class </em><tt class="descclassname">cosmic.http.</tt><tt class="descname">UpdateEndpoint</tt><big>(</big><em>api_spec</em>, <em>model_name</em>, <em>func=None</em><big>)</big><a class="headerlink" href="#cosmic.http.UpdateEndpoint" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Request:</th><td class="field-body"><table class="first docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Method:</th><td class="field-body"><tt class="docutils literal"><span class="pre">PUT</span></tt></td>
+</tr>
+<tr class="field-even field"><th class="field-name">URL:</th><td class="field-body"><tt class="docutils literal"><span class="pre">/&lt;model&gt;/&lt;id&gt;</span></tt> where <em>model</em> is the model name.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Body:</th><td class="field-body">A corresponding model patch as a JSON-encoded string.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">ContentType:</th><td class="field-body"><tt class="docutils literal"><span class="pre">application/json</span></tt></td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Response:</th><td class="field-body"><table class="first last docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Code:</th><td class="field-body"><tt class="docutils literal"><span class="pre">200</span></tt> or <tt class="docutils literal"><span class="pre">404</span></tt> if object is not found.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Body:</th><td class="field-body">New model representation as a JSON-encoded string.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">ContentType:</th><td class="field-body"><tt class="docutils literal"><span class="pre">application/json</span></tt></td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="cosmic.http.DeleteEndpoint">
+<em class="property">class </em><tt class="descclassname">cosmic.http.</tt><tt class="descname">DeleteEndpoint</tt><big>(</big><em>api_spec</em>, <em>model_name</em>, <em>func=None</em><big>)</big><a class="headerlink" href="#cosmic.http.DeleteEndpoint" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Request:</th><td class="field-body"><table class="first docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Method:</th><td class="field-body"><tt class="docutils literal"><span class="pre">DELETE</span></tt></td>
+</tr>
+<tr class="field-even field"><th class="field-name">URL:</th><td class="field-body"><tt class="docutils literal"><span class="pre">/&lt;model&gt;/&lt;id&gt;</span></tt> where <em>model</em> is the model name.</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Response:</th><td class="field-body"><table class="first last docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Code:</th><td class="field-body"><tt class="docutils literal"><span class="pre">204</span></tt> or <tt class="docutils literal"><span class="pre">404</span></tt> if object is not found.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Body:</th><td class="field-body">Empty.</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="cosmic.http.GetListEndpoint">
+<em class="property">class </em><tt class="descclassname">cosmic.http.</tt><tt class="descname">GetListEndpoint</tt><big>(</big><em>api_spec</em>, <em>model_name</em>, <em>func=None</em><big>)</big><a class="headerlink" href="#cosmic.http.GetListEndpoint" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Request:</th><td class="field-body"><table class="first docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Method:</th><td class="field-body"><tt class="docutils literal"><span class="pre">GET</span></tt></td>
+</tr>
+<tr class="field-even field"><th class="field-name">URL:</th><td class="field-body"><tt class="docutils literal"><span class="pre">/&lt;model&gt;</span></tt> where <em>model</em> is the model name.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Query:</th><td class="field-body">Query parameters serialized by the model&#8217;s <em>query_schema</em></td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Response:</th><td class="field-body"><table class="first last docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Code:</th><td class="field-body"><p class="first"><tt class="docutils literal"><span class="pre">200</span></tt></p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">ContentType:</th><td class="field-body"><p class="first"><tt class="docutils literal"><span class="pre">application/json</span></tt></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Body:</th><td class="field-body"><p class="first">The syntax follows <a class="reference external" href="http://stateless.co/hal_specification.html">JSON HAL</a> specification.</p>
+<div class="code highlight-python"><div class="highlight"><pre>{
+    &quot;_links&quot;: {
+        &quot;self&quot;: {&quot;href&quot;: &lt;self&gt;}
+    },
+    &quot;_embedded&quot;: {
+        &lt;model&gt;: [&lt;repr&gt;*]
+    },
+    &lt;metadata&gt;*
+}
+</pre></div>
+</div>
+<p class="last">In the above, <em>self</em> is the request URL, <em>model</em> is the name of
+the model that was requested and <em>repr</em> is a JSON-encoded
+representation of an object matched by the query. <em>Metadata</em> is
+defined according to
+<a class="reference internal" href="#cosmic.models.BaseModel.list_metadata" title="cosmic.models.BaseModel.list_metadata"><tt class="xref py py-data docutils literal"><span class="pre">list_metadata</span></tt></a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-cosmic.exceptions">
+<span id="exceptions"></span><h2>Exceptions<a class="headerlink" href="#module-cosmic.exceptions" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="cosmic.exceptions.SpecError">
+<em class="property">class </em><tt class="descclassname">cosmic.exceptions.</tt><tt class="descname">SpecError</tt><a class="headerlink" href="#cosmic.exceptions.SpecError" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="cosmic.exceptions.NotFound">
+<em class="property">class </em><tt class="descclassname">cosmic.exceptions.</tt><tt class="descname">NotFound</tt><a class="headerlink" href="#cosmic.exceptions.NotFound" title="Permalink to this definition">¶</a></dt>
+<dd><p>Expected to be raised by <tt class="xref py py-meth docutils literal"><span class="pre">get_by_id()</span></tt>, <tt class="xref py py-meth docutils literal"><span class="pre">update()</span></tt> and
+<tt class="xref py py-meth docutils literal"><span class="pre">delete()</span></tt> when the resource is not found. Cosmic will convert
+it to a 404 response on the server, and on the client, it will
+interpret this response by reraising the exception.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="cosmic.exceptions.HTTPError">
+<em class="property">class </em><tt class="descclassname">cosmic.exceptions.</tt><tt class="descname">HTTPError</tt><big>(</big><em>code</em>, <em>message</em><big>)</big><a class="headerlink" href="#cosmic.exceptions.HTTPError" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="cosmic.exceptions.RemoteHTTPError">
+<em class="property">class </em><tt class="descclassname">cosmic.exceptions.</tt><tt class="descname">RemoteHTTPError</tt><big>(</big><em>code</em>, <em>message</em><big>)</big><a class="headerlink" href="#cosmic.exceptions.RemoteHTTPError" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-cosmic.tools">
+<span id="tools-and-helpers"></span><h2>Tools and Helpers<a class="headerlink" href="#module-cosmic.tools" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="cosmic.tools.get_args">
+<tt class="descclassname">cosmic.tools.</tt><tt class="descname">get_args</tt><big>(</big><em>func</em><big>)</big><a class="headerlink" href="#cosmic.tools.get_args" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a function, returns a tuple (<em>required</em>, <em>optional</em>), tuples of
+non-keyword and keyword arguments respectively. If a function contains
+splats (* or **), a <a class="reference internal" href="#cosmic.exceptions.SpecError" title="cosmic.exceptions.SpecError"><tt class="xref py py-exc docutils literal"><span class="pre">SpecError</span></tt></a> will be raised.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="cosmic.tools.args_to_datum">
+<tt class="descclassname">cosmic.tools.</tt><tt class="descname">args_to_datum</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#cosmic.tools.args_to_datum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes arbitrary args and kwargs and packs them into a dict if there are
+more than one. Returns <cite>None</cite> if there are no arguments. Must be called
+with either a single argument or multiple keyword arguments.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="cosmic.tools.assert_is_compatible">
+<tt class="descclassname">cosmic.tools.</tt><tt class="descname">assert_is_compatible</tt><big>(</big><em>schema</em>, <em>required_args</em>, <em>optional_args</em><big>)</big><a class="headerlink" href="#cosmic.tools.assert_is_compatible" title="Permalink to this definition">¶</a></dt>
+<dd><p>Raises a <a class="reference internal" href="#cosmic.exceptions.SpecError" title="cosmic.exceptions.SpecError"><tt class="xref py py-exc docutils literal"><span class="pre">SpecError</span></tt></a> if function argument spec
+(as returned by <a class="reference internal" href="#cosmic.tools.get_args" title="cosmic.tools.get_args"><tt class="xref py py-func docutils literal"><span class="pre">get_args()</span></tt></a>) is incompatible with the given schema.
+By incompatible, it is meant that there exists such a piece of data that
+is valid according to the schema, but that could not be applied to the
+function by <tt class="xref py py-func docutils literal"><span class="pre">apply_to_func()</span></tt>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="cosmic.tools.deserialize_json">
+<tt class="descclassname">cosmic.tools.</tt><tt class="descname">deserialize_json</tt><big>(</big><em>schema</em>, <em>datum</em><big>)</big><a class="headerlink" href="#cosmic.tools.deserialize_json" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="cosmic.tools.serialize_json">
+<tt class="descclassname">cosmic.tools.</tt><tt class="descname">serialize_json</tt><big>(</big><em>schema</em>, <em>datum</em><big>)</big><a class="headerlink" href="#cosmic.tools.serialize_json" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="cosmic.tools.string_to_json">
+<tt class="descclassname">cosmic.tools.</tt><tt class="descname">string_to_json</tt><big>(</big><em>s</em><big>)</big><a class="headerlink" href="#cosmic.tools.string_to_json" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="cosmic.tools.validate_underscore_identifier">
+<tt class="descclassname">cosmic.tools.</tt><tt class="descname">validate_underscore_identifier</tt><big>(</big><em>id</em><big>)</big><a class="headerlink" href="#cosmic.tools.validate_underscore_identifier" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="cosmic.tools.is_string_type">
+<tt class="descclassname">cosmic.tools.</tt><tt class="descname">is_string_type</tt><big>(</big><em>serializer</em><big>)</big><a class="headerlink" href="#cosmic.tools.is_string_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Reference</a><ul>
+<li><a class="reference internal" href="#module-cosmic.api">APIs</a></li>
+<li><a class="reference internal" href="#module-cosmic.models">Models</a></li>
+<li><a class="reference internal" href="#types">Types</a></li>
+<li><a class="reference internal" href="#http-endpoints">HTTP Endpoints</a></li>
+<li><a class="reference internal" href="#module-cosmic.exceptions">Exceptions</a></li>
+<li><a class="reference internal" href="#module-cosmic.tools">Tools and Helpers</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="guide.html"
+                        title="previous chapter">Guide</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/reference.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="guide.html" title="Guide"
+             >previous</a> |</li>
+        <li><a href="index.html">Cosmic 0.3.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, 8313547 Canada Inc..
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
