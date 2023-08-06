@@ -1,0 +1,111 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<title>Pymbfl</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<style>
+body { font:80% Verdana,Tahoma,Arial,sans-serif; }
+h1, h2, h3, h4 {  font-family: "Trebuchet MS",Georgia,"Times New Roman",serif; }
+ul.toc { padding: 4px; margin-left: 0; }
+ul.toc li { list-style-type:none; }
+ul.toc li.heading2 { margin-left: 1em; }
+ul.toc li.heading3 { margin-left: 2em; }
+a.wiki-anchor { display: none; margin-left: 6px; text-decoration: none; }
+a.wiki-anchor:hover { color: #aaa !important; text-decoration: none; }
+h1:hover a.wiki-anchor, h2:hover a.wiki-anchor, h3:hover a.wiki-anchor { display: inline; color: #ddd; }
+</style>
+</head>
+<body>
+<a name="Description"></a>
+<h1 >Description<a href="#Description" class="wiki-anchor">&para;</a></h1>
+
+
+	<p>libmbfl is a streamable multibyte character code filter and converter library.<br />pymbfl provides a way to use libmbfl C API through ctypes module.</p>
+
+
+	<a name="Download"></a>
+<h1 >Download<a href="#Download" class="wiki-anchor">&para;</a></h1>
+
+
+<pre>git clone https://github.com/moriyoshi/libmbfl</pre>
+
+	<a name="Compile"></a>
+<h1 >Compile<a href="#Compile" class="wiki-anchor">&para;</a></h1>
+
+
+<pre>
+./buildconf
+./configure
+make
+make install
+</pre>
+
+	<a name="Utilities"></a>
+<h1 >Utilities<a href="#Utilities" class="wiki-anchor">&para;</a></h1>
+
+
+	<p>One may need to modify CONST_LIBPATH to let C programs find libmbfl.so.<br />Python determines libmbfl.so path dynamically though.</p>
+
+
+	<a name="mbfl"></a>
+<h2 >mbfl<a href="#mbfl" class="wiki-anchor">&para;</a></h2>
+
+
+	<p>Run several small tests to check if libmbfl works well.<br />This program is used to perform the same tests pymbfl.py does.</p>
+
+
+	<a name="Documentation"></a>
+<h1 >Documentation<a href="#Documentation" class="wiki-anchor">&para;</a></h1>
+
+
+	<p>libmbfl has no documentation, so the basic functionality is described here.<br />Since it is not necessary to go into details, I'll describe only parts of libmbfl we need.</p>
+
+
+	<a name="libmbfl"></a>
+<h2 >libmbfl<a href="#libmbfl" class="wiki-anchor">&para;</a></h2>
+
+
+	<p>libmbfl supports two categories for encodings: <code>enum mbfl_no_encoding</code> and <code>mbfl_no_encoding</code>.<br />As one may see, the first one is just an enumeration key. It can be retrieved using <code>mbfl_name2no_encoding</code>:<br /><pre>MBFLAPI extern enum mbfl_no_encoding mbfl_name2no_encoding(const char *name);</pre><br />If one needs a backward conversion, here comes @@:<br /><pre>MBFLAPI extern const char * mbfl_no_encoding2name(enum mbfl_no_encoding no_encoding);</pre></p>
+
+
+	<p>The second type is more complicated, being a struct with several members:<br /><pre>
+typedef struct _mbfl_encoding {
+    enum mbfl_no_encoding no_encoding;
+    const char *name;
+    const char *mime_name;
+    const char *(*aliases)[];
+    const unsigned char *mblen_table;
+    unsigned int flag;
+} mbfl_encoding;
+</pre></p>
+
+
+	<p>The first member corresponds to enumeration key, so there is nothing to explain here.<br />The three next members, <code>name</code>, <code>mime_name</code> and <code>aliases</code>, represent names under which encoding can be found.<br />These fields are used in various functions, available in libmbfl.</p>
+
+
+<pre>
+MBFLAPI extern const mbfl_encoding * mbfl_name2encoding(const char *name);
+MBFLAPI extern const mbfl_encoding ** mbfl_get_supported_encodings();
+MBFLAPI extern const char * mbfl_no2preferred_mime_name(enum mbfl_no_encoding no_encoding);
+MBFLAPI extern int mbfl_is_support_encoding(const char *name);
+</pre>
+
+	<p>The next member, <code>mblen_table</code>, varies between encodings; most often it is NULL, but several encodings use it, e.g. CP949.<br />This table is used in other libmbfl functions which are not discussed here (since they're inappropriate to our task).</p>
+
+
+	<p>The last member is <code>flag</code> structure. This member stores different properties, e.g. it shows if character set is SBCS or MBCS.<br />It also shows if character set uses shifts, etc.</p>
+
+
+	<p>libmbfl has proved it's almost unusable if used in determination of single-byte encodings (as well as all detectors which don't work on language data). We warned you, LOL.</p>
+
+
+	<a name="pymbfl"></a>
+<h2 >pymbfl<a href="#pymbfl" class="wiki-anchor">&para;</a></h2>
+
+
+	<p>pymbfl interface currently defines two public classes, used to interact with libmbfl's encodings and detection argorithms.<br />These classes are called (what a surprize!) <code>pymbfl.Encoding</code> and <code>pymbfl.Detector</code> respectively.</p>
+
+
+	<p><code>pymbfl.Encoding</code> can tell all the necessary information that is provided in <code>mbfl_encoding</code> structure.<br /><code>pymbfl.Detector</code> receives an iterable object that yields encodings as strings or as <code>pymbfl.Encoding</code> instances.<br />If <code>pymbfl.Detector</code> doesn't recieve encodings sequence, it tries to determine every possible multi-byte encoding.</p>
+</body>
+</html>
