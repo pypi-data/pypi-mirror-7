@@ -1,0 +1,163 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>What’s new in MyHDL 0.9 &mdash; MyHDL 0.8 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/myhdl.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.8',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="MyHDL 0.8 documentation" href="../index.html" /> 
+  </head>
+  <body>
+<div style="background-color: white; text-align: left; padding: 5px 5px 2px 15px">
+<a href="http://www.myhdl.org">
+    <img src="../_static/myhdl_logo_header.png" border=0 alt="MyHDL" />
+</a>
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="../index.html">MyHDL 0.8 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">What&#8217;s new in MyHDL 0.9</a><ul>
+<li><a class="reference internal" href="#interfaces">Interfaces</a><ul>
+<li><a class="reference internal" href="#rationale">Rationale</a></li>
+<li><a class="reference internal" href="#solution">Solution</a></li>
+<li><a class="reference internal" href="#conversion">Conversion</a></li>
+<li><a class="reference internal" href="#see-also">See also</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/whatsnew/0.9.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="what-s-new-in-myhdl-0-9">
+<span id="new09"></span><h1>What&#8217;s new in MyHDL 0.9<a class="headerlink" href="#what-s-new-in-myhdl-0-9" title="Permalink to this headline">¶</a></h1>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Author:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="interfaces">
+<h2>Interfaces<a class="headerlink" href="#interfaces" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="rationale">
+<h3>Rationale<a class="headerlink" href="#rationale" title="Permalink to this headline">¶</a></h3>
+<p>Complex designs often have many signals (ports) that
+are passed to different levels of hierarchy.  Typically
+many of the signals can logically be grouped together.
+Grouping the signals into an <em>interface</em> simplifies the
+code, improves efficiency, and reduces errors.</p>
+<p>Previous versions supported /interfaces/ for modeling
+and for conversion if the <strong>attributes</strong> were locally
+referenced in a MyHDL module.  The proposed solution
+will convert an example like the following:</p>
+<blockquote>
+<div><p>def complex_mult(clock,reset,a,b,c):</p>
+<blockquote>
+<div><p>&#64;always_seq(clock.posedge,reset=reset)
+def rtl_mult():</p>
+<blockquote>
+<div>c.real.next = (a.real*b.real) - (a.imag*b.imag)
+c.imag.next = (a.real*b.imag) + (a.imag*b.real)</div></blockquote>
+<p>return rtl_mult</p>
+</div></blockquote>
+</div></blockquote>
+</div>
+<div class="section" id="solution">
+<h3>Solution<a class="headerlink" href="#solution" title="Permalink to this headline">¶</a></h3>
+<p>The proposed solution is to create uniques names for
+attributes which are type Signal and used by a module.
+The converter will create a unique name by using the
+name of the parent and the name of the attribute along
+with the name of the MyHDL module instance (if applicable).</p>
+</div>
+<div class="section" id="conversion">
+<h3>Conversion<a class="headerlink" href="#conversion" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="see-also">
+<h3>See also<a class="headerlink" href="#see-also" title="Permalink to this headline">¶</a></h3>
+<p>For additional information see the original proposal <a class="reference external" href="http://http://myhdl.org/doku.php/meps:mep-107">mep-107</a>.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="../index.html">MyHDL 0.8 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Jan Decaluwe.
+      Last updated on Apr 08, 2014.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
