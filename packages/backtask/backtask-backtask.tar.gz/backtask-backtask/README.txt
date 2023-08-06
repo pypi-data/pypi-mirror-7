@@ -1,0 +1,67 @@
+backtask-py
+===========
+
+  A small Python module that run functions in a background
+  process, passing their arguments via fork().
+
+  The home page is:
+    http://backtask-py.sourceforge.net/
+
+
+Requirements
+------------
+
+  Python >= 2.6
+
+
+Installing
+----------
+
+  To build you require the Python development system.
+  The command to build the entire system is:
+
+	make
+
+  To install:
+
+	make install
+
+  To run the test suite:
+
+	make test
+
+
+Documentation
+-------------
+
+  None.  Sorry.  See the source code.
+
+
+License
+-------
+
+  Copyright (c) 2014 Russell Stuart.
+
+  This program is free software: you can redistribute it and/or modify it
+  under the terms of the GNU Affero General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or (at your
+  option) any later version.
+
+  The copyright holders grant you an additional permission under Section 7
+  of the GNU Affero General Public License, version 3, exempting you from
+  the requirement in Section 6 of the GNU General Public License, version 3,
+  to accompany Corresponding Source with Installation Information for the
+  Program or any work based on the Program. You are still required to
+  comply with all other Section 6 requirements to provide Corresponding
+  Source.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU Affero General Public License for more details.
+
+
+
+--
+Russell Stuart
+2014-Jun-05
