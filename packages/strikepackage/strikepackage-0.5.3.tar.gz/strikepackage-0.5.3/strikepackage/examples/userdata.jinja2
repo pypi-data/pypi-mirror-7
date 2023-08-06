@@ -1,0 +1,33 @@
+#cloud-config
+
+# This is a sample userdata file. You can do whatever you want in here, but
+# you have to phone_home to MCHM (see below). See the cloud-init documentation
+# for details.
+manual_cache_clean: true
+preserve_hostame: false
+manage_etc_hosts: true
+hostname: {{ params['hostname'] }}
+fqdn: {{ params['fqdn'] }}
+password: {{ params['rand_pass'] }}
+ssh_pwauth: True
+
+# In this example, VMs are booting on a zeroconf address, so we use a script to
+# configure the network interface, reset it to ipv4 and then apt-get
+# update and apt-get upgrade
+runcmd:
+ - [ sh, -xc, 'echo $(date) > /root/ci_executed_on' ]
+ - [ sh, -xc, 'printf "# The loopback network interface\nauto lo\niface lo inet loopback\n# The primary network interface\nauto eth0\niface eth0 inet static\n  address {{params['ip']}}\n  network {{params['nw']}}\n  netmask {{params['netmask']}}\n  broadcast {{params['broadcast']}}\n  gateway {{params['gw']}}\n  dns-nameservers {{params['dns_servers']}}\n  dns-search {{params['dns_searchdomain']}}" > /root/network.proto']
+ - [ sh, -xc, 'ifdown eth0']
+ - [ sh, -xc, 'cp /root/network.proto /etc/network/interfaces']
+ - [ sh, -xc, 'ifup eth0']
+ - [ sh, -xc, 'apt-get -qq update']
+ - [ sh, -xc, 'apt-get -qq upgrade']
+
+# Phoning home. This is mandatory so Strikepackage knows when the VM has booted up.
+phone_home:
+  url: {{ params['mchm_url'] }}/api/phonehome/{{ params['mchm_id'] }}
+  post: all
+  tries: 5
+
+# I just like doing this
+final_message: "cloud-init boot finished at $TIMESTAMP. Up $UPTIME seconds."
