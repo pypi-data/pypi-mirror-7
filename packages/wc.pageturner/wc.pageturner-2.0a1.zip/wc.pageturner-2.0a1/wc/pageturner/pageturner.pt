@@ -1,0 +1,54 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:metal="http://xml.zope.org/namespaces/metal"
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+      lang="en"
+      metal:use-macro="here/main_template/macros/master"
+      i18n:domain="plone">
+      
+<metal:js fill-slot="javascript_head_slot">
+   
+  <link rel="stylesheet" type="text/css"
+      tal:attributes="href string:${view/portal_url}/++resource++pageturner.resources/styles.css" />
+	<script type="text/javascript"
+    tal:attributes="src string:${view/portal_url}/++resource++pageturner.resources/flexpaper_flash.js"></script>
+	
+  <script type="text/javascript" tal:content="structure view/javascript"></script>
+</metal:js>
+
+<body>
+
+<div metal:fill-slot="content-core">
+  <metal:block define-macro="content-core"
+                     tal:define="content_type context/file/contentType|nothing;
+                                 v python:context.restrictedTraverse('contenttype_utils');">
+
+
+    <div id="pageturner" tal:condition="python: view.installed and view.enabled">
+      <p> To view this page ensure that Adobe Flash Player version 9.0.124 or greater is installed.</p> 
+    </div>
+    <noscript tal:condition="python: view.installed and view.enabled">
+      Javascript required in order to display this PDF.
+    </noscript>
+    <p>
+      <a tal:attributes="href string:${context/absolute_url}/@@download/file/${context/file/filename}">
+        <img tal:attributes="src python: v.getMimeTypeIcon(context.file); 
+                             alt content_type;" border="0"  />
+        <tal:name tal:content="context/file/filename" >Filename</tal:name>
+      </a> 
+      <span class="discreet"
+            tal:define="size context/file/getSize;
+                        kb python:size/1024">
+        &mdash; <span tal:replace="kb" /> KB</span>
+    </p>
+
+    <div tal:condition="python: content_type.startswith('text')">
+      <h2 i18n:translate="heading_file_contents">File contents</h2>
+      <pre tal:content="context/file/data|nothing" />
+    </div>
+  </metal:block>
+</div>
+
+</body>
+
+</html>
