@@ -1,0 +1,1 @@
+Search.setIndex({envversion:42,terms:{mechan:1,index:1,chloroplast:1,iwabuchi:1,august:1,kosei:1,takagi:1,light:1,signal:1,intracellular:1,plant:1,part:[],actin:1,arabidopsi:1,behavior:1,posit:1,depend:1,nuclei:1,base:1,shingo:1,first:0},objtypes:{},objnames:{},filenames:["parts/part1","index-latex"],titles:["Part 1","Contents"],objects:{},titleterms:{content:1,part:0,refer:1}})
