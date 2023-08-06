@@ -1,0 +1,28 @@
+======
+PyMBFL
+======
+pymbfl provides Python bindings for libmbfl. libmbfl is used to determine
+encoding of the files; it tries to guess the right encoding depending on the
+list of the encodings which user wants to check.
+
+Typical pymbfl usage::
+
+    >> import pymbfl
+
+    # Collect information about encoding
+    >> encoding = pymbfl.Encoding("ascii")
+    >> bool(encoding.flags & pymbfl.MBCS)
+    False
+    >> encoding.mime
+    'US-ASCII'
+    >> encoding.aliases
+    ['ANSI_X3.4-1968', 'iso-ir-6', 'ANSI_X3.4-1986', 'ISO_646.irv:1991',
+    'US-ASCII', 'ISO646-US', 'us', 'IBM367', 'IBM-367', 'cp367', 'csASCII']
+
+    # Determine possible encoding
+    >> language = "ru"
+    >> encodings = ["UTF-8", "UTF-16", "UTF-32LE"]
+    >> detector = pymbfl.Detector(language, encodings)
+    >> detector.detect(data, strict) # enable/disable strict check and detect
+
+See docs/pymbfl.html file for more detailed description.
