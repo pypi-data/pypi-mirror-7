@@ -1,0 +1,45 @@
+%define name privacyidea
+%define version 1.2.1~dev0
+%define unmangled_version 1.2.1-dev0
+%define release 1
+
+Summary: two-factor authentication system e.g. for OTP devices
+Name: %{name}
+Version: %{version}
+Release: %{release}
+Group: System/Authentication
+Prefix: /usr
+Provides: privacyidea
+Source0: %{name}-%{version}.tar.gz
+License: AGPL v3
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
+BuildArch: noarch
+Vendor: privacyidea.org <cornelius@privacyidea.org>
+Url: http://www.privacyidea.org
+
+%description
+privacyIDEA
+===========
+privacyIDEA is an open solution for strong two-factor authentication.
+privacyIDEA aims to not bind you to any decision of the authentication protocol or 
+it does not dictate you where your user information should be stored. 
+This is achieved by its totally modular architecture.
+privacyIDEA is not only open as far as its modular architecture is concerned. 
+But privacyIDEA is completely licensed under the AGPLv3.
+
+%prep
+%setup -n %{name}-%{version} -n %{name}-%{version}
+
+%build
+python setup.py build
+
+%install
+python setup.py install --single-version-externally-managed -O1 --root=$RPM_BUILD_ROOT --record=INSTALLED_FILES
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+
+%files -f INSTALLED_FILES
+%defattr(-,root,root)
+
+
