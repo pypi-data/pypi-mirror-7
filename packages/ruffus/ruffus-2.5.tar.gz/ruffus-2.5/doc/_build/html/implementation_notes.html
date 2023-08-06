@@ -1,0 +1,623 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Implementation Tips &mdash; ruffus 2.5 documentation</title>
+    
+    <link rel="stylesheet" href="_static/ruffus.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2.5',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="ruffus 2.5 documentation" href="index.html" />
+    <link rel="next" title="FAQ" href="faq.html" />
+    <link rel="prev" title="Future Changes to Ruffus" href="todo.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="faq.html" title="FAQ"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="todo.html" title="Future Changes to Ruffus"
+             accesskey="P">previous</a> |</li>
+        Ruffus v. 2.5
+            <li><a href="index.html">Home</a> | </li>
+            <li><a href="contents.html">Contents</a> | </li>
+            <li><a href="installation.html">Install</a>  | </li>
+            <li><a href="tutorials/new_tutorial/introduction.html">Manual</a>  / </li>
+            <li><a href="tutorials/new_tutorial/manual_contents.html">(TOC)</a>  | </li>
+            <li><a href="faq.html">FAQ</a>  | </li>
+            <li><a href="cheatsheet.html">Cheat sheet</a> | </li>
+            <li><a href="tutorials/new_tutorial/command_line.html">Command Line</a> | </li>
+            <li><a href="gallery.html">Gallery</a> |  </li>
+            <li><a href="history.html">Latest Changes</a> &raquo; </li>
+ 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="implementation-tips">
+<h1>Implementation Tips<a class="headerlink" href="#implementation-tips" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="release">
+<h2>Release<a class="headerlink" href="#release" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul>
+<li><p class="first">Change <tt class="docutils literal"><span class="pre">ruffus_version.py</span></tt></p>
+</li>
+<li><p class="first">Rebuild pdf and copy it to <tt class="docutils literal"><span class="pre">doc/static_data</span></tt></p>
+<blockquote>
+<div><p>cd doc
+make latexpdf
+cp _build/latex/ruffus.pdf static_data</p>
+</div></blockquote>
+</li>
+<li><p class="first">Rebuild documentation:</p>
+<div class="highlight-python"><pre>make htmlsync</pre>
+</div>
+</li>
+<li><p class="first">tag git with, for example:</p>
+<div class="highlight-python"><pre>git tag -a v2.5RC -m "Version 2.5 Release Candidate"</pre>
+</div>
+</li>
+<li><p class="first">Upload to pypi:</p>
+<div class="highlight-python"><pre>python setup.py sdist --format=gztar upload</pre>
+</div>
+</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="dbdict-py">
+<h2>dbdict.py<a class="headerlink" href="#dbdict-py" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>This is an sqlite backed dictionary originally written by Jacob Sondergaard and
+contributed by Jake Biesinger who added automatic pickling of python objects.</p>
+<p>The pickling code was refactored out by Leo Goodstadt into separate functions as
+part of the preparation to make Ruffus python3 ready.</p>
+<p>Python original saved (pickled) objects as 7 bit ASCII strings. Later formats
+(protocol = -1 is the latest format) uses 8 bit strings and are rather more efficient.</p>
+<p>These then need to be saved as BLOBs to sqlite3 rather than normal strings. We
+can signal this by wrapping the pickled string in a object providing a &#8220;buffer interface&#8221;.
+This is <tt class="docutils literal"><span class="pre">buffer</span></tt> in python2.6/2.7 and <tt class="docutils literal"><span class="pre">memoryview</span></tt> in python3.</p>
+<p><a class="reference external" href="http://bugs.python.org/issue7723">http://bugs.python.org/issue7723</a> suggests there is no portable python2/3 way to write
+blobs to Sqlite without these two incompatible wrappers.
+This would require conditional compilation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">hexversion</span> <span class="o">&gt;=</span> <span class="mh">0x03000000</span><span class="p">:</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">memoryview</span><span class="p">(</span><span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">protocol</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="nb">buffer</span><span class="p">(</span><span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">protocol</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Despite the discussion on the bug report, sqlite3.Binary seems to work.
+We shall see if this is portable to python3.</p>
+</div></blockquote>
+</div>
+<div class="section" id="how-to-write-new-decorators">
+<h2>how to write new decorators<a class="headerlink" href="#how-to-write-new-decorators" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>New placeholder class. E.g. for <tt class="docutils literal"><span class="pre">&#64;new_deco</span></tt></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">new_deco</span><span class="p">(</span><span class="n">task_decorator</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<p>Add to list of action names and ids:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">action_names</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;unspecified&quot;</span><span class="p">,</span>
+                <span class="o">...</span>
+                <span class="s">&quot;task_new_deco&quot;</span><span class="p">,</span>
+
+<span class="n">action_task_new_deco</span>     <span class="o">=</span>  <span class="mi">15</span>
+</pre></div>
+</div>
+<p>Add function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">task_transform</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">orig_args</span><span class="p">):</span>
+</pre></div>
+</div>
+<p>Add documentation to:</p>
+<blockquote>
+<div><ul class="simple">
+<li>decorators/NEW_DECORATOR.rst</li>
+<li>decorators/decorators.rst</li>
+<li>_templates/layout.html</li>
+<li>manual</li>
+</ul>
+</div></blockquote>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="implementation-notes">
+<h1>Implementation notes<a class="headerlink" href="#implementation-notes" title="Permalink to this headline">¶</a></h1>
+<p>N.B. Remember to cite Jake Biesinger and see if he is interested to be a co-author if we ever resubmit the drastically changed version...
+He contributed checkpointing, travis and tox etc.</p>
+<div class="section" id="ctrl-c-handling">
+<span id="todo-misfeatures"></span><h2><tt class="docutils literal"><span class="pre">Ctrl-C</span></tt> handling<a class="headerlink" href="#ctrl-c-handling" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>Pressing <tt class="docutils literal"><span class="pre">Ctrl-C</span></tt> left dangling process in Ruffus 2.4 because <tt class="docutils literal"><span class="pre">KeyboardInterrupt</span></tt> does not play nice with python <tt class="docutils literal"><span class="pre">multiprocessing.Pool</span></tt>
+See <a class="reference external" href="http://stackoverflow.com/questions/1408356/keyboard-interrupts-with-pythons-multiprocessing-pool/1408476#1408476">http://stackoverflow.com/questions/1408356/keyboard-interrupts-with-pythons-multiprocessing-pool/1408476#1408476</a></p>
+<p><a class="reference external" href="http://bryceboe.com/2012/02/14/python-multiprocessing-pool-and-keyboardinterrupt-revisited/">http://bryceboe.com/2012/02/14/python-multiprocessing-pool-and-keyboardinterrupt-revisited/</a> provides a reimplementation of Pool which
+however only works when you have a fixed number of jobs which should then run in parallel to completion. Ruffus is considerably more
+complicated because we have a variable number of jobs completing and being submitted into the job queue at any one time. Think
+of tasks stalling waiting for the dependent tasks to complete and then all the jobs of the task being released onto the queue</p>
+<p>The solution is</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>Use a <tt class="docutils literal"><span class="pre">timeout</span></tt> parameter when using <tt class="docutils literal"><span class="pre">IMapIterator.next(timeout=None)</span></tt> to iterate through <tt class="docutils literal"><span class="pre">pool.imap_unordered</span></tt> because only timed <tt class="docutils literal"><span class="pre">condition</span></tt> s can be interruptible by signals...!!</li>
+<li>This involves rewriting the <tt class="docutils literal"><span class="pre">for</span></tt> loop manually as a <tt class="docutils literal"><span class="pre">while</span></tt> loop</li>
+<li>We use a timeout of <tt class="docutils literal"><span class="pre">99999999</span></tt>, i.e. 3 years, which should be enough for any job to complete...</li>
+<li>Googling after the fact, it looks like the galaxy guys (cool dudes or what) have written similar <a class="reference external" href="https://galaxy-dist.readthedocs.org/en/latest/_modules/galaxy/objectstore/s3_multipart_upload.html">code</a></li>
+<li><tt class="docutils literal"><span class="pre">next()</span></tt> for normal iterators do not take <tt class="docutils literal"><span class="pre">timeout</span></tt> as an extra parameter so we have to wrap next in a conditional :-(. The galaxy guys do a <a class="reference external" href="http://en.wikipedia.org/wiki/Shim_(computing)">shim</a> around <tt class="docutils literal"><span class="pre">next()</span></tt> but that is as much obsfucation as a simple if...</li>
+<li>After jobs are interrupted by a signal, we rethrow with our own exception because we want something that inherits from <tt class="docutils literal"><span class="pre">Exception</span></tt> unlike <tt class="docutils literal"><span class="pre">KeyboardInterrupt</span></tt></li>
+<li>When a signal happens, we need to immediately stop <tt class="docutils literal"><span class="pre">feed_job_params_to_process_pool()</span></tt> from sending more parameters into the job queue (<tt class="docutils literal"><span class="pre">parameter_q</span></tt>)
+We use a proxy to a <tt class="docutils literal"><span class="pre">multiprocessing.Event</span></tt> (via <tt class="docutils literal"><span class="pre">syncmanager.Event()</span></tt>). When <tt class="docutils literal"><span class="pre">death_event</span></tt> is set, all further processing stops...</li>
+<li>We also signal that all jobs should finish by putting <tt class="docutils literal"><span class="pre">all_tasks_complete()</span></tt> into <tt class="docutils literal"><span class="pre">parameter_q</span></tt> but only <tt class="docutils literal"><span class="pre">death_event</span></tt> prevents jobs already in the queue from going through</li>
+<li>Ater signalling, some of the child processes appear to be dead by the time we start cleaning up. <tt class="docutils literal"><span class="pre">pool.terminate()</span></tt> sometimes tries and fails to
+re-connect to the the <tt class="docutils literal"><span class="pre">death_event</span></tt> proxy via sockets and throws an exception. We should really figure out a better solution but in the meantime
+wrapping it in a <tt class="docutils literal"><span class="pre">try</span> <span class="pre">/</span> <span class="pre">except</span></tt> allows a clean exit.</li>
+<li>If a vanilla exception is raised without multiprocessing running, we still need to first save the exception in <tt class="docutils literal"><span class="pre">job_errors</span></tt> (even if it is just one) before
+cleaning up, because the cleaning up process may lead to further (ignored) exceptions which would overwrite the current exception when we need to rethrow it</li>
+</ol>
+</div></blockquote>
+<p>Exceptions thrown in the middle of a multiprocessing / multithreading job appear to be handled gracefully.</p>
+<p>For drmaa jobs, <tt class="docutils literal"><span class="pre">qdel</span></tt> may still be necessary.</p>
+</div></blockquote>
+</div>
+<div class="section" id="python3-compatability">
+<h2>Python3 compatability<a class="headerlink" href="#python3-compatability" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>Required extensive changes especially in unit test code.</p>
+<p>Changes:</p>
+<ol class="arabic">
+<li><p class="first"><tt class="docutils literal"><span class="pre">sort</span></tt> in python3 does not order mixed types, i.e. <tt class="docutils literal"><span class="pre">int()</span></tt>, <tt class="docutils literal"><span class="pre">list()</span></tt> and <tt class="docutils literal"><span class="pre">str()</span></tt> are incommensurate</p>
+<ul>
+<li><p class="first">In <tt class="docutils literal"><span class="pre">task.get_output_files</span> <span class="pre">(...)</span></tt>, sort after conversion to string</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_filenames</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">In <tt class="docutils literal"><span class="pre">file_name_parameters.py</span></tt>: <tt class="docutils literal"><span class="pre">collate_param_factory</span> <span class="pre">(...)</span></tt>, <tt class="docutils literal"><span class="pre">sort</span></tt> after conversion to string, then <tt class="docutils literal"><span class="pre">groupby</span></tt> without string conversion. This is
+because we can&#8217;t guarantee that two different objects do not have the same string representation. But <tt class="docutils literal"><span class="pre">groupby</span></tt> requires that similar things are adjacent...</p>
+<p>In other words, <tt class="docutils literal"><span class="pre">groupby</span></tt> is a refinement of <tt class="docutils literal"><span class="pre">sorted</span></tt></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">for</span> <span class="n">output_extra_params</span><span class="p">,</span> <span class="n">grouped_params</span> <span class="ow">in</span> <span class="n">groupby</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">io_params_iter</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="n">get_output_extras_str</span><span class="p">),</span> <span class="n">key</span> <span class="o">=</span> <span class="n">get_output_extras</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p class="first"><tt class="docutils literal"><span class="pre">print()</span></tt> is a function</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first"><tt class="docutils literal"><span class="pre">items()</span></tt> only returns a list in python2. Rewrite <tt class="docutils literal"><span class="pre">dict.iteritems()</span></tt> whenever this might cause a performance bottleneck</p>
+</li>
+<li><p class="first"><tt class="docutils literal"><span class="pre">zip</span></tt> and <tt class="docutils literal"><span class="pre">map</span></tt> return iterators. Conditionally import in python2</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">sys</span>
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">hexversion</span> <span class="o">&lt;</span> <span class="mh">0x03000000</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">future_builtins</span> <span class="kn">import</span> <span class="nb">zip</span><span class="p">,</span> <span class="nb">map</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first"><tt class="docutils literal"><span class="pre">cPickle-&gt;pickle</span></tt> <tt class="docutils literal"><span class="pre">CStringIO-&gt;io</span></tt> need to be conditionally imported</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">StringIO</span> <span class="kn">as</span> <span class="nn">io</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">io</span> <span class="kn">as</span> <span class="nn">io</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first"><tt class="docutils literal"><span class="pre">map</span></tt> code can be changed to list comprehensions. Use <tt class="docutils literal"><span class="pre">2to3</span></tt> to do heavy lifting</p>
+</li>
+<li><p class="first">All normal strings are unicode in python3. Have to use <tt class="docutils literal"><span class="pre">bytes</span></tt> to support 8-bit char arrays.
+Normally, this means that <tt class="docutils literal"><span class="pre">str</span></tt> &#8220;just works&#8221;. However, to provide special handling of
+both 8-bit and unicode strings in python2, we often need to check for <tt class="docutils literal"><span class="pre">isinstance(xxx,</span> <span class="pre">basestring)</span></tt>.</p>
+<p>We need to conditionally define:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">hexversion</span> <span class="o">&gt;=</span> <span class="mh">0x03000000</span><span class="p">:</span>
+    <span class="c"># everything is unicode in python3</span>
+    <span class="n">path_str_type</span> <span class="o">=</span> <span class="nb">str</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">path_str_type</span> <span class="o">=</span> <span class="nb">basestring</span>
+
+<span class="c"># further down...</span>
+<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">compiled_regex</span><span class="p">,</span> <span class="n">path_str_type</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</div></blockquote>
+</div>
+<div class="section" id="refactoring-parameter-handling">
+<h2>Refactoring: parameter handling<a class="headerlink" href="#refactoring-parameter-handling" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><dl class="docutils">
+<dt>Though the code is still split in a not very sensible way between <tt class="docutils literal"><span class="pre">ruffus_utility.py</span></tt>, <tt class="docutils literal"><span class="pre">file_name_parameters.py</span></tt> and <tt class="docutils literal"><span class="pre">task.py</span></tt>,</dt>
+<dd>some rationalisation has taken place, and comments added so further refactoring can be made more easily.</dd>
+</dl>
+<p>Common code for:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">file_name_parameters</span><span class="o">.</span><span class="n">split_ex_param_factory</span><span class="p">()</span>
+<span class="n">file_name_parameters</span><span class="o">.</span><span class="n">transform_param_factory</span><span class="p">()</span>
+<span class="n">file_name_parameters</span><span class="o">.</span><span class="n">collate_param_factory</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>has been moved to <tt class="docutils literal"><span class="pre">file_name_parameters.py.yield_io_params_per_job()</span></tt></p>
+<p>unit tests added to <tt class="docutils literal"><span class="pre">test_file_name_parameters.py</span></tt> and <tt class="docutils literal"><span class="pre">test_ruffus_utility.py</span></tt></p>
+</div></blockquote>
+</div>
+<div class="section" id="formatter">
+<h2><tt class="docutils literal"><span class="pre">formatter</span></tt><a class="headerlink" href="#formatter" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p><tt class="docutils literal"><span class="pre">get_all_paths_components(paths,</span> <span class="pre">regex_str)</span></tt> in <tt class="docutils literal"><span class="pre">ruffus_utility.py</span></tt></p>
+<p>Input files names are first squished into a flat list of files.
+<tt class="docutils literal"><span class="pre">get_all_paths_components()</span></tt> returns both the regular expression matches and the break down of the path.</p>
+<p>In case of name clashes, the classes with higher priority override:</p>
+<blockquote>
+<div><ol class="arabic">
+<li><p class="first">Captures by name</p>
+</li>
+<li><p class="first">Captures by index</p>
+</li>
+<li><dl class="first docutils">
+<dt>Path components:</dt>
+<dd><p class="first last">&#8216;ext&#8217; = extension with dot
+&#8216;basename&#8217; = file name without extension
+&#8216;path&#8217; = path before basename, not ending with slash
+&#8216;subdir&#8217; = list of directories starting with the most nested and ending with the root (if normalised)
+&#8216;subpath&#8217; = list of &#8216;path&#8217; with successive directories removed starting with the most nested and ending with the root (if normalised)</p>
+</dd>
+</dl>
+</li>
+</ol>
+<p>E.g.  <tt class="docutils literal"><span class="pre">name</span> <span class="pre">=</span> <span class="pre">'/a/b/c/sample1.bam'</span></tt>, <tt class="docutils literal"><span class="pre">formatter=r&quot;(.*)(?P&lt;id&gt;\d+)\.(.+)&quot;)</span></tt> returns:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="mi">0</span><span class="p">:</span>          <span class="s">&#39;/a/b/c/sample1.bam&#39;</span><span class="p">,</span>           <span class="o">//</span> <span class="n">Entire</span> <span class="n">match</span> <span class="n">captured</span> <span class="n">by</span> <span class="n">index</span>
+<span class="mi">1</span><span class="p">:</span>          <span class="s">&#39;/a/b/c/sample&#39;</span><span class="p">,</span>                <span class="o">//</span> <span class="n">captured</span> <span class="n">by</span> <span class="n">index</span>
+<span class="mi">2</span><span class="p">:</span>          <span class="s">&#39;bam&#39;</span><span class="p">,</span>                          <span class="o">//</span> <span class="n">captured</span> <span class="n">by</span> <span class="n">index</span>
+<span class="s">&#39;id&#39;</span><span class="p">:</span>       <span class="s">&#39;1&#39;</span>                             <span class="o">//</span> <span class="n">captured</span> <span class="n">by</span> <span class="n">name</span>
+<span class="s">&#39;ext&#39;</span><span class="p">:</span>      <span class="s">&#39;.bam&#39;</span><span class="p">,</span>
+<span class="s">&#39;subdir&#39;</span><span class="p">:</span>   <span class="p">[</span><span class="s">&#39;c&#39;</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">,</span> <span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="s">&#39;/&#39;</span><span class="p">],</span>
+<span class="s">&#39;subpath&#39;</span><span class="p">:</span>  <span class="p">[</span><span class="s">&#39;/a/b/c&#39;</span><span class="p">,</span> <span class="s">&#39;/a/b&#39;</span><span class="p">,</span> <span class="s">&#39;/a&#39;</span><span class="p">,</span> <span class="s">&#39;/&#39;</span><span class="p">],</span>
+<span class="s">&#39;path&#39;</span><span class="p">:</span>     <span class="s">&#39;/a/b/c&#39;</span><span class="p">,</span>
+<span class="s">&#39;basename&#39;</span><span class="p">:</span> <span class="s">&#39;sample1&#39;</span><span class="p">,</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>The code is in <tt class="docutils literal"><span class="pre">ruffus_utility.py</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">results</span> <span class="o">=</span> <span class="n">get_all_paths_components</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">regex_str</span><span class="p">)</span>
+<span class="n">string</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>All the magic is hidden inside black boxes <tt class="docutils literal"><span class="pre">filename_transform</span></tt> classes:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">t_suffix_filename_transform</span><span class="p">(</span><span class="n">t_filename_transform</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">t_regex_filename_transform</span><span class="p">(</span><span class="n">t_filename_transform</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">t_format_filename_transform</span><span class="p">(</span><span class="n">t_filename_transform</span><span class="p">):</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="section" id="formatter-regex-and-suffix">
+<h3><tt class="docutils literal"><span class="pre">formatter()</span></tt>: <tt class="docutils literal"><span class="pre">regex()</span></tt> and <tt class="docutils literal"><span class="pre">suffix()</span></tt><a class="headerlink" href="#formatter-regex-and-suffix" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>The previous behaviour with regex() where mismatches fail even if no substitution is made is retained by the use of <tt class="docutils literal"><span class="pre">re.subn()</span></tt>.
+This is a corner case but I didn&#8217;t want user code to break</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># filter on &quot;.txt&quot;</span>
+<span class="n">input_filenames</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;a.wrong&quot;</span><span class="p">,</span> <span class="s">&quot;b.txt&quot;</span><span class="p">]</span>
+<span class="n">regex</span><span class="p">(</span><span class="s">&quot;(.txt)$&quot;</span><span class="p">)</span>
+
+<span class="c"># fails, no substitution possible</span>
+<span class="s">r&quot;\1&quot;</span>
+
+<span class="c"># fails anyway even through regular expression matches not referenced...</span>
+<span class="s">r&quot;output.filename&quot;</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="product">
+<h2>&#64;product()<a class="headerlink" href="#product" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li>Use combinatoric generators from itertools and keep that naming scheme</li>
+<li>Put all new generators in an <tt class="docutils literal"><span class="pre">combinatorics</span></tt> submodule namespace to avoid breaking user code. (They can imported if necessary.)</li>
+<li>test code in test/test_combinatorics.py</li>
+<li>The <tt class="docutils literal"><span class="pre">itertools.product(repeat)</span></tt> parameter doesn&#8217;t make sense for Ruffus and will not be used</li>
+<li>Flexible number of pairs of <tt class="docutils literal"><span class="pre">task</span></tt> / <tt class="docutils literal"><span class="pre">glob</span></tt> / file names + <tt class="docutils literal"><span class="pre">formatter()</span></tt></li>
+<li>Only <tt class="docutils literal"><span class="pre">formatter([OPTIONAl_REGEX])</span></tt> provides the necessary flexibility to construct the output so we won&#8217;t bother with suffix and regex</li>
+<li>Similar to <tt class="docutils literal"><span class="pre">&#64;transform</span></tt> but with extra level of nested-ness</li>
+</ul>
+<dl class="docutils">
+<dt>Retain same code for <tt class="docutils literal"><span class="pre">&#64;product</span></tt> and <tt class="docutils literal"><span class="pre">&#64;transform</span></tt> by adding an additional level of indirection:</dt>
+<dd><ul class="first last">
+<li><p class="first">generator wrap around <tt class="docutils literal"><span class="pre">get_strings_in_nested_sequence</span></tt> to convert nested input parameters either to a single flat list of file names or to nested lists of file names</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">file_name_parameters</span><span class="o">.</span><span class="n">input_param_to_file_name_list</span> <span class="p">(</span><span class="n">input_params</span><span class="p">)</span>
+<span class="n">file_name_parameters</span><span class="o">.</span><span class="n">list_input_param_to_file_name_list</span> <span class="p">(</span><span class="n">input_params</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first"><tt class="docutils literal"><span class="pre">t_file_names_transform</span></tt> class which stores a list of regular expressions, one for each <tt class="docutils literal"><span class="pre">formatter()</span></tt> object corresponding to a single set of input parameters</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">t_formatter_file_names_transform</span>
+<span class="n">t_nested_formatter_file_names_transform</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">string substitution functions which will apply a list of <tt class="docutils literal"><span class="pre">formatter</span></tt> changes</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">ruffus</span><span class="o">.</span><span class="n">utility</span><span class="o">.</span><span class="n">t_formatter_replace</span><span class="p">()</span>
+<span class="n">ruffus</span><span class="o">.</span><span class="n">utility</span><span class="o">.</span><span class="n">t_nested_formatter_replace</span><span class="p">()</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first"><tt class="docutils literal"><span class="pre">ruffus_uilility.swap_doubly_nested_order()</span></tt> makes the syntax / implementation very orthogonal</p>
+</li>
+</ul>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="permutations-combinations-combinations-with-replacement">
+<h2><tt class="docutils literal"><span class="pre">&#64;permutations(...),</span></tt> <tt class="docutils literal"><span class="pre">&#64;combinations(...),</span></tt> <tt class="docutils literal"><span class="pre">&#64;combinations_with_replacement(...)</span></tt><a class="headerlink" href="#permutations-combinations-combinations-with-replacement" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>Similar to <tt class="docutils literal"><span class="pre">&#64;product</span></tt> extra level of nested-ness is self versus self</p>
+<dl class="docutils">
+<dt>Retain same code for <tt class="docutils literal"><span class="pre">&#64;product</span></tt></dt>
+<dd><ul class="first last simple">
+<li>forward to a sinble <tt class="docutils literal"><span class="pre">file_name_parameters.combinatorics_param_factory()</span></tt></li>
+<li>use <tt class="docutils literal"><span class="pre">combinatorics_type</span></tt> to dispatch to <tt class="docutils literal"><span class="pre">combinatorics.permutations</span></tt>, <tt class="docutils literal"><span class="pre">combinatorics.combinations</span></tt> and <tt class="docutils literal"><span class="pre">combinatorics.combinations_with_replacement</span></tt></li>
+<li>use <tt class="docutils literal"><span class="pre">list_input_param_to_file_name_list</span></tt> from <tt class="docutils literal"><span class="pre">file_name_parameters.product_param_factory()</span></tt></li>
+</ul>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="drmaa-alternatives">
+<h2>drmaa alternatives<a class="headerlink" href="#drmaa-alternatives" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>Alternative, non-drmaa polling code at</p>
+<p><a class="reference external" href="https://github.com/bjpop/rubra/blob/master/rubra/cluster_job.py">https://github.com/bjpop/rubra/blob/master/rubra/cluster_job.py</a></p>
+</div></blockquote>
+</div>
+<div class="section" id="task-completion-monitoring">
+<h2>Task completion monitoring<a class="headerlink" href="#task-completion-monitoring" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="how-easy-is-it-to-abstract-out-the-database">
+<h3>How easy is it to abstract out the database?<a class="headerlink" href="#how-easy-is-it-to-abstract-out-the-database" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><ul>
+<li><dl class="first docutils">
+<dt>The database is Jacob Sondergaard&#8217;s <tt class="docutils literal"><span class="pre">dbdict</span></tt> which is a nosql / key-value store wrapper around sqlite</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="n">job_history</span> <span class="o">=</span> <span class="n">dbdict</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">RUFFUS_HISTORY_FILE</span><span class="p">,</span> <span class="n">picklevalues</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</li>
+<li><p class="first">The key is the output file name, so it is important not to confuse Ruffus by having different tasks generate the same output file!</p>
+</li>
+<li><p class="first">Is it possible to abstract this so that <strong>jobs</strong> get timestamped as well?</p>
+</li>
+<li><p class="first">If we should ever want to abstract out <tt class="docutils literal"><span class="pre">dbdict</span></tt>, we need to have a similar key-value store class,
+and make sure that a single instance of <tt class="docutils literal"><span class="pre">dbdict</span></tt> is used through <tt class="docutils literal"><span class="pre">pipeline_run</span></tt> which is passed up
+and down the function call chain. <tt class="docutils literal"><span class="pre">dbdict</span></tt> would then be drop-in replaceable by our custom (e.g. flat-file-based) dbdict alternative.</p>
+</li>
+</ul>
+<p>To peek into the database:</p>
+<blockquote>
+<div><div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>sqlite3 .ruffus_history.sqlite
+sqlite&gt; .tables
+data
+sqlite&gt; .schema data
+CREATE TABLE data <span class="o">(</span>key PRIMARY KEY,value<span class="o">)</span>;
+sqlite&gt; <span class="k">select </span>key from data order by key;
+</pre></div>
+</div>
+</div></blockquote>
+</div></blockquote>
+</div>
+<div class="section" id="can-we-query-the-database-get-job-history-stats">
+<h3>Can we query the database, get Job history / stats?<a class="headerlink" href="#can-we-query-the-database-get-job-history-stats" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div>Yes, if we write a function to read and dump the entire database but this is only useful with timestamps and task names. See below</div></blockquote>
+</div>
+<div class="section" id="what-are-the-run-time-performance-implications">
+<h3>What are the run time performance implications?<a class="headerlink" href="#what-are-the-run-time-performance-implications" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div>Should be fast: a single db connection is created and used inside <tt class="docutils literal"><span class="pre">pipeline_run</span></tt>,  <tt class="docutils literal"><span class="pre">pipeline_printout</span></tt>,  <tt class="docutils literal"><span class="pre">pipeline_printout_graph</span></tt></div></blockquote>
+</div>
+<div class="section" id="avoid-pauses-between-tasks">
+<h3>Avoid pauses between tasks<a class="headerlink" href="#avoid-pauses-between-tasks" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Allows Ruffus to avoid adding an extra 1 second pause between tasks to guard against file systems with low timestamp granularity.</p>
+<blockquote>
+<div><ul class="simple">
+<li>If the local file time looks to be in sync with the underlying file system, saved system time is used instead of file timestamps</li>
+</ul>
+</div></blockquote>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="mkdir">
+<h2><tt class="docutils literal"><span class="pre">&#64;mkdir(...),</span></tt><a class="headerlink" href="#mkdir" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><tt class="docutils literal"><span class="pre">mkdir</span></tt> continues to work seamlessly inside <tt class="docutils literal"><span class="pre">&#64;follows</span></tt>) but also as its own decorator <tt class="docutils literal"><span class="pre">&#64;mkdir</span></tt> due to the original happy orthogonal design</li>
+<li>fixed bug in checking so that Ruffus does&#8217;t blow up if non strings are in the output (number...)</li>
+<li>note: adding the decorator to a previously undecorated function might have unintended consequences. The undecorated function turns into a zombie.</li>
+<li>fixed ugly bug in <tt class="docutils literal"><span class="pre">pipeline_printout</span></tt> for printing single line output</li>
+<li>fixed description and printout indent</li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="contents.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Implementation Tips</a><ul>
+<li><a class="reference internal" href="#release">Release</a></li>
+<li><a class="reference internal" href="#dbdict-py">dbdict.py</a></li>
+<li><a class="reference internal" href="#how-to-write-new-decorators">how to write new decorators</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#implementation-notes">Implementation notes</a><ul>
+<li><a class="reference internal" href="#ctrl-c-handling"><tt class="docutils literal"><span class="pre">Ctrl-C</span></tt> handling</a></li>
+<li><a class="reference internal" href="#python3-compatability">Python3 compatability</a></li>
+<li><a class="reference internal" href="#refactoring-parameter-handling">Refactoring: parameter handling</a></li>
+<li><a class="reference internal" href="#formatter"><tt class="docutils literal"><span class="pre">formatter</span></tt></a><ul>
+<li><a class="reference internal" href="#formatter-regex-and-suffix"><tt class="docutils literal"><span class="pre">formatter()</span></tt>: <tt class="docutils literal"><span class="pre">regex()</span></tt> and <tt class="docutils literal"><span class="pre">suffix()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#product">&#64;product()</a></li>
+<li><a class="reference internal" href="#permutations-combinations-combinations-with-replacement"><tt class="docutils literal"><span class="pre">&#64;permutations(...),</span></tt> <tt class="docutils literal"><span class="pre">&#64;combinations(...),</span></tt> <tt class="docutils literal"><span class="pre">&#64;combinations_with_replacement(...)</span></tt></a></li>
+<li><a class="reference internal" href="#drmaa-alternatives">drmaa alternatives</a></li>
+<li><a class="reference internal" href="#task-completion-monitoring">Task completion monitoring</a><ul>
+<li><a class="reference internal" href="#how-easy-is-it-to-abstract-out-the-database">How easy is it to abstract out the database?</a></li>
+<li><a class="reference internal" href="#can-we-query-the-database-get-job-history-stats">Can we query the database, get Job history / stats?</a></li>
+<li><a class="reference internal" href="#what-are-the-run-time-performance-implications">What are the run time performance implications?</a></li>
+<li><a class="reference internal" href="#avoid-pauses-between-tasks">Avoid pauses between tasks</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#mkdir"><tt class="docutils literal"><span class="pre">&#64;mkdir(...),</span></tt></a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="todo.html"
+                        title="previous chapter">Future Changes to Ruffus</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="faq.html"
+                        title="next chapter">FAQ</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/implementation_notes.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+    
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+    <h3> Quick Reference:</h3>
+    <ul>
+        <h4><a href="decorators/decorators.html#core">Core:</a></h4>   
+        <ul>
+            <li><a href="decorators/originate.html">@originate</a>                           </li>
+            <li><a href="decorators/split.html">@split</a>                                   </li>
+            <li><a href="decorators/transform.html">@transform</a>                           </li>
+            <li><a href="decorators/merge.html">@merge</a>                                   </li>
+        </ul>
+
+        <h4><a href="decorators/decorators.html#advanced">Advanced</a></h4>   
+        <ul>
+            <li><a href="decorators/subdivide.html">@subdivide</a>                           </li>
+            <li><a href="decorators/transform_ex.html">@transform (add_inputs) </a>          </li>
+            <li><a href="decorators/collate.html">@collate</a>                               </li>
+            <li><a href="decorators/collate_ex.html">@collate (add_inputs)</a>               </li>
+            <li><a href="decorators/graphviz.html">@graphviz</a>                             </li>
+            <li><a href="decorators/mkdir.html">@mkdir</a>                                   </li>
+            <li><a href="decorators/follows.html">@follows / mkdir</a>                       </li>
+            <li><a href="decorators/posttask.html">@posttask touch_file</a>                  </li>
+            <li><a href="decorators/active_if.html">@active_if</a>                           </li>
+            <li><a href="decorators/jobs_limit.html">@jobs_limit</a>                         </li>
+        </ul>
+    
+        <h4><a href="decorators/decorators.html#combinatorics">Combinatorial:</a></h4>   
+        <ul>
+            <li><a href="decorators/product.html">@product </a>                              </li>
+            <li><a href="decorators/permutations.html">@permutations </a>                    </li>
+            <li><a href="decorators/combinations.html">@combinations </a>                    </li>
+            <li><a href="decorators/combinations_with_replacement.html">@combinations_ _with_replacement </a>                    </li>
+        </ul>
+
+                        
+        <h4><a href="decorators/decorators.html#esoteric">Esoteric</a></h4>   
+        <ul>
+            <li><a href="decorators/files_ex.html">@files (on the fly)</a>                   </li>
+            <li><a href="decorators/parallel.html">@parallel</a>                             </li>
+            <li><a href="decorators/check_if_uptodate.html">@check_if_uptodate</a>           </li>
+        </ul>
+
+
+        <h4 ><a href="decorators/indicator_objects.html">Indicator objects</a></h4>
+        <h4 >Pipeline functions</h4>
+        <ul>
+            <li><a href="pipeline_functions.html#pipeline-functions-pipeline-run">pipeline_run</a>                       </li>
+            <li><a href="pipeline_functions.html#pipeline-functions-pipeline-printout">pipeline_printout</a>                      </li>
+            <li><a href="pipeline_functions.html#pipeline-functions-pipeline-printout-graph">pipeline_printout_graph</a>          </li>
+            <li><a href="pipeline_functions.html#pipeline-functions-pipeline-get-task-names">pipeline_get_task_names</a>          </li>
+            <li><a href="drmaa_wrapper_functions.html#drmaa-wrapper-functions-drmaa_wrapper-run_job">drmaa_wrapper.run_job</a>          </li>
+        </ul>
+
+         <a href="todo.html">Future plans</a>
+    </ul>
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="faq.html" title="FAQ"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="todo.html" title="Future Changes to Ruffus"
+             >previous</a> |</li>
+        Ruffus v. 2.5
+            <li><a href="index.html">Home</a> | </li>
+            <li><a href="contents.html">Contents</a> | </li>
+            <li><a href="installation.html">Install</a>  | </li>
+            <li><a href="tutorials/new_tutorial/introduction.html">Manual</a>  / </li>
+            <li><a href="tutorials/new_tutorial/manual_contents.html">(TOC)</a>  | </li>
+            <li><a href="faq.html">FAQ</a>  | </li>
+            <li><a href="cheatsheet.html">Cheat sheet</a> | </li>
+            <li><a href="tutorials/new_tutorial/command_line.html">Command Line</a> | </li>
+            <li><a href="gallery.html">Gallery</a> |  </li>
+            <li><a href="history.html">Latest Changes</a> &raquo; </li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2009-2013 Leo Goodstadt.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

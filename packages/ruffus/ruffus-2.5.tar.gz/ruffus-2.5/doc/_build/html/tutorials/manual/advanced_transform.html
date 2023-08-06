@@ -1,0 +1,517 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Chapter 15: add_inputs() and inputs(): Controlling both input and output files with @transform &mdash; ruffus 2.5 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/ruffus.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.5',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="ruffus 2.5 documentation" href="../../index.html" />
+    <link rel="next" title="Chapter 16: Esoteric: Running jobs in parallel without using files with @parallel" href="parallel.html" />
+    <link rel="prev" title="Chapter 14: @collate: group together disparate input into sets of results" href="collate.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="parallel.html" title="Chapter 16: Esoteric: Running jobs in parallel without using files with @parallel"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="collate.html" title="Chapter 14: @collate: group together disparate input into sets of results"
+             accesskey="P">previous</a> |</li>
+        Ruffus v. 2.5
+            <li><a href="../../index.html">Home</a> | </li>
+            <li><a href="../../contents.html">Contents</a> | </li>
+            <li><a href="../../installation.html">Install</a>  | </li>
+            <li><a href="../new_tutorial/introduction.html">Manual</a>  / </li>
+            <li><a href="../new_tutorial/manual_contents.html">(TOC)</a>  | </li>
+            <li><a href="../../faq.html">FAQ</a>  | </li>
+            <li><a href="../../cheatsheet.html">Cheat sheet</a> | </li>
+            <li><a href="../new_tutorial/command_line.html">Command Line</a> | </li>
+            <li><a href="../../gallery.html">Gallery</a> |  </li>
+            <li><a href="../../history.html">Latest Changes</a> &raquo; </li>
+ 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="manual-transform-ex-chapter-num-add-inputs-and-inputs-controlling-both-input-and-output-files-with-transform">
+<span id="manual-advanced-transform"></span><h1><strong>Chapter 15</strong>: <strong>add_inputs()</strong> <cite>and</cite> <strong>inputs()</strong>: <cite>Controlling both input and output files with</cite> <strong>&#64;transform</strong><a class="headerlink" href="#manual-transform-ex-chapter-num-add-inputs-and-inputs-controlling-both-input-and-output-files-with-transform" title="Permalink to this headline">¶</a></h1>
+<blockquote>
+<div><table class="hlist"><tr><td><ul class="simple">
+<li><a class="reference internal" href="manual_contents.html#manual"><em>Manual overview</em></a></li>
+</ul>
+</td><td><ul class="simple">
+<li><a class="reference internal" href="../../decorators/transform.html#decorators-transform"><em>&#64;transform</em></a> syntax in detail</li>
+</ul>
+</td></tr></table>
+<p id="index-0">The standard <a class="reference internal" href="transform.html#manual-transform"><em>&#64;transform</em></a> allows you to send a list of data files
+to the same pipelined function and for the resulting <em>outputs</em> parameter to be automatically
+inferred from file names in the <em>inputs</em>.</p>
+<dl class="docutils">
+<dt>There are two situations where you might desire additional flexibility:</dt>
+<dd><ol class="first last arabic simple">
+<li>You need to add additional prequisites or filenames to the <em>inputs</em> of every single one
+of your jobs</li>
+<li>(Less often,) the actual <em>inputs</em> file names are some variant of the <em>outputs</em> of another
+task.</li>
+</ol>
+</dd>
+</dl>
+<p>Either way, it is occasionally very useful to be able to generate the actual <em>inputs</em> as
+well as <em>outputs</em> parameters by regular expression substitution. The following examples will show
+you both how and why you would want to do this.</p>
+</div></blockquote>
+<div class="section" id="adding-additional-input-prerequisites-per-job">
+<h2>Adding additional <em>input</em> prerequisites per job<a class="headerlink" href="#adding-additional-input-prerequisites-per-job" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="example-compiling-c-code">
+<h3>1.) Example: compiling c++ code<a class="headerlink" href="#example-compiling-c-code" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="docutils">
+<dt>Suppose we wished to compile some c++ (<tt class="docutils literal"><span class="pre">&quot;*.cpp&quot;</span></tt>) files:</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="n">source_files</span> <span class="o">=</span> <span class="s">&quot;hasty.cpp&quot;</span><span class="p">,</span> <span class="s">&quot;tasty.cpp&quot;</span><span class="p">,</span> <span class="s">&quot;messy.cpp&quot;</span>
+<span class="k">for</span> <span class="n">source_file</span> <span class="ow">in</span> <span class="n">source_files</span><span class="p">:</span>
+    <span class="nb">open</span><span class="p">(</span><span class="n">source_file</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<dl class="docutils">
+<dt>The ruffus code would look like this:</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">ruffus</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="nd">@transform</span><span class="p">(</span><span class="n">source_files</span><span class="p">,</span> <span class="n">suffix</span><span class="p">(</span><span class="s">&quot;.cpp&quot;</span><span class="p">),</span> <span class="s">&quot;.o&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">compile</span><span class="p">(</span><span class="n">input_filename</span><span class="p">,</span> <span class="n">output_file_name</span><span class="p">):</span>
+    <span class="nb">open</span><span class="p">(</span><span class="n">output_file_name</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<dl class="docutils">
+<dt>This results in the following jobs:</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_run</span><span class="p">([</span><span class="nb">compile</span><span class="p">],</span> <span class="n">verbose</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">multiprocess</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span>
+
+<span class="go">    Job = [None -&gt; hasty.cpp] completed</span>
+<span class="go">    Job = [None -&gt; tasty.cpp] completed</span>
+<span class="go">    Job = [None -&gt; messy.cpp] completed</span>
+<span class="go">Completed Task = prepare_cpp_source</span>
+
+<span class="go">    Job = [hasty.cpp -&gt; hasty.o] completed</span>
+<span class="go">    Job = [messy.cpp -&gt; messy.o] completed</span>
+<span class="go">    Job = [tasty.cpp -&gt; tasty.o] completed</span>
+<span class="go">Completed Task = compile</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="example-adding-a-header-file-with-add-inputs">
+<h3>2.) Example: Adding a header file with <strong>add_inputs(..)</strong><a class="headerlink" href="#example-adding-a-header-file-with-add-inputs" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>All this is plain vanilla <strong>&#64;transform</strong> syntax. But suppose that we need to add a
+common header file <tt class="docutils literal"><span class="pre">&quot;universal.h&quot;</span></tt> to our compilation.
+The <strong>add_inputs</strong> provides for this with the minimum of fuss:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="c"># create header file</span>
+<span class="nb">open</span><span class="p">(</span><span class="s">&quot;universal.h&quot;</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span>
+
+<span class="c"># compile C++ files with extra header</span>
+<span class="nd">@transform</span><span class="p">(</span><span class="n">prepare_cpp_source</span><span class="p">,</span> <span class="n">suffix</span><span class="p">(</span><span class="s">&quot;.cpp&quot;</span><span class="p">),</span> <span class="n">add_inputs</span><span class="p">(</span><span class="s">&quot;universal.h&quot;</span><span class="p">),</span> <span class="s">&quot;.o&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">compile</span><span class="p">(</span><span class="n">input_filename</span><span class="p">,</span> <span class="n">output_file_name</span><span class="p">):</span>
+    <span class="nb">open</span><span class="p">(</span><span class="n">output_file_name</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Now the input file is a python list, with <tt class="docutils literal"><span class="pre">&quot;universal.h&quot;</span></tt> added to each <tt class="docutils literal"><span class="pre">&quot;*.cpp&quot;</span></tt></p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_run</span><span class="p">([</span><span class="nb">compile</span><span class="p">],</span> <span class="n">verbose</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">multiprocess</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span>
+
+<span class="go">    Job = [ [hasty.cpp, universal.h] -&gt; hasty.o] completed</span>
+<span class="go">    Job = [ [messy.cpp, universal.h] -&gt; messy.o] completed</span>
+<span class="go">    Job = [ [tasty.cpp, universal.h] -&gt; tasty.o] completed</span>
+<span class="go">Completed Task = compile</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="additional-input-prerequisites-can-be-globs-tasks-or-pattern-matches">
+<h2>Additional <em>input</em> prerequisites can be globs, tasks or pattern matches<a class="headerlink" href="#additional-input-prerequisites-can-be-globs-tasks-or-pattern-matches" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div>A common requirement is to include the corresponding header file in compilations.
+It is easy to use <strong>add_inputs</strong> to look up additional files via pattern matches.</div></blockquote>
+<div class="section" id="example-adding-matching-header-file">
+<h3>3.) Example: Adding matching header file<a class="headerlink" href="#example-adding-matching-header-file" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="docutils">
+<dt>To make this example more fun, we shall also:</dt>
+<dd><ol class="first last arabic simple">
+<li>Give each source code file its own ordinal</li>
+<li>Use <tt class="docutils literal"><span class="pre">add_inputs</span></tt> to add files produced by another task function</li>
+</ol>
+</dd>
+</dl>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># each source file has its own index</span>
+<span class="n">source_names</span> <span class="o">=</span> <span class="p">[(</span><span class="s">&quot;hasty.cpp&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                <span class="p">(</span><span class="s">&quot;tasty.cpp&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+                <span class="p">(</span><span class="s">&quot;messy.cpp&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">]</span>
+<span class="n">header_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">sn</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot;.cpp&quot;</span><span class="p">,</span> <span class="s">&quot;.h&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">sn</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="ow">in</span> <span class="n">source_names</span><span class="p">]</span>
+<span class="n">header_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;universal.h&quot;</span><span class="p">)</span>
+
+<span class="c">#</span>
+<span class="c">#   create header and source files</span>
+<span class="c">#</span>
+<span class="k">for</span> <span class="n">source</span><span class="p">,</span> <span class="n">source_index</span> <span class="ow">in</span> <span class="n">source_names</span><span class="p">:</span>
+    <span class="nb">open</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">header</span> <span class="ow">in</span> <span class="n">header_names</span><span class="p">:</span>
+    <span class="nb">open</span><span class="p">(</span><span class="n">header</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span>
+
+
+
+<span class="kn">from</span> <span class="nn">ruffus</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c">#</span>
+<span class="c">#   lookup embedded strings in each source files</span>
+<span class="c">#</span>
+<span class="nd">@transform</span><span class="p">(</span><span class="n">source_names</span><span class="p">,</span> <span class="n">suffix</span><span class="p">(</span><span class="s">&quot;.cpp&quot;</span><span class="p">),</span> <span class="s">&quot;.embedded&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">get_embedded_strings</span><span class="p">(</span><span class="n">input_filename</span><span class="p">,</span> <span class="n">output_file_name</span><span class="p">):</span>
+    <span class="nb">open</span><span class="p">(</span><span class="n">output_file_name</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span>
+
+
+
+<span class="c"># compile C++ files with extra header</span>
+<span class="nd">@transform</span><span class="p">(</span><span class="n">source_names</span><span class="p">,</span> <span class="n">suffix</span><span class="p">(</span><span class="s">&quot;.cpp&quot;</span><span class="p">),</span>
+           <span class="n">add_inputs</span><span class="p">(</span>  <span class="s">&quot;universal.h&quot;</span><span class="p">,</span>
+                        <span class="s">r&quot;\1.h&quot;</span><span class="p">,</span>
+                        <span class="n">get_embedded_strings</span>     <span class="p">),</span> <span class="s">&quot;.o&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">compile</span><span class="p">(</span><span class="n">input_params</span><span class="p">,</span> <span class="n">output_file_name</span><span class="p">):</span>
+    <span class="nb">open</span><span class="p">(</span><span class="n">output_file_name</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span>
+
+
+<span class="n">pipeline_run</span><span class="p">([</span><span class="nb">compile</span><span class="p">],</span> <span class="n">verbose</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">multiprocess</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This script gives the following output</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_run</span><span class="p">([</span><span class="nb">compile</span><span class="p">],</span> <span class="n">verbose</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">multiprocess</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span>
+
+<span class="go">    Job = [[hasty.cpp,  1] -&gt; hasty.embedded] completed</span>
+<span class="go">    Job = [[messy.cpp,  3] -&gt; messy.embedded] completed</span>
+<span class="go">    Job = [[tasty.cpp,  2] -&gt; tasty.embedded] completed</span>
+<span class="go">Completed Task = get_embedded_strings</span>
+
+<span class="go">    Job = [[[hasty.cpp,  1],                                            # inputs</span>
+<span class="go">            universal.h,                                                # common header</span>
+<span class="go">            hasty.h,                                                    # corresponding header</span>
+<span class="go">            hasty.embedded, messy.embedded, tasty.embedded]             # output of get_embedded_strings()</span>
+<span class="go">           -&gt; hasty.o] completed</span>
+<span class="go">    Job = [[[messy.cpp, 3],                                             # inputs</span>
+<span class="go">            universal.h,                                                # common header</span>
+<span class="go">            messy.h,                                                    # corresponding header</span>
+<span class="go">            hasty.embedded, messy.embedded, tasty.embedded]             # output of get_embedded_strings()</span>
+<span class="go">           -&gt; messy.o] completed</span>
+<span class="go">    Job = [[[tasty.cpp, 2],                                             # inputs</span>
+<span class="go">            universal.h,                                                # common header</span>
+<span class="go">            tasty.h,                                                    # corresponding header</span>
+<span class="go">            hasty.embedded, messy.embedded, tasty.embedded]             # output of get_embedded_strings()</span>
+<span class="go">           -&gt; tasty.o] completed</span>
+<span class="go">Completed Task = compile</span>
+</pre></div>
+</div>
+</div></blockquote>
+<dl class="docutils">
+<dt>We can see that the <tt class="docutils literal"><span class="pre">compile(...)</span></tt> task now has four sets of <em>inputs</em>:</dt>
+<dd><ol class="first last arabic simple">
+<li>The original inputs (e.g. <tt class="docutils literal"><span class="pre">[hasty.cpp,</span>&nbsp; <span class="pre">1]</span></tt>)</li>
+</ol>
+</dd>
+<dt>And three additional added by <strong>add_inputs(...)</strong></dt>
+<dd><ol class="first last arabic simple" start="2">
+<li>A header file (<tt class="docutils literal"><span class="pre">universal.h</span></tt>) common to all jobs</li>
+<li>The matching header (e.g. <tt class="docutils literal"><span class="pre">hasty.h</span></tt>)</li>
+<li>The output from another task <tt class="docutils literal"><span class="pre">get_embedded_strings()</span></tt> (e.g. <tt class="docutils literal"><span class="pre">hasty.embedded,</span> <span class="pre">messy.embedded,</span> <span class="pre">tasty.embedded</span></tt>)</li>
+</ol>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>For input parameters with nested structures (lists or sets), the pattern matching is
+on the first filename string Ruffus comes across (DFS).</p>
+<p>So for <tt class="docutils literal"><span class="pre">[&quot;hasty.c&quot;,</span> <span class="pre">0]</span></tt>, the pattern matches <tt class="docutils literal"><span class="pre">&quot;hasty.c&quot;</span></tt>.</p>
+<p class="last">If in doubt, use <a class="reference internal" href="tracing_pipeline_parameters.html#manual-tracing-pipeline-parameters"><em>pipeline_printout</em></a> to
+check what parameters Ruffus is using.</p>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="example-using-regex-instead-of-suffix">
+<h3>4.) Example: Using <strong>regex(..)</strong> instead of <strong>suffix(..)</strong><a class="headerlink" href="#example-using-regex-instead-of-suffix" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Suffix pattern matching is much simpler and hence is usually preferable to the more
+powerful regular expressions. We can rewrite the above example to use <strong>regex</strong> as well
+to give exactly the same output.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># compile C++ files with extra header</span>
+<span class="nd">@transform</span><span class="p">(</span><span class="n">source_names</span><span class="p">,</span> <span class="n">regex</span><span class="p">(</span><span class="s">r&quot;(.+)\.cpp&quot;</span><span class="p">),</span>
+           <span class="n">add_inputs</span><span class="p">(</span>  <span class="s">&quot;universal.h&quot;</span><span class="p">,</span>
+                        <span class="s">r&quot;\1.h&quot;</span><span class="p">,</span>
+                        <span class="n">get_embedded_strings</span>     <span class="p">),</span> <span class="s">r&quot;\1.o&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">compile</span><span class="p">(</span><span class="n">input_params</span><span class="p">,</span> <span class="n">output_file_name</span><span class="p">):</span>
+    <span class="nb">open</span><span class="p">(</span><span class="n">output_file_name</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The backreference <tt class="docutils literal"><span class="pre">\g&lt;0&gt;</span></tt> usefully substitutes the entire substring matched by
+the regular expression.</p>
+</div>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="replacing-all-input-parameters-with-inputs">
+<h2>Replacing all input parameters with <strong>inputs(...)</strong><a class="headerlink" href="#replacing-all-input-parameters-with-inputs" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div>More rarely, it is necessary to replace all the input parameters wholescale.</div></blockquote>
+<div class="section" id="example-running-matching-python-scripts">
+<h3>4.) Example: Running matching python scripts<a class="headerlink" href="#example-running-matching-python-scripts" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>In the following example, we are not compiling C++ source files but invoking
+corresponding python scripts which have the same name.</p>
+<p>Given three c++ files and their corresponding python scripts:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="c"># each source file has its own index</span>
+<span class="n">source_names</span> <span class="o">=</span> <span class="p">[(</span><span class="s">&quot;hasty.cpp&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                <span class="p">(</span><span class="s">&quot;tasty.cpp&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+                <span class="p">(</span><span class="s">&quot;messy.cpp&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">]</span>
+
+<span class="c">#</span>
+<span class="c">#   create c++ source files and corresponding python files</span>
+<span class="c">#</span>
+<span class="k">for</span> <span class="n">source</span><span class="p">,</span> <span class="n">source_index</span> <span class="ow">in</span> <span class="n">source_names</span><span class="p">:</span>
+    <span class="nb">open</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span>
+    <span class="nb">open</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot;.cpp&quot;</span><span class="p">,</span> <span class="s">&quot;.py&quot;</span><span class="p">),</span> <span class="s">&quot;w&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>The Ruffus code will call each python script corresponding to their c++ counterpart:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">ruffus</span> <span class="kn">import</span> <span class="o">*</span>
+
+
+<span class="c"># run corresponding python files</span>
+<span class="nd">@transform</span><span class="p">(</span><span class="n">source_names</span><span class="p">,</span> <span class="n">suffix</span><span class="p">(</span><span class="s">&quot;.cpp&quot;</span><span class="p">),</span> <span class="n">inputs</span><span class="p">(</span>  <span class="s">r&quot;\1.py&quot;</span><span class="p">),</span> <span class="s">&quot;.results&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">run_python_file</span><span class="p">(</span><span class="n">input_params</span><span class="p">,</span> <span class="n">output_file_name</span><span class="p">):</span>
+    <span class="nb">open</span><span class="p">(</span><span class="n">output_file_name</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span>
+
+
+<span class="n">pipeline_run</span><span class="p">([</span><span class="n">run_python_file</span><span class="p">],</span> <span class="n">verbose</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">multiprocess</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<dl class="docutils">
+<dt>Resulting in this output:</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_run</span><span class="p">([</span><span class="n">run_python_file</span><span class="p">],</span> <span class="n">verbose</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">multiprocess</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">    Job = [hasty.py -&gt; hasty.results] completed</span>
+<span class="go">    Job = [messy.py -&gt; messy.results] completed</span>
+<span class="go">    Job = [tasty.py -&gt; tasty.results] completed</span>
+<span class="go">Completed Task = run_python_file</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="id1">
+<h3>5.) Example: Using <strong>regex</strong> instead of <strong>suffix</strong><a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Again, the same code can be written (less clearly) using the more powerful
+<strong>regex</strong> and python regular expressions:</p>
+<blockquote>
+<div><div class="highlight-python"><pre>from ruffus import *
+
+
+# run corresponding python files
+@transform(source_names, regex(r"(.+)\.cpp"), inputs(  r"\1.py"), r\"1.results")
+def run_python_file(input_params, output_file_name):
+    open(output_file_name, "w")
+
+
+pipeline_run([run_python_file], verbose = 2, multiprocess = 3)</pre>
+</div>
+</div></blockquote>
+<p>This is about as sophisticated as <strong>&#64;transform</strong> ever gets!</p>
+</div></blockquote>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../contents.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#"><strong>Chapter 15</strong>: <strong>add_inputs()</strong> <cite>and</cite> <strong>inputs()</strong>: <cite>Controlling both input and output files with</cite> <strong>&#64;transform</strong></a><ul>
+<li><a class="reference internal" href="#adding-additional-input-prerequisites-per-job">Adding additional <em>input</em> prerequisites per job</a><ul>
+<li><a class="reference internal" href="#example-compiling-c-code">1.) Example: compiling c++ code</a></li>
+<li><a class="reference internal" href="#example-adding-a-header-file-with-add-inputs">2.) Example: Adding a header file with <strong>add_inputs(..)</strong></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#additional-input-prerequisites-can-be-globs-tasks-or-pattern-matches">Additional <em>input</em> prerequisites can be globs, tasks or pattern matches</a><ul>
+<li><a class="reference internal" href="#example-adding-matching-header-file">3.) Example: Adding matching header file</a></li>
+<li><a class="reference internal" href="#example-using-regex-instead-of-suffix">4.) Example: Using <strong>regex(..)</strong> instead of <strong>suffix(..)</strong></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#replacing-all-input-parameters-with-inputs">Replacing all input parameters with <strong>inputs(...)</strong></a><ul>
+<li><a class="reference internal" href="#example-running-matching-python-scripts">4.) Example: Running matching python scripts</a></li>
+<li><a class="reference internal" href="#id1">5.) Example: Using <strong>regex</strong> instead of <strong>suffix</strong></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="collate.html"
+                        title="previous chapter"><strong>Chapter 14</strong>: <strong>&#64;collate</strong>: <cite>group together disparate input into sets of results</cite></a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="parallel.html"
+                        title="next chapter"><strong>Chapter 16</strong>: <cite>Esoteric: Running jobs in parallel without using files with</cite> <strong>&#64;parallel</strong></a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/tutorials/manual/advanced_transform.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+    
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+    <h3> Quick Reference:</h3>
+    <ul>
+        <h4><a href="../../decorators/decorators.html#core">Core:</a></h4>   
+        <ul>
+            <li><a href="../../decorators/originate.html">@originate</a>                           </li>
+            <li><a href="../../decorators/split.html">@split</a>                                   </li>
+            <li><a href="../../decorators/transform.html">@transform</a>                           </li>
+            <li><a href="../../decorators/merge.html">@merge</a>                                   </li>
+        </ul>
+
+        <h4><a href="../../decorators/decorators.html#advanced">Advanced</a></h4>   
+        <ul>
+            <li><a href="../../decorators/subdivide.html">@subdivide</a>                           </li>
+            <li><a href="../../decorators/transform_ex.html">@transform (add_inputs) </a>          </li>
+            <li><a href="../../decorators/collate.html">@collate</a>                               </li>
+            <li><a href="../../decorators/collate_ex.html">@collate (add_inputs)</a>               </li>
+            <li><a href="../../decorators/graphviz.html">@graphviz</a>                             </li>
+            <li><a href="../../decorators/mkdir.html">@mkdir</a>                                   </li>
+            <li><a href="../../decorators/follows.html">@follows / mkdir</a>                       </li>
+            <li><a href="../../decorators/posttask.html">@posttask touch_file</a>                  </li>
+            <li><a href="../../decorators/active_if.html">@active_if</a>                           </li>
+            <li><a href="../../decorators/jobs_limit.html">@jobs_limit</a>                         </li>
+        </ul>
+    
+        <h4><a href="../../decorators/decorators.html#combinatorics">Combinatorial:</a></h4>   
+        <ul>
+            <li><a href="../../decorators/product.html">@product </a>                              </li>
+            <li><a href="../../decorators/permutations.html">@permutations </a>                    </li>
+            <li><a href="../../decorators/combinations.html">@combinations </a>                    </li>
+            <li><a href="../../decorators/combinations_with_replacement.html">@combinations_ _with_replacement </a>                    </li>
+        </ul>
+
+                        
+        <h4><a href="../../decorators/decorators.html#esoteric">Esoteric</a></h4>   
+        <ul>
+            <li><a href="../../decorators/files_ex.html">@files (on the fly)</a>                   </li>
+            <li><a href="../../decorators/parallel.html">@parallel</a>                             </li>
+            <li><a href="../../decorators/check_if_uptodate.html">@check_if_uptodate</a>           </li>
+        </ul>
+
+
+        <h4 ><a href="../../decorators/indicator_objects.html">Indicator objects</a></h4>
+        <h4 >Pipeline functions</h4>
+        <ul>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-run">pipeline_run</a>                       </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-printout">pipeline_printout</a>                      </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-printout-graph">pipeline_printout_graph</a>          </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-get-task-names">pipeline_get_task_names</a>          </li>
+            <li><a href="../../drmaa_wrapper_functions.html#drmaa-wrapper-functions-drmaa_wrapper-run_job">drmaa_wrapper.run_job</a>          </li>
+        </ul>
+
+         <a href="../../todo.html">Future plans</a>
+    </ul>
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="parallel.html" title="Chapter 16: Esoteric: Running jobs in parallel without using files with @parallel"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="collate.html" title="Chapter 14: @collate: group together disparate input into sets of results"
+             >previous</a> |</li>
+        Ruffus v. 2.5
+            <li><a href="../../index.html">Home</a> | </li>
+            <li><a href="../../contents.html">Contents</a> | </li>
+            <li><a href="../../installation.html">Install</a>  | </li>
+            <li><a href="../new_tutorial/introduction.html">Manual</a>  / </li>
+            <li><a href="../new_tutorial/manual_contents.html">(TOC)</a>  | </li>
+            <li><a href="../../faq.html">FAQ</a>  | </li>
+            <li><a href="../../cheatsheet.html">Cheat sheet</a> | </li>
+            <li><a href="../new_tutorial/command_line.html">Command Line</a> | </li>
+            <li><a href="../../gallery.html">Gallery</a> |  </li>
+            <li><a href="../../history.html">Latest Changes</a> &raquo; </li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2009-2013 Leo Goodstadt.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,271 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Chapter 5: Tracing pipeline parameters &mdash; ruffus 2.5 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/ruffus.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.5',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="ruffus 2.5 documentation" href="../../index.html" />
+    <link rel="next" title="Chapter 6: Running Tasks and Jobs in parallel" href="parallel_processing.html" />
+    <link rel="prev" title="Chapter 4: Chaining pipeline Tasks together automatically" href="tasks_and_globs_in_inputs.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="parallel_processing.html" title="Chapter 6: Running Tasks and Jobs in parallel"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="tasks_and_globs_in_inputs.html" title="Chapter 4: Chaining pipeline Tasks together automatically"
+             accesskey="P">previous</a> |</li>
+        Ruffus v. 2.5
+            <li><a href="../../index.html">Home</a> | </li>
+            <li><a href="../../contents.html">Contents</a> | </li>
+            <li><a href="../../installation.html">Install</a>  | </li>
+            <li><a href="../new_tutorial/introduction.html">Manual</a>  / </li>
+            <li><a href="../new_tutorial/manual_contents.html">(TOC)</a>  | </li>
+            <li><a href="../../faq.html">FAQ</a>  | </li>
+            <li><a href="../../cheatsheet.html">Cheat sheet</a> | </li>
+            <li><a href="../new_tutorial/command_line.html">Command Line</a> | </li>
+            <li><a href="../../gallery.html">Gallery</a> |  </li>
+            <li><a href="../../history.html">Latest Changes</a> &raquo; </li>
+ 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="manual-tracing-pipeline-parameters-chapter-num-tracing-pipeline-parameters">
+<span id="manual-tracing-pipeline-parameters"></span><h1><strong>Chapter  5</strong>: Tracing pipeline parameters<a class="headerlink" href="#manual-tracing-pipeline-parameters-chapter-num-tracing-pipeline-parameters" title="Permalink to this headline">¶</a></h1>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference internal" href="manual_contents.html#manual"><em>Manual overview</em></a></li>
+</ul>
+<p id="index-0">The trickiest part of developing pipelines is understanding how your
+data flows through the pipeline.</p>
+<p>In <strong>Ruffus</strong>, your data is passed from one task function to another down
+the pipeline by the chain of linked parameters. Sometimes, it may be difficult to
+choose the right <strong>Ruffus</strong> syntax at first, or to understand which parameters in
+what format are being passed to your function.</p>
+<p>Whether you are learning how to use <strong>ruffus</strong>, or trying out a new
+feature in <strong>ruffus</strong>, or just have a horrendously complicated pipeline
+to debug (we have colleagues with &gt;100 criss-crossing pipelined stages),
+your best friend is <a class="reference internal" href="../../pipeline_functions.html#pipeline-functions-pipeline-printout"><em>pipeline_printout(...)</em></a>.</p>
+<p><strong>pipeline_printout</strong> displays the parameters which would be passed to each task function
+for each job in your pipeline. In other words, it traces how each of the functions in
+the pipeline are called in detail.</p>
+<p>It makes good sense to alternate between calls to <strong>pipeline_printout</strong> and <strong>pipeline_run</strong>
+in the development of <strong>Ruffus</strong> pipelines (perhaps with the use of a command-line option),
+so that you always know exactly how the pipeline is being invoked.</p>
+</div></blockquote>
+<div class="section" id="printing-out-which-jobs-will-be-run">
+<h2>Printing out which jobs will be run<a class="headerlink" href="#printing-out-which-jobs-will-be-run" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p><strong>pipeline_printout</strong> is called in exactly the same way as <strong>pipeline_run</strong> but
+instead of running the pipeline, just prints the tasks which are and are not up-to-date.</p>
+<p>The <tt class="docutils literal"><span class="pre">verbose</span></tt> parameter controls how much detail is displayed.</p>
+<blockquote>
+<div><div class="highlight-python"><pre>verbose = 0 : prints nothing
+verbose = 1 : logs warnings and tasks which are not up-to-date and which will be run
+verbose = 2 : logs doc strings for task functions as well
+verbose = 3 : logs job parameters for jobs which are out-of-date
+verbose = 4 : logs list of up-to-date tasks but parameters for out-of-date jobs
+verbose = 5 : logs parameters for all jobs whether up-to-date or not
+verbose = 10: logs messages useful only for debugging ruffus pipeline code</pre>
+</div>
+</div></blockquote>
+<p>Let us take the two step <a class="reference internal" href="../simple_tutorial/step3_run_pipeline_code.html#simple-tutorial-3nd-step-code"><em>pipeline</em></a> from
+the tutorial. <a class="reference internal" href="../../pipeline_functions.html#pipeline-functions-pipeline-printout"><em>Pipeline_printout(...)</em></a>
+by default merely lists the two tasks which will be run in the pipeline:</p>
+<blockquote>
+<div><img alt="../../_images/simple_tutorial_pipeline_printout1.png" src="../../_images/simple_tutorial_pipeline_printout1.png" />
+</div></blockquote>
+<p>To see the input and output parameters of out-of-date jobs in the pipeline, we can increase the verbosity from the default (<tt class="docutils literal"><span class="pre">1</span></tt>) to <tt class="docutils literal"><span class="pre">3</span></tt>:</p>
+<blockquote>
+<div><img alt="../../_images/simple_tutorial_pipeline_printout2.png" src="../../_images/simple_tutorial_pipeline_printout2.png" />
+</div></blockquote>
+<dl class="docutils">
+<dt>This is very useful for checking that the input and output parameters have been specified</dt>
+<dd>correctly.</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="determining-which-jobs-are-out-of-date-or-not">
+<h2>Determining which jobs are out-of-date or not<a class="headerlink" href="#determining-which-jobs-are-out-of-date-or-not" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>It is often useful to see which tasks are or are not up-to-date. For example, if we
+were to run the pipeline in full, and then modify one of the intermediate files, the
+pipeline would be partially out of date.</p>
+<p>Let us start by run the pipeline in full but then modify <tt class="docutils literal"><span class="pre">job1.stage</span></tt> so that the second task is no longer up-to-date:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">pipeline_run</span><span class="p">([</span><span class="n">second_task</span><span class="p">])</span>
+
+<span class="c"># modify job1.stage1</span>
+<span class="nb">open</span><span class="p">(</span><span class="s">&quot;job1.stage1&quot;</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>At a verbosity of <tt class="docutils literal"><span class="pre">5</span></tt>, even jobs which are up-to-date will be displayed.
+We can now see that the there is only one job in <tt class="docutils literal"><span class="pre">second_task(...)</span></tt> which needs to be re-run
+because <tt class="docutils literal"><span class="pre">job1.stage1</span></tt> has been modified after <tt class="docutils literal"><span class="pre">job1.stage2</span></tt> (highlighted in blue):</p>
+<blockquote>
+<div><img alt="../../_images/simple_tutorial_pipeline_printout3.png" src="../../_images/simple_tutorial_pipeline_printout3.png" />
+</div></blockquote>
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../contents.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#"><strong>Chapter  5</strong>: Tracing pipeline parameters</a><ul>
+<li><a class="reference internal" href="#printing-out-which-jobs-will-be-run">Printing out which jobs will be run</a></li>
+<li><a class="reference internal" href="#determining-which-jobs-are-out-of-date-or-not">Determining which jobs are out-of-date or not</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="tasks_and_globs_in_inputs.html"
+                        title="previous chapter"><strong>Chapter  4</strong>: Chaining pipeline <cite>Tasks</cite> together automatically</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="parallel_processing.html"
+                        title="next chapter"><strong>Chapter  6</strong>: <cite>Running Tasks and Jobs in parallel</cite></a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/tutorials/manual/tracing_pipeline_parameters.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+    
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+    <h3> Quick Reference:</h3>
+    <ul>
+        <h4><a href="../../decorators/decorators.html#core">Core:</a></h4>   
+        <ul>
+            <li><a href="../../decorators/originate.html">@originate</a>                           </li>
+            <li><a href="../../decorators/split.html">@split</a>                                   </li>
+            <li><a href="../../decorators/transform.html">@transform</a>                           </li>
+            <li><a href="../../decorators/merge.html">@merge</a>                                   </li>
+        </ul>
+
+        <h4><a href="../../decorators/decorators.html#advanced">Advanced</a></h4>   
+        <ul>
+            <li><a href="../../decorators/subdivide.html">@subdivide</a>                           </li>
+            <li><a href="../../decorators/transform_ex.html">@transform (add_inputs) </a>          </li>
+            <li><a href="../../decorators/collate.html">@collate</a>                               </li>
+            <li><a href="../../decorators/collate_ex.html">@collate (add_inputs)</a>               </li>
+            <li><a href="../../decorators/graphviz.html">@graphviz</a>                             </li>
+            <li><a href="../../decorators/mkdir.html">@mkdir</a>                                   </li>
+            <li><a href="../../decorators/follows.html">@follows / mkdir</a>                       </li>
+            <li><a href="../../decorators/posttask.html">@posttask touch_file</a>                  </li>
+            <li><a href="../../decorators/active_if.html">@active_if</a>                           </li>
+            <li><a href="../../decorators/jobs_limit.html">@jobs_limit</a>                         </li>
+        </ul>
+    
+        <h4><a href="../../decorators/decorators.html#combinatorics">Combinatorial:</a></h4>   
+        <ul>
+            <li><a href="../../decorators/product.html">@product </a>                              </li>
+            <li><a href="../../decorators/permutations.html">@permutations </a>                    </li>
+            <li><a href="../../decorators/combinations.html">@combinations </a>                    </li>
+            <li><a href="../../decorators/combinations_with_replacement.html">@combinations_ _with_replacement </a>                    </li>
+        </ul>
+
+                        
+        <h4><a href="../../decorators/decorators.html#esoteric">Esoteric</a></h4>   
+        <ul>
+            <li><a href="../../decorators/files_ex.html">@files (on the fly)</a>                   </li>
+            <li><a href="../../decorators/parallel.html">@parallel</a>                             </li>
+            <li><a href="../../decorators/check_if_uptodate.html">@check_if_uptodate</a>           </li>
+        </ul>
+
+
+        <h4 ><a href="../../decorators/indicator_objects.html">Indicator objects</a></h4>
+        <h4 >Pipeline functions</h4>
+        <ul>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-run">pipeline_run</a>                       </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-printout">pipeline_printout</a>                      </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-printout-graph">pipeline_printout_graph</a>          </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-get-task-names">pipeline_get_task_names</a>          </li>
+            <li><a href="../../drmaa_wrapper_functions.html#drmaa-wrapper-functions-drmaa_wrapper-run_job">drmaa_wrapper.run_job</a>          </li>
+        </ul>
+
+         <a href="../../todo.html">Future plans</a>
+    </ul>
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="parallel_processing.html" title="Chapter 6: Running Tasks and Jobs in parallel"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="tasks_and_globs_in_inputs.html" title="Chapter 4: Chaining pipeline Tasks together automatically"
+             >previous</a> |</li>
+        Ruffus v. 2.5
+            <li><a href="../../index.html">Home</a> | </li>
+            <li><a href="../../contents.html">Contents</a> | </li>
+            <li><a href="../../installation.html">Install</a>  | </li>
+            <li><a href="../new_tutorial/introduction.html">Manual</a>  / </li>
+            <li><a href="../new_tutorial/manual_contents.html">(TOC)</a>  | </li>
+            <li><a href="../../faq.html">FAQ</a>  | </li>
+            <li><a href="../../cheatsheet.html">Cheat sheet</a> | </li>
+            <li><a href="../new_tutorial/command_line.html">Command Line</a> | </li>
+            <li><a href="../../gallery.html">Gallery</a> |  </li>
+            <li><a href="../../history.html">Latest Changes</a> &raquo; </li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2009-2013 Leo Goodstadt.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

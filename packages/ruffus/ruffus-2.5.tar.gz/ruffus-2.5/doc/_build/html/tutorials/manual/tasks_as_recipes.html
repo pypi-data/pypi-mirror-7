@@ -1,0 +1,353 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Chapter 2: Tasks and Recipes &mdash; ruffus 2.5 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/ruffus.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.5',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="ruffus 2.5 documentation" href="../../index.html" />
+    <link rel="next" title="Chapter 3: Passing parameters to the pipeline with @files" href="files.html" />
+    <link rel="prev" title="Chapter 1 : Arranging tasks into a pipeline with @follows" href="follows.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="files.html" title="Chapter 3: Passing parameters to the pipeline with @files"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="follows.html" title="Chapter 1 : Arranging tasks into a pipeline with @follows"
+             accesskey="P">previous</a> |</li>
+        Ruffus v. 2.5
+            <li><a href="../../index.html">Home</a> | </li>
+            <li><a href="../../contents.html">Contents</a> | </li>
+            <li><a href="../../installation.html">Install</a>  | </li>
+            <li><a href="../new_tutorial/introduction.html">Manual</a>  / </li>
+            <li><a href="../new_tutorial/manual_contents.html">(TOC)</a>  | </li>
+            <li><a href="../../faq.html">FAQ</a>  | </li>
+            <li><a href="../../cheatsheet.html">Cheat sheet</a> | </li>
+            <li><a href="../new_tutorial/command_line.html">Command Line</a> | </li>
+            <li><a href="../../gallery.html">Gallery</a> |  </li>
+            <li><a href="../../history.html">Latest Changes</a> &raquo; </li>
+ 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="manual-tasks-as-recipes-chapter-num-tasks-and-recipes">
+<span id="manual-tasks-as-recipes"></span><h1><strong>Chapter  2</strong>: <cite>Tasks and Recipes</cite><a class="headerlink" href="#manual-tasks-as-recipes-chapter-num-tasks-and-recipes" title="Permalink to this headline">¶</a></h1>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference internal" href="manual_contents.html#manual"><em>Manual overview</em></a></li>
+</ul>
+<div class="line-block" id="index-0">
+<div class="line">The python functions which do the actual work of each stage  or
+<a class="reference internal" href="../../glossary.html#term-task"><em class="xref std std-term">task</em></a> of a <strong>Ruffus</strong> pipeline are written by you.</div>
+<div class="line">The role of <strong>Ruffus</strong> is to make sure these functions are called in the right order,
+with the right parameters, running in parallel using multiprocessing if desired.</div>
+</div>
+<p><strong>Ruffus</strong> manages the data flowing through your pipeline by supplying the correct
+parameters to your pipeline functions. In this way, you will get the following features
+for free:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>only out-of-date parts of the pipeline will be re-run</li>
+<li>multiple jobs can be run in parallel (on different processors if possible)</li>
+<li>pipeline stages can be chained together automatically</li>
+</ol>
+</div></blockquote>
+<p>Much of the functionality of <strong>ruffus</strong> involves determining the data flow through
+your pipeline, by governing how the output of one stage of the pipeline is supplied
+as parameters to the functions of the next.</p>
+</div></blockquote>
+<div class="section" id="skip-jobs-which-are-up-to-date">
+<span id="manual-skip-up-to-date"></span><span id="index-1"></span><h2>Skip jobs which are up to date<a class="headerlink" href="#skip-jobs-which-are-up-to-date" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>Very often it will necessary to re-run a computational pipeline, because part of the
+data has changed. <strong>Ruffus</strong> will run only those stages of the pipeline
+which are absolutely necessary.</p>
+<p>By default, <strong>Ruffus</strong> uses file modification times to see which parts of the pipeline
+are out of date, and which <a class="reference internal" href="../../glossary.html#term-task"><em class="xref std std-term">task</em></a>s need to be run again. This is so convenient that
+even if a pipeline is not file-based (if it, for example, uses database tables instead),
+it may be worth while to use dummy, &#8220;sentinel&#8221; files to manage the stages of a pipeline.</p>
+<p>(It is also possible, as we shall
+see later, to add custom functions to determine which parts of the pipeline are out
+of date. see <a class="reference internal" href="../../decorators/parallel.html#decorators-parallel"><em>&#64;parallel</em></a> and
+<a class="reference internal" href="../../decorators/check_if_uptodate.html#decorators-check-if-uptodate"><em>&#64;check_if_uptodate</em></a>.)</p>
+</div></blockquote>
+<span class="target" id="manual-io-parameters"><span id="index-2"></span></span></div>
+<div class="section" id="inputs-and-outputs-parameters">
+<span id="index-3"></span><h2><em>Inputs</em> and <em>Outputs</em> parameters<a class="headerlink" href="#inputs-and-outputs-parameters" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p><strong>Ruffus</strong> treats the first two parameters of each job in each task as the <em>inputs</em> and
+<em>outputs</em> parameters respectively. If these parameters are strings, or are sequences
+which contain strings, these will be treated as the names of files required by and
+produced by that job. The presence and modification times of the <em>inputs</em> and <em>outputs</em> files
+will be used to check if it is necessry to rerun the job.</p>
+<p>Apart from this, <strong>Ruffus</strong> imposes no other restrictions on the parameters for jobs, which
+are passed verbatim to task functions.</p>
+<p>Most of the time, it is sensible to stick with file names (strings) in the <em>inputs</em> and
+<em>outputs</em> parameters but <strong>Ruffus</strong> does not try to second-guess what sort of data you
+will be passing through your pipelines (except that strings represent file names).</p>
+<p>Thus, given the following over-elaborate parameters (parameter passing will be discussed in
+more detail from <a class="reference internal" href="files.html#manual-files"><em>|manual.files.chapter_num|</em></a>):</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="p">[</span>   <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="s">&quot;afile.name&quot;</span><span class="p">,</span> <span class="p">(</span><span class="s">&quot;bfile.name&quot;</span><span class="p">,</span> <span class="mi">72</span><span class="p">)],</span>
+    <span class="p">[[</span><span class="mi">56</span><span class="p">,</span> <span class="mf">3.3</span><span class="p">],</span> <span class="nb">set</span><span class="p">(</span><span class="n">custom_object</span><span class="p">(),</span> <span class="s">&quot;output.file&quot;</span><span class="p">)],</span>
+    <span class="mf">33.3</span><span class="p">,</span>
+    <span class="s">&quot;oops&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>This will be passed <cite>&#8220;as is&#8221;</cite> to your task function:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="n">do_something</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="s">&quot;afile.name&quot;</span><span class="p">,</span> <span class="p">(</span><span class="s">&quot;bfile.name&quot;</span><span class="p">,</span> <span class="mi">72</span><span class="p">)],</span>        <span class="c"># input</span>
+            <span class="p">[[</span><span class="mi">56</span><span class="p">,</span> <span class="mf">3.3</span><span class="p">],</span> <span class="nb">set</span><span class="p">(</span><span class="n">custom_object</span><span class="p">(),</span> <span class="s">&quot;output.file&quot;</span><span class="p">)],</span>   <span class="c"># output</span>
+            <span class="mf">33.3</span><span class="p">,</span>                                               <span class="c"># extra parameter</span>
+            <span class="s">&quot;oops&quot;</span><span class="p">)</span>                                             <span class="c"># extra parameter</span>
+</pre></div>
+</div>
+<p><strong>Ruffus</strong> will interprete this as:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">Input_parameter</span>   <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="s">&quot;afile.name&quot;</span><span class="p">,</span> <span class="p">(</span><span class="s">&quot;bfile.name&quot;</span><span class="p">,</span> <span class="mi">72</span><span class="p">)]</span>
+<span class="n">Output_parameter</span>  <span class="o">=</span> <span class="p">[[</span><span class="mi">56</span><span class="p">,</span> <span class="mf">3.3</span><span class="p">],</span> <span class="nb">set</span><span class="p">(</span><span class="n">custom_object</span><span class="p">(),</span> <span class="s">&quot;output.file&quot;</span><span class="p">)]</span>
+<span class="n">Other_parameter_1</span> <span class="o">=</span> <span class="mf">33.3</span>
+<span class="n">Other_parameter_2</span> <span class="o">=</span> <span class="s">&quot;oops&quot;</span>
+</pre></div>
+</div>
+<p><strong>Ruffus</strong> disregards the <em>structure</em> of your data, only identifying the (nested) strings.
+Thus there are 2 input files:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;afile.name&quot;</span>
+<span class="s">&quot;bfile.name&quot;</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>and 1 output file:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;output.file&quot;</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div>
+<div class="section" id="checking-if-files-are-up-to-date">
+<span id="manual-skip-up-to-date-rules"></span><span id="index-4"></span><h2>Checking if files are up to date<a class="headerlink" href="#checking-if-files-are-up-to-date" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>The following simple rules are used by <strong>Ruffus</strong>.</p>
+<ol class="arabic">
+<li><p class="first">The pipeline stage will be rerun if:</p>
+<blockquote>
+<div><ul class="simple">
+<li>If any of the <em>inputs</em> files are new (newer than the <em>output</em> files)</li>
+<li>If any of the <em>output</em> files are missing</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">In addition, it is possible to run jobs which create files from scratch.</p>
+<blockquote>
+<div><ul class="simple">
+<li>If no <em>inputs</em> file names are supplied, the job will only run if any <em>output</em> file is missing.</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">Finally, if no <em>outputs</em> file names are supplied, the job will always run.</p>
+</li>
+</ol>
+<p>The <a class="reference internal" href="files.html#manual-files-example"><em>example</em></a> in the next chapter shows how this works in practice.</p>
+</div></blockquote>
+</div>
+<div class="section" id="missing-files">
+<span id="index-5"></span><h2>Missing files<a class="headerlink" href="#missing-files" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>If the <em>inputs</em> files for a job are missing, the task function will have no way
+to produce its <em>output</em>. In this case, a <tt class="docutils literal"><span class="pre">MissingInputFileError</span></tt> exception will be raised
+automatically. For example,</p>
+<blockquote>
+<div><div class="highlight-python"><pre>task.MissingInputFileError: No way to run job: Input file ['a.1'] does not exist
+for Job = ["a.1" -&gt; "a.2", "A file"]</pre>
+</div>
+</div></blockquote>
+</div></blockquote>
+</div>
+<div class="section" id="caveats-timestamp-resolution">
+<span id="index-6"></span><h2>Caveats: Timestamp resolution<a class="headerlink" href="#caveats-timestamp-resolution" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><div class="line-block">
+<div class="line">Note that modification times have precision to the nearest second under some older file systems
+(ext2/ext3?). This may be also be true for networked file systems.</div>
+<div class="line"><strong>Ruffus</strong> is very conservative, and assumes that files with <em>exactly</em> the same date stamp might have been
+created in the wrong order, and will treat the job as out-of-date. This would result in some
+jobs re-running unnecessarily, simple because an underlying coarse-grained file system does not
+distinguish between successively created files with sufficiently accuracy.</div>
+</div>
+<p>To get around this, <strong>Ruffus</strong> makes sure that each task is punctuated by a 1 second pause
+(via <tt class="docutils literal"><span class="pre">time.sleep()</span></tt>). If this is gets in the way, and you are using a modern file system with
+nanosecond timestamp resolution, you can turn off the delay by setting
+<tt class="docutils literal"><span class="pre">one_second_per_job</span></tt> to <tt class="docutils literal"><span class="pre">False</span></tt> in <a class="reference internal" href="../../pipeline_functions.html#pipeline-functions-pipeline-run"><em>pipeline_run</em></a></p>
+<p>Later versions of <strong>Ruffus</strong> will allow file modification times to be saved at higher precision
+in a log file or database to get around this.</p>
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../contents.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#"><strong>Chapter  2</strong>: <cite>Tasks and Recipes</cite></a><ul>
+<li><a class="reference internal" href="#skip-jobs-which-are-up-to-date">Skip jobs which are up to date</a></li>
+<li><a class="reference internal" href="#inputs-and-outputs-parameters"><em>Inputs</em> and <em>Outputs</em> parameters</a></li>
+<li><a class="reference internal" href="#checking-if-files-are-up-to-date">Checking if files are up to date</a></li>
+<li><a class="reference internal" href="#missing-files">Missing files</a></li>
+<li><a class="reference internal" href="#caveats-timestamp-resolution">Caveats: Timestamp resolution</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="follows.html"
+                        title="previous chapter"><strong>Chapter  1</strong> : <cite>Arranging tasks into a pipeline with</cite> <strong>&#64;follows</strong></a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="files.html"
+                        title="next chapter"><strong>Chapter  3</strong>: <cite>Passing parameters to the pipeline with</cite> <strong>&#64;files</strong></a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/tutorials/manual/tasks_as_recipes.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+    
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+    <h3> Quick Reference:</h3>
+    <ul>
+        <h4><a href="../../decorators/decorators.html#core">Core:</a></h4>   
+        <ul>
+            <li><a href="../../decorators/originate.html">@originate</a>                           </li>
+            <li><a href="../../decorators/split.html">@split</a>                                   </li>
+            <li><a href="../../decorators/transform.html">@transform</a>                           </li>
+            <li><a href="../../decorators/merge.html">@merge</a>                                   </li>
+        </ul>
+
+        <h4><a href="../../decorators/decorators.html#advanced">Advanced</a></h4>   
+        <ul>
+            <li><a href="../../decorators/subdivide.html">@subdivide</a>                           </li>
+            <li><a href="../../decorators/transform_ex.html">@transform (add_inputs) </a>          </li>
+            <li><a href="../../decorators/collate.html">@collate</a>                               </li>
+            <li><a href="../../decorators/collate_ex.html">@collate (add_inputs)</a>               </li>
+            <li><a href="../../decorators/graphviz.html">@graphviz</a>                             </li>
+            <li><a href="../../decorators/mkdir.html">@mkdir</a>                                   </li>
+            <li><a href="../../decorators/follows.html">@follows / mkdir</a>                       </li>
+            <li><a href="../../decorators/posttask.html">@posttask touch_file</a>                  </li>
+            <li><a href="../../decorators/active_if.html">@active_if</a>                           </li>
+            <li><a href="../../decorators/jobs_limit.html">@jobs_limit</a>                         </li>
+        </ul>
+    
+        <h4><a href="../../decorators/decorators.html#combinatorics">Combinatorial:</a></h4>   
+        <ul>
+            <li><a href="../../decorators/product.html">@product </a>                              </li>
+            <li><a href="../../decorators/permutations.html">@permutations </a>                    </li>
+            <li><a href="../../decorators/combinations.html">@combinations </a>                    </li>
+            <li><a href="../../decorators/combinations_with_replacement.html">@combinations_ _with_replacement </a>                    </li>
+        </ul>
+
+                        
+        <h4><a href="../../decorators/decorators.html#esoteric">Esoteric</a></h4>   
+        <ul>
+            <li><a href="../../decorators/files_ex.html">@files (on the fly)</a>                   </li>
+            <li><a href="../../decorators/parallel.html">@parallel</a>                             </li>
+            <li><a href="../../decorators/check_if_uptodate.html">@check_if_uptodate</a>           </li>
+        </ul>
+
+
+        <h4 ><a href="../../decorators/indicator_objects.html">Indicator objects</a></h4>
+        <h4 >Pipeline functions</h4>
+        <ul>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-run">pipeline_run</a>                       </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-printout">pipeline_printout</a>                      </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-printout-graph">pipeline_printout_graph</a>          </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-get-task-names">pipeline_get_task_names</a>          </li>
+            <li><a href="../../drmaa_wrapper_functions.html#drmaa-wrapper-functions-drmaa_wrapper-run_job">drmaa_wrapper.run_job</a>          </li>
+        </ul>
+
+         <a href="../../todo.html">Future plans</a>
+    </ul>
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="files.html" title="Chapter 3: Passing parameters to the pipeline with @files"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="follows.html" title="Chapter 1 : Arranging tasks into a pipeline with @follows"
+             >previous</a> |</li>
+        Ruffus v. 2.5
+            <li><a href="../../index.html">Home</a> | </li>
+            <li><a href="../../contents.html">Contents</a> | </li>
+            <li><a href="../../installation.html">Install</a>  | </li>
+            <li><a href="../new_tutorial/introduction.html">Manual</a>  / </li>
+            <li><a href="../new_tutorial/manual_contents.html">(TOC)</a>  | </li>
+            <li><a href="../../faq.html">FAQ</a>  | </li>
+            <li><a href="../../cheatsheet.html">Cheat sheet</a> | </li>
+            <li><a href="../new_tutorial/command_line.html">Command Line</a> | </li>
+            <li><a href="../../gallery.html">Gallery</a> |  </li>
+            <li><a href="../../history.html">Latest Changes</a> &raquo; </li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2009-2013 Leo Goodstadt.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,406 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>@transform with add_inputs and inputs &mdash; ruffus 2.5 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/ruffus.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.5',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="ruffus 2.5 documentation" href="../index.html" />
+    <link rel="next" title="@collate" href="collate.html" />
+    <link rel="prev" title="@subdivide" href="subdivide.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="collate.html" title="@collate"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="subdivide.html" title="@subdivide"
+             accesskey="P">previous</a> |</li>
+        Ruffus v. 2.5
+            <li><a href="../index.html">Home</a> | </li>
+            <li><a href="../contents.html">Contents</a> | </li>
+            <li><a href="../installation.html">Install</a>  | </li>
+            <li><a href="../tutorials/new_tutorial/introduction.html">Manual</a>  / </li>
+            <li><a href="../tutorials/new_tutorial/manual_contents.html">(TOC)</a>  | </li>
+            <li><a href="../faq.html">FAQ</a>  | </li>
+            <li><a href="../cheatsheet.html">Cheat sheet</a> | </li>
+            <li><a href="../tutorials/new_tutorial/command_line.html">Command Line</a> | </li>
+            <li><a href="../gallery.html">Gallery</a> |  </li>
+            <li><a href="../history.html">Latest Changes</a> &raquo; </li>
+ 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <span class="target" id="decorators-transform-ex"></span><div class="admonition seealso" id="index-0">
+<p class="first admonition-title">See also</p>
+<ul class="last simple">
+<li><a class="reference internal" href="decorators.html#decorators"><em>Decorators</em></a> for more decorators</li>
+</ul>
+</div>
+<div class="section" id="transform-with-add-inputs-and-inputs">
+<h1>&#64;transform  with <tt class="docutils literal"><span class="pre">add_inputs</span></tt> and <tt class="docutils literal"><span class="pre">inputs</span></tt><a class="headerlink" href="#transform-with-add-inputs-and-inputs" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="transform-tasks-or-file-names-suffix-suffix-string-regex-matching-regex-formatter-matching-formatter-inputs-add-inputs-input-pattern-or-glob-output-pattern-extra-parameters">
+<h2><em>&#64;transform</em> ( <a class="reference internal" href="#decorators-transform-tasks-or-file-names"><cite>tasks_or_file_names</cite></a>, <a class="reference internal" href="indicator_objects.html#decorators-suffix"><em>suffix</em></a><em>(</em><a class="reference internal" href="#decorators-transform-suffix-string"><cite>suffix_string</cite></a><em>)</em>| <a class="reference internal" href="indicator_objects.html#decorators-regex"><em>regex</em></a><em>(</em><a class="reference internal" href="#decorators-transform-matching-regex"><cite>matching_regex</cite></a><em>)</em> |  <a class="reference internal" href="indicator_objects.html#decorators-formatter"><em>formatter</em></a><em>(</em><a class="reference internal" href="#decorators-transform-matching-formatter"><cite>matching_formatter</cite></a><em>)</em>, <a class="reference internal" href="indicator_objects.html#decorators-inputs"><em>inputs</em></a> | <a class="reference internal" href="indicator_objects.html#decorators-add-inputs"><em>add_inputs</em></a><em>(</em><a class="reference internal" href="#decorators-transform-input-pattern-or-glob"><cite>input_pattern_or_glob</cite></a><em>)</em>, <a class="reference internal" href="#decorators-transform-output-pattern"><cite>output_pattern</cite></a>, [<a class="reference internal" href="#decorators-transform-extra-parameters"><cite>extra_parameters</cite></a>,...] )<a class="headerlink" href="#transform-tasks-or-file-names-suffix-suffix-string-regex-matching-regex-formatter-matching-formatter-inputs-add-inputs-input-pattern-or-glob-output-pattern-extra-parameters" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><dl class="docutils">
+<dt><strong>Purpose:</strong></dt>
+<dd><p class="first">This variant of <tt class="docutils literal"><span class="pre">&#64;transform</span></tt> allows additional inputs or dependencies to be added
+dynamically to the task.</p>
+<p>Output file names and strings in the extra parameters
+are determined from <a class="reference internal" href="#decorators-transform-tasks-or-file-names"><cite>tasks_or_file_names</cite></a>, i.e. from the output
+of up stream tasks, or a list of file names.</p>
+<p>This variant of <tt class="docutils literal"><span class="pre">&#64;transform</span></tt> allows input file names to be derived in the same way.</p>
+<p>String replacement occurs either through suffix matches via <a class="reference internal" href="indicator_objects.html#decorators-suffix"><em>suffix</em></a> or
+the <a class="reference internal" href="indicator_objects.html#decorators-formatter"><em>formatter</em></a> or <a class="reference internal" href="indicator_objects.html#decorators-regex"><em>regex</em></a> indicators.</p>
+<p><tt class="docutils literal"><span class="pre">&#64;collate</span></tt> groups together all <strong>Input</strong> which result in identical <strong>Output</strong> and <strong>extra</strong>
+parameters.</p>
+<p>It is a <strong>many to fewer</strong> operation.</p>
+<p><a class="reference internal" href="indicator_objects.html#decorators-add-inputs"><em>add_inputs</em></a> nests the the original input parameters in a list before adding additional dependencies.</p>
+<p><a class="reference internal" href="indicator_objects.html#decorators-inputs"><em>inputs</em></a> replaces the original input parameters wholescale.</p>
+<p class="last">Only out of date tasks (comparing input and output files) will be run</p>
+</dd>
+</dl>
+<p><strong>Example of</strong> <a class="reference internal" href="indicator_objects.html#decorators-add-inputs"><em>add_inputs</em></a></p>
+<blockquote>
+<div><p>A common task in compiling C code is to include the corresponding header file for the source.</p>
+<dl class="docutils">
+<dt>To compile <tt class="docutils literal"><span class="pre">*.c</span></tt> to <tt class="docutils literal"><span class="pre">*.o</span></tt>, adding <tt class="docutils literal"><span class="pre">*.h</span></tt> and the common header <tt class="docutils literal"><span class="pre">universal.h</span></tt>:</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="nd">@transform</span><span class="p">([</span><span class="s">&quot;1.c&quot;</span><span class="p">,</span> <span class="s">&quot;2.c&quot;</span><span class="p">],</span> <span class="n">suffix</span><span class="p">(</span><span class="s">&quot;.c&quot;</span><span class="p">),</span> <span class="n">add_inputs</span><span class="p">([</span><span class="s">r&quot;\1.h&quot;</span><span class="p">,</span> <span class="s">&quot;universal.h&quot;</span><span class="p">]),</span>  <span class="s">&quot;.o&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">compile</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="n">outfile</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+</dd>
+<dt>This will result in the following functional calls:</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="nb">compile</span><span class="p">([</span><span class="s">&quot;1.c&quot;</span><span class="p">,</span> <span class="s">&quot;1.h&quot;</span><span class="p">,</span> <span class="s">&quot;universal.h&quot;</span><span class="p">],</span> <span class="s">&quot;1.o&quot;</span><span class="p">)</span>
+<span class="nb">compile</span><span class="p">([</span><span class="s">&quot;2.c&quot;</span><span class="p">,</span> <span class="s">&quot;2.h&quot;</span><span class="p">,</span> <span class="s">&quot;universal.h&quot;</span><span class="p">],</span> <span class="s">&quot;2.o&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</div></blockquote>
+<p><strong>Example of</strong> <a class="reference internal" href="indicator_objects.html#decorators-inputs"><em>inputs</em></a></p>
+<blockquote>
+<div><p><tt class="docutils literal"><span class="pre">inputs(...)</span></tt> allows the original input parameters to be replaced wholescale.</p>
+<dl class="docutils">
+<dt>This can be seen in the following example:</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="nd">@transform</span><span class="p">([</span>    <span class="p">[</span><span class="s">&quot;1.c&quot;</span><span class="p">,</span> <span class="s">&quot;A.c&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+                <span class="p">[</span><span class="s">&quot;2.c&quot;</span><span class="p">,</span> <span class="s">&quot;B.c&quot;</span><span class="p">,</span> <span class="s">&quot;C.c&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">]],</span>
+                <span class="n">suffix</span><span class="p">(</span><span class="s">&quot;.c&quot;</span><span class="p">),</span> <span class="n">inputs</span><span class="p">([</span><span class="s">r&quot;\1.py&quot;</span><span class="p">,</span> <span class="s">&quot;docs.rst&quot;</span><span class="p">]),</span>  <span class="s">&quot;.pyc&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">compile</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="n">outfile</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+</dd>
+<dt>This will result in the following functional calls:</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="nb">compile</span><span class="p">([</span><span class="s">&quot;1.py&quot;</span><span class="p">,</span> <span class="s">&quot;docs.rst&quot;</span><span class="p">],</span> <span class="s">&quot;1.pyc&quot;</span><span class="p">)</span>
+<span class="nb">compile</span><span class="p">([</span><span class="s">&quot;2.py&quot;</span><span class="p">,</span> <span class="s">&quot;docs.rst&quot;</span><span class="p">],</span> <span class="s">&quot;2.pyc&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</div></blockquote>
+<p><strong>Parameters:</strong></p>
+</div></blockquote>
+<blockquote id="decorators-transform-tasks-or-file-names">
+<div><ul>
+<li><dl class="first docutils">
+<dt><em>tasks_or_file_names</em></dt>
+<dd><p class="first">can be a:</p>
+<ol class="last arabic">
+<li><dl class="first docutils">
+<dt>Task / list of tasks (as in the example above).</dt>
+<dd><p class="first last">File names are taken from the output of the specified task(s)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>(Nested) list of file name strings.</dt>
+<dd><dl class="first last docutils">
+<dt>File names containing <tt class="docutils literal"><span class="pre">*[]?</span></tt> will be expanded as a <a class="reference external" href="http://docs.python.org/library/glob.html"><cite>glob</cite></a>.</dt>
+<dd><p class="first last">E.g.:<tt class="docutils literal"><span class="pre">&quot;a.*&quot;</span> <span class="pre">=&gt;</span> <span class="pre">&quot;a.1&quot;,</span> <span class="pre">&quot;a.2&quot;</span></tt></p>
+</dd>
+</dl>
+</dd>
+</dl>
+</li>
+</ol>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<blockquote id="decorators-transform-suffix-string">
+<div><ul>
+<li><dl class="first docutils">
+<dt><em>suffix_string</em></dt>
+<dd><p class="first">must be wrapped in a <a class="reference internal" href="indicator_objects.html#decorators-suffix"><em>suffix</em></a> indicator object.
+The end of each file name which matches suffix_string will be replaced by <cite>output_pattern</cite>.
+Thus:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@transform</span><span class="p">([</span><span class="s">&quot;a.c&quot;</span><span class="p">,</span> <span class="s">&quot;b.c&quot;</span><span class="p">],</span> <span class="n">suffix</span><span class="p">(</span><span class="s">&quot;.c&quot;</span><span class="p">),</span> <span class="s">&quot;.o&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">compile</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="n">outfile</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<p>will result in the following function calls:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nb">compile</span><span class="p">(</span><span class="s">&quot;a.c&quot;</span><span class="p">,</span> <span class="s">&quot;a.o&quot;</span><span class="p">)</span>
+<span class="nb">compile</span><span class="p">(</span><span class="s">&quot;b.c&quot;</span><span class="p">,</span> <span class="s">&quot;b.o&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="last">File names which do not match suffix_string will be ignored</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<blockquote id="decorators-transform-matching-regex">
+<div><ul>
+<li><dl class="first docutils">
+<dt><em>matching_regex</em></dt>
+<dd><p class="first last">is a python regular expression string, which must be wrapped in
+a <a class="reference internal" href="indicator_objects.html#decorators-regex"><em>regex</em></a> indicator object
+See python <a class="reference external" href="http://docs.python.org/library/re.html">regular expression (re)</a>
+documentation for details of regular expression syntax
+Each output file name is created using regular expression substitution with <tt class="docutils literal"><span class="pre">output_pattern</span></tt></p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<blockquote id="decorators-transform-matching-formatter">
+<div><ul>
+<li><dl class="first docutils">
+<dt><em>matching_formatter</em></dt>
+<dd><p class="first last">a <a class="reference internal" href="indicator_objects.html#decorators-formatter"><em>formatter</em></a> indicator object containing optionally
+a  python <a class="reference external" href="http://docs.python.org/library/re.html">regular expression (re)</a>.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<blockquote id="decorators-transform-input-pattern-or-glob">
+<div><ul>
+<li><dl class="first docutils">
+<dt><em>input_pattern</em></dt>
+<dd><p class="first">Specifies the resulting input(s) to each job.
+Must be wrapped in an <a class="reference internal" href="indicator_objects.html#decorators-inputs"><em>inputs</em></a> or an <a class="reference internal" href="indicator_objects.html#decorators-add-inputs"><em>inputs</em></a> indicator object.</p>
+<p>Can be a:</p>
+<ol class="last arabic">
+<li><dl class="first docutils">
+<dt>Task / list of tasks (as in the example above).</dt>
+<dd><p class="first last">File names are taken from the output of the specified task(s)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>(Nested) list of file name strings.</dt>
+<dd><p class="first last">Strings will be subject to substitution.
+File names containing <tt class="docutils literal"><span class="pre">*[]?</span></tt> will be expanded as a <a class="reference external" href="http://docs.python.org/library/glob.html"><cite>glob</cite></a>.
+E.g.:<tt class="docutils literal"><span class="pre">&quot;a.*&quot;</span> <span class="pre">=&gt;</span> <span class="pre">&quot;a.1&quot;,</span> <span class="pre">&quot;a.2&quot;</span></tt></p>
+</dd>
+</dl>
+</li>
+</ol>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<blockquote id="decorators-transform-output-pattern">
+<div><ul>
+<li><dl class="first docutils">
+<dt><em>output_pattern</em></dt>
+<dd><p class="first last">Specifies the resulting output file name(s).</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<blockquote id="decorators-transform-extra-parameters">
+<div><ul>
+<li><dl class="first docutils">
+<dt>[<em>extra_parameters, ...</em>]</dt>
+<dd><p class="first">Any extra parameters are passed to the task function.</p>
+<p>If the <tt class="docutils literal"><span class="pre">regex(...)</span></tt> or <tt class="docutils literal"><span class="pre">formatter(...)</span></tt> parameter is used, then substitution
+is first applied to (even nested) string parameters. Other data types are passed
+verbatim.</p>
+<p>For example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@transform</span><span class="p">([</span><span class="s">&quot;a.c&quot;</span><span class="p">,</span> <span class="s">&quot;b.c&quot;</span><span class="p">],</span> <span class="n">regex</span><span class="p">(</span><span class="s">r&quot;(.*).c&quot;</span><span class="p">),</span> <span class="n">inputs</span><span class="p">(</span><span class="s">r&quot;\1.c&quot;</span><span class="p">,</span> <span class="s">r&quot;\1.h&quot;</span><span class="p">,</span> <span class="s">&quot;universal.h&quot;</span><span class="p">),</span>  <span class="s">r&quot;\1.o&quot;</span><span class="p">,</span> <span class="s">r&quot;\1&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">compile</span><span class="p">(</span><span class="n">infiles</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">file_name_root</span><span class="p">):</span>
+    <span class="c"># do something here</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<p>will result in the following function calls:</p>
+<div class="last highlight-python"><div class="highlight"><pre><span class="nb">compile</span><span class="p">([</span><span class="s">&quot;1.c&quot;</span><span class="p">,</span> <span class="s">&quot;1.h&quot;</span><span class="p">,</span> <span class="s">&quot;universal.h&quot;</span><span class="p">],</span> <span class="s">&quot;1.o&quot;</span><span class="p">,</span> <span class="s">&quot;1&quot;</span><span class="p">)</span>
+<span class="nb">compile</span><span class="p">([</span><span class="s">&quot;2.c&quot;</span><span class="p">,</span> <span class="s">&quot;2.h&quot;</span><span class="p">,</span> <span class="s">&quot;universal.h&quot;</span><span class="p">],</span> <span class="s">&quot;2.o&quot;</span><span class="p">,</span> <span class="s">&quot;2&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<p>See <a class="reference internal" href="transform.html#decorators-transform"><em>here</em></a> for more straightforward ways to use transform.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../contents.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">&#64;transform  with <tt class="docutils literal"><span class="pre">add_inputs</span></tt> and <tt class="docutils literal"><span class="pre">inputs</span></tt></a><ul>
+<li><a class="reference internal" href="#transform-tasks-or-file-names-suffix-suffix-string-regex-matching-regex-formatter-matching-formatter-inputs-add-inputs-input-pattern-or-glob-output-pattern-extra-parameters"><em>&#64;transform</em> ( <cite>tasks_or_file_names</cite>, <tt class="docutils literal"><span class="pre">suffix</span></tt><em>(</em><cite>suffix_string</cite><em>)</em>| <tt class="docutils literal"><span class="pre">regex</span></tt><em>(</em><cite>matching_regex</cite><em>)</em> |  <tt class="docutils literal"><span class="pre">formatter</span></tt><em>(</em><cite>matching_formatter</cite><em>)</em>, <tt class="docutils literal"><span class="pre">inputs</span></tt> | <tt class="docutils literal"><span class="pre">add_inputs</span></tt><em>(</em><cite>input_pattern_or_glob</cite><em>)</em>, <cite>output_pattern</cite>, [<cite>extra_parameters</cite>,...] )</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="subdivide.html"
+                        title="previous chapter">&#64;subdivide</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="collate.html"
+                        title="next chapter">&#64;collate</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/decorators/transform_ex.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+    
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+    <h3> Quick Reference:</h3>
+    <ul>
+        <h4><a href="decorators.html#core">Core:</a></h4>   
+        <ul>
+            <li><a href="originate.html">@originate</a>                           </li>
+            <li><a href="split.html">@split</a>                                   </li>
+            <li><a href="transform.html">@transform</a>                           </li>
+            <li><a href="merge.html">@merge</a>                                   </li>
+        </ul>
+
+        <h4><a href="decorators.html#advanced">Advanced</a></h4>   
+        <ul>
+            <li><a href="subdivide.html">@subdivide</a>                           </li>
+            <li><a href="#">@transform (add_inputs) </a>          </li>
+            <li><a href="collate.html">@collate</a>                               </li>
+            <li><a href="collate_ex.html">@collate (add_inputs)</a>               </li>
+            <li><a href="graphviz.html">@graphviz</a>                             </li>
+            <li><a href="mkdir.html">@mkdir</a>                                   </li>
+            <li><a href="follows.html">@follows / mkdir</a>                       </li>
+            <li><a href="posttask.html">@posttask touch_file</a>                  </li>
+            <li><a href="active_if.html">@active_if</a>                           </li>
+            <li><a href="jobs_limit.html">@jobs_limit</a>                         </li>
+        </ul>
+    
+        <h4><a href="decorators.html#combinatorics">Combinatorial:</a></h4>   
+        <ul>
+            <li><a href="product.html">@product </a>                              </li>
+            <li><a href="permutations.html">@permutations </a>                    </li>
+            <li><a href="combinations.html">@combinations </a>                    </li>
+            <li><a href="combinations_with_replacement.html">@combinations_ _with_replacement </a>                    </li>
+        </ul>
+
+                        
+        <h4><a href="decorators.html#esoteric">Esoteric</a></h4>   
+        <ul>
+            <li><a href="files_ex.html">@files (on the fly)</a>                   </li>
+            <li><a href="parallel.html">@parallel</a>                             </li>
+            <li><a href="check_if_uptodate.html">@check_if_uptodate</a>           </li>
+        </ul>
+
+
+        <h4 ><a href="indicator_objects.html">Indicator objects</a></h4>
+        <h4 >Pipeline functions</h4>
+        <ul>
+            <li><a href="../pipeline_functions.html#pipeline-functions-pipeline-run">pipeline_run</a>                       </li>
+            <li><a href="../pipeline_functions.html#pipeline-functions-pipeline-printout">pipeline_printout</a>                      </li>
+            <li><a href="../pipeline_functions.html#pipeline-functions-pipeline-printout-graph">pipeline_printout_graph</a>          </li>
+            <li><a href="../pipeline_functions.html#pipeline-functions-pipeline-get-task-names">pipeline_get_task_names</a>          </li>
+            <li><a href="../drmaa_wrapper_functions.html#drmaa-wrapper-functions-drmaa_wrapper-run_job">drmaa_wrapper.run_job</a>          </li>
+        </ul>
+
+         <a href="../todo.html">Future plans</a>
+    </ul>
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="collate.html" title="@collate"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="subdivide.html" title="@subdivide"
+             >previous</a> |</li>
+        Ruffus v. 2.5
+            <li><a href="../index.html">Home</a> | </li>
+            <li><a href="../contents.html">Contents</a> | </li>
+            <li><a href="../installation.html">Install</a>  | </li>
+            <li><a href="../tutorials/new_tutorial/introduction.html">Manual</a>  / </li>
+            <li><a href="../tutorials/new_tutorial/manual_contents.html">(TOC)</a>  | </li>
+            <li><a href="../faq.html">FAQ</a>  | </li>
+            <li><a href="../cheatsheet.html">Cheat sheet</a> | </li>
+            <li><a href="../tutorials/new_tutorial/command_line.html">Command Line</a> | </li>
+            <li><a href="../gallery.html">Gallery</a> |  </li>
+            <li><a href="../history.html">Latest Changes</a> &raquo; </li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2009-2013 Leo Goodstadt.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

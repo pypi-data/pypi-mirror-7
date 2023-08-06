@@ -1,0 +1,269 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Chapter 14: @collate: group together disparate input into sets of results &mdash; ruffus 2.5 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/ruffus.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.5',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="ruffus 2.5 documentation" href="../../index.html" />
+    <link rel="next" title="Chapter 15: add_inputs() and inputs(): Controlling both input and output files with @transform" href="advanced_transform.html" />
+    <link rel="prev" title="Chapter 13: Generating parameters on the fly with @files" href="onthefly.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="advanced_transform.html" title="Chapter 15: add_inputs() and inputs(): Controlling both input and output files with @transform"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="onthefly.html" title="Chapter 13: Generating parameters on the fly with @files"
+             accesskey="P">previous</a> |</li>
+        Ruffus v. 2.5
+            <li><a href="../../index.html">Home</a> | </li>
+            <li><a href="../../contents.html">Contents</a> | </li>
+            <li><a href="../../installation.html">Install</a>  | </li>
+            <li><a href="../new_tutorial/introduction.html">Manual</a>  / </li>
+            <li><a href="../new_tutorial/manual_contents.html">(TOC)</a>  | </li>
+            <li><a href="../../faq.html">FAQ</a>  | </li>
+            <li><a href="../../cheatsheet.html">Cheat sheet</a> | </li>
+            <li><a href="../new_tutorial/command_line.html">Command Line</a> | </li>
+            <li><a href="../../gallery.html">Gallery</a> |  </li>
+            <li><a href="../../history.html">Latest Changes</a> &raquo; </li>
+ 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="manual-collate-chapter-num-collate-group-together-disparate-input-into-sets-of-results">
+<span id="manual-collate"></span><h1><strong>Chapter 14</strong>: <strong>&#64;collate</strong>: <cite>group together disparate input into sets of results</cite><a class="headerlink" href="#manual-collate-chapter-num-collate-group-together-disparate-input-into-sets-of-results" title="Permalink to this headline">¶</a></h1>
+<blockquote>
+<div><table class="hlist"><tr><td><ul class="simple">
+<li><a class="reference internal" href="manual_contents.html#manual"><em>Manual overview</em></a></li>
+</ul>
+</td><td><ul class="simple">
+<li><a class="reference internal" href="../../decorators/collate.html#decorators-collate"><em>&#64;collate syntax in detail</em></a></li>
+</ul>
+</td></tr></table>
+<p>It is often very useful to group together disparate <em>inputs</em> into several categories, each of which
+lead to a separate <em>output</em>. In the example shown below, we produce separate summaries of results
+depending on which species the file belongs to.</p>
+<p><strong>Ruffus</strong> uses the term <tt class="docutils literal"><span class="pre">collate</span></tt> in a rough analogy to the way printers group together
+copies of documents appropriately.</p>
+</div></blockquote>
+<div class="section" id="collating-many-inputs-each-into-a-single-output">
+<span id="index-0"></span><h2>Collating many <em>inputs</em> each into a single <em>output</em><a class="headerlink" href="#collating-many-inputs-each-into-a-single-output" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>Our example starts with some files which presumably have been created by some
+earlier stages of our pipeline. We simulate this here with this code:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="n">files_names</span> <span class="o">=</span> <span class="p">[</span>     <span class="s">&quot;mammals.tiger.wild.animals&quot;</span>
+                    <span class="s">&quot;mammals.lion.wild.animals&quot;</span>
+                    <span class="s">&quot;mammals.lion.handreared.animals&quot;</span>
+                    <span class="s">&quot;mammals.dog.tame.animals&quot;</span>
+                    <span class="s">&quot;mammals.dog.wild.animals&quot;</span>
+                    <span class="s">&quot;mammals.dog.feral.animals&quot;</span>
+                    <span class="s">&quot;reptiles.crocodile.wild.animals&quot;</span> <span class="p">]</span>
+<span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files_names</span><span class="p">:</span>
+    <span class="nb">open</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>However, we are only interested in mammals, and we would like the files of each species to
+end up in its own directory, i.e. <tt class="docutils literal"><span class="pre">tiger</span></tt>, <tt class="docutils literal"><span class="pre">lion</span></tt> and <tt class="docutils literal"><span class="pre">dog</span></tt>:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">os</span>
+<span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="s">&quot;tiger&quot;</span><span class="p">)</span>
+<span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="s">&quot;lion&quot;</span><span class="p">)</span>
+<span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="s">&quot;dog&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Now we would like to place each file in a different destination, depending on its
+species. The following regular expression marks out the species name <tt class="docutils literal"><span class="pre">r'mammals.([^.]+)'</span></tt>.
+For <tt class="docutils literal"><span class="pre">mammals.tiger.wild.animals</span></tt>, the first matching group (<tt class="docutils literal"><span class="pre">\1</span></tt>) == <tt class="docutils literal"><span class="pre">&quot;tiger&quot;</span></tt></p>
+<p>Then, the following:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">ruffus</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="nd">@collate</span><span class="p">(</span><span class="s">&#39;*.animals&#39;</span><span class="p">,</span>                     <span class="c"># inputs = all *.animal files</span>
+            <span class="n">regex</span><span class="p">(</span><span class="s">r&#39;mammals.([^.]+)&#39;</span><span class="p">),</span>    <span class="c"># regular expression</span>
+            <span class="s">r&#39;\1/animals.in_my_zoo&#39;</span><span class="p">,</span>      <span class="c"># single output file per species</span>
+            <span class="s">r&#39;\1&#39;</span> <span class="p">)</span>                       <span class="c"># species name</span>
+<span class="k">def</span> <span class="nf">capture_mammals</span><span class="p">(</span><span class="n">infiles</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">species</span><span class="p">):</span>
+    <span class="c"># summarise all animals of this species</span>
+    <span class="k">print</span> <span class="s">&quot;Collating </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">species</span>
+
+    <span class="n">o</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">infiles</span><span class="p">:</span>
+        <span class="n">o</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">infile</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">captured</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+
+<span class="n">pipeline_run</span><span class="p">([</span><span class="n">capture_mammals</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>puts each captured mammal in its own directory:</p>
+<div class="highlight-python"><pre>Task = capture_mammals
+    Job = [(mammals.lion.handreared.animals, mammals.lion.wild.animals) -&gt; lion/animals.in_my_zoo] completed
+    Job = [(mammals.tiger.wild.animals, ) -&gt; tiger/animals.in_my_zoo] completed
+    Job = [(mammals.dog.tame.animals, mammals.dog.wild.animals, mammals.dog.feral.animals) -&gt; dog/animals.in_my_zoo] completed</pre>
+</div>
+<p>The crocodile has been discarded because it isn&#8217;t a mammal and the file name
+doesn&#8217;t match the <tt class="docutils literal"><span class="pre">mammal</span></tt> part of the regular expression.</p>
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../contents.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#"><strong>Chapter 14</strong>: <strong>&#64;collate</strong>: <cite>group together disparate input into sets of results</cite></a><ul>
+<li><a class="reference internal" href="#collating-many-inputs-each-into-a-single-output">Collating many <em>inputs</em> each into a single <em>output</em></a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="onthefly.html"
+                        title="previous chapter"><strong>Chapter 13</strong>: <cite>Generating parameters on the fly with</cite> <strong>&#64;files</strong></a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="advanced_transform.html"
+                        title="next chapter"><strong>Chapter 15</strong>: <strong>add_inputs()</strong> <cite>and</cite> <strong>inputs()</strong>: <cite>Controlling both input and output files with</cite> <strong>&#64;transform</strong></a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/tutorials/manual/collate.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+    
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+    <h3> Quick Reference:</h3>
+    <ul>
+        <h4><a href="../../decorators/decorators.html#core">Core:</a></h4>   
+        <ul>
+            <li><a href="../../decorators/originate.html">@originate</a>                           </li>
+            <li><a href="../../decorators/split.html">@split</a>                                   </li>
+            <li><a href="../../decorators/transform.html">@transform</a>                           </li>
+            <li><a href="../../decorators/merge.html">@merge</a>                                   </li>
+        </ul>
+
+        <h4><a href="../../decorators/decorators.html#advanced">Advanced</a></h4>   
+        <ul>
+            <li><a href="../../decorators/subdivide.html">@subdivide</a>                           </li>
+            <li><a href="../../decorators/transform_ex.html">@transform (add_inputs) </a>          </li>
+            <li><a href="../../decorators/collate.html">@collate</a>                               </li>
+            <li><a href="../../decorators/collate_ex.html">@collate (add_inputs)</a>               </li>
+            <li><a href="../../decorators/graphviz.html">@graphviz</a>                             </li>
+            <li><a href="../../decorators/mkdir.html">@mkdir</a>                                   </li>
+            <li><a href="../../decorators/follows.html">@follows / mkdir</a>                       </li>
+            <li><a href="../../decorators/posttask.html">@posttask touch_file</a>                  </li>
+            <li><a href="../../decorators/active_if.html">@active_if</a>                           </li>
+            <li><a href="../../decorators/jobs_limit.html">@jobs_limit</a>                         </li>
+        </ul>
+    
+        <h4><a href="../../decorators/decorators.html#combinatorics">Combinatorial:</a></h4>   
+        <ul>
+            <li><a href="../../decorators/product.html">@product </a>                              </li>
+            <li><a href="../../decorators/permutations.html">@permutations </a>                    </li>
+            <li><a href="../../decorators/combinations.html">@combinations </a>                    </li>
+            <li><a href="../../decorators/combinations_with_replacement.html">@combinations_ _with_replacement </a>                    </li>
+        </ul>
+
+                        
+        <h4><a href="../../decorators/decorators.html#esoteric">Esoteric</a></h4>   
+        <ul>
+            <li><a href="../../decorators/files_ex.html">@files (on the fly)</a>                   </li>
+            <li><a href="../../decorators/parallel.html">@parallel</a>                             </li>
+            <li><a href="../../decorators/check_if_uptodate.html">@check_if_uptodate</a>           </li>
+        </ul>
+
+
+        <h4 ><a href="../../decorators/indicator_objects.html">Indicator objects</a></h4>
+        <h4 >Pipeline functions</h4>
+        <ul>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-run">pipeline_run</a>                       </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-printout">pipeline_printout</a>                      </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-printout-graph">pipeline_printout_graph</a>          </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-get-task-names">pipeline_get_task_names</a>          </li>
+            <li><a href="../../drmaa_wrapper_functions.html#drmaa-wrapper-functions-drmaa_wrapper-run_job">drmaa_wrapper.run_job</a>          </li>
+        </ul>
+
+         <a href="../../todo.html">Future plans</a>
+    </ul>
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="advanced_transform.html" title="Chapter 15: add_inputs() and inputs(): Controlling both input and output files with @transform"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="onthefly.html" title="Chapter 13: Generating parameters on the fly with @files"
+             >previous</a> |</li>
+        Ruffus v. 2.5
+            <li><a href="../../index.html">Home</a> | </li>
+            <li><a href="../../contents.html">Contents</a> | </li>
+            <li><a href="../../installation.html">Install</a>  | </li>
+            <li><a href="../new_tutorial/introduction.html">Manual</a>  / </li>
+            <li><a href="../new_tutorial/manual_contents.html">(TOC)</a>  | </li>
+            <li><a href="../../faq.html">FAQ</a>  | </li>
+            <li><a href="../../cheatsheet.html">Cheat sheet</a> | </li>
+            <li><a href="../new_tutorial/command_line.html">Command Line</a> | </li>
+            <li><a href="../../gallery.html">Gallery</a> |  </li>
+            <li><a href="../../history.html">Latest Changes</a> &raquo; </li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2009-2013 Leo Goodstadt.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>
