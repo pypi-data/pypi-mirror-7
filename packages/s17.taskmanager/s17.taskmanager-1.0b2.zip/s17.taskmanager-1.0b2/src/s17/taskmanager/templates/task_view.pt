@@ -1,0 +1,369 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:metal="http://xml.zope.org/namespaces/metal"
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+      lang="en"
+      metal:use-macro="context/main_template/macros/master"
+      i18n:domain="s17.taskmanager">
+<head>
+    <metal:block fill-slot="top_slot"
+                 tal:define="dummy python:request.set('disable_border',1)" />
+    <metal:css fill-slot="style_slot">
+        <link type="text/css"
+              rel="stylesheet"
+              href="++resource++s17.taskmanager/taskmanager.css" />
+    </metal:css>
+</head>
+
+<body>
+  <metal:main fill-slot="content-core">
+    <tal:main-macro metal:define-macro="content-core"
+        tal:define="member context/@@plone_portal_state/member;
+                    isAnon context/@@plone_portal_state/anonymous;
+                    isSubmitter python:member.getId() == here.Creator();">
+
+        <table class="vertical listing task-info-box" summary="Task details"
+               i18n:attributes="summary"
+               tal:define="toLocalizedTime nocall:context/@@plone/toLocalizedTime;
+                           pas_member context/@@pas_member;
+                           wtool context/portal_workflow;">
+            <tbody>
+            <tr tal:define="state python:wtool.getInfoFor(here, 'review_state');
+                            state_title python:wtool.getTitleForStateOnType(state,
+                            here.getPortalTypeName());">
+                <th i18n:translate="">State</th>
+                <td tal:content="state_title"
+                    i18n:translate=""
+                    tal:attributes="class string:task-${state}"/>
+            </tr>
+
+            <tr>
+                <th width="30%" i18n:translate="">Priority</th>
+                <td width="50%" tal:content="view/get_priority"></td>
+            </tr>
+            <tr>
+                <th i18n:translate="">Submitted by</th>
+                <td tal:define="creator python:pas_member.info(here.Creator())"
+                    tal:content="creator/name_or_id" />
+
+            </tr>
+            <tr>
+                <th i18n:translate="">Submitted on</th>
+                <td tal:content="python:here.toLocalizedTime(here.created())" />
+            </tr>
+            <tr tal:condition="context/responsible">
+                <th i18n:translate="">Responsible</th>
+                <td tal:content="view/responsible"></td>
+            </tr>
+            <tr tal:condition="context/initial_date">
+                <th i18n:translate="">Initial date</th>
+                <td tal:content="python:here.toLocalizedTime(here.initial_date.ctime())">
+                </td>
+            </tr>
+            <tr tal:condition="context/end_date">
+                <th i18n:translate="">End date</th>
+                <td tal:content="python:here.toLocalizedTime(here.end_date.ctime())"></td>
+            </tr>
+            <tr tal:condition="context/provided_date">
+                <th i18n:translate="">Expected date</th>
+                <td tal:content="python:here.toLocalizedTime(here.provided_date.ctime())"></td>
+            </tr>
+            </tbody>
+        </table>
+
+        <form style="display: inline" action="@@watching"
+              id="watch-task-form"
+              tal:condition="python:not isAnon and not isSubmitter">
+            <div class="formControls">
+                <input tal:condition="view/is_watching"
+                       class="standalone"
+                       type="submit"
+                       i18n:attributes="value"
+                       value="Stop watching this task"
+                        />
+                <input tal:condition="not:view/is_watching"
+                       class="context"
+                       type="submit"
+                       i18n:attributes="value"
+                       value="Watch this task"
+                        />
+            </div>
+        </form>
+
+        <div tal:content="structure view/w/text/render" />
+
+        <div class="visualClear"><!----></div>
+        <tal:block condition="view/images">
+            <fieldset>
+                <legend i18n:translate="task_images">Images</legend>
+                <tal:images tal:repeat="image view/images">
+                    <div class="photoAlbumEntry">
+                        <a tal:attributes="href string:${image/absolute_url}/view;
+                                        title image/Description">
+                            <span class="photoAlbumEntryWrapper">
+                                <img src="" alt="" tal:replace="structure python:image.tag(scale='thumb', title=image.Description())" />
+                            </span>
+                            <span class="photoAlbumEntryTitle" tal:content="image/pretty_title_or_id"></span>
+                        </a>
+                    </div>
+                </tal:images>
+            </fieldset>
+        </tal:block>
+        <tal:block condition="view/files">
+            <fieldset id="">
+                <legend i18n:translate="task_files">Files</legend>
+                <ul class="visualNoMarker">
+                    <tal:related tal:repeat="item view/files">
+                        <li tal:define="desc item/Description;
+                                item_type item/portal_type;
+                                portal context/@@plone_portal_state/portal;
+                                putils portal/plone_utils;
+                                item_type_class python:'contenttype-' + putils.normalizeString(item_type);
+                                item_wf_state item/review_state | python:getInfoFor(item, 'review_state', '');
+                                item_wf_state_class python:'state-' + putils.normalizeString(item_wf_state);
+                                item_url item/getURL;">
+                    <span tal:attributes="class item_type_class">
+                        <a href="" class="visualIconPadding"
+                           tal:attributes="href string:${item_url}/view;
+                                           title desc;"
+                           tal:content="item/pretty_title_or_id">
+                        </a>
+                    </span>
+                        </li>
+                    </tal:related>
+                </ul>
+            </fieldset>
+        </tal:block>
+
+        <div class="formControls">
+            <form style="display: inline" action="edit"
+                  tal:condition="python: user.has_permission('Modify portal content', here)">
+                <input class="context"
+                       type="submit"
+                       i18n:attributes="value"
+                       value="Edit task"
+                       />
+            </form>
+            <input type="button"
+                   tal:condition="python: user.has_permission('Modify portal content', here)"
+                   id="multiplefiles" class="contenttype-multiplefiles link-overlay"
+                   href="./@@media_uploader"
+                   i18n:attributes="value"
+                   value="Upload multiple files or images" />
+        </div>
+
+        <div class="visualClear"><!----></div>
+
+        <h2>History</h2>
+
+        <tal:responses repeat="response_info view/responses">
+            <div class="response-reply"
+                 tal:define="id response_info/id;
+                     response nocall:response_info/response;
+                     html response_info/html;
+                     toLocalizedTime nocall:context/@@plone/toLocalizedTime;">
+
+                <div class="response-actions">
+                  <form method="post" action="@@edit-response" tal:condition="view/can_edit_response">
+                        <input type="hidden" name="response_id" tal:attributes="value id" />
+                        <input name="edit-response"
+                               class="standalone"
+                               type="submit"
+                               i18n:attributes="value"
+                               value="Edit"
+                                />
+                  </form>
+                  <form method="post" action="@@delete-response" tal:condition="view/can_delete_response">
+                        <input type="hidden" name="response_id" tal:attributes="value id" />
+                        <input name="delete-response"
+                               class="destructive"
+                               type="submit"
+                               i18n:attributes="value"
+                               value="Delete"
+                                />
+                  </form>
+                </div>
+
+                <div class="response-info">
+                    <span i18n:translate="task_added_by">Added by</span>
+                <span class="contact-user"
+                      tal:define="pas_member context/@@pas_member;
+                                  creator python:pas_member.info(response.creator)"
+                      tal:content="creator/name_or_id" />
+                    <span i18n:translate="task_added_on">on</span>
+                <span class="contact-user"
+                      tal:content="python:toLocalizedTime(response.date, long_format=True)" />
+                    <div tal:repeat="delta response/changes">
+                        <div tal:condition="python:delta['id'] != 'provided_date'">
+                            <span i18n:translate="" tal:content="delta/name" />:
+                            <span class="taskChange"
+                                  i18n:translate=""
+                                  i18n:domain="plone"
+                                  tal:content="delta/before" />
+                            &#8594;
+                            <span class="taskChange"
+                                  i18n:translate=""
+                                  i18n:domain="plone"
+                                  tal:content="delta/after" />
+                        </div>
+                        <div tal:condition="python:delta['id'] == 'provided_date'"
+                             tal:define="before python:delta['before'];
+                                         after python:delta['after'];">
+                            <span i18n:translate="" tal:content="delta/name" />:
+                            <span class="taskChange"
+                                  i18n:translate=""
+                                  i18n:domain="plone"
+                                  tal:condition="before"
+                                  tal:content="python:toLocalizedTime(before)" />
+                            &#8594;
+                            <span class="taskChange"
+                                  i18n:translate=""
+                                  i18n:domain="plone"
+                                  tal:content="python:toLocalizedTime(after)" />
+                        </div>
+
+                    </div>
+                </div>
+                <span tal:replace="structure html" />
+
+            </div>
+        </tal:responses>
+        <tal:noadd condition="python:not user.has_permission('Modify portal content', here)">
+            <p class="discreet"
+               i18n:translate="msg_no_responses_can_be_added">
+                No responses can be added.
+            </p>
+        </tal:noadd>
+
+        <div class="formControls"
+             tal:condition="context/@@plone_portal_state/anonymous">
+            <div class="login-suggestion">
+                <tal:block i18n:translate="login_suggestion_response">
+                    If you can, please log in before submitting a reaction.
+                </tal:block>
+            </div>
+            <form
+                    tal:attributes="action string:${context/@@plone_portal_state/portal_url}/login_form?came_from=${here/absolute_url}">
+                <input class="standalone"
+                       type="submit"
+                       value="Log in"
+                       i18n:domain="plone"
+                       i18n:attributes="value label_log_in;"
+                        />
+            </form>
+        </div>
+
+        <tal:add condition="python:user.has_permission('Modify portal content', here)">
+          <h2>Modify properties</h2>
+
+          <form method="post" action="@@create-response" enctype="multipart/form-data">
+
+            <fieldset>
+              <legend>Properties</legend>
+                <div class="field" tal:condition="view/transitions_for_display">
+                  <label for="transition">State</label>
+                  <select id="transition" name="transition">
+                    <option tal:repeat="transition view/transitions_for_display"
+                        tal:attributes="value transition/value;
+                                        checked transition/checked;"
+                        tal:content="transition/label" />
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label for="priority">Priority</label>
+                  <select id="priority" name="priority:int">
+                      <option tal:repeat="option view/priority_for_display"
+                          tal:attributes="value option/value;
+                                          selected option/checked;"
+                          tal:content="option/label" />
+                  </select>
+                </div>
+
+                <div class="field" tal:condition="view/responsibles_for_display">
+                  <label for="responsible">Responsible</label>
+                  <select id="responsible" name="responsible">
+                    <option tal:repeat="option view/responsibles_for_display"
+                        tal:attributes="value option/value;
+                                        selected option/checked;"
+                        tal:content="option/label" />
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label class="horizontal" for="expected_date">Expected date</label>
+                    <input type="text"
+                           value=""
+                           maxlength="2"
+                           size="2"
+                           class="date-widget date-field"
+                           name="date-day"
+                           id="date-day"
+                           tal:attributes="value view/day" /> /
+                    <select class="date-widget date-field" name="date-month" id="date-month">
+                      <option value="" selected=""
+                          tal:repeat="item view/months"
+                          tal:attributes="value item/value;
+                                          selected python:item['selected'] and 'selected' or None"
+                          tal:content="item/name" />
+                    </select>
+                    <input type="text"
+                           value=""
+                           maxlength="4"
+                           size="4"
+                           accesskey=""
+                           class="date-widget date-field"
+                           name="date-year"
+                           id="date-year"
+                           tal:attributes="value view/year"/>
+                    <input type="hidden"
+                           value="1"
+                           name="date-empty-marker"
+                           originalvalue="1" />
+                    <input type="hidden"
+                           id="date-calendar"
+                           name="date-calendar"
+                           class="date"
+                           originalvalue="" />
+
+                    <a tal:replace="structure view/show_jquerytools_dateinput_js" />
+                </div>
+            </fieldset>
+
+            <div class="field">
+              <label>Notes</label>
+              <div>
+                <tal:block
+                    define="inputname string:response;
+                            inputvalue string:;
+                            portal context/@@plone_portal_state/portal;
+                            member context/@@plone_portal_state/member;
+                            site_properties context/portal_properties/site_properties;
+                            default_editor python:site_properties.getProperty('default_editor').lower();
+                            user_editor python:member.getProperty('wysiwyg_editor', 'plone_wysiwyg').lower();
+                            editor python:user_editor or default_editor;
+                            portal_url context/@@plone_portal_state/portal_url;
+                            here_url context/@@plone_context_state/object_url;
+                            support python: path('nocall:here/%s_wysiwyg_support|here/%s/wysiwyg_support|here/portal_skins/plone_wysiwyg/wysiwyg_support' % (editor, editor));"
+                            on-error="string:$editor not installed correctly: ${error/value}">
+
+                  <metal:block use-macro="support/macros/wysiwygEditorBox" />
+                </tal:block>
+              </div>
+            </div>
+
+                <div class="visualClear"><!----></div>
+
+                <div class="formControls">
+                    <input name='submit-response' class="standalone" value="Submit" type="submit"
+                           i18n:domain="plone" i18n:attributes="value"/>
+                </div>
+            </form>
+        </tal:add>
+
+        <div class="visualClear"><!----></div>
+
+    </tal:main-macro>
+  </metal:main>
+</body>
+</html>
