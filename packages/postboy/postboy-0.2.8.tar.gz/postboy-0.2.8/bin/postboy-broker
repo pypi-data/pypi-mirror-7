@@ -1,0 +1,142 @@
+#!/usr/bin/env python
+# encoding: utf-8
+import tempfile
+import sqlite3
+import zmq
+import uuid
+from socket import getfqdn
+from optparse import OptionParser
+import logging
+import signal, os
+import traceback
+import json
+
+parser = OptionParser()
+parser.add_option("-l", "--listen", dest="listen", help="Listen this interface", metavar="ADDRESS", default='127.0.0.1')
+parser.add_option("-p", "--port", dest="port", help="Use this port", metavar="PORT", default=5450, type=int)
+parser.add_option("--storage-path", dest='storage_path', help='Path to storage of the queue', default=tempfile.gettempdir())
+parser.add_option("--debug", action='store_true', help='A lot of logging messages', default=False)
+parser.add_option("--retry-limit", help='Set limit of retries for failed task.', default=10, type=int, dest='retry_limit')
+
+log = logging.getLogger('postboy.broker')
+
+ALIVE = True
+
+def signal_handler(signum, frame):
+    global ALIVE
+    ALIVE = False
+    log.info('Getting signal: {0}. Program finishing.'.format(signum))
+
+signal.signal(signal.SIGTERM, signal_handler)
+signal.signal(signal.SIGINT, signal_handler)
+
+
+def create_db(fname):
+    INIT_CONNECTION = [
+        'PRAGMA journal_mode = MEMORY',
+        'PRAGMA synchronous = OFF',
+        'PRAGMA temp_store = MEMORY',
+        'PRAGMA cache_size = 500000',
+        'PRAGMA encoding = "UTF-8"',
+        'CREATE TABLE IF NOT EXISTS queue ( '
+            '`id` INTEGER PRIMARY KEY AUTOINCREMENT, '
+            '`data` TEXT NOT NULL, '
+            '`retries` UNSIGNED INTEGER NOT NULL DEFAULT 0, '
+            '`busy` BOOLEAN NOT NULL DEFAULT 0, '
+            '`assigned` TEXT '
+         ');',
+        'CREATE INDEX IF NOT EXISTS "busy_idx" ON "queue" ("busy" ASC)',
+    ]
+
+    connection = sqlite3.connect(fname)
+    cursor = connection.cursor()
+    for query in INIT_CONNECTION:
+        cursor.execute(query)
+    connection.commit()
+    cursor.close()
+    return connection
+
+
+def gen_uuid(options):
+    return str(uuid.uuid5(uuid.NAMESPACE_OID, "{0}:{1}".format(getfqdn(), options.port)))
+
+
+def setup_logger(options):
+    logformat = u'%(asctime)s [%(filename)s:%(lineno)d] %(levelname)-8s %(message)s'
+    logging.basicConfig(level=logging.DEBUG if options.debug else logging.INFO, format=logformat)
+
+
+def message_decode(message):
+    obj = json.loads(message)
+    command = obj.pop('command')
+    data = obj.pop('data')
+
+    return command, data
+
+def main(options, args):
+    global ALIVE
+    setup_logger(options)
+    uid = gen_uuid(options)
+    db = create_db(os.path.join(options.storage_path, "broker-{0}.sqlite".format(uid)))
+    context = zmq.Context()
+    socket = context.socket(zmq.REP)
+    address = "tcp://{0}:{1}".format(options.listen if options.listen != '0.0.0.0' else '*', options.port)
+    log.info('Listening address: {0}'.format(address))
+    socket.bind(address)
+
+    def response(data, error=False):
+        return socket.send(json.dumps({'error': error, 'data': data}))
+
+    while ALIVE:
+        cursor = db.cursor()
+        try:
+            message = socket.recv()
+            log.debug("Received request: {0}".format(message))
+            command, data = message_decode(message)
+            if command == u'store':
+                obj = cursor.execute('INSERT INTO queue (data) VALUES (?);', (data,))
+                db.commit()
+                response(obj.lastrowid)
+            elif command == u'assign':
+                result = cursor.execute(
+                    'SELECT id, data, retries FROM queue WHERE `busy` = 0 AND `retries` < ? ORDER BY `id` LIMIT 1;',
+                    (options.retry_limit,)
+                ).fetchone()
+                task_id, task, retries = result if result else (None, None, None)
+
+                if task_id:
+                    cursor.execute(
+                        'UPDATE queue SET `assigned`=?, `busy`=1, `retries` = `retries` + 1 WHERE `id`=?',
+                        (data, task_id,)
+                    )
+                    db.commit()
+
+                log.debug('Trying to assign task "{0}" ({2}) to client "{1}".'.format(task_id, data, retries))
+                response({'task': task, 'id': task_id} if task_id else None)
+                log.debug('Responding to client "{0}": "{1}"'.format(data, task))
+            elif command == u'done':
+                task_id = data
+                result = cursor.execute('DELETE FROM queue WHERE `id` = ?;', (task_id,))
+                db.commit()
+                response(result.rowcount)
+            elif command == u'fault':
+                task_id = data
+                result = cursor.execute('UPDATE queue SET busy=0 WHERE `id` = ?;', (task_id,))
+                db.commit()
+                response(result.rowcount)
+            else:
+                log.info('Client sent unknown command: {0}'.format(command))
+                response('Unknown command', True)
+        except Exception as e:
+            log.debug("Error: {0}\n".format(traceback.format_exc()))
+            err = unicode(e)
+            log.error("Error storing message: {0}".format(err))
+            response(err, True)
+        finally:
+            cursor.close()
+
+    db.close()
+
+
+if __name__ == '__main__':
+    main(*parser.parse_args())
