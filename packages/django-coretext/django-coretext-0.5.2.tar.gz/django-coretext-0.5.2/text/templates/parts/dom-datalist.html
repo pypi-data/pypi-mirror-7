@@ -1,0 +1,37 @@
+<h3>{{dl.title}}{% if user.is_superuser %}<a title="datalist dl {{dl.id}}" target="_blank" href="/admin/core/datalist/{{dl.id}}">[edit dl {{dl.id}}]</a>{% endif %}</h3>
+<dl>
+	
+{% for dt in dl.data_titles.all %}
+    <dt onclick="window.scrollTo(0,0); return false" id="dt-{{dt.id}}">{{dt.text}} </dt>
+	{% if user.is_superuser %}<a target="_blank" title="data title dt id {{dt.id}}" href="/admin/core/datalisttitle/{{dt.id}}">[edit dt {{dt.id}}]</a>{% endif %}
+    {% for dd in dt.data_items.all %}
+    <dd style="{{dd.style}}">
+	{{dd.text|linebreaks}}
+	{% if dd.options %}
+	{% for opt in dd.options.all %}
+        {% if opt.images %}
+            {% for image in opt.images.all %}
+                {% include 'parts/dom-image.html' %}
+            {% endfor %}
+        {% endif %}
+        {% if opt.lists %}
+            {% for l in opt.lists.all %}
+			{% ifequal l.kind "numbered" %}<ol>{% else %}<ul class="dothis">{% endifequal %} <!-- list l starts -->
+					{% if user.is_superuser %}<a target="_blank" title="list l id {{l.id}}" href="/admin/core/list/{{l.id}}">[edit list {{l.id}}]</a>{% endif %}
+                {% for li in l.list_items.all %}
+                    <li>{{li.text|linebreaks}}
+                    {% if li.options.images %}
+                        {% for image in li.options.images.all %}
+                        {% include 'parts/dom-image.html' %}
+                        {% endfor %}
+                    {% endif %}
+                {% if user.is_superuser %}<a target="_blank" title="list item li id {{li.id}}" href="/admin/core/listitem/{{li.id}}">..</a>{% endif %}</li>{% endfor %}
+            {% ifequal l.kind "numbered" %}</ol>{% else %}</ul>{% endifequal %}
+			{% endfor %} <!-- list l ends -->
+        {% endif %}
+    {% endfor %}
+    {% endif %}
+    {% if user.is_superuser %}<a target="_blank" title="dd item id {{dd.id}}" href="/admin/core/datalistdata/{{dd.id}}">[edit dd {{dd.id}}]</a>{% endif %}</dd>{% endfor %}
+{% endfor %}
+</dl>
+   

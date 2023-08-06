@@ -1,0 +1,84 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+	<title>{{chapter.title}}</title>
+	<link rel="shortcut icon" href="/project/_img_interface/favicon.ico" />
+	<link rel="stylesheet" href="/project/_css/_common.css" type="text/css" media="screen" title="no title" charset="utf-8" />
+	
+</head>
+	
+<body id="content">
+	{% include "parts/header.html" %}
+    <div id="content">
+        <div class="window-content text">
+                    <h1>{{page.title}}</h1>
+					{% if user.is_superuser %}<a target="_blank" title="page {{page.id}}" href="/admin/core/page/{{page.id}}">[edit page {{page.id}}]</a>{% endif %}
+					<p>{{page.summary}}</p>
+					<!-- toc -->
+					<h2>Inhoudsopgave</h2>
+					<ol class="toc">
+					{% for paragraph in page.paragraphs.all %}
+					<li ><a href="#header-{{paragraph.id}}">{{paragraph.header}}</a>
+					{% if paragraph.data_lists %}
+					
+						{% for dl in paragraph.data_lists.all %}
+						<ul style="margin-top: 21px">
+							{% for dt in dl.data_titles.all %}
+							
+							<li style="line-height: 5px"><a href="#dt-{{dt.id}}">{{dt.text}}</a></li>
+							
+							{% endfor %}
+						</ul>
+						{% endfor %}
+					
+					{% endif %}
+					</li>
+					
+					
+					{% endfor %}
+					</ol>
+					<!-- toc ends -->
+                    {% for paragraph in page.paragraphs.all %}
+                        <!-- paragraph -->
+                        <h2 onclick="window.scrollTo(0,0); return false" id="header-{{paragraph.id}}">{{paragraph.header}}</h2>
+						{% if user.is_superuser %}<a target="_blank" title="paragraph {{paragraph.id}}" href="/admin/core/paragraph/{{paragraph.id}}">[edit p {{paragraph.id}}]</a>{% endif %}
+                        
+						<p>
+                        {{paragraph.text|linebreaks}}
+						{% for options in paragraph.options.all %}
+                        {% if options.images %}
+                        <!-- paragraph images -->
+                        {% for image in options.images.all %}
+                        {% include 'parts/dom-image.html' %}
+                        {% endfor %}
+                        <!-- paragraph images end -->
+                        {% endif %}
+                        {% if options.data_lists %}
+                        <!-- paragraph datalists -->
+                        {% for dl in options.data_lists.all %}
+                            {% include 'parts/dom-datalist.html' %}
+                        {% endfor %}
+                        <!-- paragraph datalists end --> 
+                        {% endif %}              
+                        {% if options.lists %}
+                        <!-- paragraph lists -->
+                        {% for l in options.lists.all %}
+                            {% include 'parts/dom-list.html' %}
+                        {% endfor %}
+                        <!-- paragraph lists end -->
+                        {% endif %}
+						{% if options.relative_links %}
+						{% for r in options.relative_links.all %}
+						{% include 'parts/dom-relativelink.html' %}
+						{% endfor %}
+						{% endif %}
+                        </p>
+ 						{% endfor %}
+                    {% endfor %}<!-- paragraph ends -->
+        </div>
+    </div>
+</body>
+</html>
