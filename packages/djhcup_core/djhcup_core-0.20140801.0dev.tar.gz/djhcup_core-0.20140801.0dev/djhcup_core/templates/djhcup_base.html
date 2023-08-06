@@ -1,0 +1,148 @@
+{% load staticfiles %}<!DOCTYPE html>
+<html>
+<head>
+<title>Le Hachoir - {% block title %}{% if title %}{{ title }}{% else %}No Title{% endif %}{% endblock %}</title>
+{% block head %}
+{% block extra_js %}
+{% endblock %}
+<style type="text/css">
+body {
+    background-color:#eee;
+    color:#1C1C1C;
+    margin:0;
+    padding:0;
+}
+div#nav {
+    background-color:#1C1C1C;
+    color:#e0e0e0;
+    padding:1.0em;
+}
+div#header,
+div#content {
+    padding-left:1em;
+    padding-right:1em;
+    }
+.response_messages li,
+.links li {
+    padding:0.5em 1em;
+}
+.error { background-color: #FFCCCC; color: #270000; border-top: 1px solid #820000; border-bottom: 1px solid #820000; }
+.warning { background-color: #FFFFCC; color: #1A1A14; border-top: 1px solid #E6E6B8; border-bottom: 1px solid #E6E6B8; }
+.info { background-color: #CCE6FF; color: #0F141A; border-top: 1px solid #B8CFE6; border-bottom: 1px solid #B8CFE6; }
+.response_messages,
+.links {
+    list-style-type:none;
+    margin:0;
+    padding:0;
+}
+li {margin:0;}
+a {color:inherit; text-decoration:none;}
+a:hover, a:active {text-decoration:underline;}
+
+/* batch status formatting */
+table.batch_items {text-align:left; border-collapse:collapse;}
+table td,
+table th
+    {padding:.25em .5em;}
+.txt_col {text-align:left; }
+.num_col {text-align:right; }
+a:link,
+a:visited,
+a:hover,
+a:active
+    {text-decoration:none;}
+a:link,
+a:visited
+    {border-bottom:1px dotted;}
+a:hover,
+a:active
+    {border-bottom:1px solid; color:#1E90FF}
+div.filtergroup {
+    padding: 0.5em 1.0em;
+    border: 1px solid #ccc;
+}
+ul.filter_list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+ul.filter_list li {
+    margin: 0.25em auto;
+}
+div.right-align-labels ol {
+    list-style-type: none;
+}
+div.right-align-labels label {
+    display:inline-block;
+    width:5em;
+    padding: 0.5em;
+    text-align:right;
+}
+div.right-align-labels input,
+div.right-align-labels textarea {
+    vertical-align:text-top;
+}
+div.right-align-labels .helptext {
+    color: #888;
+    display: block;
+    clear: both;
+}
+{% block extra_css %}
+{% endblock %}
+{% endblock %}
+</style>
+<script src="{% static "js/jqueryui/external/jquery/jquery.js" %}"></script>
+<script src="{% static "js/jqueryui/jquery-ui.min.js" %}"></script>
+</head>
+<body>
+{% block body %}
+
+    
+    <div id="nav">
+    {% block nav %}
+        {% if user.is_authenticated %}
+            Logged in as {{ user }} <a href="{% url 'logout' %}">logout&rarr;</a>
+        {% endif %}
+    {% endblock %}
+    </div>
+    
+    <div id="header">
+    {% block header %}
+        {% if title %}<h1>{{ title }}</h1>{% endif %} 
+    {% endblock %}
+    </div>
+    
+    {% block messages %}
+        {% if response_messages %}
+            <ol class="response_messages">
+            {% for m in response_messages %}
+                <li class="{{ m.type }}">{{ m.content }}</li>
+            {% endfor %}
+            </ol>
+        {% endif %}
+    {% endblock %}
+    
+    {% block links %}
+        {% if links %}
+            <ul class="links">
+            {% for l in links %}
+                <li><a href="{{ l.href }}">{{ l.display }}</a></li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endblock %}
+    
+    <div id="content">
+    {% block content %}
+        <p>No content.</p>
+    {% endblock %}
+    </div>
+    
+    {% block footer %}
+    {% endblock %}
+    
+{% endblock %}
+{% block body_js %}
+{% endblock %}
+</body>
+</html>
