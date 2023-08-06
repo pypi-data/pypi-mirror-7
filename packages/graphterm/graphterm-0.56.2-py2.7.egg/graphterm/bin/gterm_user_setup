@@ -1,0 +1,124 @@
+#!/bin/bash
+
+# Creates gterm user, if not present, and starts host connection
+#  Note: gterm users are locked and cannot login directly
+# If user is --all, host connection is started for all existing users (excluding admin user)
+# To reset user terminals, use "gterm_user_setup --all restart"
+# To delete user, use "gterm_user_setup user delete"
+
+GRAPHTERM_DIR=.graphterm
+GRAPHTERM_AUTH=_gterm_auth.txt
+GRAPHTERM_MAIL=gterm_email.txt
+
+if [ $# -lt 1 ]; then
+    echo "Usage: gterm_user_setup (username|--all) [activate/stop/restart/delete [server_name [(email|-) [users_dir [admin [gtermhost_arguments]]]]]]"
+    exit 1
+fi
+
+username=$1
+action=activate
+server=localhost
+email=""
+users_dir=/home
+admin=$USER
+rem_args=""
+
+if [ $# -gt 1 ]; then
+    action=$2
+fi
+
+if [ $# -gt 2 ]; then
+    server=$3
+fi
+
+if [ $# -gt 3 ]; then
+    email=$4
+    if [ "$email" = "-" ]; then
+	email=""
+    fi
+fi
+
+if [ $# -gt 4 ]; then
+    users_dir=$5
+fi
+
+if [ $# -gt 5 ]; then
+    admin=$6
+fi
+
+if [ $# -gt 6 ]; then
+    shift 6
+    rem_args="$@"
+fi
+
+if [ ! -d $users_dir ]; then
+    echo "Home directory $users_dir does not exist"
+    exit 1
+fi
+
+umask 077
+
+if [ "$username" = "--all" ]; then
+    host_list=""
+    cd  $users_dir
+    for host in *; do
+        if [ "$host" != "$admin" ]; then
+	    host_list="$host_list $host"
+	fi
+    done
+
+elif [[ "$username" =~ ^[a-z][a-z0-9-]*$ ]]; then
+    host_list=$username
+    homedir=$users_dir/$username
+    if [ ! -d $homedir ]; then
+	if getent passwd $username > /dev/null 2>&1; then
+	    echo "User $username already created, but home directory not found"
+	    exit 1
+	fi
+
+        # Create new user
+	echo "Creating new user and group $username"
+	useradd --user-group --create-home --home $homedir --shell /bin/bash $username
+
+        # Lock user password (i.e., no direct logins allowed)
+	passwd -l $username
+
+	su -l $username -c "chmod 0700 $homedir"
+    fi
+
+    gt_dir=$homedir/$GRAPHTERM_DIR
+    if [ ! -d $gt_dir ]; then
+	su -l $username -c "mkdir $gt_dir"
+	su -l $username -c "chmod 0700 $gt_dir"
+    
+        if [ "$email" != "" ]; then
+	    su -l $username -c "touch $gt_dir/$GRAPHTERM_MAIL"
+	    su -l $username -c "echo $email >> $gt_dir/$GRAPHTERM_MAIL"
+	fi
+    fi
+else
+    echo "Invalid username $username"
+    exit 1
+fi
+
+for host in $host_list; do
+    gt_dir=$users_dir/$host/$GRAPHTERM_DIR
+    if [ "$host" != "$admin" ] && [ "$action" = "delete" ]; then
+	read -p "Press Enter to delete user $host:" confirm
+	echo deluser --remove-home $host
+	deluser --remove-home $host
+    elif [ "$host" != "$admin" ] && [ -d $gt_dir ]; then
+        # Update authentication code for host/user (if gt_dir exists)
+        if [ "$server" = "localhost" ]; then
+	    auth_file=$gt_dir/${host}$GRAPHTERM_AUTH
+	else
+	    auth_file=$gt_dir/${host}@$server$GRAPHTERM_AUTH
+        fi
+	su -l $host -c "touch $auth_file"
+	gauth -w --admin=$admin --server=$server $host
+
+        # Start client for host
+        uid=`id -u $host`
+	su -l $host -c "gtermhost --daemon=$action --auth_file=$auth_file $rem_args $host"
+    fi
+done
