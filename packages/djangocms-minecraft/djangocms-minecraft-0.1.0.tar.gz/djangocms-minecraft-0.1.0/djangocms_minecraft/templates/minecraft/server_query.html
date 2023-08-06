@@ -1,0 +1,45 @@
+{% load staticfiles %}
+
+{#<div class="alert alert-warning">#}
+{#    <h1>DEBUG INFO</h1>#}
+{#    <p>#}
+{#        RAW:{{ status }}#}
+{#        <ul>{% for k,v in status.items %}#}
+{#            <li>{{ k }}: {{ v }}</li>#}
+{#        {% endfor %}</ul>#}
+{#    </p>#}
+{#</div>#}
+
+<div class="minecraft_server_query">
+    {% if status %}
+        <img src="{% static "djangocms_minecraft/img/server_up_icon.png" %}" alt="Server is UP" style="float:right;position: relative; padding-left: 5px;">
+    {% else %}
+        <img src="{% static "djangocms_minecraft/img/server_down_icon.png" %}" alt="Server is DOWN" style="float:right;position: relative; padding-left: 5px;">
+    {% endif %}
+    <dl>
+        {% if status %}
+            <dt>Status</dt>
+            <dd>
+                Up
+            </dd>
+            <dt>MOTD</dt><dd>{{ status.motd }}</dd>
+            <dt>Version</dt><dd>{{ status.software }}</dd>
+            <dt>Players online ({{ status.numplayers }}/{{ status.maxplayers }})</dt>
+                {% if status.numplayers > 0 %}
+                    <dd>
+                        <ul>{% for p in status.players %}
+                            <li>{{ p }}</li>
+                        {% endfor %}</ul>
+                    </dd>
+                {% else %}
+                    <dd>None at this time</dd>
+                {% endif %}
+                <dt>Main Map</dt><dd>
+                    <a href="{{ instance.map_url }}&worldname={{ status.map }}">{{ status.map }}</a>
+                </dd>
+        {% else %}
+            <dt>{{ instance.name }}</dt>
+            <dd>not available or not responding</dd>
+        {% endif %}
+    </dl>
+</div>
