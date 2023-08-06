@@ -1,0 +1,68 @@
+#!/usr/bin/env python
+
+from argparse import ArgumentParser
+from bs4 import BeautifulSoup
+from multiprocessing.pool import ThreadPool
+from multiprocessing import Manager
+from urlparse import urlparse, urlunparse, urljoin, urldefrag
+
+import requests
+
+
+def worker(queue, lock, hit_list, querystring, fragment):
+    while True:
+        url = queue.get()
+        r = requests.get(url, timeout=None)
+
+        if r.status_code == requests.codes.ok:
+            soup = BeautifulSoup(r.text)
+            for link in soup.find_all('a'):
+                href = urljoin(r.url, link.get('href'))
+                if not fragment:
+                    href = urldefrag(href)[0]
+                if not querystring:
+                    href = url_remove_querystring(href)[0]
+                if urlparse(url).netloc == urlparse(href).netloc and href not in hit_list:
+                    queue.put(href)
+                    hit_list.append(href)
+
+                    lock.acquire()
+                    print href
+                    lock.release()
+        queue.task_done()
+
+
+def url_remove_querystring(url):
+    """Remove querystring from URL.
+
+    Returns a tuple of the stripped URL and the querystring.  If
+    the URL contained no querystring, the second element is an
+    empty string.
+    """
+    if '?' in url:
+        s, n, p, a, q, frag = urlparse(url)
+        stripped = urlunparse((s, n, p, a, '', frag))
+        return stripped, q
+    else:
+        return url, ''
+
+
+if __name__ == '__main__':
+    parser = ArgumentParser(description="Crawl a domain to get a list of urls.")
+    parser.add_argument('seed')
+    parser.add_argument('-q', '--save-querystring', action='store_true', dest='querystring')
+    parser.add_argument('-f', '--save-fragment', action='store_true', dest='fragment')
+    parser.add_argument('-t', '--threads', default=5, type=int, dest='threads')
+    #parser.add_argument('--version', action='version', version='%(prog)s 2.0')
+
+    args = parser.parse_args()
+
+    m = Manager()
+    queue = m.Queue()
+    lock = m.Lock()
+    hit_list = m.list()
+
+    queue.put(args.seed)
+
+    pool = ThreadPool(processes=args.threads)
+    pool.apply(worker, args=(queue, lock, hit_list, args.querystring, args.fragment))
