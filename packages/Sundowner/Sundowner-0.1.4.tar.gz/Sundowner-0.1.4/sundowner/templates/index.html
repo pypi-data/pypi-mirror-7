@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="A sunrise and sunset calculator.">
+        <meta name="author" content="Kenners">
+        <title>Sundowner</title>
+
+        <!-- Bootstrap -->
+        <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='css/datepicker3.css') }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='css/sundowner.css') }}" rel="stylesheet">
+        <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+        <!--[if lt IE 9]>
+            <script src="{{ url_for('static', filename='js/html5shiv.js') }}"></script>
+            <script src="{{ url_for('static', filename='js/respond.min.js') }}"></script>
+        <![endif]-->
+    </head>
+    <body>
+        <div class="container">
+            <div class="page-header">
+                <ul id="tabs" class="nav pull-right">
+                    <li class="active"><a href="#rothera" data-toggle="pill">Rothera</a></li>
+                    <li><a href="#stations" data-toggle="pill">Other Stations</a></li>
+                    <li><a href="#elsewhere" data-toggle="pill">Elsewhere</a></li>
+                </ul>
+                <h1>Sundowner</h1>
+            </div>
+            <div class="tab-content">
+                <div class="tab-pane active" id="rothera">
+                    <div class="row">
+                        <div class="col-md-4 col-md-offset-4">
+                            <div id="datepicker-container">
+                                <div class="input-group date">
+                                    <input type="text" class="form-control input-lg text-center datepicker-sd" placeholder="Today" tabindex=1>
+                                    <span class="input-group-addon">
+                                        <i class="glyphicon glyphicon-calendar"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <p class="lead">Dawn</p>
+                            <h1><span id="civil_dawn"></span></h1>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <p class="lead">Sunrise</p>
+                            <h1><span id="sunrise"></span></h1>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <p class="lead">Sunset</p>
+                            <h1><span id="sunset"></span></h1>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <p class="lead">Dusk</p>
+                            <h1><span id="civil_dusk"></span></h1>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane" id="stations">
+                    <div class="row">
+                        <div class="col-md-4 col-md-offset-4">
+
+                            <label class="sr-only" for="station">Station</label>
+                            <select id="station" class="form-control input-lg text-center" tabindex=1>
+                                <option value="r">Rothera</option>
+                                <option value="kg">Fossil Bluff</option>
+                                <option value="sbr">Sky Blu</option>
+                                <option value="z">Halley</option>
+                                <option value="kep">King Edward Point</option>
+                                <option value="bi">Bird Island</option>
+                                <option value="si">Signy</option>
+                                <option value="sp">South Pole</option>
+                                <option value="sv">Ny-Ålesund</option>
+                                <option value="cam">Cambridge</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-8 col-md-offset-2">
+                            <div id="daterange-container">
+                                <div class="input-daterange input-group" id="datepicker">
+                                    <div id="daterange-start-parent">
+                                        <label class="sr-only" for="daterange-start">Start date</label>
+                                        <input type="text" class="form-control input-lg datepicker-sd" id="daterange-start" name="start" tabindex=2>
+                                    </div>
+                                    <span class="input-group-addon">to</span>
+                                    <div id="daterange-end-parent">
+                                        <label class="sr-only" for="daterange-end">End date</label>
+                                        <input type="text" class="form-control input-lg datepicker-sd" id="daterange-end" name="end" tabindex=3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-8 col-md-offset-2" >
+                            <div id="timetable"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane" id="elsewhere">
+                    <div class="row">
+                        <div class="col-md-4 col-md-offset-4">
+                            <div id="coord-parent" class="input-group">
+                                <label class="sr-only" for="coord">Coordinates:</label>
+                                <input type="text" class="form-control input-lg text-center" id="coord" placeholder="Lat Lon" tabindex=1>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-8 col-md-offset-2">
+                            <div id="datepicker-container-ew">
+                                <div class="input-daterange input-group" id="datepicker-ew">
+                                    <div id="daterange-start-parent-ew">
+                                        <label class="sr-only" for="daterange-start-ew">Start date</label>
+                                        <input type="text" class="form-control input-lg datepicker-sd" id="daterange-start-ew" name="start" tabindex=2>
+                                    </div>
+                                    <span class="input-group-addon">to</span>
+                                    <div id="daterange-end-parent-ew">
+                                        <label class="sr-only" for="daterange-end-ew">End date</label>
+                                        <input type="text" class="form-control input-lg datepicker-sd" id="daterange-end-ew" name="end" tabindex=3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-8 col-md-offset-2" >
+                            <div id="timetable-ew"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="footer">
+            <div class="container">
+                <p class="text-center">All times are in your <a href="#" data-toggle="tooltip" id="browser-timezone">local timezone</a></p>
+                <p class="text-center small">Handbuilt by <a href="http://kenners.org">Kenners</a> &middot; <a href="https://github.com/kenners/sundowner/issues/new">Found a bug?</a></p>
+            </div>
+        </div>
+        <script type=text/javascript>
+            $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+        </script>
+        <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+        <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+        <!-- Include all compiled plugins (below), or include individual files as needed -->
+        <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/bootstrap-datepicker.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/sundowner.js') }}"></script>
+    </body>
+</html>
