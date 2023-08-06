@@ -1,0 +1,132 @@
+Metadata-Version: 1.1
+Name: dio
+Version: 0.2.3
+Summary: Python API for DigitalOcean v2.0 REST API
+Home-page: http://corndogcomputers.github.io/python-dio
+Author: Rob Johnson
+Author-email: info@corndogcomputers.com
+License: UNKNOWN
+Download-URL: https://github.com/corndogcomputers/python-dio/tarball/master
+Description: # Dio v0.2.3
+        
+        ##### Python API for DigitalOcean v2.0 REST API
+         
+        ### How to install
+        
+        You can install dio using **pip**
+        
+            pip install -U dio
+        
+        or via sources:
+        
+            python setup.py install
+        
+        --
+        
+        ### Features
+        * **DROPLET BACKUP!!! (rsync and snapshot a droplet)**
+        * **Uses digitalocean v2.0 API**
+        * Running API call count
+        * Running API remaining call count
+        * All objects have a details function to return properties and values
+        * Get user's Droplets
+        * Get user's Images (Snapshot and Backups)
+        * Get public Images
+        * Create and Remove a Droplet
+        * Resize a Droplet
+        * Shutdown, restart and boot a Droplet
+        * Power off, power on and "power cycle" a Droplet
+        * Perform Snapshot
+        * Enable/Disable automatic Backups
+        * Restore root password of a Droplet
+        
+        --
+        
+        ### Changelog
+        
+        #### v0.1
+          - pypi "python-dio" package was deleted.
+        
+        #### v0.2
+          - added full backup function to Backup.py class.
+          - added backup prompt for Droplet.delete(). Pass in False to bypass prompt
+          - renamed package from python-dio to dio
+        
+        #### v0.2.1
+          - added check to Backup.rsync() to make sure the droplet is on
+        
+        #### v0.2.2
+          - changed Droplet.snapshot() to use shutdown instead of power_off.
+        
+        #### v0.2.3
+          - hidden token from .details() data
+        
+        
+        
+        --
+        
+        ### Example cronjob:
+        
+        ```sh
+        # DigitalOcean backup script
+        0 * * * * /usr/bin/python /Users/username/bin/backup.py
+        ```
+        
+        --
+        
+        ### Example backup script:
+        
+        ```python
+        
+        import dio
+        
+        """ Your digitalocean API v2.0 token """
+        token = "YOUR_TOKEN"
+        
+        """ Ignore list of droplets to bypass in operations """
+        ignore = ["production.example.com"]
+        
+        """ Droplet backup options. Only needed when doing backup """
+        options = {
+          "dev.example.com": {
+            "ssh_user"        : "root",
+            "ssh_key"         : "ssh_key",
+            "backup_dir"      : "/Users/username/Droplets",
+            "remote_dir"      : "/root",
+            "use_ip"          : True,
+            "snapshot_hour"   : 3,
+            "snapshots_keep"  : 2,
+            "snapshot_delete" : True,
+          },
+          "production.example.com": {
+            "ssh_user"        : "root",
+            "ssh_key"         : "ssh_key",
+            "backup_dir"      : "/Users/username/Droplets",
+            "remote_dir"      : "/var/www",
+            "use_ip"          : True,
+            "snapshot_hour"   : 3,
+            "snapshots_keep"  : 7,
+            "snapshot_delete" : True,
+          }
+        }
+        
+        """ Manager init will automatically get the droplets """
+        manager = dio.Manager( token, ignore )
+        
+        """ backup your droplet with rsync """
+        for droplet in manager.droplets:
+          dio.Backup( options, droplet )
+        
+        """ See how many api calls you used """
+        print dio.api.calls
+        
+        """ See how many remaining api calls you have left for the hour """
+        print dio.api.remaining
+        
+        ```
+        
+        --
+        
+        Designed to be compatible with [python-digitalocean](https://github.com/koalalorenzo/python-digitalocean)
+Keywords: digitalocean,backup,vps,rsync,api
+Platform: UNKNOWN
