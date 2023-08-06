@@ -1,0 +1,689 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Step 2: @transform-ing data in a pipeline &mdash; ruffus 2.5 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/ruffus.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.5',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="ruffus 2.5 documentation" href="../../index.html" />
+    <link rel="next" title="Step 3: Understanding how your pipeline works" href="step3_run_pipeline.html" />
+    <link rel="prev" title="Step 1: An introduction to Ruffus pipelines" href="step1_follows.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="step3_run_pipeline.html" title="Step 3: Understanding how your pipeline works"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="step1_follows.html" title="Step 1: An introduction to Ruffus pipelines"
+             accesskey="P">previous</a> |</li>
+        Ruffus v. 2.5
+            <li><a href="../../index.html">Home</a> | </li>
+            <li><a href="../../contents.html">Contents</a> | </li>
+            <li><a href="../../installation.html">Install</a>  | </li>
+            <li><a href="../new_tutorial/introduction.html">Manual</a>  / </li>
+            <li><a href="../new_tutorial/manual_contents.html">(TOC)</a>  | </li>
+            <li><a href="../../faq.html">FAQ</a>  | </li>
+            <li><a href="../../cheatsheet.html">Cheat sheet</a> | </li>
+            <li><a href="../new_tutorial/command_line.html">Command Line</a> | </li>
+            <li><a href="../../gallery.html">Gallery</a> |  </li>
+            <li><a href="../../history.html">Latest Changes</a> &raquo; </li>
+ 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <span class="target" id="simple-tutorial-2nd-step"></span><div class="section" id="step-2-transform-ing-data-in-a-pipeline">
+<span id="index-0"></span><h1>Step 2: <tt class="docutils literal"><span class="pre">&#64;transform</span></tt>-ing data in a pipeline<a class="headerlink" href="#step-2-transform-ing-data-in-a-pipeline" title="Permalink to this headline">¶</a></h1>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference internal" href="simple_tutorial.html#simple-tutorial"><em>Simple tutorial overview</em></a></li>
+<li><a class="reference internal" href="../../decorators/transform.html#decorators-transform"><em>&#64;transform syntax in detail</em></a></li>
+</ul>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Remember to look at the example code:</p>
+<ul class="last simple">
+<li><a class="reference internal" href="step2_code.html#simple-tutorial-2nd-step-code"><em>Python Code for step 2</em></a></li>
+</ul>
+</div>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><svg version="1.0" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0" y="0"
+    width="731.3pt"
+    height="83pt"
+    viewBox="0 0 731.3 83">
+  <defs id="defs3287">
+    <marker refX="0" refY="0" orient="auto" id="Arrow2Mend" style="overflow:visible">
+      <path d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z" transform="scale(-0.6,-0.6)" id="path4124" style="fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round" />
+    </marker>
+    <marker refX="0" refY="0" orient="auto" id="Arrow2Lend" style="overflow:visible">
+      <path d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" id="path4118" style="fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round" />
+    </marker>
+    <marker refX="0" refY="0" orient="auto" id="Arrow1Lend" style="overflow:visible">
+      <path d="M 0,0 5,-5 -12.5,0 5,5 0,0 z" transform="matrix(-0.8,0,0,-0.8,-10,0)" id="path4100" style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt" />
+    </marker>
+    <marker refX="0" refY="0" orient="auto" id="Arrow2Mend-4" style="overflow:visible">
+      <path d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z" transform="scale(-0.6,-0.6)" id="path4124-8" style="fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round" />
+    </marker>
+    <marker refX="0" refY="0" orient="auto" id="Arrow2Mend-1" style="overflow:visible">
+      <path d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z" transform="scale(-0.6,-0.6)" id="path4124-1" style="fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round" />
+    </marker>
+    <marker refX="0" refY="0" orient="auto" id="Arrow2Mend-1-1" style="overflow:visible">
+      <path d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z" transform="scale(-0.6,-0.6)" id="path4124-1-8" style="fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round" />
+    </marker>
+    <marker refX="0" refY="0" orient="auto" id="Arrow2Mend-1-2" style="overflow:visible">
+      <path d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z" transform="scale(-0.6,-0.6)" id="path4124-1-7" style="fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round" />
+    </marker>
+    <marker refX="0" refY="0" orient="auto" id="Arrow2Mend-1-23" style="overflow:visible">
+      <path d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z" transform="scale(-0.6,-0.6)" id="path4124-1-3" style="fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round" />
+    </marker>
+  </defs>
+  <g transform="translate(-14.608261,-32.693481)" id="layer1">
+    <rect width="89.826035" height="65.392792" x="21.063463" y="39.148708" id="rect3309" style="fill:#ffff00;fill-opacity:1;stroke:#ff0000;stroke-width:0.41040453" />
+    <text x="64.540756" y="62.738293" id="text3311" xml:space="preserve" style="font-size:14px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Monospace;-inkscape-font-specification:Monospace"><tspan x="67.314194" y="62.738293" id="tspan3313" style="font-size:20px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;text-anchor:middle;font-family:Arial;-inkscape-font-specification:Arial Bold">Starting </tspan><tspan x="64.540756" y="87.738297" id="tspan3315" style="font-size:20px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;text-anchor:middle;font-family:Arial;-inkscape-font-specification:Arial Bold">Data</tspan></text>
+    <text x="118.47811" y="104.62877" id="text4956" xml:space="preserve" style="font-size:21.02927971px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#ff0000;fill-opacity:1;stroke:none;font-family:Monospace;-inkscape-font-specification:Monospace"><tspan x="118.47811" y="104.62877" id="tspan4958" style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;fill:#ff0000;font-family:Arial;-inkscape-font-specification:Arial Bold">task_1()</tspan></text>
+    <text x="345.62097" y="104.98591" id="text4956-1" xml:space="preserve" style="font-size:21.02927971px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#ff0000;fill-opacity:1;stroke:none;font-family:Monospace;-inkscape-font-specification:Monospace"><tspan x="345.62097" y="104.98591" id="tspan4958-7" style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;fill:#ff0000;font-family:Arial;-inkscape-font-specification:Arial Bold">task_2()</tspan></text>
+    <text x="575.62097" y="103.03347" id="text4956-2" xml:space="preserve" style="font-size:21.02927971px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#ff0000;fill-opacity:1;stroke:none;font-family:Monospace;-inkscape-font-specification:Monospace"><tspan x="575.62097" y="103.03347" id="tspan4958-3" style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;fill:#ff0000;font-family:Arial;-inkscape-font-specification:Arial Bold">task_3()</tspan></text>
+    <path d="m 110.71429,72.362182 87.14285,0" id="path5080" style="fill:#ff0000;stroke:#ff0000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:url(#Arrow2Mend-1)" />
+    <rect width="131.88234" height="65.306244" x="206.10674" y="39.191959" id="rect3309-6" style="fill:#ffff00;fill-opacity:1;stroke:#ff0000;stroke-width:0.49695465" />
+    <text x="273.11218" y="65.772057" id="text3311-2-2" xml:space="preserve" style="font-size:14px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Monospace;-inkscape-font-specification:Monospace"><tspan x="273.11218" y="65.772057" id="tspan3313-4-2" style="font-size:20px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;text-anchor:middle;font-family:Arial;-inkscape-font-specification:Arial Bold">Intermediate</tspan><tspan x="273.11218" y="90.772057" id="tspan3315-5-1" style="font-size:20px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;text-anchor:middle;font-family:Arial;-inkscape-font-specification:Arial Bold">Data 1</tspan></text>
+    <path d="m 338.57143,72.362177 87.14285,0" id="path5080-9" style="fill:#ff0000;stroke:#ff0000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:url(#Arrow2Mend-1)" />
+    <rect width="131.88234" height="65.306244" x="433.96387" y="39.191959" id="rect3309-6-4" style="fill:#ffff00;fill-opacity:1;stroke:#ff0000;stroke-width:0.49695465" />
+    <text x="500.96933" y="65.772057" id="text3311-2-2-1" xml:space="preserve" style="font-size:14px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Monospace;-inkscape-font-specification:Monospace"><tspan x="500.96933" y="65.772057" id="tspan3313-4-2-1" style="font-size:20px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;text-anchor:middle;font-family:Arial;-inkscape-font-specification:Arial Bold">Intermediate</tspan><tspan x="500.96933" y="90.772057" id="tspan3315-5-1-3" style="font-size:20px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;text-anchor:middle;font-family:Arial;-inkscape-font-specification:Arial Bold">Data 2</tspan></text>
+    <path d="m 566.42857,72.362178 87.14285,0" id="path5080-9-8" style="fill:#ff0000;stroke:#ff0000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:url(#Arrow2Mend-1)" />
+    <flowRoot id="flowRoot5373" xml:space="preserve" style="font-size:14px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Monospace;-inkscape-font-specification:Monospace"><flowRegion id="flowRegion5375"><rect width="56.42857" height="339.28571" x="214.28572" y="123.07647" id="rect5377" /></flowRegion><flowPara id="flowPara5379"></flowPara></flowRoot>    <rect width="74.861671" height="65.428436" x="664.61707" y="39.130863" id="rect3309-6-4-7" style="fill:#ffff00;fill-opacity:1;stroke:#ff0000;stroke-width:0.37476507" />
+    <text x="700.25507" y="65.071579" id="text3311-2-8" xml:space="preserve" style="font-size:14px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Monospace;-inkscape-font-specification:Monospace"><tspan x="700.25507" y="65.071579" id="tspan3315-5-7" style="font-size:20px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;text-anchor:middle;font-family:Arial;-inkscape-font-specification:Arial Bold">Final</tspan><tspan x="700.25507" y="90.071579" id="tspan5078" style="font-size:20px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;text-anchor:middle;font-family:Arial;-inkscape-font-specification:Arial Bold">Result</tspan></text>
+  </g>
+</svg><p>Computational pipelines transform your data in stages until the final result is produced.
+Ruffus automates the plumbing in your pipeline. You supply the python functions which perform the data transformation,
+and tell Ruffus how these pipeline stages or <a class="reference internal" href="../../glossary.html#term-task"><em class="xref std std-term">task</em></a> functions are connected together.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p><strong>The best way to design a pipeline is to:</strong></p>
+<blockquote class="last">
+<div><ul class="simple">
+<li><strong>write down the file names of the data as it flows across your pipeline</strong></li>
+<li><strong>write down the names of functions which transforms the data at each stage of the pipeline.</strong></li>
+</ul>
+</div></blockquote>
+</div>
+<p>By letting <strong>Ruffus</strong> manage your pipeline parameters, you will get the following features
+for free:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>only out-of-date parts of the pipeline will be re-run</li>
+<li>multiple jobs can be run in parallel (on different processors if possible)</li>
+<li>pipeline stages can be chained together automatically</li>
+</ol>
+</div></blockquote>
+</div></blockquote>
+</div>
+<div class="section" id="transform">
+<h2>&#64;transform<a class="headerlink" href="#transform" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>Let us start with the simplest pipeline with a single <em>input</em> data file <strong>transform</strong>ed
+into a single <em>output</em> file. We will add some arbitrary extra parameters as well.</p>
+<p>The <a class="reference internal" href="../../decorators/transform.html#decorators-transform"><em>&#64;transform</em></a> decorator tells Ruffus that this
+task function <strong>transforms</strong> each and every piece of input data into a corresponding output.</p>
+<blockquote>
+<div>In other words, inputs and outputs have a <strong>1 to 1</strong> relationship.</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>In the second part of the tutorial, we will encounter more decorators which can <em>split up</em>, or <em>join together</em> or <em>group</em> inputs.</p>
+<blockquote class="last">
+<div>In other words, inputs and output can have <strong>many to one</strong>, <strong>many to many</strong> etc. relationships.</div></blockquote>
+</div>
+<p>Let us provide <strong>input</strong>s and <strong>output</strong>s to our new pipeline:</p>
+<blockquote>
+<div><svg version="1.0" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0" y="0"
+    width="385pt"
+    height="210pt"
+    viewBox="0 0 385 210">
+        <defs id="defs3568">
+    <marker refX="0" refY="0" orient="auto" id="Arrow2Mend" style="overflow:visible">
+      <path d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z" transform="scale(-0.6,-0.6)" id="path4497" style="fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round" />
+    </marker>
+    <marker refX="0" refY="0" orient="auto" id="Arrow1Lend" style="overflow:visible">
+      <path d="M 0,0 5,-5 -12.5,0 5,5 0,0 z" transform="matrix(-0.8,0,0,-0.8,-10,0)" id="path4473" style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt" />
+    </marker>
+    <marker refX="0" refY="0" orient="auto" id="TriangleOutL" style="overflow:visible">
+      <path d="m 5.77,0 -8.65,5 0,-10 8.65,5 z" transform="scale(0.8,0.8)" id="path4612" style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt" />
+    </marker>
+    <marker refX="0" refY="0" orient="auto" id="Arrow2Send" style="overflow:visible">
+      <path d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z" transform="matrix(-0.3,0,0,-0.3,0.69,0)" id="path4503" style="fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round" />
+    </marker>
+    <marker refX="0" refY="0" orient="auto" id="Arrow1Mend" style="overflow:visible">
+      <path d="M 0,0 5,-5 -12.5,0 5,5 0,0 z" transform="matrix(-0.4,0,0,-0.4,-4,0)" id="path4479" style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt" />
+    </marker>
+    <marker refX="0" refY="0" orient="auto" id="Arrow2Lend" style="overflow:visible">
+      <path d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z" transform="matrix(-1.1,0,0,-1.1,-1.1,0)" id="path4491" style="fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round" />
+    </marker>
+  </defs>
+  <g transform="matrix(1.0077068,0,0,1,9.8598546,3.6099157)" id="g3519">
+    <rect width="359.146" height="174.006" x="6.244" y="27.667" id="rect3521" style="fill:none;stroke:#016735;stroke-width:0.25;stroke-miterlimit:10" />
+    <rect width="364.86499" height="174.006" x="3.385" y="27.667" id="rect3523" style="fill:#eeffcc" />
+  </g>
+  <path d="m 84.221497,82.954914 c 0,3.583 -3.942,6.488 -8.804,6.488 h -49.481 c -4.862,0 -8.803999,-2.905 -8.803999,-6.488 l 0,0 c 0,-3.582998 3.941999,-6.487998 8.803999,-6.487998 h 49.481 c 4.862,0 8.804,2.905 8.804,6.487998 l 0,0 z" id="path3641" style="opacity:0.2;fill:#ed1c24" />
+  <path d="m 190.77333,82.954914 c 0,3.583 -6.09517,6.488 -13.61411,6.488 h -76.51461 c -7.518948,0 -13.614113,-2.905 -13.614113,-6.488 l 0,0 c 0,-3.582998 6.095165,-6.487998 13.614113,-6.487998 h 76.51322 c 7.51894,0 13.6155,2.905 13.6155,6.487998 l 0,0 z" id="path3671" style="opacity:0.2;fill:#00a14b" />
+  <path d="m 368.12884,82.954914 c 0,3.583 -3.66127,6.488 -8.17701,6.488 h -45.95795 c -4.5166,0 -8.17787,-2.905 -8.17787,-6.488 l 0,0 c 0,-3.582998 3.66127,-6.487998 8.17787,-6.487998 h 45.95795 c 4.51574,0 8.17701,2.905 8.17701,6.487998 l 0,0 z" id="path3687" style="opacity:0.2;fill:#00a14b" />
+  <path d="m 300.38251,97.842914 c 0,3.406006 -2.537,6.167006 -5.667,6.167006 H 90.049497 c -3.129,0 -5.667,-2.761 -5.667,-6.167006 l 0,0 c 0,-3.406 2.537,-6.167 5.667,-6.167 H 294.71651 c 3.129,10e-4 5.666,2.762 5.666,6.167 l 0,0 z" id="path3689" style="opacity:0.2;fill:#00a14b" />
+  <text x="22.156881" y="58.294636" transform="scale(1.0042467,0.99577126)" id="text3295" xml:space="preserve" style="font-size:9.89657974px;font-family:monospace" />
+  <text x="22.156881" y="138.88107" transform="scale(1.0042467,0.99577126)" id="text3317" xml:space="preserve" style="font-size:9.89657974px;font-family:monospace" />
+  <text x="22.156881" y="179.17427" transform="scale(1.0042467,0.99577126)" id="text3327" xml:space="preserve" style="font-size:9.89657974px;font-family:monospace" />
+  <text x="22.156881" y="206.03641" transform="scale(1.0042467,0.99577126)" id="text3331" xml:space="preserve" style="font-size:9.89657974px;font-family:monospace" />
+  <text x="22.156881" y="54.504337" transform="scale(1.0042467,0.99577126)" id="text3285-5" xml:space="preserve" style="font-size:9.89657974px;font-family:monospace" />
+  <g transform="matrix(1,0,0,1.442061,16.381543,-1.5326283)" id="g3645">
+    <line x1="125.896" y1="53.333" x2="125.896" y2="15.667" id="line3647" style="fill:#00ff00" />
+    <g id="g3649">
+      <line stroke-miterlimit="10" x1="125.896" y1="49.028" x2="125.896" y2="15.667" id="line3651" style="fill:none;stroke:#00a651;stroke-miterlimit:10" />
+      <g id="g3653">
+        <polygon points="128.888,48.153 125.897,53.333 122.905,48.153 " id="polygon3655" style="fill:#00a651" />
+      </g>
+    </g>
+  </g>
+  <g transform="matrix(1,0,0,1.3096241,27.941781,-1.0861523)" id="g3659">
+    <line x1="267.23001" y1="70.667" x2="267.23001" y2="15.667" id="line3661" style="fill:#00ff00" />
+    <g id="g3663">
+      <line stroke-miterlimit="10" x1="267.23001" y1="66.361" x2="267.23001" y2="15.667" id="line3665" style="fill:none;stroke:#00a651;stroke-miterlimit:10" />
+      <g id="g3667">
+        <polygon points="270.222,65.486 267.23,70.667 264.238,65.486 " id="polygon3669" style="fill:#00a651" />
+      </g>
+    </g>
+  </g>
+  <g transform="matrix(1,0,0,1.4502473,19.50593,-3.2189853)" id="g3675">
+    <line x1="313.56299" y1="53.333" x2="313.56299" y2="15.667" id="line3677" style="fill:#00ff00" />
+    <g id="g3679">
+      <line stroke-miterlimit="10" x1="313.56299" y1="49.028" x2="313.56299" y2="15.667" id="line3681" style="fill:none;stroke:#00a651;stroke-miterlimit:10" />
+      <g id="g3683">
+        <polygon points="316.556,48.153 313.564,53.333 310.572,48.153 " id="polygon3685" style="fill:#00a651" />
+      </g>
+    </g>
+  </g>
+  <text x="4.0742145" y="13.589844" id="text3629" style="font-size:12px;fill:#ff0000;font-family:ArialMT">Decorator</text>
+  <text x="114.1965" y="15.776917" id="text3643" style="font-size:12px;fill:#00a14b;font-family:ArialMT">Inputs</text>
+  <text x="207.08836" y="15.776917" id="text3657" style="font-size:12px;fill:#00a14b;font-family:ArialMT">Extra parameters</text>
+  <text x="313.42374" y="15.776917" id="text3673" style="font-size:12px;fill:#00a14b;font-family:ArialMT">Outputs</text>
+  <text x="22.156881" y="44.86356" transform="scale(1.0042467,0.99577126)" id="text3285" xml:space="preserve" style="font-size:9.89657974px;font-family:monospace"><tspan id="tspan3287" style="font-weight:bold;fill:#008000">from</tspan> <tspan id="tspan3289" style="font-weight:bold;fill:#0e84b5">ruffus</tspan> <tspan id="tspan3291" style="font-weight:bold;fill:#008000">import</tspan> <tspan id="tspan3293" style="fill:#303030">*</tspan></text>
+  <text x="22.156881" y="64.113289" transform="scale(1.0042467,0.99577126)" id="text3329-1" xml:space="preserve" style="font-size:9.89657974px;font-family:monospace">first_task_params = 'job1.input'</text>
+  <text x="22.156881" y="86.186874" transform="scale(1.0042467,0.99577126)" id="text3297" xml:space="preserve" style="font-size:9.89657974px;font-family:monospace"><tspan id="tspan3299" style="font-weight:bold;fill:#505050">@transform</tspan>(first_task_params, <tspan id="tspan3548" style="font-weight:bold;fill:#ff0000">suffix</tspan>(&quot;.input&quot;), &quot;.output1&quot;, </text>
+  <text x="22.156881" y="99.61795" transform="scale(1.0042467,0.99577126)" id="text3301" xml:space="preserve" style="font-size:9.89657974px;font-family:monospace">           &quot;some_extra.string.for_example&quot;, <tspan id="tspan3303" style="font-weight:bold;fill:#0000d0">14</tspan>)</text>
+  <text x="22.156881" y="113.04904" transform="scale(1.0042467,0.99577126)" id="text3305" xml:space="preserve" style="font-size:9.89657974px;font-family:monospace"><tspan id="tspan3307" style="font-weight:bold;fill:#008000">def</tspan> <tspan id="tspan3309" style="font-weight:bold;fill:#0060b0">first_task</tspan>(input_file, output_file,</text>
+  <text x="22.156881" y="126.48013" transform="scale(1.0042467,0.99577126)" id="text3311" xml:space="preserve" style="font-size:9.89657974px;font-family:monospace">               extra_parameter_str, extra_parameter_num):</text>
+  <text x="22.156881" y="139.91115" transform="scale(1.0042467,0.99577126)" id="text3313" xml:space="preserve" style="font-size:9.89657974px;font-family:monospace">    <tspan id="tspan3315" style="font-weight:bold;fill:#008000">pass</tspan></text>
+  <text x="22.156881" y="166.77328" transform="scale(1.0042467,0.99577126)" id="text3319" xml:space="preserve" style="font-size:9.89657974px;font-family:monospace"><tspan id="tspan3321" style="fill:#808080">#   make sure the input file is there</tspan></text>
+  <text x="22.156881" y="180.20436" transform="scale(1.0042467,0.99577126)" id="text3323" xml:space="preserve" style="font-size:9.89657974px;font-family:monospace"><tspan id="tspan3325" style="fill:#007020">open</tspan>('job1.input', &quot;w&quot;)</text>
+  <text x="22.156881" y="199.1844" transform="scale(1.0042467,0.99577126)" id="text3329" xml:space="preserve" style="font-size:9.89657974px;font-family:monospace">pipeline_run([first_task])</text>
+  <path d="m 11.798134,17.75418 0,40.879392 11.506636,16.489166" id="path3696" style="fill:none;stroke:#ff0000;stroke-width:1.25536001;stroke-linecap:butt;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:url(#Arrow2Mend)" />
+</svg><p>The <tt class="docutils literal"><span class="pre">&#64;transform</span></tt> decorator tells Ruffus to generate the appropriate arguments for our python function:</p>
+<blockquote>
+<div><ul class="simple">
+<li>The input file name is as given: <tt class="docutils literal"><span class="pre">job1.input</span></tt></li>
+<li>The output file name is the input file name with its <strong>suffix</strong> of <tt class="docutils literal"><span class="pre">.input</span></tt> replaced with <tt class="docutils literal"><span class="pre">.output1</span></tt></li>
+<li>There are two extra parameters, a string and a number.</li>
+</ul>
+</div></blockquote>
+<p>This is exactly equivalent to the following function call:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="n">first_task</span><span class="p">(</span><span class="s">&#39;job1.input&#39;</span><span class="p">,</span> <span class="s">&#39;job1.output1&#39;</span><span class="p">,</span> <span class="s">&quot;some_extra.string.for_example&quot;</span><span class="p">,</span> <span class="mi">14</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Even though this (empty) function doesn&#8217;t do anything just yet, the output from <strong>Ruffus</strong> <tt class="docutils literal"><span class="pre">pipeline_run</span></tt> will show that that this part of the pipeline completed successfully:</p>
+<blockquote>
+<div><svg version="1.0" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0" y="0" width="374.86499pt" height="92.02504pt" viewBox="0 0 374.86498 92.025041">
+    <rect width="359.146" height="58.154449" x="7.8589935" y="28.798326" id="rect3521" style="fill:none;stroke:#016735;stroke-width:0.14452712;stroke-miterlimit:10" /><rect width="364.86499" height="58.154449" x="4.9999938" y="28.798326" id="rect3523" style="fill:#eeffcc" />
+    <g transform="matrix(1,0,0,0.72872639,-16.352384,4.6212592)" id="g3645">
+        <line x1="125.896" y1="53.333" x2="125.896" y2="15.667" id="line3647" style="fill:#00ff00" />
+        <g id="g3649">
+            <line stroke-miterlimit="10" x1="125.896" y1="49.028" x2="125.896" y2="15.667" id="line3651" style="fill:none;stroke:#00a651;stroke-miterlimit:10" />
+            <g id="g3653">
+                <polygon points="128.888,48.153 125.897,53.333 122.905,48.153 " id="polygon3655" style="fill:#00a651" />
+            </g>
+        </g>
+    </g>
+    <g transform="matrix(1,0,0,0.73146564,-0.38500643,4.5843285)" id="g3659">
+        <line x1="267.23001" y1="70.667" x2="267.23001" y2="15.667" id="line3661" style="fill:#00ff00" />
+        <g id="g3663">
+            <line stroke-miterlimit="10" x1="267.23001" y1="66.361" x2="267.23001" y2="15.667" id="line3665" style="fill:none;stroke:#00a651;stroke-miterlimit:10" />
+            <g id="g3667">
+                <polygon points="267.23,70.667 264.238,65.486 270.222,65.486 " id="polygon3669" style="fill:#00a651" />
+            </g>
+        </g>
+    </g>
+    <path d="m 153.04485,51.262472 c 0,3.583 -4.15868,6.488 -9.28879,6.488 H 91.550787 c -5.130114,0 -9.288794,-2.905 -9.288794,-6.488 l 0,0 c 0,-3.583 4.15868,-6.488 9.288794,-6.488 h 52.204323 c 5.13012,0 9.28974,2.905 9.28974,6.488 l 0,0 z" id="path3671" style="opacity:0.2;fill:#00a14b" />
+    <g transform="matrix(1,0,0,0.72872639,-103.64072,4.6212592)" id="g3675">
+        <line x1="313.56299" y1="53.333" x2="313.56299" y2="15.667" id="line3677" style="fill:#00ff00" />
+        <g id="g3679">
+            <line stroke-miterlimit="10" x1="313.56299" y1="49.028" x2="313.56299" y2="15.667" id="line3681" style="fill:none;stroke:#00a651;stroke-miterlimit:10" />
+            <g id="g3683">
+                <polygon points="316.556,48.153 313.564,53.333 310.572,48.153 " id="polygon3685" style="fill:#00a651" />
+            </g>
+        </g>
+    </g>
+    <path d="m 250.58388,51.262472 c 0,3.583 -4.83746,6.488 -10.80388,6.488 h -60.72201 c -5.96757,0 -10.80503,-2.905 -10.80503,-6.488 l 0,0 c 0,-3.583 4.83746,-6.488 10.80503,-6.488 H 239.78 c 5.96642,0 10.80388,2.905 10.80388,6.488 l 0,0 z" id="path3687" style="opacity:0.2;fill:#00a14b" />
+    <path d="m 295.61399,65.440811 c 0,3.406 -2.537,6.167 -5.667,6.167 H 85.280993 c -3.129,0 -5.667,-2.761 -5.667,-6.167 l 0,0 c 0,-3.406 2.537,-6.167 5.667,-6.167 H 289.94799 c 3.129,10e-4 5.666,2.762 5.666,6.167 l 0,0 z" id="path3689" style="opacity:0.2;fill:#00a14b" />
+    <text x="92.396126" y="13.742188" id="text3643" style="font-size:12px;fill:#00a14b;font-family:ArialMT">Inputs</text>
+    <text x="193.83928" y="13.742188" id="text3673" style="font-size:12px;fill:#00a14b;font-family:ArialMT">Outputs</text>
+    <text x="256.93237" y="13.742188" id="text3657" style="font-size:12px;fill:#00a14b;font-family:ArialMT">Extra parameters</text>
+    <text x="9.3237839" y="40.037392" id="text3040" xml:space="preserve" style="font-size:10.32079887px;font-family:monospace"><tspan id="tspan3042" style="font-weight:bold;fill:#ff0000">&gt;&gt;&gt;</tspan> pipeline_run([first_task])</text>
+    <text x="9.3237839" y="54.044189" id="text3046" xml:space="preserve" style="font-size:10.32079887px;font-family:monospace">    Job  <tspan id="tspan3048" style="fill:#666666">=</tspan> [job1<tspan id="tspan3050" style="fill:#666666">.</tspan>input <tspan id="tspan3052" style="fill:#666666">-&gt;</tspan> job1<tspan id="tspan3056" style="fill:#666666">.</tspan>output1,</text>
+    <text x="58.633194" y="67.193367" id="text3160" xml:space="preserve" style="font-size:10.32079887px;font-family:monospace">    some_extra.string.for_example, 14] completed</text>
+    <text x="9.3237839" y="82.432899" id="text3058" xml:space="preserve" style="font-size:10.32079887px;font-family:monospace">Completed Task <tspan id="tspan3060" style="fill:#666666">=</tspan> first_task</text>
+    </svg></div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div>
+<div class="section" id="task-functions-as-recipes">
+<h2>Task functions as recipes<a class="headerlink" href="#task-functions-as-recipes" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>This may seem like a lot of effort and complication for something so simple: a normal python function call.
+However, now that we have annotated a task, we can start using it as part of our computational pipeline:</p>
+<p>Each <a class="reference internal" href="../../glossary.html#term-task"><em class="xref std std-term">task</em></a> function of the pipeline is a recipe or
+<a class="reference external" href="http://www.gnu.org/software/make/manual/make.html#Rule-Introduction">rule</a>
+which can be applied repeatedly to our data.</p>
+<p>For example, one can have</p>
+<blockquote>
+<div><ul class="simple">
+<li>a <tt class="docutils literal"><span class="pre">compile()</span></tt> <em>task</em> which will compile any number of source code files, or</li>
+<li>a <tt class="docutils literal"><span class="pre">count_lines()</span></tt> <em>task</em> which will count the number of lines in any file or</li>
+<li>an <tt class="docutils literal"><span class="pre">align_dna()</span></tt> <em>task</em> which will align the DNA of many chromosomes.</li>
+</ul>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p><strong>Key Ruffus Terminology</strong>:</p>
+<p>A  <a class="reference internal" href="../../glossary.html#term-task"><em class="xref std std-term">task</em></a> is an annotated python function which represents a recipe or stage of your pipeline.</p>
+<p>A  <a class="reference internal" href="../../glossary.html#term-job"><em class="xref std std-term">job</em></a> is each time your recipe is applied to a piece of data, i.e. each time Ruffus calls your function.</p>
+<p class="last">Each <strong>task</strong> or pipeline recipe can thus have many <strong>jobs</strong> each of which can work in parallel on different data.</p>
+</div>
+<p>In the original example, we have made a single output file by supplying a single input parameter.
+We shall use much the same syntax to apply the same recipe to <em>multiple</em> input files.
+Instead of providing a single <em>input</em>, and a single <em>output</em>, we are going to specify
+the parameters for <em>three</em> jobs at once:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="c"># previously,</span>
+<span class="c"># first_task_params = &#39;job1.input&#39;</span>
+<span class="n">first_task_params</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s">&#39;job1.input&#39;</span><span class="p">,</span>
+                    <span class="s">&#39;job2.input&#39;</span>
+                    <span class="s">&#39;job3.input&#39;</span>
+                    <span class="p">]</span>
+
+<span class="c"># make sure the input files are there</span>
+<span class="nb">open</span><span class="p">(</span><span class="s">&#39;job1.input&#39;</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span>
+<span class="nb">open</span><span class="p">(</span><span class="s">&#39;job2.input&#39;</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span>
+<span class="nb">open</span><span class="p">(</span><span class="s">&#39;job3.input&#39;</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span>
+
+<span class="n">pipeline_run</span><span class="p">([</span><span class="n">first_task</span><span class="p">])</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Just by changing the inputs from a single file to a list of three files, we now have a pipeline which runs independently on three pieces of data.
+The results should look familiar:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_run</span><span class="p">([</span><span class="n">first_task</span><span class="p">])</span>
+<span class="go">    Job  = [job1.input -&gt; job1.output1,</span>
+<span class="go">            some_extra.string.for_example, 14] completed</span>
+<span class="go">    Job  = [job2.input -&gt; job2.output1,</span>
+<span class="go">            some_extra.string.for_example, 14] completed</span>
+<span class="go">    Job  = [job3.input -&gt; job3.output1,</span>
+<span class="go">            some_extra.string.for_example, 14] completed</span>
+<span class="go">Completed Task = first_task</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div></blockquote>
+</div>
+<div class="section" id="multiple-steps">
+<h2>Multiple steps<a class="headerlink" href="#multiple-steps" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>Best of all, it is easy to add another step to our initial pipeline.</p>
+<p>We have to</p>
+<blockquote>
+<div><ul class="simple">
+<li>add another <tt class="docutils literal"><span class="pre">&#64;transform</span></tt> decorated function (<tt class="docutils literal"><span class="pre">second_task()</span></tt>),</li>
+<li>specify <tt class="docutils literal"><span class="pre">first_task()</span></tt> as the source:</li>
+<li>use a <tt class="docutils literal"><span class="pre">suffix</span></tt> which matches the output from <tt class="docutils literal"><span class="pre">first_task()</span></tt></li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@transform</span><span class="p">(</span><span class="n">first_task</span><span class="p">,</span> <span class="n">suffix</span><span class="p">(</span><span class="s">&quot;.output1&quot;</span><span class="p">),</span> <span class="s">&quot;.output2&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">second_task</span><span class="p">(</span><span class="n">input_file</span><span class="p">,</span> <span class="n">output_file</span><span class="p">):</span>
+    <span class="c"># make output file</span>
+    <span class="nb">open</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>call <tt class="docutils literal"><span class="pre">pipeline_run()</span></tt> with the correct final task (<tt class="docutils literal"><span class="pre">second_task()</span></tt>)</li>
+</ul>
+</div></blockquote>
+<p>The full source code can be found <a class="reference internal" href="step2_code.html#simple-tutorial-2nd-step-code"><em>here</em></a></p>
+<p>With very little effort, we now have three independent pieces of information coursing through our pipeline.
+Because <tt class="docutils literal"><span class="pre">second_task()</span></tt> <em>transforms</em> the output from <tt class="docutils literal"><span class="pre">first_task()</span></tt>, it magically knows its dependencies and
+that it too has to work on three jobs.</p>
+</div></blockquote>
+</div>
+<div class="section" id="multi-tasking">
+<h2>Multi-tasking<a class="headerlink" href="#multi-tasking" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>Though, three jobs have been specified in parallel, <strong>Ruffus</strong> defaults to running
+each of them successively. With modern CPUs, it is often a lot faster to run parts
+of your pipeline in parallel, all at the same time.</p>
+<p>To do this, all you have to do is to add a multiprocess parameter to pipeline_run:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_run</span><span class="p">([</span><span class="n">second_task</span><span class="p">],</span> <span class="n">multiprocess</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>In this case, ruffus will try to run up to 5 jobs at the same time. Since our second
+task only has three jobs, these will be started simultaneously.</p>
+</div></blockquote>
+</div>
+<div class="section" id="up-to-date-jobs-are-not-re-run-unnecessarily">
+<h2>Up-to-date jobs are not re-run unnecessarily<a class="headerlink" href="#up-to-date-jobs-are-not-re-run-unnecessarily" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>A job will be run only if the output file timestamps are out of date.
+If you ran the same code a second time,</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_run</span><span class="p">([</span><span class="n">second_task</span><span class="p">])</span>
+</pre></div>
+</div>
+</div></blockquote>
+<dl class="docutils">
+<dt>Nothing would happen because:</dt>
+<dd><ul class="first last simple">
+<li><tt class="docutils literal"><span class="pre">job1.output2</span></tt> is more recent than <tt class="docutils literal"><span class="pre">job1.output1</span></tt> and</li>
+<li><tt class="docutils literal"><span class="pre">job2.output2</span></tt> is more recent than <tt class="docutils literal"><span class="pre">job2.output1</span></tt> and</li>
+<li><tt class="docutils literal"><span class="pre">job3.output2</span></tt> is more recent than <tt class="docutils literal"><span class="pre">job3.output1</span></tt>.</li>
+</ul>
+</dd>
+<dt>Let us see what happens when just 1 out of 3 pieces of data is modified</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="nb">open</span><span class="p">(</span><span class="s">&quot;job1.input1&quot;</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span>
+<span class="n">pipeline_run</span><span class="p">([</span><span class="n">second_task</span><span class="p">],</span> <span class="n">verbose</span> <span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">multiprocess</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>You would see that only the out of date jobs (highlighted) have been re-run:</p>
+<blockquote>
+<div><div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_run</span><span class="p">([</span><span class="n">second_task</span><span class="p">],</span> <span class="n">verbose</span> <span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">multiprocess</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span>
+<span class="hll"><span class="go">    Job  = [job1.input -&gt; job1.output1, some_extra.string.for_example, 14] completed</span>
+</span><span class="go">    Job  = [job3.input -&gt; job3.output1, some_extra.string.for_example, 14] unnecessary: already up to date</span>
+<span class="go">    Job  = [job2.input -&gt; job2.output1, some_extra.string.for_example, 14] unnecessary: already up to date</span>
+<span class="go">Completed Task = first_task</span>
+<span class="hll"><span class="go">    Job  = [job1.output1 -&gt; job1.output2] completed</span>
+</span><span class="go">    Job  = [job2.output1 -&gt; job2.output2] unnecessary: already up to date</span>
+<span class="go">    Job  = [job3.output1 -&gt; job3.output2] unnecessary: already up to date</span>
+<span class="go">Completed Task = second_task</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div></blockquote>
+</div>
+<div class="section" id="intermediate-files">
+<span id="index-1"></span><h2>Intermediate files<a class="headerlink" href="#intermediate-files" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>In the above examples, the <em>input</em> and <em>output</em> parameters are file names.
+Ruffus was designed for pipelines which save intermediate data in files. This is not
+compulsory but saving your data in files at each step provides a few advantages:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>Ruffus can use file system time stamps to check if your pipeline is up to date</li>
+<li>Your data is persistent across runs</li>
+<li>This is a good way to pass large amounts of data across processes and computational nodes</li>
+</ol>
+</div></blockquote>
+<p>Otherwise, task parameters could be all sorts of data, from lists of files, to numbers,
+sets or tuples. Ruffus imposes few constraints on what <em>you</em>
+would like to send to each stage of your pipeline.</p>
+<p><strong>Ruffus</strong> does, however, assume that all strings in your <em>input</em> and <em>output</em>
+parameters represent file names.</p>
+<p><em>input</em> parameters which contains a <a class="reference external" href="http://docs.python.org/library/glob.html"><cite>glob</cite></a> pattern (e.g. <tt class="docutils literal"><span class="pre">*.txt</span></tt>) are expanded to the matching file names.</p>
+</div></blockquote>
+</div>
+<div class="section" id="transform-is-a-1-to-1-operation">
+<h2>&#64;transform is a 1 to 1 operation<a class="headerlink" href="#transform-is-a-1-to-1-operation" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p><tt class="docutils literal"><span class="pre">&#64;transform</span></tt> is a 1:1 operation because it keeps the number of jobs constant
+entering and leaving the task. Each job can accept, for example, a pair of files as its input,
+or generate more than one output files.</p>
+<dl class="docutils">
+<dt>Let us see this in action using the previous example:</dt>
+<dd><ul class="first">
+<li><p class="first"><tt class="docutils literal"><span class="pre">first_task_params</span></tt> is changed to 3 <em>pairs</em> of file names</p>
+</li>
+<li><dl class="first docutils">
+<dt><tt class="docutils literal"><span class="pre">&#64;transform</span></tt> for <tt class="docutils literal"><span class="pre">first_task</span></tt> is modified to produce <em>pairs</em> of file names</dt>
+<dd><ul class="first last simple">
+<li><tt class="docutils literal"><span class="pre">.output.1</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">.output.extra.1</span></tt></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">ruffus</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c">#---------------------------------------------------------------</span>
+<span class="c">#   Create pairs of input files</span>
+<span class="c">#</span>
+<span class="n">first_task_params</span> <span class="o">=</span> <span class="p">[</span>
+                     <span class="p">[</span><span class="s">&#39;job1.a.input&#39;</span><span class="p">,</span> <span class="s">&#39;job1.b.input&#39;</span><span class="p">],</span>
+                     <span class="p">[</span><span class="s">&#39;job2.a.input&#39;</span><span class="p">,</span> <span class="s">&#39;job2.b.input&#39;</span><span class="p">],</span>
+                     <span class="p">[</span><span class="s">&#39;job3.a.input&#39;</span><span class="p">,</span> <span class="s">&#39;job3.b.input&#39;</span><span class="p">],</span>
+                    <span class="p">]</span>
+
+<span class="k">for</span> <span class="n">input_file_pairs</span> <span class="ow">in</span> <span class="n">first_task_params</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">input_file</span> <span class="ow">in</span> <span class="n">input_file_pairs</span><span class="p">:</span>
+        <span class="nb">open</span><span class="p">(</span><span class="n">input_file</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span>
+
+
+<span class="c">#---------------------------------------------------------------</span>
+<span class="c">#</span>
+<span class="c">#   first task</span>
+<span class="c">#</span>
+<span class="nd">@transform</span><span class="p">(</span><span class="n">first_task_params</span><span class="p">,</span> <span class="n">suffix</span><span class="p">(</span><span class="s">&quot;.input&quot;</span><span class="p">),</span>
+                        <span class="p">[</span><span class="s">&quot;.output.1&quot;</span><span class="p">,</span>
+                         <span class="s">&quot;.output.extra.1&quot;</span><span class="p">],</span>
+                       <span class="s">&quot;some_extra.string.for_example&quot;</span><span class="p">,</span> <span class="mi">14</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">first_task</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="n">output_file_pairs</span><span class="p">,</span>
+                <span class="n">extra_parameter_str</span><span class="p">,</span> <span class="n">extra_parameter_num</span><span class="p">):</span>
+    <span class="c"># make both pairs of output files</span>
+    <span class="k">for</span> <span class="n">output_file</span> <span class="ow">in</span> <span class="n">output_file_pairs</span><span class="p">:</span>
+        <span class="nb">open</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span>
+
+
+<span class="c">#---------------------------------------------------------------</span>
+<span class="c">#</span>
+<span class="c">#   second task</span>
+<span class="c">#</span>
+<span class="nd">@transform</span><span class="p">(</span><span class="n">first_task</span><span class="p">,</span> <span class="n">suffix</span><span class="p">(</span><span class="s">&quot;.output.1&quot;</span><span class="p">),</span> <span class="s">&quot;.output2&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">second_task</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="n">output_file</span><span class="p">):</span>
+    <span class="c"># make output file</span>
+    <span class="nb">open</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span>
+
+<span class="c">#---------------------------------------------------------------</span>
+<span class="c">#</span>
+<span class="c">#       Run</span>
+<span class="c">#</span>
+<span class="n">pipeline_run</span><span class="p">([</span><span class="n">second_task</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>This gives the following results:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_run</span><span class="p">([</span><span class="n">pipeline_task</span><span class="p">])</span>
+</pre></div>
+</div>
+<p class="last">We see that apart from having a file pair where previously there was a single file,
+little else has changed. We still have three pieces of data going through the
+pipeline in three parallel jobs.</p>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../contents.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Step 2: <tt class="docutils literal"><span class="pre">&#64;transform</span></tt>-ing data in a pipeline</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#transform">&#64;transform</a></li>
+<li><a class="reference internal" href="#task-functions-as-recipes">Task functions as recipes</a></li>
+<li><a class="reference internal" href="#multiple-steps">Multiple steps</a></li>
+<li><a class="reference internal" href="#multi-tasking">Multi-tasking</a></li>
+<li><a class="reference internal" href="#up-to-date-jobs-are-not-re-run-unnecessarily">Up-to-date jobs are not re-run unnecessarily</a></li>
+<li><a class="reference internal" href="#intermediate-files">Intermediate files</a></li>
+<li><a class="reference internal" href="#transform-is-a-1-to-1-operation">&#64;transform is a 1 to 1 operation</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="step1_follows.html"
+                        title="previous chapter">Step 1: An introduction to Ruffus pipelines</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="step3_run_pipeline.html"
+                        title="next chapter">Step 3: Understanding how your pipeline works</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/tutorials/simple_tutorial/step2.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+    
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+    <h3> Quick Reference:</h3>
+    <ul>
+        <h4><a href="../../decorators/decorators.html#core">Core:</a></h4>   
+        <ul>
+            <li><a href="../../decorators/originate.html">@originate</a>                           </li>
+            <li><a href="../../decorators/split.html">@split</a>                                   </li>
+            <li><a href="../../decorators/transform.html">@transform</a>                           </li>
+            <li><a href="../../decorators/merge.html">@merge</a>                                   </li>
+        </ul>
+
+        <h4><a href="../../decorators/decorators.html#advanced">Advanced</a></h4>   
+        <ul>
+            <li><a href="../../decorators/subdivide.html">@subdivide</a>                           </li>
+            <li><a href="../../decorators/transform_ex.html">@transform (add_inputs) </a>          </li>
+            <li><a href="../../decorators/collate.html">@collate</a>                               </li>
+            <li><a href="../../decorators/collate_ex.html">@collate (add_inputs)</a>               </li>
+            <li><a href="../../decorators/graphviz.html">@graphviz</a>                             </li>
+            <li><a href="../../decorators/mkdir.html">@mkdir</a>                                   </li>
+            <li><a href="../../decorators/follows.html">@follows / mkdir</a>                       </li>
+            <li><a href="../../decorators/posttask.html">@posttask touch_file</a>                  </li>
+            <li><a href="../../decorators/active_if.html">@active_if</a>                           </li>
+            <li><a href="../../decorators/jobs_limit.html">@jobs_limit</a>                         </li>
+        </ul>
+    
+        <h4><a href="../../decorators/decorators.html#combinatorics">Combinatorial:</a></h4>   
+        <ul>
+            <li><a href="../../decorators/product.html">@product </a>                              </li>
+            <li><a href="../../decorators/permutations.html">@permutations </a>                    </li>
+            <li><a href="../../decorators/combinations.html">@combinations </a>                    </li>
+            <li><a href="../../decorators/combinations_with_replacement.html">@combinations_ _with_replacement </a>                    </li>
+        </ul>
+
+                        
+        <h4><a href="../../decorators/decorators.html#esoteric">Esoteric</a></h4>   
+        <ul>
+            <li><a href="../../decorators/files_ex.html">@files (on the fly)</a>                   </li>
+            <li><a href="../../decorators/parallel.html">@parallel</a>                             </li>
+            <li><a href="../../decorators/check_if_uptodate.html">@check_if_uptodate</a>           </li>
+        </ul>
+
+
+        <h4 ><a href="../../decorators/indicator_objects.html">Indicator objects</a></h4>
+        <h4 >Pipeline functions</h4>
+        <ul>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-run">pipeline_run</a>                       </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-printout">pipeline_printout</a>                      </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-printout-graph">pipeline_printout_graph</a>          </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-get-task-names">pipeline_get_task_names</a>          </li>
+            <li><a href="../../drmaa_wrapper_functions.html#drmaa-wrapper-functions-drmaa_wrapper-run_job">drmaa_wrapper.run_job</a>          </li>
+        </ul>
+
+         <a href="../../todo.html">Future plans</a>
+    </ul>
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="step3_run_pipeline.html" title="Step 3: Understanding how your pipeline works"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="step1_follows.html" title="Step 1: An introduction to Ruffus pipelines"
+             >previous</a> |</li>
+        Ruffus v. 2.5
+            <li><a href="../../index.html">Home</a> | </li>
+            <li><a href="../../contents.html">Contents</a> | </li>
+            <li><a href="../../installation.html">Install</a>  | </li>
+            <li><a href="../new_tutorial/introduction.html">Manual</a>  / </li>
+            <li><a href="../new_tutorial/manual_contents.html">(TOC)</a>  | </li>
+            <li><a href="../../faq.html">FAQ</a>  | </li>
+            <li><a href="../../cheatsheet.html">Cheat sheet</a> | </li>
+            <li><a href="../new_tutorial/command_line.html">Command Line</a> | </li>
+            <li><a href="../../gallery.html">Gallery</a> |  </li>
+            <li><a href="../../history.html">Latest Changes</a> &raquo; </li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2009-2013 Leo Goodstadt.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

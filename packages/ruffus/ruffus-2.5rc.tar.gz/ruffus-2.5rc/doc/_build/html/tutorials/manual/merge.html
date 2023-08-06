@@ -1,0 +1,291 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Chapter 9: Merge multiple input into a single result &mdash; ruffus 2.5 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/ruffus.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.5',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="ruffus 2.5 documentation" href="../../index.html" />
+    <link rel="next" title="Chapter 10: Signal the completion of each stage of our pipeline with @posttask" href="posttask.html" />
+    <link rel="prev" title="Chapter 8: Applying the same recipe to create many different files with @transform" href="transform.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="posttask.html" title="Chapter 10: Signal the completion of each stage of our pipeline with @posttask"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="transform.html" title="Chapter 8: Applying the same recipe to create many different files with @transform"
+             accesskey="P">previous</a> |</li>
+        Ruffus v. 2.5
+            <li><a href="../../index.html">Home</a> | </li>
+            <li><a href="../../contents.html">Contents</a> | </li>
+            <li><a href="../../installation.html">Install</a>  | </li>
+            <li><a href="../new_tutorial/introduction.html">Manual</a>  / </li>
+            <li><a href="../new_tutorial/manual_contents.html">(TOC)</a>  | </li>
+            <li><a href="../../faq.html">FAQ</a>  | </li>
+            <li><a href="../../cheatsheet.html">Cheat sheet</a> | </li>
+            <li><a href="../new_tutorial/command_line.html">Command Line</a> | </li>
+            <li><a href="../../gallery.html">Gallery</a> |  </li>
+            <li><a href="../../history.html">Latest Changes</a> &raquo; </li>
+ 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="manual-merge-chapter-num-merge-multiple-input-into-a-single-result">
+<span id="manual-merge"></span><h1><strong>Chapter  9</strong>: <strong>Merge</strong> <cite>multiple input into a single result</cite><a class="headerlink" href="#manual-merge-chapter-num-merge-multiple-input-into-a-single-result" title="Permalink to this headline">¶</a></h1>
+<blockquote>
+<div><table class="hlist"><tr><td><ul class="simple">
+<li><a class="reference internal" href="manual_contents.html#manual"><em>Manual overview</em></a></li>
+</ul>
+</td><td><ul class="simple">
+<li><a class="reference internal" href="../../decorators/merge.html#decorators-merge"><em>&#64;merge</em></a> syntax in detail</li>
+</ul>
+</td></tr></table>
+<p>At the conclusion of our pipeline, or at key selected points, we might need a
+summary of our progress, gathering data from a multitude of files or disparate <em>inputs</em>,
+and summarised in the <em>output</em>  of a single <a class="reference internal" href="../../glossary.html#term-job"><em class="xref std std-term">job</em></a>.</p>
+<p><em>Ruffus</em> uses the <a class="reference internal" href="../../decorators/merge.html#decorators-merge"><em>&#64;merge</em></a> decorator for this purpose.</p>
+<p>Although, <strong>&#64;merge</strong> tasks multiple <em>inputs</em> and produces a single <em>output</em>, <strong>Ruffus</strong>
+is again agnostic as to the sort of data contained within <em>output</em>. It can be a single
+(string) file name, or an arbitrary complicated nested structure with numbers, objects etc.
+As always, strings contained (even with nested sequences) within <em>output</em> will be treated
+as file names for the purpose of checking if the <a class="reference internal" href="../../glossary.html#term-task"><em class="xref std std-term">task</em></a> is up-to-date.</p>
+</div></blockquote>
+<div class="section" id="merge">
+<span id="index-0"></span><h2><strong>&#64;merge</strong><a class="headerlink" href="#merge" title="Permalink to this headline">¶</a></h2>
+<p>This example is borrowed from <a class="reference internal" href="../simple_tutorial/step6_transform.html#simple-tutorial-6th-step"><em>step 6</em></a> of the simple tutorial.</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><a class="reference internal" href="../simple_tutorial/step6_transform_code.html#simple-tutorial-6th-step-code"><em>Accompanying Python Code</em></a></p>
+</div>
+</div></blockquote>
+<div class="section" id="combining-partial-solutions-calculating-variances">
+<h3>Combining partial solutions: Calculating variances<a class="headerlink" href="#combining-partial-solutions-calculating-variances" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><table border="1" class="borderless docutils">
+<colgroup>
+<col width="1%" />
+<col width="99%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><p class="first centered">
+<strong>Step 6 from:</strong></p><img alt="../../_images/simple_tutorial_step5_sans_key.png" class="last" src="../../_images/simple_tutorial_step5_sans_key.png" />
+</td>
+<td><blockquote class="first last">
+<div><p>We wanted to calculate the sample variance of a large list of random numbers. We
+have seen previously how we can split up this large problem into small pieces
+(using <a class="reference internal" href="split.html#manual-split"><em>&#64;split</em></a> in <strong>Chapter  7</strong>), and work out the
+partial solutions for each sub-problem (calculating sums with <a class="reference internal" href="transform.html#manual-transform"><em>&#64;transform</em></a>
+in <strong>Chapter  8</strong> ).</p>
+<p>All that remains is to join up the partial solutions from the different <tt class="docutils literal"><span class="pre">.sums</span></tt> files
+and turn these into the variance as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">variance</span> <span class="o">=</span> <span class="p">(</span><span class="n">sum_squared</span> <span class="o">-</span> <span class="nb">sum</span> <span class="o">*</span> <span class="nb">sum</span> <span class="o">/</span> <span class="n">N</span><span class="p">)</span><span class="o">/</span><span class="n">N</span>
+</pre></div>
+</div>
+<p>where <tt class="docutils literal"><span class="pre">N</span></tt> is the number of values</p>
+<p>See the <a class="reference external" href="http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance">wikipedia</a> entry for a discussion of
+why this is a very naive approach!</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p>To do this, all we have to do is go through all the values in <tt class="docutils literal"><span class="pre">*.sums</span></tt>, i.e.
+add up the <tt class="docutils literal"><span class="pre">sums</span></tt> and <tt class="docutils literal"><span class="pre">sum_squared</span></tt> for each chunk. We can then apply the above (naive) formula.</p>
+<dl class="docutils">
+<dt>Merging files is straightforward in <strong>Ruffus</strong>:</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="nd">@merge</span><span class="p">(</span><span class="n">step_5_calculate_sum_of_squares</span><span class="p">,</span> <span class="s">&quot;variance.result&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">step_6_calculate_variance</span> <span class="p">(</span><span class="n">input_file_names</span><span class="p">,</span> <span class="n">output_file_name</span><span class="p">):</span>
+    <span class="c">#</span>
+    <span class="c">#   add together sums and sums of squares from each input_file_name</span>
+    <span class="c">#       calculate variance and write to output_file_name</span>
+    <span class="s">&quot;&quot;</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>The <a class="reference internal" href="../../decorators/merge.html#decorators-merge"><em>&#64;merge</em></a> decorator tells <em>Ruffus</em> to take all the files from the step 5 task (i.e. <tt class="docutils literal"><span class="pre">*.sums</span></tt>),
+and produced a merge file in the form of <tt class="docutils literal"><span class="pre">variance.result</span></tt>.</p>
+<dl class="docutils">
+<dt>Thus if <tt class="docutils literal"><span class="pre">step_5_calculate_sum_of_squares</span></tt> created</dt>
+<dd><div class="first last line-block">
+<div class="line"><tt class="docutils literal"><span class="pre">1.sums</span></tt> and</div>
+<div class="line"><tt class="docutils literal"><span class="pre">2.sums</span></tt> etc.</div>
+</div>
+</dd>
+</dl>
+<p>This would result in the following function call:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="n">step_6_calculate_variance</span> <span class="p">([</span><span class="s">&quot;1.sums&quot;</span><span class="p">,</span> <span class="s">&quot;2.sums&quot;</span><span class="p">],</span> <span class="s">&quot;variance.result&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>The final result is, of course, in <tt class="docutils literal"><span class="pre">variance.result</span></tt>.</p>
+</div></blockquote>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../contents.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#"><strong>Chapter  9</strong>: <strong>Merge</strong> <cite>multiple input into a single result</cite></a><ul>
+<li><a class="reference internal" href="#merge"><strong>&#64;merge</strong></a><ul>
+<li><a class="reference internal" href="#combining-partial-solutions-calculating-variances">Combining partial solutions: Calculating variances</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="transform.html"
+                        title="previous chapter"><strong>Chapter  8</strong>: <cite>Applying the same recipe to create many different files with</cite> <strong>&#64;transform</strong></a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="posttask.html"
+                        title="next chapter"><strong>Chapter 10</strong>: <cite>Signal the completion of each stage of our pipeline with</cite> <strong>&#64;posttask</strong></a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/tutorials/manual/merge.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+    
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+    <h3> Quick Reference:</h3>
+    <ul>
+        <h4><a href="../../decorators/decorators.html#core">Core:</a></h4>   
+        <ul>
+            <li><a href="../../decorators/originate.html">@originate</a>                           </li>
+            <li><a href="../../decorators/split.html">@split</a>                                   </li>
+            <li><a href="../../decorators/transform.html">@transform</a>                           </li>
+            <li><a href="../../decorators/merge.html">@merge</a>                                   </li>
+        </ul>
+
+        <h4><a href="../../decorators/decorators.html#advanced">Advanced</a></h4>   
+        <ul>
+            <li><a href="../../decorators/subdivide.html">@subdivide</a>                           </li>
+            <li><a href="../../decorators/transform_ex.html">@transform (add_inputs) </a>          </li>
+            <li><a href="../../decorators/collate.html">@collate</a>                               </li>
+            <li><a href="../../decorators/collate_ex.html">@collate (add_inputs)</a>               </li>
+            <li><a href="../../decorators/graphviz.html">@graphviz</a>                             </li>
+            <li><a href="../../decorators/mkdir.html">@mkdir</a>                                   </li>
+            <li><a href="../../decorators/follows.html">@follows / mkdir</a>                       </li>
+            <li><a href="../../decorators/posttask.html">@posttask touch_file</a>                  </li>
+            <li><a href="../../decorators/active_if.html">@active_if</a>                           </li>
+            <li><a href="../../decorators/jobs_limit.html">@jobs_limit</a>                         </li>
+        </ul>
+    
+        <h4><a href="../../decorators/decorators.html#combinatorics">Combinatorial:</a></h4>   
+        <ul>
+            <li><a href="../../decorators/product.html">@product </a>                              </li>
+            <li><a href="../../decorators/permutations.html">@permutations </a>                    </li>
+            <li><a href="../../decorators/combinations.html">@combinations </a>                    </li>
+            <li><a href="../../decorators/combinations_with_replacement.html">@combinations_ _with_replacement </a>                    </li>
+        </ul>
+
+                        
+        <h4><a href="../../decorators/decorators.html#esoteric">Esoteric</a></h4>   
+        <ul>
+            <li><a href="../../decorators/files_ex.html">@files (on the fly)</a>                   </li>
+            <li><a href="../../decorators/parallel.html">@parallel</a>                             </li>
+            <li><a href="../../decorators/check_if_uptodate.html">@check_if_uptodate</a>           </li>
+        </ul>
+
+
+        <h4 ><a href="../../decorators/indicator_objects.html">Indicator objects</a></h4>
+        <h4 >Pipeline functions</h4>
+        <ul>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-run">pipeline_run</a>                       </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-printout">pipeline_printout</a>                      </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-printout-graph">pipeline_printout_graph</a>          </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-get-task-names">pipeline_get_task_names</a>          </li>
+            <li><a href="../../drmaa_wrapper_functions.html#drmaa-wrapper-functions-drmaa_wrapper-run_job">drmaa_wrapper.run_job</a>          </li>
+        </ul>
+
+         <a href="../../todo.html">Future plans</a>
+    </ul>
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="posttask.html" title="Chapter 10: Signal the completion of each stage of our pipeline with @posttask"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="transform.html" title="Chapter 8: Applying the same recipe to create many different files with @transform"
+             >previous</a> |</li>
+        Ruffus v. 2.5
+            <li><a href="../../index.html">Home</a> | </li>
+            <li><a href="../../contents.html">Contents</a> | </li>
+            <li><a href="../../installation.html">Install</a>  | </li>
+            <li><a href="../new_tutorial/introduction.html">Manual</a>  / </li>
+            <li><a href="../new_tutorial/manual_contents.html">(TOC)</a>  | </li>
+            <li><a href="../../faq.html">FAQ</a>  | </li>
+            <li><a href="../../cheatsheet.html">Cheat sheet</a> | </li>
+            <li><a href="../new_tutorial/command_line.html">Command Line</a> | </li>
+            <li><a href="../../gallery.html">Gallery</a> |  </li>
+            <li><a href="../../history.html">Latest Changes</a> &raquo; </li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2009-2013 Leo Goodstadt.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

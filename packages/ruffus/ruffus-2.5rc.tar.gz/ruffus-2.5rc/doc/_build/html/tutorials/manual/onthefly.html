@@ -1,0 +1,324 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Chapter 13: Generating parameters on the fly with @files &mdash; ruffus 2.5 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/ruffus.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.5',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="ruffus 2.5 documentation" href="../../index.html" />
+    <link rel="next" title="Chapter 14: @collate: group together disparate input into sets of results" href="collate.html" />
+    <link rel="prev" title="Chapter 12: Checking dependencies to run tasks in order" href="dependencies.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="collate.html" title="Chapter 14: @collate: group together disparate input into sets of results"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="dependencies.html" title="Chapter 12: Checking dependencies to run tasks in order"
+             accesskey="P">previous</a> |</li>
+        Ruffus v. 2.5
+            <li><a href="../../index.html">Home</a> | </li>
+            <li><a href="../../contents.html">Contents</a> | </li>
+            <li><a href="../../installation.html">Install</a>  | </li>
+            <li><a href="../new_tutorial/introduction.html">Manual</a>  / </li>
+            <li><a href="../new_tutorial/manual_contents.html">(TOC)</a>  | </li>
+            <li><a href="../../faq.html">FAQ</a>  | </li>
+            <li><a href="../../cheatsheet.html">Cheat sheet</a> | </li>
+            <li><a href="../new_tutorial/command_line.html">Command Line</a> | </li>
+            <li><a href="../../gallery.html">Gallery</a> |  </li>
+            <li><a href="../../history.html">Latest Changes</a> &raquo; </li>
+ 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="manual-on-the-fly-chapter-num-generating-parameters-on-the-fly-with-files">
+<span id="manual-on-the-fly"></span><h1><strong>Chapter 13</strong>: <cite>Generating parameters on the fly with</cite> <strong>&#64;files</strong><a class="headerlink" href="#manual-on-the-fly-chapter-num-generating-parameters-on-the-fly-with-files" title="Permalink to this headline">¶</a></h1>
+<blockquote>
+<div><table class="hlist"><tr><td><ul class="simple">
+<li><a class="reference internal" href="manual_contents.html#manual"><em>Manual overview</em></a></li>
+</ul>
+</td><td><ul class="simple">
+<li><a class="reference internal" href="../../decorators/files_ex.html#decorators-files-on-the-fly"><em>&#64;files on-the-fly syntax in detail</em></a></li>
+</ul>
+</td></tr></table>
+<div class="line-block">
+<div class="line">Sometimes, it is necessary, or perhaps more convenient, to generate parameters on the fly or
+at runtime.</div>
+<div class="line">This  powerful ability to generate the exact parameters you need is
+sometimes worth the slight increase in complexity.</div>
+</div>
+</div></blockquote>
+<div class="section" id="files">
+<span id="index-0"></span><h2><strong>&#64;files</strong><a class="headerlink" href="#files" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>To generate parameters on the fly, pass the decorator <strong>files</strong> with a <a class="reference internal" href="../../glossary.html#term-generator"><em class="xref std std-term">generator</em></a> function which
+yields one list / tuple of parameters per job. For example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">ruffus</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">def</span> <span class="nf">generate_parameters_on_the_fly</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    returns one list of parameters per job</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">parameters</span> <span class="o">=</span> <span class="p">[</span>
+                        <span class="p">[</span><span class="s">&#39;A.input&#39;</span><span class="p">,</span> <span class="s">&#39;A.output&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)],</span> <span class="c"># 1st job</span>
+                        <span class="p">[</span><span class="s">&#39;B.input&#39;</span><span class="p">,</span> <span class="s">&#39;B.output&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)],</span> <span class="c"># 2nd job</span>
+                        <span class="p">[</span><span class="s">&#39;C.input&#39;</span><span class="p">,</span> <span class="s">&#39;C.output&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">)],</span> <span class="c"># 3rd job</span>
+                    <span class="p">]</span>
+    <span class="k">for</span> <span class="n">job_parameters</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">job_parameters</span>
+
+<span class="nd">@files</span><span class="p">(</span><span class="n">generate_parameters_on_the_fly</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">pipeline_task</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">extra</span><span class="p">):</span>
+    <span class="nb">open</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%d</span><span class="s"> + </span><span class="si">%d</span><span class="s"> =&gt; </span><span class="si">%d</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">extra</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">,</span> <span class="n">extra</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">extra</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">extra</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+
+<span class="n">pipeline_run</span><span class="p">([</span><span class="n">pipeline_task</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Produces:</p>
+<div class="highlight-python"><pre>Task = parallel_task
+    1 + 2 = 3
+    Job = ["A", 1, 2] completed
+    3 + 4 = 7
+    Job = ["B", 3, 4] completed
+    5 + 6 = 11
+    Job = ["C", 5, 6] completed</pre>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Be aware that the parameter generating function may be invoked
+<a class="reference internal" href="dependencies.html#manual-dependencies-checking-multiple-times"><em>more than once</em></a>:</p>
+<blockquote class="last">
+<div><div class="line-block">
+<div class="line">The first time to check if this part of the pipeline is up-to-date.</div>
+<div class="line">The second time when the pipeline task function is run.</div>
+</div>
+</div></blockquote>
+</div>
+<p>The resulting <em>inputs</em>, <em>outputs</em> and any additional extra parameters per job are
+treated normally for the purposes of checking to see if jobs are up-to-date and
+need to be re-run.</p>
+</div></blockquote>
+</div>
+<div class="section" id="permutations-and-combinations">
+<h2>Permutations and Combinations<a class="headerlink" href="#permutations-and-combinations" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>The <a class="reference internal" href="onthefly_code.html#manual-on-the-fly-code"><em>accompanying example</em></a> provides a more realistic reason why
+you would want to generate parameters on the fly. It is a fun piece of code, which generates
+N x M combinations from two sets of files as the <em>inputs</em> of a pipeline stage.</p>
+<p>The <em>inputs</em> / <em>outputs</em> filenames are generated as a pair of nested for-loops to produce
+the N (outside loop) x M (inside loop) combinations, with the appropriate parameters
+for each job <tt class="docutils literal"><span class="pre">yield</span></tt>ed per iteration of the inner loop. The gist of this is:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="c">#_________________________________________________________________________________________</span>
+<span class="c">#</span>
+<span class="c">#   Step 1:</span>
+<span class="c">#</span>
+<span class="c">#        N x M jobs</span>
+<span class="c">#_________________________________________________________________________________________</span>
+<span class="k">def</span> <span class="nf">generate_simulation_params</span> <span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Custom function to generate</span>
+<span class="sd">    file names for gene/gwas simulation study</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">sim_file</span> <span class="ow">in</span> <span class="n">get_simulation_files</span><span class="p">():</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">gene</span><span class="p">,</span> <span class="n">gwas</span><span class="p">)</span> <span class="ow">in</span> <span class="n">get_gene_gwas_file_pairs</span><span class="p">():</span>
+            <span class="n">result_file</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">.</span><span class="si">%s</span><span class="s">.results&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">gene</span><span class="p">,</span> <span class="n">sim_file</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="p">(</span><span class="n">gene</span><span class="p">,</span> <span class="n">gwas</span><span class="p">,</span> <span class="n">sim_file</span><span class="p">),</span> <span class="n">result_file</span>
+
+
+
+<span class="nd">@files</span><span class="p">(</span><span class="n">generate_simulation_params</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">gwas_simulation</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="n">output_file</span><span class="p">):</span>
+    <span class="s">&quot;...&quot;</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>If <tt class="docutils literal"><span class="pre">get_gene_gwas_file_pairs()</span></tt> produces:</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="s">&#39;a.sim&#39;</span><span class="p">,</span> <span class="s">&#39;b.sim&#39;</span><span class="p">,</span> <span class="s">&#39;c.sim&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</dd>
+<dt>and <tt class="docutils literal"><span class="pre">get_gene_gwas_file_pairs()</span></tt> produces:</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="p">[(</span><span class="s">&#39;1.gene&#39;</span><span class="p">,</span> <span class="s">&#39;1.gwas&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s">&#39;2.gene&#39;</span><span class="p">,</span> <span class="s">&#39;2.gwas&#39;</span><span class="p">)]</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>then we would end up with <tt class="docutils literal"><span class="pre">3</span></tt> x <tt class="docutils literal"><span class="pre">2</span></tt> = <tt class="docutils literal"><span class="pre">6</span></tt> jobs and the following equivalent function calls:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="n">gwas_simulation</span><span class="p">((</span><span class="s">&#39;1.gene&#39;</span><span class="p">,</span> <span class="s">&#39;1.gwas&#39;</span><span class="p">,</span> <span class="s">&#39;a.sim&#39;</span><span class="p">),</span> <span class="s">&quot;1.gene.a.sim.results&quot;</span><span class="p">)</span>
+<span class="n">gwas_simulation</span><span class="p">((</span><span class="s">&#39;2.gene&#39;</span><span class="p">,</span> <span class="s">&#39;2.gwas&#39;</span><span class="p">,</span> <span class="s">&#39;a.sim&#39;</span><span class="p">),</span> <span class="s">&quot;2.gene.a.sim.results&quot;</span><span class="p">)</span>
+<span class="n">gwas_simulation</span><span class="p">((</span><span class="s">&#39;1.gene&#39;</span><span class="p">,</span> <span class="s">&#39;1.gwas&#39;</span><span class="p">,</span> <span class="s">&#39;b.sim&#39;</span><span class="p">),</span> <span class="s">&quot;1.gene.b.sim.results&quot;</span><span class="p">)</span>
+<span class="n">gwas_simulation</span><span class="p">((</span><span class="s">&#39;2.gene&#39;</span><span class="p">,</span> <span class="s">&#39;2.gwas&#39;</span><span class="p">,</span> <span class="s">&#39;b.sim&#39;</span><span class="p">),</span> <span class="s">&quot;2.gene.b.sim.results&quot;</span><span class="p">)</span>
+<span class="n">gwas_simulation</span><span class="p">((</span><span class="s">&#39;1.gene&#39;</span><span class="p">,</span> <span class="s">&#39;1.gwas&#39;</span><span class="p">,</span> <span class="s">&#39;c.sim&#39;</span><span class="p">),</span> <span class="s">&quot;1.gene.c.sim.results&quot;</span><span class="p">)</span>
+<span class="n">gwas_simulation</span><span class="p">((</span><span class="s">&#39;2.gene&#39;</span><span class="p">,</span> <span class="s">&#39;2.gwas&#39;</span><span class="p">,</span> <span class="s">&#39;c.sim&#39;</span><span class="p">),</span> <span class="s">&quot;2.gene.c.sim.results&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div></blockquote>
+<p>The <a class="reference internal" href="onthefly_code.html#manual-on-the-fly-code"><em>accompanying code</em></a> looks slightly more complicated because
+of some extra bookkeeping.</p>
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../contents.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#"><strong>Chapter 13</strong>: <cite>Generating parameters on the fly with</cite> <strong>&#64;files</strong></a><ul>
+<li><a class="reference internal" href="#files"><strong>&#64;files</strong></a></li>
+<li><a class="reference internal" href="#permutations-and-combinations">Permutations and Combinations</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="dependencies.html"
+                        title="previous chapter"><strong>Chapter 12</strong>: <cite>Checking dependencies to run tasks in order</cite></a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="collate.html"
+                        title="next chapter"><strong>Chapter 14</strong>: <strong>&#64;collate</strong>: <cite>group together disparate input into sets of results</cite></a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/tutorials/manual/onthefly.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+    
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+    <h3> Quick Reference:</h3>
+    <ul>
+        <h4><a href="../../decorators/decorators.html#core">Core:</a></h4>   
+        <ul>
+            <li><a href="../../decorators/originate.html">@originate</a>                           </li>
+            <li><a href="../../decorators/split.html">@split</a>                                   </li>
+            <li><a href="../../decorators/transform.html">@transform</a>                           </li>
+            <li><a href="../../decorators/merge.html">@merge</a>                                   </li>
+        </ul>
+
+        <h4><a href="../../decorators/decorators.html#advanced">Advanced</a></h4>   
+        <ul>
+            <li><a href="../../decorators/subdivide.html">@subdivide</a>                           </li>
+            <li><a href="../../decorators/transform_ex.html">@transform (add_inputs) </a>          </li>
+            <li><a href="../../decorators/collate.html">@collate</a>                               </li>
+            <li><a href="../../decorators/collate_ex.html">@collate (add_inputs)</a>               </li>
+            <li><a href="../../decorators/graphviz.html">@graphviz</a>                             </li>
+            <li><a href="../../decorators/mkdir.html">@mkdir</a>                                   </li>
+            <li><a href="../../decorators/follows.html">@follows / mkdir</a>                       </li>
+            <li><a href="../../decorators/posttask.html">@posttask touch_file</a>                  </li>
+            <li><a href="../../decorators/active_if.html">@active_if</a>                           </li>
+            <li><a href="../../decorators/jobs_limit.html">@jobs_limit</a>                         </li>
+        </ul>
+    
+        <h4><a href="../../decorators/decorators.html#combinatorics">Combinatorial:</a></h4>   
+        <ul>
+            <li><a href="../../decorators/product.html">@product </a>                              </li>
+            <li><a href="../../decorators/permutations.html">@permutations </a>                    </li>
+            <li><a href="../../decorators/combinations.html">@combinations </a>                    </li>
+            <li><a href="../../decorators/combinations_with_replacement.html">@combinations_ _with_replacement </a>                    </li>
+        </ul>
+
+                        
+        <h4><a href="../../decorators/decorators.html#esoteric">Esoteric</a></h4>   
+        <ul>
+            <li><a href="../../decorators/files_ex.html">@files (on the fly)</a>                   </li>
+            <li><a href="../../decorators/parallel.html">@parallel</a>                             </li>
+            <li><a href="../../decorators/check_if_uptodate.html">@check_if_uptodate</a>           </li>
+        </ul>
+
+
+        <h4 ><a href="../../decorators/indicator_objects.html">Indicator objects</a></h4>
+        <h4 >Pipeline functions</h4>
+        <ul>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-run">pipeline_run</a>                       </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-printout">pipeline_printout</a>                      </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-printout-graph">pipeline_printout_graph</a>          </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-get-task-names">pipeline_get_task_names</a>          </li>
+            <li><a href="../../drmaa_wrapper_functions.html#drmaa-wrapper-functions-drmaa_wrapper-run_job">drmaa_wrapper.run_job</a>          </li>
+        </ul>
+
+         <a href="../../todo.html">Future plans</a>
+    </ul>
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="collate.html" title="Chapter 14: @collate: group together disparate input into sets of results"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="dependencies.html" title="Chapter 12: Checking dependencies to run tasks in order"
+             >previous</a> |</li>
+        Ruffus v. 2.5
+            <li><a href="../../index.html">Home</a> | </li>
+            <li><a href="../../contents.html">Contents</a> | </li>
+            <li><a href="../../installation.html">Install</a>  | </li>
+            <li><a href="../new_tutorial/introduction.html">Manual</a>  / </li>
+            <li><a href="../new_tutorial/manual_contents.html">(TOC)</a>  | </li>
+            <li><a href="../../faq.html">FAQ</a>  | </li>
+            <li><a href="../../cheatsheet.html">Cheat sheet</a> | </li>
+            <li><a href="../new_tutorial/command_line.html">Command Line</a> | </li>
+            <li><a href="../../gallery.html">Gallery</a> |  </li>
+            <li><a href="../../history.html">Latest Changes</a> &raquo; </li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2009-2013 Leo Goodstadt.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

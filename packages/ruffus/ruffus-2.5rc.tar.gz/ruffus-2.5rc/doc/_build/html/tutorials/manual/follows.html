@@ -1,0 +1,363 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Chapter 1 : Arranging tasks into a pipeline with @follows &mdash; ruffus 2.5 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/ruffus.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.5',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="ruffus 2.5 documentation" href="../../index.html" />
+    <link rel="next" title="Chapter 2: Tasks and Recipes" href="tasks_as_recipes.html" />
+    <link rel="prev" title="Ruffus Manual" href="manual_introduction.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="tasks_as_recipes.html" title="Chapter 2: Tasks and Recipes"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="manual_introduction.html" title="Ruffus Manual"
+             accesskey="P">previous</a> |</li>
+        Ruffus v. 2.5
+            <li><a href="../../index.html">Home</a> | </li>
+            <li><a href="../../contents.html">Contents</a> | </li>
+            <li><a href="../../installation.html">Install</a>  | </li>
+            <li><a href="../new_tutorial/introduction.html">Manual</a>  / </li>
+            <li><a href="../new_tutorial/manual_contents.html">(TOC)</a>  | </li>
+            <li><a href="../../faq.html">FAQ</a>  | </li>
+            <li><a href="../../cheatsheet.html">Cheat sheet</a> | </li>
+            <li><a href="../new_tutorial/command_line.html">Command Line</a> | </li>
+            <li><a href="../../gallery.html">Gallery</a> |  </li>
+            <li><a href="../../history.html">Latest Changes</a> &raquo; </li>
+ 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="manual-follows-chapter-num-arranging-tasks-into-a-pipeline-with-follows">
+<span id="manual-follows"></span><h1><strong>Chapter  1</strong> : <cite>Arranging tasks into a pipeline with</cite> <strong>&#64;follows</strong><a class="headerlink" href="#manual-follows-chapter-num-arranging-tasks-into-a-pipeline-with-follows" title="Permalink to this headline">¶</a></h1>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference internal" href="manual_contents.html#manual"><em>Manual overview</em></a></li>
+<li><a class="reference internal" href="../../decorators/follows.html#decorators-follows"><em>&#64;follows syntax in detail</em></a></li>
+</ul>
+</div></blockquote>
+<div class="section" id="follows">
+<span id="index-0"></span><h2><strong>&#64;follows</strong><a class="headerlink" href="#follows" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>The order in which stages or <a class="reference internal" href="../../glossary.html#term-task"><em class="xref std std-term">task</em></a>s of a pipeline are arranged are set
+explicitly by the <a class="reference internal" href="../../decorators/follows.html#decorators-follows"><em>&#64;follows(...)</em></a> python decorator:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">ruffus</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="k">def</span> <span class="nf">first_task</span><span class="p">():</span>
+    <span class="k">print</span> <span class="s">&quot;First task&quot;</span>
+
+<span class="nd">@follows</span><span class="p">(</span><span class="n">first_task</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">second_task</span><span class="p">():</span>
+    <span class="k">print</span> <span class="s">&quot;Second task&quot;</span>
+
+<span class="nd">@follows</span><span class="p">(</span><span class="n">second_task</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">final_task</span><span class="p">():</span>
+    <span class="k">print</span> <span class="s">&quot;Final task&quot;</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>the <tt class="docutils literal"><span class="pre">&#64;follows</span></tt> decorator indicate that the <tt class="docutils literal"><span class="pre">first_task</span></tt> function precedes <tt class="docutils literal"><span class="pre">second_task</span></tt> in
+the pipeline.</p>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>We shall see in <a class="reference internal" href="tasks_and_globs_in_inputs.html#manual-tasks-as-input"><em>Chapter 2</em></a> that the order of pipeline <a class="reference internal" href="../../glossary.html#term-task"><em class="xref std std-term">task</em></a>s can also be inferred implicitly
+for the following decorators</p>
+<blockquote class="last">
+<div><ul class="simple">
+<li><a class="reference internal" href="split.html#manual-split"><em>&#64;split(...)</em></a></li>
+<li><a class="reference internal" href="transform.html#manual-transform"><em>&#64;transform(...)</em></a></li>
+<li><a class="reference internal" href="merge.html#manual-merge"><em>&#64;merge(...)</em></a></li>
+<li><a class="reference internal" href="collate.html#manual-collate"><em>&#64;collate(...)</em></a></li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="running">
+<span id="index-1"></span><h3>Running<a class="headerlink" href="#running" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="docutils">
+<dt>Now we can run the pipeline by:</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="n">pipeline_run</span><span class="p">([</span><span class="n">final_task</span><span class="p">])</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>Because <tt class="docutils literal"><span class="pre">final_task</span></tt> depends on <tt class="docutils literal"><span class="pre">second_task</span></tt> which depends on <tt class="docutils literal"><span class="pre">first_task</span></tt> , all
+three functions will be executed in order.</p>
+</div></blockquote>
+</div>
+<div class="section" id="displaying">
+<span id="index-2"></span><h3>Displaying<a class="headerlink" href="#displaying" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="docutils">
+<dt>We can see a flowchart of our fledgling pipeline by executing:</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="n">pipeline_printout_graph</span> <span class="p">(</span> <span class="s">&quot;manual_follows1.png&quot;</span><span class="p">,</span>
+                         <span class="s">&quot;png&quot;</span><span class="p">,</span>
+                         <span class="p">[</span><span class="n">final_task</span><span class="p">],</span>
+                         <span class="n">no_key_legend</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>producing the following flowchart</p>
+<blockquote>
+<div><img alt="../../_images/manual_follows1.png" src="../../_images/manual_follows1.png" />
+</div></blockquote>
+<dl class="docutils">
+<dt>or in text format with:</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="n">pipeline_printout</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="p">[</span><span class="n">final_task</span><span class="p">])</span>
+</pre></div>
+</div>
+</dd>
+<dt>which produces the following:</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="n">Task</span> <span class="o">=</span> <span class="n">first_task</span>
+<span class="n">Task</span> <span class="o">=</span> <span class="n">second_task</span>
+<span class="n">Task</span> <span class="o">=</span> <span class="n">final_task</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="defining-pipeline-tasks-out-of-order">
+<span id="manual-follows-out-of-order"></span><span id="index-3"></span><h2>Defining pipeline tasks out of order<a class="headerlink" href="#defining-pipeline-tasks-out-of-order" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>All this assumes that all your pipelined tasks are defined in order.
+(<tt class="docutils literal"><span class="pre">first_task</span></tt> before <tt class="docutils literal"><span class="pre">second_task</span></tt> before <tt class="docutils literal"><span class="pre">final_task</span></tt>)</p>
+<div class="line-block">
+<div class="line">This is usually the most sensible way to arrange your code.</div>
+</div>
+<p>If you wish to refer to tasks which are not yet defined, you can do so by quoting the function name as a string:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="nd">@follows</span><span class="p">(</span><span class="s">&quot;second_task&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">final_task</span><span class="p">():</span>
+    <span class="k">print</span> <span class="s">&quot;Final task&quot;</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>You can refer to tasks (functions) in other modules, in which case the full
+qualified name must be used:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="nd">@follows</span><span class="p">(</span><span class="s">&quot;other_module.second_task&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">final_task</span><span class="p">():</span>
+    <span class="k">print</span> <span class="s">&quot;Final task&quot;</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div></blockquote>
+</div>
+<div class="section" id="multiple-dependencies">
+<span id="manual-follows-multiple-dependencies"></span><span id="index-4"></span><h2>Multiple dependencies<a class="headerlink" href="#multiple-dependencies" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>Each task can depend on more than one antecedent task.</p>
+<dl class="docutils">
+<dt>This can be indicated either by stacking <tt class="docutils literal"><span class="pre">&#64;follows</span></tt>:</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="nd">@follows</span><span class="p">(</span><span class="n">first_task</span><span class="p">)</span>
+<span class="nd">@follows</span><span class="p">(</span><span class="s">&quot;second_task&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">final_task</span><span class="p">():</span>
+    <span class="s">&quot;&quot;</span>
+</pre></div>
+</div>
+</dd>
+<dt>or in a more concise way:</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="nd">@follows</span><span class="p">(</span><span class="n">first_task</span><span class="p">,</span> <span class="s">&quot;second_task&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">final_task</span><span class="p">():</span>
+    <span class="s">&quot;&quot;</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</div></blockquote>
+<span class="target" id="manual-follows-mkdir"></span></div>
+<div class="section" id="making-directories-automatically-with-mkdir">
+<span id="index-5"></span><h2>Making directories automatically with <a class="reference internal" href="../../decorators/mkdir.html#decorators-mkdir"><em>mkdir</em></a><a class="headerlink" href="#making-directories-automatically-with-mkdir" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>A common prerequisite for any computational task, is making sure that the destination
+directories exist.</p>
+<p><strong>Ruffus</strong> provides special syntax to support this, using the special
+<a class="reference internal" href="../../decorators/mkdir.html#decorators-mkdir"><em>mkdir</em></a> dependency. For example:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="nd">@follows</span><span class="p">(</span><span class="n">first_task</span><span class="p">,</span> <span class="n">mkdir</span><span class="p">(</span><span class="s">&quot;output/results/here&quot;</span><span class="p">))</span>
+<span class="k">def</span> <span class="nf">second_task</span><span class="p">():</span>
+    <span class="k">print</span> <span class="s">&quot;Second task&quot;</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>will make sure that <tt class="docutils literal"><span class="pre">output/results/here</span></tt> exists before <cite>second_task</cite> is run.</p>
+<p>In other words, it will make the <tt class="docutils literal"><span class="pre">output/results/here</span></tt> directory if it does not exist.</p>
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../contents.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#"><strong>Chapter  1</strong> : <cite>Arranging tasks into a pipeline with</cite> <strong>&#64;follows</strong></a><ul>
+<li><a class="reference internal" href="#follows"><strong>&#64;follows</strong></a><ul>
+<li><a class="reference internal" href="#running">Running</a></li>
+<li><a class="reference internal" href="#displaying">Displaying</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#defining-pipeline-tasks-out-of-order">Defining pipeline tasks out of order</a></li>
+<li><a class="reference internal" href="#multiple-dependencies">Multiple dependencies</a></li>
+<li><a class="reference internal" href="#making-directories-automatically-with-mkdir">Making directories automatically with <tt class="docutils literal"><span class="pre">mkdir</span></tt></a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="manual_introduction.html"
+                        title="previous chapter"><strong>Ruffus</strong> Manual</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="tasks_as_recipes.html"
+                        title="next chapter"><strong>Chapter  2</strong>: <cite>Tasks and Recipes</cite></a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/tutorials/manual/follows.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+    
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+    <h3> Quick Reference:</h3>
+    <ul>
+        <h4><a href="../../decorators/decorators.html#core">Core:</a></h4>   
+        <ul>
+            <li><a href="../../decorators/originate.html">@originate</a>                           </li>
+            <li><a href="../../decorators/split.html">@split</a>                                   </li>
+            <li><a href="../../decorators/transform.html">@transform</a>                           </li>
+            <li><a href="../../decorators/merge.html">@merge</a>                                   </li>
+        </ul>
+
+        <h4><a href="../../decorators/decorators.html#advanced">Advanced</a></h4>   
+        <ul>
+            <li><a href="../../decorators/subdivide.html">@subdivide</a>                           </li>
+            <li><a href="../../decorators/transform_ex.html">@transform (add_inputs) </a>          </li>
+            <li><a href="../../decorators/collate.html">@collate</a>                               </li>
+            <li><a href="../../decorators/collate_ex.html">@collate (add_inputs)</a>               </li>
+            <li><a href="../../decorators/graphviz.html">@graphviz</a>                             </li>
+            <li><a href="../../decorators/mkdir.html">@mkdir</a>                                   </li>
+            <li><a href="../../decorators/follows.html">@follows / mkdir</a>                       </li>
+            <li><a href="../../decorators/posttask.html">@posttask touch_file</a>                  </li>
+            <li><a href="../../decorators/active_if.html">@active_if</a>                           </li>
+            <li><a href="../../decorators/jobs_limit.html">@jobs_limit</a>                         </li>
+        </ul>
+    
+        <h4><a href="../../decorators/decorators.html#combinatorics">Combinatorial:</a></h4>   
+        <ul>
+            <li><a href="../../decorators/product.html">@product </a>                              </li>
+            <li><a href="../../decorators/permutations.html">@permutations </a>                    </li>
+            <li><a href="../../decorators/combinations.html">@combinations </a>                    </li>
+            <li><a href="../../decorators/combinations_with_replacement.html">@combinations_ _with_replacement </a>                    </li>
+        </ul>
+
+                        
+        <h4><a href="../../decorators/decorators.html#esoteric">Esoteric</a></h4>   
+        <ul>
+            <li><a href="../../decorators/files_ex.html">@files (on the fly)</a>                   </li>
+            <li><a href="../../decorators/parallel.html">@parallel</a>                             </li>
+            <li><a href="../../decorators/check_if_uptodate.html">@check_if_uptodate</a>           </li>
+        </ul>
+
+
+        <h4 ><a href="../../decorators/indicator_objects.html">Indicator objects</a></h4>
+        <h4 >Pipeline functions</h4>
+        <ul>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-run">pipeline_run</a>                       </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-printout">pipeline_printout</a>                      </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-printout-graph">pipeline_printout_graph</a>          </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-get-task-names">pipeline_get_task_names</a>          </li>
+            <li><a href="../../drmaa_wrapper_functions.html#drmaa-wrapper-functions-drmaa_wrapper-run_job">drmaa_wrapper.run_job</a>          </li>
+        </ul>
+
+         <a href="../../todo.html">Future plans</a>
+    </ul>
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="tasks_as_recipes.html" title="Chapter 2: Tasks and Recipes"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="manual_introduction.html" title="Ruffus Manual"
+             >previous</a> |</li>
+        Ruffus v. 2.5
+            <li><a href="../../index.html">Home</a> | </li>
+            <li><a href="../../contents.html">Contents</a> | </li>
+            <li><a href="../../installation.html">Install</a>  | </li>
+            <li><a href="../new_tutorial/introduction.html">Manual</a>  / </li>
+            <li><a href="../new_tutorial/manual_contents.html">(TOC)</a>  | </li>
+            <li><a href="../../faq.html">FAQ</a>  | </li>
+            <li><a href="../../cheatsheet.html">Cheat sheet</a> | </li>
+            <li><a href="../new_tutorial/command_line.html">Command Line</a> | </li>
+            <li><a href="../../gallery.html">Gallery</a> |  </li>
+            <li><a href="../../history.html">Latest Changes</a> &raquo; </li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2009-2013 Leo Goodstadt.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,292 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Step 8: Signal the completion of each stage of our pipeline &mdash; ruffus 2.5 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/ruffus.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.5',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="ruffus 2.5 documentation" href="../../index.html" />
+    <link rel="next" title="Code for Chapter 9: Checking dependencies to run tasks in order" href="../manual/dependencies_code.html" />
+    <link rel="prev" title="Step 7: Merging results back together" href="step7_merge.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../manual/dependencies_code.html" title="Code for Chapter 9: Checking dependencies to run tasks in order"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="step7_merge.html" title="Step 7: Merging results back together"
+             accesskey="P">previous</a> |</li>
+        Ruffus v. 2.5
+            <li><a href="../../index.html">Home</a> | </li>
+            <li><a href="../../contents.html">Contents</a> | </li>
+            <li><a href="../../installation.html">Install</a>  | </li>
+            <li><a href="../new_tutorial/introduction.html">Manual</a>  / </li>
+            <li><a href="../new_tutorial/manual_contents.html">(TOC)</a>  | </li>
+            <li><a href="../../faq.html">FAQ</a>  | </li>
+            <li><a href="../../cheatsheet.html">Cheat sheet</a> | </li>
+            <li><a href="../new_tutorial/command_line.html">Command Line</a> | </li>
+            <li><a href="../../gallery.html">Gallery</a> |  </li>
+            <li><a href="../../history.html">Latest Changes</a> &raquo; </li>
+ 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="step-8-signal-the-completion-of-each-stage-of-our-pipeline">
+<span id="simple-tutorial-8th-step"></span><span id="index-0"></span><h1>Step 8: Signal the completion of each stage of our pipeline<a class="headerlink" href="#step-8-signal-the-completion-of-each-stage-of-our-pipeline" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="simple_tutorial.html#simple-tutorial"><em>Simple tutorial overview</em></a></li>
+<li><a class="reference internal" href="../../decorators/posttask.html#decorators-posttask"><em>&#64;posttask</em></a> in detail</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Remember to look at the example code:</p>
+<ul class="last simple">
+<li><a class="reference internal" href="step8_posttask_code.html#simple-tutorial-8th-step-code"><em>Python Code for step 8</em></a></li>
+</ul>
+</div>
+<p>Let us finish by celebrating the success of our modest pipeline example.</p>
+<div class="section" id="running-some-code-to-show-that-a-stage-of-the-pipeline-has-finished">
+<h2>Running some code to show that a stage of the pipeline has finished<a class="headerlink" href="#running-some-code-to-show-that-a-stage-of-the-pipeline-has-finished" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>A common requirement is to take some extra action when a particular
+<a class="reference internal" href="../../glossary.html#term-task"><em class="xref std std-term">task</em></a> or stage of a pipeline is complete.</p>
+<p>This can range from printing out some message, or <tt class="docutils literal"><span class="pre">touching</span></tt> some sentinel file,
+to emailing the author.</p>
+<p>This is particular useful if the <a class="reference internal" href="../../glossary.html#term-task"><em class="xref std std-term">task</em></a> is a recipe apply to an unspecified number
+of parameters in parallel in different <a class="reference internal" href="../../glossary.html#term-job"><em class="xref std std-term">job</em></a>s</p>
+<p>The &#8220;extra action&#8221; can be added to a <em>Ruffus</em> pipeline using the <a class="reference internal" href="../../decorators/posttask.html#decorators-posttask"><em>&#64;posttask</em></a>
+decorator.</p>
+<p>Let us print a &#8220;hooray&#8221; message to show that we have finished calculating variances.</p>
+<blockquote>
+<div><img alt="../../_images/simple_tutorial_posttask.png" src="../../_images/simple_tutorial_posttask.png" />
+</div></blockquote>
+<p>This is such a short function, we can even write it in-line:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="nd">@posttask</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;hooray</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">))</span>
+<span class="nd">@merge</span><span class="p">(</span><span class="n">step_6_calculate_sum_of_squares</span><span class="p">,</span> <span class="s">&quot;variance.result&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">step_7_calculate_variance</span> <span class="p">(</span><span class="n">input_file_names</span><span class="p">,</span> <span class="n">output_file_name</span><span class="p">):</span>
+    <span class="s">&quot;&quot;</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div></blockquote>
+</div>
+<div class="section" id="touching-a-sentinel-file-after-finishing-a-pipeline-stage">
+<span id="index-1"></span><h2><em>Touching</em> a sentinel file after finishing a pipeline stage<a class="headerlink" href="#touching-a-sentinel-file-after-finishing-a-pipeline-stage" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><div class="line-block">
+<div class="line">Very often we would like to mark the competion of a pipeline stage by using the
+date/time stamp of a &#8220;sentinel&#8221; file.</div>
+<div class="line">This is such a common requirement that <em>Ruffus</em> even has special syntax for this
+in the form of <a class="reference internal" href="../../decorators/indicator_objects.html#decorators-touch-file"><em>touch_file</em></a>.</div>
+</div>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="nd">@posttask</span><span class="p">(</span><span class="n">touch_file</span><span class="p">(</span><span class="s">&quot;sentinel_flag&quot;</span><span class="p">))</span>
+<span class="k">def</span> <span class="nf">your_pipeline_function</span> <span class="p">(</span><span class="n">input_file_names</span><span class="p">,</span> <span class="n">output_file_name</span><span class="p">):</span>
+    <span class="s">&quot;&quot;</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>The file <tt class="docutils literal"><span class="pre">sentinel_flag</span></tt> will be created (if it did not exist) or its
+date/time stamp changed to the current time whenever this stage of the pipeline is
+completed.</p>
+</div></blockquote>
+</div>
+<div class="section" id="adding-several-post-task-actions">
+<h2>Adding several post task actions<a class="headerlink" href="#adding-several-post-task-actions" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>You can, of course, add more than one different action to be taken on completion of the
+task, either by stacking up <a class="reference internal" href="../../decorators/posttask.html#decorators-posttask"><em>&#64;posttask</em></a> decorators or by including
+several functions in the same <strong>&#64;posttask</strong>:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="nd">@posttask</span><span class="p">(</span><span class="n">print_hooray</span><span class="p">,</span> <span class="n">print_whopee</span><span class="p">)</span>
+<span class="nd">@posttask</span><span class="p">(</span><span class="n">touch_file</span><span class="p">(</span><span class="s">&quot;sentinel_flag&quot;</span><span class="p">))</span>
+<span class="k">def</span> <span class="nf">your_pipeline_function</span> <span class="p">(</span><span class="n">input_file_names</span><span class="p">,</span> <span class="n">output_file_name</span><span class="p">):</span>
+    <span class="s">&quot;&quot;</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div></blockquote>
+</div>
+<div class="section" id="finding-out-more-about-ruffus">
+<h2>Finding out more about <strong>Ruffus</strong><a class="headerlink" href="#finding-out-more-about-ruffus" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>This wraps up our short tutorial on the <strong>Ruffus</strong>.</p>
+<p>Here are a few useful topics you may be interested in:</p>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference internal" href="../manual/collate.html#manual-collate"><em>How to summarise disparate input by category</em></a></li>
+<li><a class="reference internal" href="../manual/logging.html#manual-logging"><em>How to log pipeline progress</em></a></li>
+<li><a class="reference internal" href="../manual/exceptions.html#manual-exceptions"><em>How exceptions are handled</em></a></li>
+</ul>
+</div></blockquote>
+<p>To find out more about <strong>Ruffus</strong>, you can read the <a class="reference internal" href="../manual/manual_introduction.html#manual-introduction"><em>manual</em></a>
+or just start using <strong>Ruffus</strong>.</p>
+<p>Email the authors at ruffus_lib at llew.org.uk if you have any comments or suggestions.</p>
+<p>Happy pipelining!</p>
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../contents.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Step 8: Signal the completion of each stage of our pipeline</a><ul>
+<li><a class="reference internal" href="#running-some-code-to-show-that-a-stage-of-the-pipeline-has-finished">Running some code to show that a stage of the pipeline has finished</a></li>
+<li><a class="reference internal" href="#touching-a-sentinel-file-after-finishing-a-pipeline-stage"><em>Touching</em> a sentinel file after finishing a pipeline stage</a></li>
+<li><a class="reference internal" href="#adding-several-post-task-actions">Adding several post task actions</a></li>
+<li><a class="reference internal" href="#finding-out-more-about-ruffus">Finding out more about <strong>Ruffus</strong></a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="step7_merge.html"
+                        title="previous chapter">Step 7: Merging results back together</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../manual/dependencies_code.html"
+                        title="next chapter">Code for Chapter 9: Checking dependencies to run tasks in order</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/tutorials/simple_tutorial/step8_posttask.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+    
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+    <h3> Quick Reference:</h3>
+    <ul>
+        <h4><a href="../../decorators/decorators.html#core">Core:</a></h4>   
+        <ul>
+            <li><a href="../../decorators/originate.html">@originate</a>                           </li>
+            <li><a href="../../decorators/split.html">@split</a>                                   </li>
+            <li><a href="../../decorators/transform.html">@transform</a>                           </li>
+            <li><a href="../../decorators/merge.html">@merge</a>                                   </li>
+        </ul>
+
+        <h4><a href="../../decorators/decorators.html#advanced">Advanced</a></h4>   
+        <ul>
+            <li><a href="../../decorators/subdivide.html">@subdivide</a>                           </li>
+            <li><a href="../../decorators/transform_ex.html">@transform (add_inputs) </a>          </li>
+            <li><a href="../../decorators/collate.html">@collate</a>                               </li>
+            <li><a href="../../decorators/collate_ex.html">@collate (add_inputs)</a>               </li>
+            <li><a href="../../decorators/graphviz.html">@graphviz</a>                             </li>
+            <li><a href="../../decorators/mkdir.html">@mkdir</a>                                   </li>
+            <li><a href="../../decorators/follows.html">@follows / mkdir</a>                       </li>
+            <li><a href="../../decorators/posttask.html">@posttask touch_file</a>                  </li>
+            <li><a href="../../decorators/active_if.html">@active_if</a>                           </li>
+            <li><a href="../../decorators/jobs_limit.html">@jobs_limit</a>                         </li>
+        </ul>
+    
+        <h4><a href="../../decorators/decorators.html#combinatorics">Combinatorial:</a></h4>   
+        <ul>
+            <li><a href="../../decorators/product.html">@product </a>                              </li>
+            <li><a href="../../decorators/permutations.html">@permutations </a>                    </li>
+            <li><a href="../../decorators/combinations.html">@combinations </a>                    </li>
+            <li><a href="../../decorators/combinations_with_replacement.html">@combinations_ _with_replacement </a>                    </li>
+        </ul>
+
+                        
+        <h4><a href="../../decorators/decorators.html#esoteric">Esoteric</a></h4>   
+        <ul>
+            <li><a href="../../decorators/files_ex.html">@files (on the fly)</a>                   </li>
+            <li><a href="../../decorators/parallel.html">@parallel</a>                             </li>
+            <li><a href="../../decorators/check_if_uptodate.html">@check_if_uptodate</a>           </li>
+        </ul>
+
+
+        <h4 ><a href="../../decorators/indicator_objects.html">Indicator objects</a></h4>
+        <h4 >Pipeline functions</h4>
+        <ul>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-run">pipeline_run</a>                       </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-printout">pipeline_printout</a>                      </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-printout-graph">pipeline_printout_graph</a>          </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-get-task-names">pipeline_get_task_names</a>          </li>
+            <li><a href="../../drmaa_wrapper_functions.html#drmaa-wrapper-functions-drmaa_wrapper-run_job">drmaa_wrapper.run_job</a>          </li>
+        </ul>
+
+         <a href="../../todo.html">Future plans</a>
+    </ul>
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../manual/dependencies_code.html" title="Code for Chapter 9: Checking dependencies to run tasks in order"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="step7_merge.html" title="Step 7: Merging results back together"
+             >previous</a> |</li>
+        Ruffus v. 2.5
+            <li><a href="../../index.html">Home</a> | </li>
+            <li><a href="../../contents.html">Contents</a> | </li>
+            <li><a href="../../installation.html">Install</a>  | </li>
+            <li><a href="../new_tutorial/introduction.html">Manual</a>  / </li>
+            <li><a href="../new_tutorial/manual_contents.html">(TOC)</a>  | </li>
+            <li><a href="../../faq.html">FAQ</a>  | </li>
+            <li><a href="../../cheatsheet.html">Cheat sheet</a> | </li>
+            <li><a href="../new_tutorial/command_line.html">Command Line</a> | </li>
+            <li><a href="../../gallery.html">Gallery</a> |  </li>
+            <li><a href="../../history.html">Latest Changes</a> &raquo; </li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2009-2013 Leo Goodstadt.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

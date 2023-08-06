@@ -1,0 +1,258 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Step 6: Running jobs in parallel &mdash; ruffus 2.5 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/ruffus.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.5',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="ruffus 2.5 documentation" href="../../index.html" />
+    <link rel="next" title="Step 7: Merging results back together" href="step7_merge.html" />
+    <link rel="prev" title="Step 5: Splitting up large tasks / files" href="step5_split.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="step7_merge.html" title="Step 7: Merging results back together"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="step5_split.html" title="Step 5: Splitting up large tasks / files"
+             accesskey="P">previous</a> |</li>
+        Ruffus v. 2.5
+            <li><a href="../../index.html">Home</a> | </li>
+            <li><a href="../../contents.html">Contents</a> | </li>
+            <li><a href="../../installation.html">Install</a>  | </li>
+            <li><a href="../new_tutorial/introduction.html">Manual</a>  / </li>
+            <li><a href="../new_tutorial/manual_contents.html">(TOC)</a>  | </li>
+            <li><a href="../../faq.html">FAQ</a>  | </li>
+            <li><a href="../../cheatsheet.html">Cheat sheet</a> | </li>
+            <li><a href="../new_tutorial/command_line.html">Command Line</a> | </li>
+            <li><a href="../../gallery.html">Gallery</a> |  </li>
+            <li><a href="../../history.html">Latest Changes</a> &raquo; </li>
+ 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <span class="target" id="tutorial-transform"><span id="simple-tutorial-6th-step"></span></span><div class="section" id="step-6-running-jobs-in-parallel">
+<span id="index-0"></span><h1>Step 6: Running jobs in parallel<a class="headerlink" href="#step-6-running-jobs-in-parallel" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="simple_tutorial.html#simple-tutorial"><em>Simple tutorial overview</em></a></li>
+<li><a class="reference internal" href="../../decorators/transform.html#decorators-transform"><em>&#64;transform in detail</em></a></li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Remember to look at the example code:</p>
+<ul class="last simple">
+<li><a class="reference internal" href="step6_transform_code.html#simple-tutorial-6th-step-code"><em>Python Code for step 6</em></a></li>
+</ul>
+</div>
+<div class="section" id="calculating-sums-and-sum-of-squares-in-parallel">
+<h2>Calculating sums and sum of squares in parallel<a class="headerlink" href="#calculating-sums-and-sum-of-squares-in-parallel" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>Now that we have many smaller lists of numbers in separate files, we can calculate their sums and
+sum of squares in parallel.</p>
+<p>All we need is a function which takes a <tt class="docutils literal"><span class="pre">*.chunk</span></tt> file, reads the numbers, calculates
+the answers and writes them back out to a corresponding <tt class="docutils literal"><span class="pre">*.sums</span></tt> file.</p>
+<p><em>Ruffus</em> magically takes care of applying this task function to all the different
+data files in parallel.</p>
+<blockquote>
+<div><img alt="../../_images/simple_tutorial_transform1.png" src="../../_images/simple_tutorial_transform1.png" />
+</div></blockquote>
+<div class="line-block">
+<div class="line">The first thing to note about this example is that the <em>input</em> files are not specified
+as a <a class="reference external" href="http://docs.python.org/library/glob.html"><cite>glob</cite></a>  (e.g. <tt class="docutils literal"><span class="pre">*.chunk</span></tt>) but as the preceding task.</div>
+<div class="line"><em>Ruffus</em> will take all
+the files produced by <tt class="docutils literal"><span class="pre">step_5_split_numbers_into_chunks()</span></tt> and feed them as the <em>input</em>
+into step 6.</div>
+</div>
+<p>This handy shortcut also means that <strong>Ruffus</strong> knows that <tt class="docutils literal"><span class="pre">step_6_calculate_sum_of_squares</span></tt>
+depends on <tt class="docutils literal"><span class="pre">step_5_split_numbers_into_chunks</span></tt> and an additional <tt class="docutils literal"><span class="pre">&#64;follows</span></tt> directive
+is unnecessary.</p>
+<p>The use of <a class="reference internal" href="../../decorators/transform_ex.html#decorators-transform-suffix-string"><em>suffix</em></a> within the decorator tells
+<em>Ruffus</em> to take all <em>input</em> files with the <tt class="docutils literal"><span class="pre">.chunks</span></tt> suffix and substitute a <tt class="docutils literal"><span class="pre">.sums</span></tt>
+suffix to generate the corresponding <em>output</em> file name.</p>
+<dl class="docutils">
+<dt>Thus if <tt class="docutils literal"><span class="pre">step_5_split_numbers_into_chunks</span></tt> created</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="s">&quot;1.chunks&quot;</span>
+<span class="s">&quot;2.chunks&quot;</span>
+<span class="s">&quot;3.chunks&quot;</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>This would result in the following function calls:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="n">step_6_calculate_sum_of_squares</span> <span class="p">(</span><span class="s">&quot;1.chunk&quot;</span><span class="p">,</span> <span class="s">&quot;1.sums&quot;</span><span class="p">)</span>
+<span class="n">step_6_calculate_sum_of_squares</span> <span class="p">(</span><span class="s">&quot;2.chunk&quot;</span><span class="p">,</span> <span class="s">&quot;2.sums&quot;</span><span class="p">)</span>
+<span class="n">step_6_calculate_sum_of_squares</span> <span class="p">(</span><span class="s">&quot;3.chunk&quot;</span><span class="p">,</span> <span class="s">&quot;3.sums&quot;</span><span class="p">)</span>
+
+<span class="c"># etc...</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">It is possible to generate <em>output</em> filenames using more powerful regular expressions
+as well. See the <a class="reference internal" href="../../decorators/transform.html#decorators-transform"><em>&#64;transform</em></a> syntax documentation for more details.</p>
+</div>
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../contents.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Step 6: Running jobs in parallel</a><ul>
+<li><a class="reference internal" href="#calculating-sums-and-sum-of-squares-in-parallel">Calculating sums and sum of squares in parallel</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="step5_split.html"
+                        title="previous chapter">Step 5: Splitting up large tasks / files</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="step7_merge.html"
+                        title="next chapter">Step 7: Merging results back together</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/tutorials/simple_tutorial/step6_transform.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+    
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+    <h3> Quick Reference:</h3>
+    <ul>
+        <h4><a href="../../decorators/decorators.html#core">Core:</a></h4>   
+        <ul>
+            <li><a href="../../decorators/originate.html">@originate</a>                           </li>
+            <li><a href="../../decorators/split.html">@split</a>                                   </li>
+            <li><a href="../../decorators/transform.html">@transform</a>                           </li>
+            <li><a href="../../decorators/merge.html">@merge</a>                                   </li>
+        </ul>
+
+        <h4><a href="../../decorators/decorators.html#advanced">Advanced</a></h4>   
+        <ul>
+            <li><a href="../../decorators/subdivide.html">@subdivide</a>                           </li>
+            <li><a href="../../decorators/transform_ex.html">@transform (add_inputs) </a>          </li>
+            <li><a href="../../decorators/collate.html">@collate</a>                               </li>
+            <li><a href="../../decorators/collate_ex.html">@collate (add_inputs)</a>               </li>
+            <li><a href="../../decorators/graphviz.html">@graphviz</a>                             </li>
+            <li><a href="../../decorators/mkdir.html">@mkdir</a>                                   </li>
+            <li><a href="../../decorators/follows.html">@follows / mkdir</a>                       </li>
+            <li><a href="../../decorators/posttask.html">@posttask touch_file</a>                  </li>
+            <li><a href="../../decorators/active_if.html">@active_if</a>                           </li>
+            <li><a href="../../decorators/jobs_limit.html">@jobs_limit</a>                         </li>
+        </ul>
+    
+        <h4><a href="../../decorators/decorators.html#combinatorics">Combinatorial:</a></h4>   
+        <ul>
+            <li><a href="../../decorators/product.html">@product </a>                              </li>
+            <li><a href="../../decorators/permutations.html">@permutations </a>                    </li>
+            <li><a href="../../decorators/combinations.html">@combinations </a>                    </li>
+            <li><a href="../../decorators/combinations_with_replacement.html">@combinations_ _with_replacement </a>                    </li>
+        </ul>
+
+                        
+        <h4><a href="../../decorators/decorators.html#esoteric">Esoteric</a></h4>   
+        <ul>
+            <li><a href="../../decorators/files_ex.html">@files (on the fly)</a>                   </li>
+            <li><a href="../../decorators/parallel.html">@parallel</a>                             </li>
+            <li><a href="../../decorators/check_if_uptodate.html">@check_if_uptodate</a>           </li>
+        </ul>
+
+
+        <h4 ><a href="../../decorators/indicator_objects.html">Indicator objects</a></h4>
+        <h4 >Pipeline functions</h4>
+        <ul>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-run">pipeline_run</a>                       </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-printout">pipeline_printout</a>                      </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-printout-graph">pipeline_printout_graph</a>          </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-get-task-names">pipeline_get_task_names</a>          </li>
+            <li><a href="../../drmaa_wrapper_functions.html#drmaa-wrapper-functions-drmaa_wrapper-run_job">drmaa_wrapper.run_job</a>          </li>
+        </ul>
+
+         <a href="../../todo.html">Future plans</a>
+    </ul>
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="step7_merge.html" title="Step 7: Merging results back together"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="step5_split.html" title="Step 5: Splitting up large tasks / files"
+             >previous</a> |</li>
+        Ruffus v. 2.5
+            <li><a href="../../index.html">Home</a> | </li>
+            <li><a href="../../contents.html">Contents</a> | </li>
+            <li><a href="../../installation.html">Install</a>  | </li>
+            <li><a href="../new_tutorial/introduction.html">Manual</a>  / </li>
+            <li><a href="../new_tutorial/manual_contents.html">(TOC)</a>  | </li>
+            <li><a href="../../faq.html">FAQ</a>  | </li>
+            <li><a href="../../cheatsheet.html">Cheat sheet</a> | </li>
+            <li><a href="../new_tutorial/command_line.html">Command Line</a> | </li>
+            <li><a href="../../gallery.html">Gallery</a> |  </li>
+            <li><a href="../../history.html">Latest Changes</a> &raquo; </li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2009-2013 Leo Goodstadt.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

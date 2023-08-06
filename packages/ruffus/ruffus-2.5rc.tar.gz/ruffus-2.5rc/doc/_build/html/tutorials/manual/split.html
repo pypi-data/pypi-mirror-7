@@ -1,0 +1,352 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Chapter 7: Splitting up large tasks / files with @split &mdash; ruffus 2.5 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/ruffus.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.5',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="ruffus 2.5 documentation" href="../../index.html" />
+    <link rel="next" title="Chapter 8: Applying the same recipe to create many different files with @transform" href="transform.html" />
+    <link rel="prev" title="Chapter 6: Running Tasks and Jobs in parallel" href="parallel_processing.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="transform.html" title="Chapter 8: Applying the same recipe to create many different files with @transform"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="parallel_processing.html" title="Chapter 6: Running Tasks and Jobs in parallel"
+             accesskey="P">previous</a> |</li>
+        Ruffus v. 2.5
+            <li><a href="../../index.html">Home</a> | </li>
+            <li><a href="../../contents.html">Contents</a> | </li>
+            <li><a href="../../installation.html">Install</a>  | </li>
+            <li><a href="../new_tutorial/introduction.html">Manual</a>  / </li>
+            <li><a href="../new_tutorial/manual_contents.html">(TOC)</a>  | </li>
+            <li><a href="../../faq.html">FAQ</a>  | </li>
+            <li><a href="../../cheatsheet.html">Cheat sheet</a> | </li>
+            <li><a href="../new_tutorial/command_line.html">Command Line</a> | </li>
+            <li><a href="../../gallery.html">Gallery</a> |  </li>
+            <li><a href="../../history.html">Latest Changes</a> &raquo; </li>
+ 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="manual-split-chapter-num-splitting-up-large-tasks-files-with-split">
+<span id="manual-split"></span><h1><strong>Chapter  7</strong>: <cite>Splitting up large tasks / files with</cite> <strong>&#64;split</strong><a class="headerlink" href="#manual-split-chapter-num-splitting-up-large-tasks-files-with-split" title="Permalink to this headline">¶</a></h1>
+<blockquote>
+<div><table class="hlist"><tr><td><ul class="simple">
+<li><a class="reference internal" href="manual_contents.html#manual"><em>Manual overview</em></a></li>
+</ul>
+</td><td><ul class="simple">
+<li><a class="reference internal" href="../../decorators/split.html#decorators-split"><em>&#64;split</em></a> syntax in detail</li>
+</ul>
+</td></tr></table>
+<p>A common requirement in computational pipelines is to split up a large task into
+small jobs which can be run on different processors, (or sent to a computational
+cluster). Very often, the number of jobs depends dynamically on the size of the
+task, and cannot be known for sure beforehand.</p>
+<p><em>Ruffus</em> uses the <a class="reference internal" href="../../decorators/split.html#decorators-split"><em>&#64;split</em></a> decorator to indicate that
+the <a class="reference internal" href="../../glossary.html#term-task"><em class="xref std std-term">task</em></a> function will produce an indeterminate number of output files.</p>
+</div></blockquote>
+<div class="section" id="split">
+<span id="index-0"></span><h2><strong>&#64;split</strong><a class="headerlink" href="#split" title="Permalink to this headline">¶</a></h2>
+<p>This example is borrowed from <a class="reference internal" href="../simple_tutorial/step5_split.html#simple-tutorial-5th-step"><em>step 4</em></a> of the simple tutorial.</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">See <a class="reference internal" href="../simple_tutorial/step5_split_code.html#simple-tutorial-5th-step-code"><em>accompanying Python Code</em></a></p>
+</div>
+</div></blockquote>
+<div class="section" id="splitting-up-a-long-list-of-random-numbers-to-calculate-their-variance">
+<h3>Splitting up a long list of random numbers to calculate their variance<a class="headerlink" href="#splitting-up-a-long-list-of-random-numbers-to-calculate-their-variance" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><table border="1" class="borderless docutils">
+<colgroup>
+<col width="1%" />
+<col width="99%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><p class="first centered">
+<strong>Step 5 from the tutorial:</strong></p><img alt="../../_images/simple_tutorial_step5_sans_key.png" class="last" src="../../_images/simple_tutorial_step5_sans_key.png" />
+</td>
+<td><blockquote class="first last">
+<div><p>Suppose we had a list of 100,000 random numbers in the file <tt class="docutils literal"><span class="pre">random_numbers.list</span></tt>:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">random</span>
+<span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s">&#39;random_numbers.list&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">NUMBER_OF_RANDOMS</span><span class="p">):</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%g</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">*</span> <span class="mf">100.0</span><span class="p">))</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>We might want to calculate the sample variance more quickly by splitting them
+into <tt class="docutils literal"><span class="pre">NNN</span></tt> parcels of 1000 numbers each and working on them in parallel.
+In this case we known that <tt class="docutils literal"><span class="pre">NNN</span> <span class="pre">==</span> <span class="pre">100</span></tt> but usually the number of resulting files
+is only apparent after we have finished processing our starting file.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Our pipeline function needs to take the random numbers file <tt class="docutils literal"><span class="pre">random_numbers.list</span></tt>,
+read the random numbers from it, and write to a new file every 100 lines.</p>
+<p>The <em>Ruffus</em> decorator <a class="reference internal" href="../../decorators/split.html#decorators-split"><em>&#64;split</em></a> is designed specifically for
+splitting up <em>inputs</em> into an indeterminate <tt class="docutils literal"><span class="pre">NNN</span></tt> number of <em>outputs</em>:</p>
+<blockquote>
+<div><img alt="../../_images/simple_tutorial_split.png" src="../../_images/simple_tutorial_split.png" />
+</div></blockquote>
+<p>Ruffus will set</p>
+<blockquote>
+<div><div class="line-block">
+<div class="line"><tt class="docutils literal"><span class="pre">input_file_name</span></tt> to <tt class="docutils literal"><span class="pre">&quot;random_numbers.list&quot;</span></tt></div>
+<div class="line"><tt class="docutils literal"><span class="pre">output_files</span></tt> to all files which match <tt class="docutils literal"><span class="pre">*.chunks</span></tt> (i.e. <tt class="docutils literal"><span class="pre">&quot;1.chunks&quot;</span></tt>, <tt class="docutils literal"><span class="pre">&quot;2.chunks&quot;</span></tt> etc.).</div>
+</div>
+</div></blockquote>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="output-files">
+<span id="manual-split-output-files"></span><h2>Output files<a class="headerlink" href="#output-files" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>The <em>output</em> (second) parameter of <strong>&#64;split</strong> usually contains a
+<a class="reference external" href="http://docs.python.org/library/glob.html"><cite>glob</cite></a> pattern like the <tt class="docutils literal"><span class="pre">*.chunks</span></tt> above.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><strong>Ruffus</strong> is quite relaxed about the contents of the <tt class="docutils literal"><span class="pre">output</span></tt> parameter.
+Strings are treated as file names. Strings containing <a class="reference external" href="http://docs.python.org/library/glob.html"><cite>glob</cite></a> pattern are expanded.
+Other types are passed verbatim to the decorated task function.</p>
+</div>
+<p>The files which match the <a class="reference external" href="http://docs.python.org/library/glob.html"><cite>glob</cite></a> will be passed as the actual parameters to the job
+function. Thus, the first time you run the example code <tt class="docutils literal"><span class="pre">*.chunks</span></tt> will return an empty list because
+no <tt class="docutils literal"><span class="pre">.chunks</span></tt> files have been created, resulting in the following:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="n">step_4_split_numbers_into_chunks</span> <span class="p">(</span><span class="s">&quot;random_numbers.list&quot;</span><span class="p">,</span> <span class="p">[])</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>After that <tt class="docutils literal"><span class="pre">*.chunks</span></tt> will match the list of current <tt class="docutils literal"><span class="pre">.chunks</span></tt> files created by
+the previous pipeline run.</p>
+<p>File names in <em>output</em> are generally out of date or superfluous. They are useful
+mainly for cleaning-up detritus from previous runs
+(have a look at <a class="reference internal" href="../simple_tutorial/step5_split_code.html#simple-tutorial-5th-step-code"><em>step_4_split_numbers_into_chunks(...)</em></a>).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>It is important, nevertheless, to specify correctly the list of <em>output</em> files.
+Otherwise, dependent tasks will not know what files you have created, and it will
+not be possible automatically to chain together the <em>ouput</em> of this pipeline task into the
+<em>inputs</em> of the next step.</p>
+<p>You can specify multiple <a class="reference external" href="http://docs.python.org/library/glob.html"><cite>glob</cite></a> patterns to match <em>all</em> the files which are the
+result of the splitting task function. These can even cover different directories,
+or groups of file names. This is a more extreme example:</p>
+<blockquote class="last">
+<div><div class="highlight-python"><div class="highlight"><pre><span class="nd">@split</span><span class="p">(</span><span class="s">&quot;input.file&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;a*.bits&#39;</span><span class="p">,</span> <span class="s">&#39;b*.pieces&#39;</span><span class="p">,</span> <span class="s">&#39;somewhere_else/c*.stuff&#39;</span><span class="p">])</span>
+<span class="k">def</span> <span class="nf">split_function</span> <span class="p">(</span><span class="n">input_filename</span><span class="p">,</span> <span class="n">output_files</span><span class="p">):</span>
+    <span class="s">&quot;Code to split up &#39;input.file&#39;&quot;</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<p>The actual resulting files of this task function are not constrained by the file names
+in the <em>output</em> parameter of the function. The whole point of <strong>&#64;split</strong> is that number
+of resulting output files cannot be known beforehand, after all.</p>
+</div></blockquote>
+<div class="section" id="example">
+<h3>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="docutils">
+<dt>Suppose random_numbers.list can be split into four pieces, this function will create</dt>
+<dd><tt class="docutils literal"><span class="pre">1.chunks</span></tt>, <tt class="docutils literal"><span class="pre">2.chunks</span></tt>, <tt class="docutils literal"><span class="pre">3.chunks</span></tt>, <tt class="docutils literal"><span class="pre">4.chunks</span></tt></dd>
+</dl>
+<p>Subsequently, we receive a larger <tt class="docutils literal"><span class="pre">random_numbers.list</span></tt> which should be split into 10
+pieces. If the pipeline is called again, the task function receives the following parameters:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="n">step_4_split_numbers_into_chunks</span><span class="p">(</span><span class="s">&quot;random_numbers.list&quot;</span><span class="p">,</span>
+                                 <span class="p">[</span><span class="s">&quot;1.chunks&quot;</span><span class="p">,</span>               <span class="c">#   previously created files</span>
+                                  <span class="s">&quot;2.chunks&quot;</span><span class="p">,</span>               <span class="c">#</span>
+                                  <span class="s">&quot;3.chunks&quot;</span><span class="p">,</span>               <span class="c">#</span>
+                                  <span class="s">&quot;4.chunks&quot;</span> <span class="p">])</span>             <span class="c">#</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>This doesn&#8217;t stop the function from creating the extra <tt class="docutils literal"><span class="pre">5.chunks</span></tt>, <tt class="docutils literal"><span class="pre">6.chunks</span></tt> etc.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Any tasks <strong>&#64;follow</strong>ing and specifying
+<tt class="docutils literal"><span class="pre">step_4_split_numbers_into_chunks(...)</span></tt> as its <em>inputs</em> parameter is going to receive
+<tt class="docutils literal"><span class="pre">1.chunks</span></tt>, <tt class="docutils literal"><span class="pre">...</span></tt>, <tt class="docutils literal"><span class="pre">10.chunks</span></tt> and not merely the first four files.</p>
+<p class="last">In other words, dependent / down-stream tasks which obtain output files automatically
+from the task decorated by <strong>&#64;split</strong> receive the most current file list.
+The <a class="reference external" href="http://docs.python.org/library/glob.html"><cite>glob</cite></a> patterns will be matched again to see exactly what files the task function
+has created in reality <em>after</em> the task completes.</p>
+</div>
+</div></blockquote>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../contents.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#"><strong>Chapter  7</strong>: <cite>Splitting up large tasks / files with</cite> <strong>&#64;split</strong></a><ul>
+<li><a class="reference internal" href="#split"><strong>&#64;split</strong></a><ul>
+<li><a class="reference internal" href="#splitting-up-a-long-list-of-random-numbers-to-calculate-their-variance">Splitting up a long list of random numbers to calculate their variance</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#output-files">Output files</a><ul>
+<li><a class="reference internal" href="#example">Example</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="parallel_processing.html"
+                        title="previous chapter"><strong>Chapter  6</strong>: <cite>Running Tasks and Jobs in parallel</cite></a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="transform.html"
+                        title="next chapter"><strong>Chapter  8</strong>: <cite>Applying the same recipe to create many different files with</cite> <strong>&#64;transform</strong></a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/tutorials/manual/split.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+    
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+    <h3> Quick Reference:</h3>
+    <ul>
+        <h4><a href="../../decorators/decorators.html#core">Core:</a></h4>   
+        <ul>
+            <li><a href="../../decorators/originate.html">@originate</a>                           </li>
+            <li><a href="../../decorators/split.html">@split</a>                                   </li>
+            <li><a href="../../decorators/transform.html">@transform</a>                           </li>
+            <li><a href="../../decorators/merge.html">@merge</a>                                   </li>
+        </ul>
+
+        <h4><a href="../../decorators/decorators.html#advanced">Advanced</a></h4>   
+        <ul>
+            <li><a href="../../decorators/subdivide.html">@subdivide</a>                           </li>
+            <li><a href="../../decorators/transform_ex.html">@transform (add_inputs) </a>          </li>
+            <li><a href="../../decorators/collate.html">@collate</a>                               </li>
+            <li><a href="../../decorators/collate_ex.html">@collate (add_inputs)</a>               </li>
+            <li><a href="../../decorators/graphviz.html">@graphviz</a>                             </li>
+            <li><a href="../../decorators/mkdir.html">@mkdir</a>                                   </li>
+            <li><a href="../../decorators/follows.html">@follows / mkdir</a>                       </li>
+            <li><a href="../../decorators/posttask.html">@posttask touch_file</a>                  </li>
+            <li><a href="../../decorators/active_if.html">@active_if</a>                           </li>
+            <li><a href="../../decorators/jobs_limit.html">@jobs_limit</a>                         </li>
+        </ul>
+    
+        <h4><a href="../../decorators/decorators.html#combinatorics">Combinatorial:</a></h4>   
+        <ul>
+            <li><a href="../../decorators/product.html">@product </a>                              </li>
+            <li><a href="../../decorators/permutations.html">@permutations </a>                    </li>
+            <li><a href="../../decorators/combinations.html">@combinations </a>                    </li>
+            <li><a href="../../decorators/combinations_with_replacement.html">@combinations_ _with_replacement </a>                    </li>
+        </ul>
+
+                        
+        <h4><a href="../../decorators/decorators.html#esoteric">Esoteric</a></h4>   
+        <ul>
+            <li><a href="../../decorators/files_ex.html">@files (on the fly)</a>                   </li>
+            <li><a href="../../decorators/parallel.html">@parallel</a>                             </li>
+            <li><a href="../../decorators/check_if_uptodate.html">@check_if_uptodate</a>           </li>
+        </ul>
+
+
+        <h4 ><a href="../../decorators/indicator_objects.html">Indicator objects</a></h4>
+        <h4 >Pipeline functions</h4>
+        <ul>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-run">pipeline_run</a>                       </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-printout">pipeline_printout</a>                      </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-printout-graph">pipeline_printout_graph</a>          </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-get-task-names">pipeline_get_task_names</a>          </li>
+            <li><a href="../../drmaa_wrapper_functions.html#drmaa-wrapper-functions-drmaa_wrapper-run_job">drmaa_wrapper.run_job</a>          </li>
+        </ul>
+
+         <a href="../../todo.html">Future plans</a>
+    </ul>
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="transform.html" title="Chapter 8: Applying the same recipe to create many different files with @transform"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="parallel_processing.html" title="Chapter 6: Running Tasks and Jobs in parallel"
+             >previous</a> |</li>
+        Ruffus v. 2.5
+            <li><a href="../../index.html">Home</a> | </li>
+            <li><a href="../../contents.html">Contents</a> | </li>
+            <li><a href="../../installation.html">Install</a>  | </li>
+            <li><a href="../new_tutorial/introduction.html">Manual</a>  / </li>
+            <li><a href="../new_tutorial/manual_contents.html">(TOC)</a>  | </li>
+            <li><a href="../../faq.html">FAQ</a>  | </li>
+            <li><a href="../../cheatsheet.html">Cheat sheet</a> | </li>
+            <li><a href="../new_tutorial/command_line.html">Command Line</a> | </li>
+            <li><a href="../../gallery.html">Gallery</a> |  </li>
+            <li><a href="../../history.html">Latest Changes</a> &raquo; </li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2009-2013 Leo Goodstadt.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

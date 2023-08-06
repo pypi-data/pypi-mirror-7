@@ -1,0 +1,305 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Code for Step 3: Displaying the pipeline visually &mdash; ruffus 2.5 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/ruffus.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.5',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="ruffus 2.5 documentation" href="../../index.html" />
+    <link rel="next" title="Code for Step 4: Displaying the pipeline visually" href="step4_run_pipeline_graphically_code.html" />
+    <link rel="prev" title="Code for Step 2: Passing parameters to the pipeline" href="step2_code.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="step4_run_pipeline_graphically_code.html" title="Code for Step 4: Displaying the pipeline visually"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="step2_code.html" title="Code for Step 2: Passing parameters to the pipeline"
+             accesskey="P">previous</a> |</li>
+        Ruffus v. 2.5
+            <li><a href="../../index.html">Home</a> | </li>
+            <li><a href="../../contents.html">Contents</a> | </li>
+            <li><a href="../../installation.html">Install</a>  | </li>
+            <li><a href="../new_tutorial/introduction.html">Manual</a>  / </li>
+            <li><a href="../new_tutorial/manual_contents.html">(TOC)</a>  | </li>
+            <li><a href="../../faq.html">FAQ</a>  | </li>
+            <li><a href="../../cheatsheet.html">Cheat sheet</a> | </li>
+            <li><a href="../new_tutorial/command_line.html">Command Line</a> | </li>
+            <li><a href="../../gallery.html">Gallery</a> |  </li>
+            <li><a href="../../history.html">Latest Changes</a> &raquo; </li>
+ 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="code-for-step-3-displaying-the-pipeline-visually">
+<span id="simple-tutorial-3nd-step-code"></span><h1>Code for Step 3: Displaying the pipeline visually<a class="headerlink" href="#code-for-step-3-displaying-the-pipeline-visually" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="simple_tutorial.html#simple-tutorial"><em>Simple tutorial overview</em></a></li>
+<li><a class="reference internal" href="../../pipeline_functions.html#pipeline-functions"><em>pipeline functions</em></a> in detail</li>
+<li><a class="reference internal" href="step3_run_pipeline.html#simple-tutorial-3rd-step"><em>Back to Step 3</em></a></li>
+</ul>
+<div class="section" id="display-the-initial-state-of-the-pipeline">
+<h2>Display the initial state of the pipeline<a class="headerlink" href="#display-the-initial-state-of-the-pipeline" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">ruffus</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="c">#---------------------------------------------------------------</span>
+<span class="c">#</span>
+<span class="c">#   first task</span>
+<span class="c">#</span>
+<span class="n">task1_param</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="p">[</span> <span class="bp">None</span><span class="p">,</span> <span class="s">&#39;job1.stage1&#39;</span><span class="p">],</span> <span class="c"># 1st job</span>
+                    <span class="p">[</span> <span class="bp">None</span><span class="p">,</span> <span class="s">&#39;job2.stage1&#39;</span><span class="p">],</span> <span class="c"># 2nd job</span>
+              <span class="p">]</span>
+
+<span class="nd">@files</span><span class="p">(</span><span class="n">task1_param</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">first_task</span><span class="p">(</span><span class="n">no_input_file</span><span class="p">,</span> <span class="n">output_file</span><span class="p">):</span>
+    <span class="nb">open</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span>
+    <span class="c">#</span>
+    <span class="c"># pretend we have worked hard</span>
+
+
+<span class="c">#---------------------------------------------------------------</span>
+<span class="c">#</span>
+<span class="c">#   second task</span>
+<span class="c">#</span>
+<span class="n">task2_param</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="p">[</span> <span class="s">&#39;job1.stage1&#39;</span><span class="p">,</span> <span class="s">&quot;job1.stage2&quot;</span><span class="p">,</span> <span class="s">&quot;    1st_job&quot;</span><span class="p">],</span> <span class="c"># 1st job</span>
+                    <span class="p">[</span> <span class="s">&#39;job2.stage1&#39;</span><span class="p">,</span> <span class="s">&quot;job2.stage2&quot;</span><span class="p">,</span> <span class="s">&quot;    2nd_job&quot;</span><span class="p">],</span> <span class="c"># 2nd job</span>
+              <span class="p">]</span>
+
+<span class="nd">@follows</span><span class="p">(</span><span class="n">first_task</span><span class="p">)</span>
+<span class="nd">@files</span><span class="p">(</span><span class="n">task2_param</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">second_task</span><span class="p">(</span><span class="n">input_file</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">extra_parameter</span><span class="p">):</span>
+    <span class="nb">open</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span>
+    <span class="k">print</span> <span class="n">extra_parameter</span>
+
+<span class="n">pipeline_printout</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="p">[</span><span class="n">second_task</span><span class="p">],</span> <span class="n">verbose</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="resulting-output">
+<h2>Resulting Output<a class="headerlink" href="#resulting-output" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_printout</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="p">[</span><span class="n">second_task</span><span class="p">])</span>
+
+<span class="go">    Task = first_task</span>
+<span class="go">           Job = [None -&gt; job1.stage1]</span>
+<span class="go">           Job = [None -&gt; job2.stage1]</span>
+
+<span class="go">    Task = second_task</span>
+<span class="go">           Job = [job1.stage1 -&gt; job1.stage2,     1st_job]</span>
+<span class="go">           Job = [job2.stage1 -&gt; job2.stage2,     2nd_job]</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="display-the-partially-up-to-date-pipeline">
+<h2>Display the partially up-to-date pipeline<a class="headerlink" href="#display-the-partially-up-to-date-pipeline" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>Run the pipeline, modify <tt class="docutils literal"><span class="pre">job1.stage</span></tt> so that the second task is no longer up-to-date
+and printout the pipeline stage again:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">pipeline_run</span><span class="p">([</span><span class="n">second_task</span><span class="p">])</span>
+
+<span class="c"># modify job1.stage1</span>
+<span class="nb">open</span><span class="p">(</span><span class="s">&quot;job1.stage1&quot;</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>At a verbosity of 5, even jobs which are up-to-date will be displayed:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_printout</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="p">[</span><span class="n">second_task</span><span class="p">],</span> <span class="n">verbose</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span>
+<span class="go">________________________________________</span>
+<span class="go">Tasks which are up-to-date:</span>
+
+<span class="go">Task = first_task</span>
+<span class="go">       Job = [None</span>
+<span class="go">             -&gt;job1.stage1]</span>
+<span class="go">         Job up-to-date</span>
+<span class="go">       Job = [None</span>
+<span class="go">             -&gt;job2.stage1]</span>
+<span class="go">         Job up-to-date</span>
+
+
+<span class="go">________________________________________</span>
+<span class="go">Tasks which will be run:</span>
+
+<span class="go">Task = second_task</span>
+<span class="go">       Job = [job1.stage1</span>
+<span class="go">             -&gt;job1.stage2,     1st_job]</span>
+<span class="go">         Job needs update: Need update file times= [[(1269025787.0, &#39;job1.stage1&#39;)], [(1269025785.0,</span>
+<span class="go">               &#39;job1.stage2&#39;)]]</span>
+<span class="go">       Job = [job2.stage1</span>
+<span class="go">             -&gt;job2.stage2,     2nd_job]</span>
+<span class="go">         Job up-to-date</span>
+
+<span class="go">________________________________________</span>
+</pre></div>
+</div>
+<p>We can now see that the there is only one job in &#8220;second_task&#8221; which needs to be re-run
+because &#8216;job1.stage1&#8217; has been modified after &#8216;job1.stage2&#8217;</p>
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../contents.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Code for Step 3: Displaying the pipeline visually</a><ul>
+<li><a class="reference internal" href="#display-the-initial-state-of-the-pipeline">Display the initial state of the pipeline</a></li>
+<li><a class="reference internal" href="#resulting-output">Resulting Output</a></li>
+<li><a class="reference internal" href="#display-the-partially-up-to-date-pipeline">Display the partially up-to-date pipeline</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="step2_code.html"
+                        title="previous chapter">Code for Step 2: Passing parameters to the pipeline</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="step4_run_pipeline_graphically_code.html"
+                        title="next chapter">Code for Step 4: Displaying the pipeline visually</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/tutorials/simple_tutorial/step3_run_pipeline_code.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+    
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+    <h3> Quick Reference:</h3>
+    <ul>
+        <h4><a href="../../decorators/decorators.html#core">Core:</a></h4>   
+        <ul>
+            <li><a href="../../decorators/originate.html">@originate</a>                           </li>
+            <li><a href="../../decorators/split.html">@split</a>                                   </li>
+            <li><a href="../../decorators/transform.html">@transform</a>                           </li>
+            <li><a href="../../decorators/merge.html">@merge</a>                                   </li>
+        </ul>
+
+        <h4><a href="../../decorators/decorators.html#advanced">Advanced</a></h4>   
+        <ul>
+            <li><a href="../../decorators/subdivide.html">@subdivide</a>                           </li>
+            <li><a href="../../decorators/transform_ex.html">@transform (add_inputs) </a>          </li>
+            <li><a href="../../decorators/collate.html">@collate</a>                               </li>
+            <li><a href="../../decorators/collate_ex.html">@collate (add_inputs)</a>               </li>
+            <li><a href="../../decorators/graphviz.html">@graphviz</a>                             </li>
+            <li><a href="../../decorators/mkdir.html">@mkdir</a>                                   </li>
+            <li><a href="../../decorators/follows.html">@follows / mkdir</a>                       </li>
+            <li><a href="../../decorators/posttask.html">@posttask touch_file</a>                  </li>
+            <li><a href="../../decorators/active_if.html">@active_if</a>                           </li>
+            <li><a href="../../decorators/jobs_limit.html">@jobs_limit</a>                         </li>
+        </ul>
+    
+        <h4><a href="../../decorators/decorators.html#combinatorics">Combinatorial:</a></h4>   
+        <ul>
+            <li><a href="../../decorators/product.html">@product </a>                              </li>
+            <li><a href="../../decorators/permutations.html">@permutations </a>                    </li>
+            <li><a href="../../decorators/combinations.html">@combinations </a>                    </li>
+            <li><a href="../../decorators/combinations_with_replacement.html">@combinations_ _with_replacement </a>                    </li>
+        </ul>
+
+                        
+        <h4><a href="../../decorators/decorators.html#esoteric">Esoteric</a></h4>   
+        <ul>
+            <li><a href="../../decorators/files_ex.html">@files (on the fly)</a>                   </li>
+            <li><a href="../../decorators/parallel.html">@parallel</a>                             </li>
+            <li><a href="../../decorators/check_if_uptodate.html">@check_if_uptodate</a>           </li>
+        </ul>
+
+
+        <h4 ><a href="../../decorators/indicator_objects.html">Indicator objects</a></h4>
+        <h4 >Pipeline functions</h4>
+        <ul>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-run">pipeline_run</a>                       </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-printout">pipeline_printout</a>                      </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-printout-graph">pipeline_printout_graph</a>          </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-get-task-names">pipeline_get_task_names</a>          </li>
+            <li><a href="../../drmaa_wrapper_functions.html#drmaa-wrapper-functions-drmaa_wrapper-run_job">drmaa_wrapper.run_job</a>          </li>
+        </ul>
+
+         <a href="../../todo.html">Future plans</a>
+    </ul>
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="step4_run_pipeline_graphically_code.html" title="Code for Step 4: Displaying the pipeline visually"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="step2_code.html" title="Code for Step 2: Passing parameters to the pipeline"
+             >previous</a> |</li>
+        Ruffus v. 2.5
+            <li><a href="../../index.html">Home</a> | </li>
+            <li><a href="../../contents.html">Contents</a> | </li>
+            <li><a href="../../installation.html">Install</a>  | </li>
+            <li><a href="../new_tutorial/introduction.html">Manual</a>  / </li>
+            <li><a href="../new_tutorial/manual_contents.html">(TOC)</a>  | </li>
+            <li><a href="../../faq.html">FAQ</a>  | </li>
+            <li><a href="../../cheatsheet.html">Cheat sheet</a> | </li>
+            <li><a href="../new_tutorial/command_line.html">Command Line</a> | </li>
+            <li><a href="../../gallery.html">Gallery</a> |  </li>
+            <li><a href="../../history.html">Latest Changes</a> &raquo; </li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2009-2013 Leo Goodstadt.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

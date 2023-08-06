@@ -1,0 +1,395 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Chapter 8: Applying the same recipe to create many different files with @transform &mdash; ruffus 2.5 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/ruffus.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.5',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="ruffus 2.5 documentation" href="../../index.html" />
+    <link rel="next" title="Chapter 9: Merge multiple input into a single result" href="merge.html" />
+    <link rel="prev" title="Chapter 7: Splitting up large tasks / files with @split" href="split.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="merge.html" title="Chapter 9: Merge multiple input into a single result"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="split.html" title="Chapter 7: Splitting up large tasks / files with @split"
+             accesskey="P">previous</a> |</li>
+        Ruffus v. 2.5
+            <li><a href="../../index.html">Home</a> | </li>
+            <li><a href="../../contents.html">Contents</a> | </li>
+            <li><a href="../../installation.html">Install</a>  | </li>
+            <li><a href="../new_tutorial/introduction.html">Manual</a>  / </li>
+            <li><a href="../new_tutorial/manual_contents.html">(TOC)</a>  | </li>
+            <li><a href="../../faq.html">FAQ</a>  | </li>
+            <li><a href="../../cheatsheet.html">Cheat sheet</a> | </li>
+            <li><a href="../new_tutorial/command_line.html">Command Line</a> | </li>
+            <li><a href="../../gallery.html">Gallery</a> |  </li>
+            <li><a href="../../history.html">Latest Changes</a> &raquo; </li>
+ 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="manual-transform-chapter-num-applying-the-same-recipe-to-create-many-different-files-with-transform">
+<span id="manual-transform"></span><h1><strong>Chapter  8</strong>: <cite>Applying the same recipe to create many different files with</cite> <strong>&#64;transform</strong><a class="headerlink" href="#manual-transform-chapter-num-applying-the-same-recipe-to-create-many-different-files-with-transform" title="Permalink to this headline">¶</a></h1>
+<blockquote>
+<div><table class="hlist"><tr><td><ul class="simple">
+<li><a class="reference internal" href="manual_contents.html#manual"><em>Manual overview</em></a></li>
+</ul>
+</td><td><ul class="simple">
+<li><a class="reference internal" href="../../decorators/transform.html#decorators-transform"><em>&#64;transform</em></a> syntax in detail</li>
+</ul>
+</td></tr></table>
+<p>Sometimes you might have a list of data files which you might want to send to the
+same pipelined function, to apply
+the same operation. The best way to manage this would be to produce a corresponding
+list of results files:</p>
+<blockquote>
+<div><div class="line-block">
+<div class="line">Compiling c source files might <em>&#64;transform</em> an <tt class="docutils literal"><span class="pre">a.c</span></tt> file to an <tt class="docutils literal"><span class="pre">a.o</span></tt> file.</div>
+<div class="line">A <tt class="docutils literal"><span class="pre">grep</span></tt> operation might <em>&#64;transform</em> a <tt class="docutils literal"><span class="pre">plays.king_lear.txt</span></tt> file to an <tt class="docutils literal"><span class="pre">plays.king_lear.counts</span></tt> file.</div>
+</div>
+</div></blockquote>
+<p><em>Ruffus</em> uses the <a class="reference internal" href="../../decorators/transform.html#decorators-transform"><em>&#64;transform</em></a> decorator for this purpose.</p>
+<p>When you <strong>&#64;transform</strong> your data from one file type to another, you are not restricted just
+to changing the file suffix. We shall see how, with the full power of regular
+expressions behind you, you can sort the resulting
+data into different directories, add indices and so on.</p>
+</div></blockquote>
+<div class="section" id="transform">
+<span id="index-0"></span><h2><strong>&#64;transform</strong><a class="headerlink" href="#transform" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="worked-example-calculating-sums-and-sum-of-squares-in-parallel">
+<h3>Worked example: calculating sums and sum of squares in parallel<a class="headerlink" href="#worked-example-calculating-sums-and-sum-of-squares-in-parallel" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>This example is borrowed from <a class="reference internal" href="../simple_tutorial/step5_split.html#simple-tutorial-5th-step"><em>step 5</em></a> of the simple tutorial.</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">See <a class="reference internal" href="../simple_tutorial/step5_split_code.html#simple-tutorial-5th-step-code"><em>example code here</em></a></p>
+</div>
+</div></blockquote>
+<p>Given a set of files, each with a set of random numbers, we want to calculate thier
+sums and sum of squares. The easiest way to do this is by providing a recipe for
+transforming a <tt class="docutils literal"><span class="pre">*.chunk</span></tt> file containing a list of numbers into a <tt class="docutils literal"><span class="pre">*.sums</span></tt> file
+with our sums and sum of squares.</p>
+<p><em>Ruffus</em> magically takes care of applying the same recipe (task function) to all the different
+data files in parallel.</p>
+<blockquote>
+<div><img alt="../../_images/simple_tutorial_transform.png" src="../../_images/simple_tutorial_transform.png" />
+</div></blockquote>
+<p>The <a class="reference internal" href="../../decorators/transform.html#decorators-transform"><em>&#64;transform</em></a> decorator tells <em>Ruffus</em> to take files from the step 4 task (i.e. <tt class="docutils literal"><span class="pre">*.chunks</span></tt>),
+and produce files having the <tt class="docutils literal"><span class="pre">.sums</span></tt> suffix instead.
+ending.</p>
+<dl class="docutils">
+<dt>Thus if <tt class="docutils literal"><span class="pre">step_4_split_numbers_into_chunks</span></tt> created</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="s">&quot;1.chunks&quot;</span>
+<span class="s">&quot;2.chunks&quot;</span>
+<span class="s">&quot;3.chunks&quot;</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>This would result in the following function calls:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="n">step_5_calculate_sum_of_squares</span> <span class="p">(</span><span class="s">&quot;1.chunk&quot;</span><span class="p">,</span> <span class="s">&quot;1.sums&quot;</span><span class="p">)</span>
+<span class="n">step_5_calculate_sum_of_squares</span> <span class="p">(</span><span class="s">&quot;2.chunk&quot;</span><span class="p">,</span> <span class="s">&quot;2.sums&quot;</span><span class="p">)</span>
+<span class="n">step_5_calculate_sum_of_squares</span> <span class="p">(</span><span class="s">&quot;3.chunk&quot;</span><span class="p">,</span> <span class="s">&quot;3.sums&quot;</span><span class="p">)</span>
+
+<span class="c"># etc...</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="using-suffix-to-change-give-each-output-file-a-new-suffix">
+<h2>Using <a class="reference internal" href="../../decorators/indicator_objects.html#decorators-suffix"><em>suffix(...)</em></a> to change give each output file a new suffix<a class="headerlink" href="#using-suffix-to-change-give-each-output-file-a-new-suffix" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>The <a class="reference internal" href="../../decorators/indicator_objects.html#decorators-suffix"><em>suffix</em></a> specification indicates that</p>
+<blockquote>
+<div><ul class="simple">
+<li>only filenames with ending with the suffix term (e.g. <tt class="docutils literal"><span class="pre">.chunk</span></tt>) should be considered</li>
+<li>The text matching the suffix term should be replaced with the string in the output pattern.</li>
+</ul>
+</div></blockquote>
+<p>This example assumes that both the <em>inputs</em> and the <em>outputs</em> consist each of a single string but
+<strong>Ruffus</strong> places no such constraints on the data flowing through your pipeline.</p>
+<blockquote>
+<div><ul class="simple">
+<li>If there are multiple file names (strings) contained within each <em>inputs</em> parameter,
+then only the first will be used to generate the <em>output</em></li>
+<li>Each string that is encountered in each <em>output</em> parameter will be used for suffix replacement.</li>
+</ul>
+</div></blockquote>
+</div></blockquote>
+<div class="section" id="an-example-with-more-complex-data-structures">
+<h3>An example with more complex data structures<a class="headerlink" href="#an-example-with-more-complex-data-structures" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>This will become much clearer with this example:</p>
+<blockquote>
+<div><div class="highlight-python"><pre>    inputs = [
+                    ["file1.ext", 10   ],               #job 1
+                    [37.0, "file2.wrong_extension",
+                           "file2_ignored.ext"],        #job 2
+                    "file3.ext"                         #job 3
+                    ]
+
+@transform(inputs, suffix(".ext"), [(".ext1", ), ".ext2"])
+def pipelinetask (input_file_name, output_file_name):
+    ""</pre>
+</div>
+</div></blockquote>
+<div class="line-block">
+<div class="line">Granted, it may seem rather odd that the <em>inputs</em> parameter including numbers as well
+as file names, but <strong>Ruffus</strong> does not second guess how you wish to arrange your pipelines.</div>
+<div class="line"><tt class="docutils literal"><span class="pre">inputs</span></tt> contains the parameters for three jobs.</div>
+<div class="line">In each case, the first file name string encountered will be used to generate the <em>output</em> parameter:</div>
+</div>
+<blockquote>
+<div><img alt="../../_images/manual_transform_complex_outputs.png" src="../../_images/manual_transform_complex_outputs.png" />
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The first filename in the prospective job #2 does not have the <tt class="docutils literal"><span class="pre">.ext</span></tt> suffix so this job will be eliminated.</p>
+</div>
+</div></blockquote>
+<p>Thus, the original code:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="nd">@transform</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">suffix</span><span class="p">(</span><span class="s">&quot;.ext&quot;</span><span class="p">),</span> <span class="p">[(</span><span class="mi">15</span><span class="p">,</span> <span class="s">&quot;.ext1&quot;</span><span class="p">),</span> <span class="s">&quot;.ext2&quot;</span><span class="p">])</span>
+<span class="k">def</span> <span class="nf">pipelinetask</span> <span class="p">(</span><span class="n">input_file_name</span><span class="p">,</span> <span class="n">output_file_name</span><span class="p">):</span>
+    <span class="s">&quot;&quot;</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>is equivalent to calling:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="n">pipelinetask</span><span class="p">([</span><span class="s">&quot;file1.ext&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="p">[(</span><span class="mi">15</span><span class="p">,</span> <span class="s">&#39;file1.ext1&#39;</span><span class="p">),</span> <span class="s">&#39;file1.ext2&#39;</span><span class="p">])</span>  <span class="c"># job 1</span>
+<span class="n">pipelinetask</span><span class="p">(</span><span class="s">&quot;file3.ext&quot;</span><span class="p">,</span>       <span class="p">[(</span><span class="mi">15</span><span class="p">,</span> <span class="s">&#39;file3.ext1&#39;</span><span class="p">),</span> <span class="s">&#39;file3.ext2&#39;</span><span class="p">])</span>  <span class="c"># job 3</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Hopefully, your code will simpler than this rather pathological case!</p>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="regular-expressions-regex-provide-maximum-flexibility">
+<h2>Regular expressions <a class="reference internal" href="../../decorators/indicator_objects.html#decorators-regex"><em>regex(...)</em></a> provide maximum flexibility<a class="headerlink" href="#regular-expressions-regex-provide-maximum-flexibility" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>Exactly the same function could be written using regular expressions:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="nd">@transform</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">regex</span><span class="p">(</span><span class="s">&quot;.ext&quot;</span><span class="p">),</span> <span class="p">[(</span><span class="mi">15</span><span class="p">,</span> <span class="s">&quot;.ext1&quot;</span><span class="p">),</span> <span class="s">&quot;.ext2&quot;</span><span class="p">])</span>
+<span class="k">def</span> <span class="nf">pipelinetask</span> <span class="p">(</span><span class="n">input_file_name</span><span class="p">,</span> <span class="n">output_file_name</span><span class="p">):</span>
+    <span class="s">&quot;&quot;</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="line-block">
+<div class="line">However, regular expressions are not limited to suffix matches.</div>
+<div class="line">We can sort our <em>ouputs</em> to different subdirectories, depending on category.</div>
+<div class="line"><br /></div>
+<div class="line">Our example starts off with data file for different zoo animals.</div>
+<div class="line">We are only interested in mammals, and we would like the files of each species to</div>
+<div class="line">end up in its own directory after processing.</div>
+<div class="line">Starting with these species files:</div>
+</div>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;mammals.tiger.wild.animals&quot;</span>
+<span class="s">&quot;mammals.lion.wild.animals&quot;</span>
+<span class="s">&quot;mammals.lion.handreared.animals&quot;</span>
+<span class="s">&quot;mammals.dog.tame.animals&quot;</span>
+<span class="s">&quot;mammals.dog.wild.animals&quot;</span>
+<span class="s">&quot;reptiles.crocodile.wild.animals&quot;</span>
+</pre></div>
+</div>
+</div></blockquote>
+<dl class="docutils">
+<dt>Then, the following:</dt>
+<dd><img alt="../../_images/manual_transform.png" class="first last" src="../../_images/manual_transform.png" />
+</dd>
+<dt>will put each captured mammal in its own directory:</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_run</span><span class="p">([</span><span class="n">capture_mammals</span><span class="p">])</span>
+<span class="go">    Job = [mammals.dog.tame.animals        -&gt; dog/dog.tame.in_my_zoo, dog] completed</span>
+<span class="go">    Job = [mammals.dog.wild.animals        -&gt; dog/dog.wild.in_my_zoo, dog] completed</span>
+<span class="go">    Job = [mammals.lion.handreared.animals -&gt; lion/lion.handreared.in_my_zoo, lion] completed</span>
+<span class="go">    Job = [mammals.lion.wild.animals       -&gt; lion/lion.wild.in_my_zoo, lion] completed</span>
+<span class="go">    Job = [mammals.tiger.wild.animals      -&gt; tiger/tiger.wild.in_my_zoo, tiger] completed</span>
+<span class="go">Completed Task = capture_mammals</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The code can be found <a class="reference internal" href="transform_code.html#manual-transform-code"><em>here</em></a></p>
+</div>
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../contents.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#"><strong>Chapter  8</strong>: <cite>Applying the same recipe to create many different files with</cite> <strong>&#64;transform</strong></a><ul>
+<li><a class="reference internal" href="#transform"><strong>&#64;transform</strong></a><ul>
+<li><a class="reference internal" href="#worked-example-calculating-sums-and-sum-of-squares-in-parallel">Worked example: calculating sums and sum of squares in parallel</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#using-suffix-to-change-give-each-output-file-a-new-suffix">Using <tt class="docutils literal"><span class="pre">suffix(...)</span></tt> to change give each output file a new suffix</a><ul>
+<li><a class="reference internal" href="#an-example-with-more-complex-data-structures">An example with more complex data structures</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#regular-expressions-regex-provide-maximum-flexibility">Regular expressions <tt class="docutils literal"><span class="pre">regex(...)</span></tt> provide maximum flexibility</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="split.html"
+                        title="previous chapter"><strong>Chapter  7</strong>: <cite>Splitting up large tasks / files with</cite> <strong>&#64;split</strong></a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="merge.html"
+                        title="next chapter"><strong>Chapter  9</strong>: <strong>Merge</strong> <cite>multiple input into a single result</cite></a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/tutorials/manual/transform.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+    
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+    <h3> Quick Reference:</h3>
+    <ul>
+        <h4><a href="../../decorators/decorators.html#core">Core:</a></h4>   
+        <ul>
+            <li><a href="../../decorators/originate.html">@originate</a>                           </li>
+            <li><a href="../../decorators/split.html">@split</a>                                   </li>
+            <li><a href="../../decorators/transform.html">@transform</a>                           </li>
+            <li><a href="../../decorators/merge.html">@merge</a>                                   </li>
+        </ul>
+
+        <h4><a href="../../decorators/decorators.html#advanced">Advanced</a></h4>   
+        <ul>
+            <li><a href="../../decorators/subdivide.html">@subdivide</a>                           </li>
+            <li><a href="../../decorators/transform_ex.html">@transform (add_inputs) </a>          </li>
+            <li><a href="../../decorators/collate.html">@collate</a>                               </li>
+            <li><a href="../../decorators/collate_ex.html">@collate (add_inputs)</a>               </li>
+            <li><a href="../../decorators/graphviz.html">@graphviz</a>                             </li>
+            <li><a href="../../decorators/mkdir.html">@mkdir</a>                                   </li>
+            <li><a href="../../decorators/follows.html">@follows / mkdir</a>                       </li>
+            <li><a href="../../decorators/posttask.html">@posttask touch_file</a>                  </li>
+            <li><a href="../../decorators/active_if.html">@active_if</a>                           </li>
+            <li><a href="../../decorators/jobs_limit.html">@jobs_limit</a>                         </li>
+        </ul>
+    
+        <h4><a href="../../decorators/decorators.html#combinatorics">Combinatorial:</a></h4>   
+        <ul>
+            <li><a href="../../decorators/product.html">@product </a>                              </li>
+            <li><a href="../../decorators/permutations.html">@permutations </a>                    </li>
+            <li><a href="../../decorators/combinations.html">@combinations </a>                    </li>
+            <li><a href="../../decorators/combinations_with_replacement.html">@combinations_ _with_replacement </a>                    </li>
+        </ul>
+
+                        
+        <h4><a href="../../decorators/decorators.html#esoteric">Esoteric</a></h4>   
+        <ul>
+            <li><a href="../../decorators/files_ex.html">@files (on the fly)</a>                   </li>
+            <li><a href="../../decorators/parallel.html">@parallel</a>                             </li>
+            <li><a href="../../decorators/check_if_uptodate.html">@check_if_uptodate</a>           </li>
+        </ul>
+
+
+        <h4 ><a href="../../decorators/indicator_objects.html">Indicator objects</a></h4>
+        <h4 >Pipeline functions</h4>
+        <ul>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-run">pipeline_run</a>                       </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-printout">pipeline_printout</a>                      </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-printout-graph">pipeline_printout_graph</a>          </li>
+            <li><a href="../../pipeline_functions.html#pipeline-functions-pipeline-get-task-names">pipeline_get_task_names</a>          </li>
+            <li><a href="../../drmaa_wrapper_functions.html#drmaa-wrapper-functions-drmaa_wrapper-run_job">drmaa_wrapper.run_job</a>          </li>
+        </ul>
+
+         <a href="../../todo.html">Future plans</a>
+    </ul>
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="merge.html" title="Chapter 9: Merge multiple input into a single result"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="split.html" title="Chapter 7: Splitting up large tasks / files with @split"
+             >previous</a> |</li>
+        Ruffus v. 2.5
+            <li><a href="../../index.html">Home</a> | </li>
+            <li><a href="../../contents.html">Contents</a> | </li>
+            <li><a href="../../installation.html">Install</a>  | </li>
+            <li><a href="../new_tutorial/introduction.html">Manual</a>  / </li>
+            <li><a href="../new_tutorial/manual_contents.html">(TOC)</a>  | </li>
+            <li><a href="../../faq.html">FAQ</a>  | </li>
+            <li><a href="../../cheatsheet.html">Cheat sheet</a> | </li>
+            <li><a href="../new_tutorial/command_line.html">Command Line</a> | </li>
+            <li><a href="../../gallery.html">Gallery</a> |  </li>
+            <li><a href="../../history.html">Latest Changes</a> &raquo; </li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2009-2013 Leo Goodstadt.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>
