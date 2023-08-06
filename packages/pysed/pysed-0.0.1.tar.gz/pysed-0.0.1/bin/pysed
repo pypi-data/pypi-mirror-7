@@ -1,0 +1,203 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+
+
+'''usage: pysed [-h] [-v] [-p] [-s] [-b] [-n]
+
+Utility that parses and transforms text
+
+optional arguments:
+  -h, --help		show this help message and exit
+  -v, --version		print version and exit
+  -p, --print		print text
+  -s,			find and replace text
+  -b,			add text before target
+  -n,			add text after the target'''
+
+
+
+import re
+import sys
+import subprocess
+
+
+
+__author__ = "dslackw"
+__version__ = "0.0.1"
+__license__ = "GNU General Public License v3 (GPLv3)"
+__email__ = "d.zlatanidis@gmail.com"
+
+
+
+
+path = subprocess.check_output(['pwd'], shell=True).replace('\n', '/')
+
+
+def PrintText(file, arg0, arg2, arg3):
+	result = []
+
+	try :
+		file = open(path + file, 'r')
+
+	       	read = file.read()
+        	file.close()
+
+
+		try:
+		        find_text = re.findall(arg2, read)
+		except re.error:
+			sys.exit()
+			
+		if arg0 == '-p' or arg0 == '--print':
+			print read,
+			sys.exit()
+
+		elif arg0 == '-s':
+		        for char in find_text:
+        		        result = read.replace(char, arg3)
+
+		elif arg0 == '-b':
+			for char in find_text:
+                	        result = read.replace(char, arg3 + char)
+
+		elif arg0 == '-n':
+			for char in find_text:
+                	        result = read.replace(char, char + arg3)
+
+		else:
+			print ('pysed: error argument')
+			sys.exit()
+		
+	        if result == []:
+			pass
+		else:
+        	        print result,	
+
+	except IOError:
+                print ('wrong file name')
+
+
+
+
+def ReplaceText(file, arg1, arg2):
+	result = []
+
+	try:
+
+	        file =  open(path + file, 'r+')
+		read = file.read()
+	
+		try:
+			find_text = re.findall(arg1, read)
+		except re.error:
+			sys.exit()
+
+		for char in find_text:
+			result = read.replace(char, arg2)
+
+	        if result == []:
+			pass
+		else:
+			file.seek(0)
+			file.truncate()
+			file.write(result)
+
+		file.close()
+
+	except IOError:
+                print ('wrong file name')	
+
+
+
+
+def AppendText(file, arg0, arg1, arg2):
+	result = []
+
+	try:
+
+		file = open(path + file, 'r+')
+        	read = file.read()
+	
+		try:
+		        find_text = re.findall(arg1, read)
+		except re.error:
+        	        sys.exit()
+	
+
+		if arg0 == '-b':
+		        for char in find_text:
+        		        result = read.replace(char, arg2 + char)
+
+		else:
+			for char in find_text:
+        		        result = read.replace(char, char + arg2)
+
+	        if result == []:
+			pass
+		else:
+			file.seek(0)
+			file.truncate()
+	                file.write(result)
+
+	        file.close()
+
+	except IOError:
+                print ('wrong file name')
+
+
+
+def main():
+
+	arg = sys.argv
+	arg.pop(0)
+
+
+	if len(arg) == 2:
+		file = arg[1]
+
+	elif len(arg) == 4:
+		file = arg[3]
+
+	elif len(arg) == 5:
+		file = arg[4]
+
+
+	if len(arg) == 0:
+                print ('Please give one arguments')
+
+	elif len(arg) == 1 and arg[0] == '-h' or len(arg) == 1 and arg[0] == '--help':
+		print ('usage: pysed [-h] [-v] [-p] [-s] [-b] [-n]\n')
+		print ('Utility that parses and transforms text\n')
+		print ('optional arguments:')
+	        print ('  -h, --help		show this help message and exit')
+		print ('  -v, --version		print version and exit')
+        	print ('  -p, --print		print text')
+		print ('  -s,			find and replace text')
+		print ('  -b,			add text before target')
+		print ('  -n,			add text after the target')
+
+	elif len(arg) == 1 and arg[0] == '-v' or len(arg) == 1 and arg[0] == '--version':
+		print ('Version : '),  __version__
+
+	elif len(arg) == 2 and arg[0] == '-p' or len(arg) == 2 and arg[0] == '--print':
+		PrintText(file, arg[0], '', '')
+
+	elif len(arg) == 5 and arg[1] == '-p' or len(arg) == 5 and arg[1] == '--print':
+		PrintText(file, arg[0], arg[2], arg[3])
+	
+	elif len(arg) == 4 and arg[0] == '-s':
+		ReplaceText(file, arg[1], arg[2])
+
+	elif len(arg) == 4 and arg[0] == '-b':
+		AppendText(file, arg[0], arg[1], arg[2])
+
+	elif len(arg) == 4 and arg[0] == '-n':
+		AppendText(file, arg[0], arg[1], arg[2])
+
+	else:
+        	print ('pysed: error argument')
+
+
+if __name__ == "__main__":
+    main()
