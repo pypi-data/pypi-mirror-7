@@ -1,0 +1,184 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Quickstart &mdash; xlwings 0.1.1dev documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1.1dev',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="xlwings 0.1.1dev documentation" href="index.html" />
+    <link rel="next" title="Workbook Object" href="workbook.html" />
+    <link rel="prev" title="Installation" href="installation.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="workbook.html" title="Workbook Object"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="installation.html" title="Installation"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">xlwings 0.1.1dev documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="quickstart">
+<h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h1>
+<p>This guide assumes you have already installed xlwings. If that&#8217;s not the case, head over to <a class="reference internal" href="installation.html#installation"><em>Installation</em></a>.</p>
+<div class="section" id="interact-with-excel-from-python">
+<h2>Interact with Excel from Python<a class="headerlink" href="#interact-with-excel-from-python" title="Permalink to this headline">¶</a></h2>
+<p>Writing/reading values to/from Excel and adding a chart is as easy as:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">xlwings</span> <span class="kn">import</span> <span class="n">Workbook</span><span class="p">,</span> <span class="n">Range</span><span class="p">,</span> <span class="n">Chart</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wb</span> <span class="o">=</span> <span class="n">Workbook</span><span class="p">()</span>  <span class="c"># Creates a connection with a new workbook</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Range</span><span class="p">(</span><span class="s">&#39;A1&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Foo 1&#39;</span><span class="p">,</span> <span class="s">&#39;Foo 2&#39;</span><span class="p">,</span> <span class="s">&#39;Foo 3&#39;</span><span class="p">,</span> <span class="s">&#39;Foo 4&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Range</span><span class="p">(</span><span class="s">&#39;A2&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">40</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Range</span><span class="p">(</span><span class="s">&#39;A1&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">value</span>  <span class="c"># Read the whole table back</span>
+<span class="go">[[u&#39;Foo 1&#39;, u&#39;Foo 2&#39;, u&#39;Foo 3&#39;, u&#39;Foo 4&#39;], [10.0, 20.0, 30.0, 40.0]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chart</span> <span class="o">=</span> <span class="n">Chart</span><span class="p">()</span><span class="o">.</span><span class="n">add</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chart</span><span class="o">.</span><span class="n">set_source_data</span><span class="p">(</span><span class="n">Range</span><span class="p">(</span><span class="s">&#39;A1&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">table</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The Range object as used above will refer to the active sheet. Include the Sheet name like this:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">Range</span><span class="p">(</span><span class="s">&#39;Sheet1&#39;</span><span class="p">,</span> <span class="s">&#39;A1&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+</pre></div>
+</div>
+<p>Qualify the Workbook additionally like this:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">wb</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="s">&#39;Sheet1&#39;</span><span class="p">,</span> <span class="s">&#39;A1&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="call-python-from-excel">
+<h2>Call Python from Excel<a class="headerlink" href="#call-python-from-excel" title="Permalink to this headline">¶</a></h2>
+<p>If, for example, you want to fill your spreadsheet with standard normally distributed random numbers, your VBA code is
+just one line:</p>
+<div class="highlight-vb.net"><div class="highlight"><pre><span class="k">Sub</span> <span class="nf">RandomNumbers</span><span class="p">()</span>
+    <span class="n">RunPython</span> <span class="p">(</span><span class="s">&quot;import mymodule; mymodule.rand_numbers()&quot;</span><span class="p">)</span>
+<span class="k">End</span> <span class="k">Sub</span>
+</pre></div>
+</div>
+<p>This essentially hands over control to <tt class="docutils literal"><span class="pre">mymodule.py</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">xlwings</span> <span class="kn">import</span> <span class="n">Workbook</span><span class="p">,</span> <span class="n">Range</span>
+
+<span class="n">wb</span> <span class="o">=</span> <span class="n">Workbook</span><span class="p">()</span>  <span class="c"># Creates a reference to the calling Excel file</span>
+
+<span class="k">def</span> <span class="nf">rand_numbers</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot; produces standard normally distributed random numbers with shape (n,n)&quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">Range</span><span class="p">(</span><span class="s">&#39;Sheet1&#39;</span><span class="p">,</span> <span class="s">&#39;B1&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+    <span class="n">rand_num</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+    <span class="n">Range</span><span class="p">(</span><span class="s">&#39;Sheet1&#39;</span><span class="p">,</span> <span class="s">&#39;C3&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">rand_num</span>
+</pre></div>
+</div>
+<p>To make this run, just import de VBA module <tt class="docutils literal"><span class="pre">xlwings.bas</span></tt> in the VBA editor (Open the VBA editor with <tt class="docutils literal"><span class="pre">Alt-F11</span></tt>,
+then go to <tt class="docutils literal"><span class="pre">File</span> <span class="pre">&gt;</span> <span class="pre">Import</span> <span class="pre">File...</span></tt> and import the <tt class="docutils literal"><span class="pre">xlwings.bas</span></tt> file. ). It can be found in the directory of
+your <tt class="docutils literal"><span class="pre">xlwings</span></tt> installation.</p>
+</div>
+<div class="section" id="easy-deployment">
+<h2>Easy deployment<a class="headerlink" href="#easy-deployment" title="Permalink to this headline">¶</a></h2>
+<p>Deployment is really the part where xlwings shines:</p>
+<ul class="simple">
+<li>Just zip-up your Spreadsheet with your Python code and the <tt class="docutils literal"><span class="pre">xlwings</span></tt> directory from your installation and send it
+around. The receiver only needs to have an installation of Python with
+<a class="reference external" href="http://sourceforge.net/projects/pywin32/">pywin32</a> (and obviously all the other packages you&#8217;re using).</li>
+<li>There is no need to install any Excel add-in.</li>
+<li>If this still sounds too complicated, just freeze your Python code into an executable and use
+<tt class="docutils literal"><span class="pre">RunFrozenPython</span></tt> instead of <tt class="docutils literal"><span class="pre">RunPython</span></tt>. This gives you a standalone version of your Spreadsheet tool without any
+dependencies.</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Quickstart</a><ul>
+<li><a class="reference internal" href="#interact-with-excel-from-python">Interact with Excel from Python</a></li>
+<li><a class="reference internal" href="#call-python-from-excel">Call Python from Excel</a></li>
+<li><a class="reference internal" href="#easy-deployment">Easy deployment</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="installation.html"
+                        title="previous chapter">Installation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="workbook.html"
+                        title="next chapter">Workbook Object</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/quickstart.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="workbook.html" title="Workbook Object"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="installation.html" title="Installation"
+             >previous</a> |</li>
+        <li><a href="index.html">xlwings 0.1.1dev documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Zoomer Analytics LLC..
+    </div>
+  </body>
+</html>
