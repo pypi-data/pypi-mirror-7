@@ -1,0 +1,342 @@
+Description: All-in-one baremetal OpenStack and all dependencies.
+HeatTemplateFormatVersion: '2012-12-12'
+Parameters:
+  AdminPassword:
+    Default: unset
+    Description: The password for the keystone admin account, used for monitoring, querying neutron etc.
+    Type: String
+    NoEcho: true
+  AdminToken:
+    Default: unset
+    Description: The keystone auth secret.
+    Type: String
+    NoEcho: true
+  CinderLVMLoopDeviceSize:
+    Default: 5000
+    Description: The size of the loopback file used by the cinder LVM driver.
+    Type: Number
+  BaremetalArch:
+    Default: i386
+    Description: The architecture to use in Nova-BM - i386 or amd64.
+    Type: String
+  CeilometerMeteringSecret:
+    Default: unset
+    Description: Secret shared by the ceilometer services.
+    Type: String
+    NoEcho: true
+  CeilometerPassword:
+    Default: unset
+    Description: The password for the ceilometer service account.
+    Type: String
+    NoEcho: true
+  SnmpdReadonlyUserName:
+    Default: ro_snmp_user
+    Description: The user name for SNMPd with readonly rights running on all Overcloud nodes
+    Type: String
+  SnmpdReadonlyUserPassword:
+    Default: unset
+    Description: The user password for SNMPd with readonly rights running on all Overcloud nodes
+    Type: String
+    NoEcho: true
+  ExtraConfig:
+    Default: {}
+    Description: |
+      Additional configuration to inject into the cluster. The JSON should have
+      the following structure:
+        {"FILEKEY":
+          {"config:
+            [{"section": "SECTIONNAME",
+              "values":
+               [{"option": "OPTIONNAME",
+                  "value": "VALUENAME"
+                }
+               ]
+             }
+            ]
+          }
+        }
+      For instance:
+        {"nova":
+          {"config":
+            [{"section": "default",
+              "values":
+                [{"option": "compute_manager",
+                  "value": "ironic.nova.compute.manager.ClusterComputeManager"
+                 }
+                ]
+             },
+             {"section": "cells",
+              "values":
+                [{"option": "driver",
+                  "value": "nova.cells.rpc_driver.CellsRPCDriver"
+                 }
+                ]
+             }
+            ]
+          }
+        }
+    Type: Json
+  Flavor:
+    Default: baremetal
+    Description: Flavor to request when deploying.
+    Type: String
+  GlancePassword:
+    Default: unset
+    Description: The password for the glance service account, used by the glance services.
+    Type: String
+    NoEcho: true
+  GlanceNotifierStrategy:
+    Description: Strategy to use for Glance notification queue
+    Type: String
+    Default: noop
+  GlanceLogFile:
+    Description: The filepath of the file to use for logging messages from Glance.
+    Type: String
+    Default: ''
+  KeyName:
+    Default: default
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instances
+    Type: String
+  HeatPassword:
+    Default: unset
+    Description: The password for the Heat service account, used by the Heat services.
+    Type: String
+    NoEcho: true
+  ImageUpdatePolicy:
+    Default: REBUILD_PRESERVE_EPHEMERAL
+    Description: What policy to use when reconstructing instances. REBUILD for rebuilds,
+      REBUILD_PRESERVE_EPHEMERAL to preserve /mnt.
+    Type: String
+  undercloudImage:
+    Default: undercloud
+    Type: String
+  NeutronPassword:
+    Default: unset
+    Description: The password for the neutron service account, used by neutron agents.
+    Type: String
+    NoEcho: true
+  NovaPassword:
+    Default: unset
+    Description: The password for the nova service account, used by nova-api.
+    Type: String
+    NoEcho: true
+  NeutronPublicInterfaceDefaultRoute:
+    Default: ''
+    Description: A custom default route for the NeutronPublicInterface.
+    Type: String
+  NeutronPublicInterfaceIP:
+    Default: ''
+    Description: A custom IP address to put onto the NeutronPublicInterface.
+    Type: String
+  NeutronPublicInterfaceRawDevice:
+    Default: ''
+    Description: If set, the public interface is a vlan with this device as the raw device.
+    Type: String
+  NtpServer:
+    Type: String
+    Default: ''
+  RabbitUserName:
+    Default: guest
+    Description: The username for RabbitMQ
+    Type: String
+  RabbitPassword:
+    Default: guest
+    Description: The password for RabbitMQ
+    Type: String
+    NoEcho: true
+  RabbitCookieSalt:
+    Type: String
+    Default: unset
+    Description: Salt for the rabbit cookie, change this to force the randomly generated rabbit cookie to change.
+  HeatStackDomainAdminPassword:
+    Description: Password for heat_domain_admin user.
+    Type: String
+    Default: ''
+    NoEcho: true
+  MysqlInnodbBufferPoolSize:
+    Description: >
+        Specifies the size of the buffer pool in megabytes. Setting to
+        zero should be interpreted as "no value" and will defer to the
+        lower level default.
+    Type: Number
+    Default: 0
+  KeystoneCACertificate:
+    Default: ''
+    Description: Keystone self-signed certificate authority certificate.
+    Type: String
+  KeystoneSigningCertificate:
+    Default: ''
+    Description: Keystone certificate for verifying token validity.
+    Type: String
+  KeystoneSigningKey:
+    Default: ''
+    Description: Keystone key for signing tokens.
+    Type: String
+    NoEcho: true
+Resources:
+  RabbitCookie:
+    Type: OS::Heat::RandomString
+    Properties:
+      length: 20
+      salt:
+        Ref: RabbitCookieSalt
+  undercloudConfig:
+    Type: OS::Heat::StructuredConfig
+    Properties:
+      config:
+        completion-signal: {get_input: deploy_signal_id}
+        admin-password:
+          Ref: AdminPassword
+        admin-token:
+          Ref: AdminToken
+        bootstrap_host:
+          bootstrap_nodeid:
+            Fn::Select:
+            - 0
+            - Fn::Select:
+              - 0
+              - Merge::Map:
+                  undercloud:
+                  - Fn::Select:
+                    - name
+                    - Fn::GetAtt:
+                      - undercloud
+                      - show
+          nodeid: {get_input: bootstack_nodeid}
+        bootstack:
+          public_interface_ip:
+            Ref: NeutronPublicInterfaceIP
+        controller-address:
+          get_input: controller_host
+        ceilometer:
+          db: mysql://ceilometer:unset@localhost/ceilometer
+          metering_secret: {Ref: CeilometerMeteringSecret}
+          snmpd_readonly_user_name:
+            Ref: SnmpdReadonlyUserName
+          snmpd_readonly_user_password:
+            Ref: SnmpdReadonlyUserPassword
+          service-password:
+            Ref: CeilometerPassword
+        db-password: unset
+        glance:
+          backend: file
+          db: mysql://glance:unset@localhost/glance
+          host: 127.0.0.1
+          service-password:
+            Ref: GlancePassword
+          notifier-strategy:
+            Ref: GlanceNotifierStrategy
+          log-file:
+            Ref: GlanceLogFile
+        heat:
+          admin_password:
+            Ref: HeatPassword
+          admin_tenant_name: service
+          admin_user: heat
+          auth_encryption_key: unset___________
+          db: mysql://heat:unset@localhost/heat
+          stack_domain_admin_password: {Ref: HeatStackDomainAdminPassword}
+          watch_server_url: {get_input: heat.watch_server_url}
+          metadata_server_url: {get_input: heat.metadata_server_url}
+          waitcondition_server_url: {get_input: heat.waitcondition_server_url}
+        keystone:
+          db: mysql://keystone:unset@localhost/keystone
+          host: 127.0.0.1
+          ca_certificate: {Ref: KeystoneCACertificate}
+          signing_key: {Ref: KeystoneSigningKey}
+          signing_certificate: {Ref: KeystoneSigningCertificate}
+        mysql:
+          innodb_buffer_pool_size: {Ref: MysqlInnodbBufferPoolSize}
+        neutron:
+          host: 127.0.0.1
+          ovs_db: mysql://neutron:unset@localhost/ovs_neutron?charset=utf8
+          ovs:
+            public_interface:
+              Ref: NeutronPublicInterface
+            public_interface_raw_device:
+              Ref: NeutronPublicInterfaceRawDevice
+            public_interface_route:
+              Ref: NeutronPublicInterfaceDefaultRoute
+            physical_bridge: br-ctlplane
+            physical_network: ctlplane
+            network_vlan_ranges: ctlplane
+            bridge_mappings: ctlplane:br-ctlplane
+            tenant_network_type: vlan
+            enable_tunneling: 'False'
+          service-password:
+            Ref: NeutronPassword
+        rabbit:
+          host: 127.0.0.1
+          username:
+            Ref: RabbitUserName
+          password:
+            Ref: RabbitPassword
+          cookie:
+            Fn::GetAtt:
+            - RabbitCookie
+            - value
+        ntp:
+          servers:
+            - {server: {Ref: NtpServer}, fudge: "stratum 0"}
+  undercloudPassthroughConfig:
+    Type: OS::Heat::StructuredConfig
+    Properties:
+      config: {get_input: passthrough_config}
+  undercloud:
+    Type: OS::Nova::Server
+    Properties:
+      image:
+        Ref: undercloudImage
+      flavor:
+        Ref: Flavor
+      key_name:
+        Ref: KeyName
+      image_update_policy:
+        Ref: ImageUpdatePolicy
+      user_data_format: SOFTWARE_CONFIG
+  99_undercloudDeployment:
+    Type: OS::Heat::StructuredDeployment
+    Properties:
+      config: {Ref: undercloudConfig}
+      server: {Ref: undercloud}
+      input_values:
+        bootstack_nodeid:
+          Fn::Select:
+            - name
+            - Fn::GetAtt:
+              - undercloud
+              - show
+        controller_host:
+          Fn::Select:
+            - 0
+            - Fn::Select:
+              - ctlplane
+              - Fn::GetAtt:
+                - undercloud
+                - networks
+        heat.watch_server_url:
+          Fn::Join:
+            - ''
+            - - 'http://'
+              - {"Fn::Select": [ 0, "Fn::Select": [ ctlplane, { "Fn::GetAtt": [ undercloud, networks ]}]]}
+              - ':8003'
+        heat.metadata_server_url:
+          Fn::Join:
+            - ''
+            - - 'http://'
+              - {"Fn::Select": [ 0, "Fn::Select": [ ctlplane, { "Fn::GetAtt": [ undercloud, networks ]}]]}
+              - ':8000'
+        heat.waitcondition_server_url:
+          Fn::Join:
+            - ''
+            - - 'http://'
+              - {"Fn::Select": [ 0, "Fn::Select": [ ctlplane, { "Fn::GetAtt": [ undercloud, networks ]}]]}
+              - ':8000/v1/waitcondition'
+  00_undercloudPassthroughDeployment:
+    Type: OS::Heat::StructuredDeployment
+    Properties:
+      config: {Ref: undercloudPassthroughConfig}
+      server: {Ref: undercloud}
+      signal_transport: NO_SIGNAL
+      input_values:
+        passthrough_config: {Ref: ExtraConfig}

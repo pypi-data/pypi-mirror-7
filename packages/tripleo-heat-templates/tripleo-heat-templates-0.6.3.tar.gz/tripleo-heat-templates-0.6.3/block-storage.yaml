@@ -1,0 +1,88 @@
+HeatTemplateFormatVersion: '2012-12-12'
+Description: 'Common Block Storage Configuration'
+Parameters:
+  BlockStorageImage:
+    Type: String
+    Default: overcloud-cinder-volume
+  OvercloudBlockStorageFlavor:
+    Default: baremetal
+    Description: Flavor for block storage nodes to request when deploying.
+    Type: String
+  NeutronNetworkType:
+    Type: String
+    Default: 'gre'
+  NeutronEnableTunnelling:
+    Type: String
+    Default: True
+Resources:
+  BlockStorage0:
+    Type: OS::Nova::Server
+    Properties:
+      image:
+        {Ref: BlockStorageImage}
+      flavor: {Ref: OvercloudBlockStorageFlavor}
+      key_name: {Ref: KeyName}
+  BlockStorage0Deployment:
+    Type: OS::Heat::StructuredDeployment
+    Properties:
+      server: {Ref: BlockStorage0}
+      config: {Ref: BlockStorageConfig}
+      input_values:
+        controller_host: {"Fn::Select": [ 0, {"Fn::Select": [ "ctlplane", {"Fn::GetAtt": [controller0, networks]} ]} ] }
+        cinder_dsn: {"Fn::Join": ['', ['mysql://cinder:unset@', {"Fn::Select": [ 0, {"Fn::Select": [ "ctlplane", {"Fn::GetAtt": [controller0, networks]} ]} ] } , '/cinder']]}
+        neutron_local_ip: {"Fn::Select": [0, "Fn::Select": [ctlplane, [{"Fn::GetAtt": [BlockStorage0 , networks]}]]]}
+  BlockStorageConfig:
+    Type: OS::Heat::StructuredConfig
+    Properties:
+      group: os-apply-config
+      config:
+        admin-password: {Ref: AdminPassword}
+        keystone:
+          host: {get_input: controller_host}
+        cinder:
+          db: {get_input: cinder_dsn}
+          volume_size_mb:
+            Ref: CinderLVMLoopDeviceSize
+          service-password:
+            Ref: CinderPassword
+          iscsi-helper:
+            Ref: CinderISCSIHelper
+        admin-password: {Ref: AdminPassword}
+        rabbit:
+          host: {get_input: controller_host}
+          username: {Ref: RabbitUserName}
+          password: {Ref: RabbitPassword}
+        interfaces:
+          control: {Ref: NeutronPublicInterface}
+        neutron:
+          ovs:
+            local_ip: {get_input: neutron_local_ip}
+            tenant_network_type: {Ref: NeutronNetworkType}
+            enable_tunneling: {Ref: NeutronEnableTunnelling}
+          service-password:
+            Ref: NeutronPassword
+        config:
+          keystone:
+            host: {get_input: controller_host}
+          cinder:
+            db: {get_input: cinder_dsn}
+            volume_size_mb:
+              Ref: CinderLVMLoopDeviceSize
+            service-password:
+              Ref: CinderPassword
+            iscsi-helper:
+              Ref: CinderISCSIHelper
+          admin-password: {Ref: AdminPassword}
+          rabbit:
+            host: {get_input: controller_host}
+            username: {Ref: RabbitUserName}
+            password: {Ref: RabbitPassword}
+          interfaces:
+            control: {Ref: NeutronPublicInterface}
+          neutron:
+            ovs:
+              local_ip: { get_input: neutron_local_ip }
+              tenant_network_type: {Ref: NeutronNetworkType}
+              enable_tunneling: {Ref: NeutronEnableTunnelling}
+            service-password:
+              Ref: NeutronPassword
