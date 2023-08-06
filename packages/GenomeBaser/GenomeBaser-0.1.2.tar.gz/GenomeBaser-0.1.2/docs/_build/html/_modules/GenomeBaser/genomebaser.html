@@ -1,0 +1,317 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>GenomeBaser.genomebaser &mdash; GenomeBaser 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="GenomeBaser 0.1.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">GenomeBaser 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for GenomeBaser.genomebaser</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Genomebaser is a tool to manage complete genomes from the NCBI</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__title__</span> <span class="o">=</span> <span class="s">&#39;GenomeBaser&#39;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s">&#39;0.1.1&#39;</span>
+<span class="n">__description__</span> <span class="o">=</span> <span class="s">&quot;GenomeBaser manages complete (bacterial) genomes from NCBI&quot;</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Mitchell Stanton-Cook&#39;</span>
+<span class="n">__author_email__</span> <span class="o">=</span> <span class="s">&#39;m.stantoncook@gmail.com&#39;</span>
+<span class="n">__url__</span> <span class="o">=</span> <span class="s">&#39;http://github.com/mscook/GenomeBaser&#39;</span>
+<span class="n">__license__</span> <span class="o">=</span> <span class="s">&#39;ECL 2.0&#39;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+
+<span class="kn">from</span> <span class="nn">Bio</span> <span class="kn">import</span> <span class="n">SeqIO</span>
+<span class="kn">import</span> <span class="nn">click</span>
+
+
+<div class="viewcode-block" id="check_for_deps"><a class="viewcode-back" href="../../GenomeBaser.html#GenomeBaser.genomebaser.check_for_deps">[docs]</a><span class="k">def</span> <span class="nf">check_for_deps</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check if 3rd party dependencies (non-python) exist</span>
+
+<span class="sd">    Requires:</span>
+<span class="sd">        * rsysnc</span>
+<span class="sd">        * prokka-genbank_to_fasta_db</span>
+<span class="sd">        * cd-hit</span>
+<span class="sd">        * makeblastdb</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">reqs</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;rsync&quot;</span><span class="p">,</span> <span class="s">&quot;prokka-genbank_to_fasta_db&quot;</span><span class="p">,</span> <span class="s">&quot;cd-hit&quot;</span><span class="p">,</span> <span class="s">&quot;makeblastdb&quot;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">reqs</span><span class="p">:</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s">&quot;which&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">],</span>
+                                  <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span><span class="o">.</span><span class="n">communicate</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">output</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">!=</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&quot;Misisng </span><span class="si">%s</span><span class="s">. Please install. Exiting.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="fetch_genomes"><a class="viewcode-back" href="../../GenomeBaser.html#GenomeBaser.genomebaser.fetch_genomes">[docs]</a><span class="k">def</span> <span class="nf">fetch_genomes</span><span class="p">(</span><span class="n">target_genus_species</span><span class="p">,</span> <span class="n">db_base</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Use rsync to manage periodic updates</span>
+
+<span class="sd">    Examples:</span>
+
+<span class="sd">    &gt;&gt;&gt; fetch_genomes(&quot;Escherichia coli&quot;)</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt; fetch_genomes(&quot;Klebsiella pneumoniae&quot;, &quot;/home/me/dbs/&quot;)</span>
+
+<span class="sd">    :param target_genus_species: the genus species as a string</span>
+<span class="sd">                                 (space delimited)</span>
+
+<span class="sd">    :returns: the database location</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">working_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">db_base</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">db_base</span><span class="p">)</span>
+    <span class="n">target_genus_species</span> <span class="o">=</span> <span class="n">target_genus_species</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">,</span> <span class="s">&quot;_&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">target_genus_species</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">target_genus_species</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">target_genus_species</span><span class="p">)</span>
+    <span class="n">cmd</span> <span class="o">=</span> <span class="p">(</span><span class="s">&quot;rsync -av ftp.ncbi.nlm.nih.gov::genomes/Bacteria/&quot;</span>
+           <span class="s">&quot;</span><span class="si">%s</span><span class="s">_*/*.gbk .&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="n">target_genus_species</span><span class="p">)</span>
+    <span class="n">db_loc</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">working_dir</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">db_loc</span>
+
+</div>
+<div class="viewcode-block" id="genbank_to_fasta"><a class="viewcode-back" href="../../GenomeBaser.html#GenomeBaser.genomebaser.genbank_to_fasta">[docs]</a><span class="k">def</span> <span class="nf">genbank_to_fasta</span><span class="p">(</span><span class="n">db_loc</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts GenBank to fasta while naming using the given in the DEFINITION</span>
+
+<span class="sd">    Examples:</span>
+
+<span class="sd">    &gt;&gt;&gt; genbank_to_fasta(&quot;/home/mscook/dbs/Klebsiella_pneumoniae&quot;</span>
+
+<span class="sd">    :param db_loc: the fullpath as a sting to the database location (genus</span>
+<span class="sd">                   species inclusive)</span>
+
+<span class="sd">    :returns: a list of the output fasta files</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fasta_files</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">tmp_file</span> <span class="o">=</span> <span class="s">&quot;tmp.gbk&quot;</span>
+    <span class="n">working_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">db_loc</span><span class="p">)</span>
+    <span class="n">infs</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s">&quot;*.gbk&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">inf</span> <span class="ow">in</span> <span class="n">infs</span><span class="p">:</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="s">&quot;grep -v &#39;CONTIG      join&#39; &quot;</span><span class="o">+</span><span class="n">inf</span><span class="o">+</span><span class="s">&quot; &gt; &quot;</span><span class="o">+</span><span class="n">tmp_file</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">tmp_file</span><span class="p">,</span> <span class="n">inf</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">seq_record</span> <span class="ow">in</span> <span class="n">SeqIO</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">inf</span><span class="p">,</span> <span class="s">&quot;genbank&quot;</span><span class="p">):</span>
+            <span class="n">out_fa</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">r&#39;\W+&#39;</span><span class="p">,</span> <span class="s">&#39; &#39;</span><span class="p">,</span> <span class="n">seq_record</span><span class="o">.</span><span class="n">description</span>
+                            <span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">,</span> <span class="s">&#39;_&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">out_fa</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;_&#39;</span><span class="p">):</span>
+                <span class="n">out_fa</span> <span class="o">=</span> <span class="n">out_fa</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="s">&quot;.fna&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">out_fa</span> <span class="o">=</span> <span class="n">out_fa</span><span class="o">+</span><span class="s">&quot;.fna&quot;</span>
+            <span class="n">SeqIO</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">seq_record</span><span class="p">,</span> <span class="n">out_fa</span><span class="p">,</span> <span class="s">&quot;fasta&quot;</span><span class="p">)</span>
+            <span class="n">fasta_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">out_fa</span><span class="p">)</span>
+            <span class="n">dest</span> <span class="o">=</span> <span class="n">out_fa</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot;.fna&quot;</span><span class="p">,</span> <span class="s">&quot;.gbk&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">lexists</span><span class="p">(</span><span class="n">dest</span><span class="p">):</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">symlink</span><span class="p">(</span><span class="n">inf</span><span class="p">,</span> <span class="n">dest</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">tmp_file</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">tmp_file</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">working_dir</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fasta_files</span>
+
+</div>
+<div class="viewcode-block" id="partition_genomes"><a class="viewcode-back" href="../../GenomeBaser.html#GenomeBaser.genomebaser.partition_genomes">[docs]</a><span class="k">def</span> <span class="nf">partition_genomes</span><span class="p">(</span><span class="n">db_loc</span><span class="p">,</span> <span class="n">fasta_files</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Separate complete genomes from plasmids</span>
+
+<span class="sd">    ..warning:: this partitions on the complete_sequence (plasmid) vs</span>
+<span class="sd">                complete_genome (genome) in filename assumption (in</span>
+<span class="sd">                DEFINITION) line</span>
+
+<span class="sd">    :param db_loc: the fullpath as a sting to the database location (genus</span>
+<span class="sd">                   species inclusive)</span>
+
+<span class="sd">    :param fasta_files: a list of fasta files</span>
+
+<span class="sd">    :returns: a list of DEFINITION format named GenBank files</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">plasmid</span><span class="p">,</span> <span class="n">genome</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="n">working_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">db_loc</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">fasta_files</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;complete_sequence&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">plasmid</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;complete_genome&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">genome</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;_genome&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">genome</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&quot;Could not classify </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">print</span> <span class="s">&quot;Continuing...&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s">&quot;plasmid&quot;</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="s">&quot;plasmid&quot;</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s">&quot;plasmid&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">plasmid</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">lexists</span><span class="p">(</span><span class="n">e</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">symlink</span><span class="p">(</span><span class="s">&quot;../&quot;</span><span class="o">+</span><span class="n">e</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s">&quot;../&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s">&quot;genome&quot;</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="s">&quot;genome&quot;</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s">&quot;genome&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">genome</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">lexists</span><span class="p">(</span><span class="n">e</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">symlink</span><span class="p">(</span><span class="s">&quot;../&quot;</span><span class="o">+</span><span class="n">e</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s">&quot;../&quot;</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">working_dir</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">genome</span>
+
+</div>
+<div class="viewcode-block" id="make_prokka"><a class="viewcode-back" href="../../GenomeBaser.html#GenomeBaser.genomebaser.make_prokka">[docs]</a><span class="k">def</span> <span class="nf">make_prokka</span><span class="p">(</span><span class="n">db_loc</span><span class="p">,</span> <span class="n">genbank_files</span><span class="p">,</span> <span class="n">target_genus_species</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Make a prokka database of the complete genomes</span>
+
+<span class="sd">    :param db_loc: the fullpath as a sting to the database location (genus</span>
+<span class="sd">                   species inclusive)</span>
+
+<span class="sd">    :param genbank_files: a list of GenBank files</span>
+
+<span class="sd">    :param target_genus_species: the genus species as a string</span>
+<span class="sd">                                 (space delimited)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">working_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">db_loc</span><span class="p">)</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">target_genus_species</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s">&quot;prokka&quot;</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="s">&quot;prokka&quot;</span><span class="p">)</span>
+    <span class="n">prokka_cmd</span> <span class="o">=</span> <span class="p">(</span><span class="s">&quot;prokka-genbank_to_fasta_db </span><span class="si">%s</span><span class="s"> --idtag=locus_tag &quot;</span>
+                  <span class="s">&quot;&gt; prokka/</span><span class="si">%s</span><span class="s">.faa&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">genbank_files</span><span class="p">),</span> <span class="n">target</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">prokka_cmd</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot;.fna&quot;</span><span class="p">,</span> <span class="s">&quot;.gbk&quot;</span><span class="p">))</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s">&quot;prokka&quot;</span><span class="p">)</span>
+    <span class="n">cd_hit_cmd</span> <span class="o">=</span> <span class="p">(</span><span class="s">&quot;cd-hit -i </span><span class="si">%s</span><span class="s">.faa -o </span><span class="si">%s</span><span class="s"> -T 0 &quot;</span>
+                  <span class="s">&quot;-M 0 -g 1 -s 0.8 -c 0.9&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">cd_hit_cmd</span><span class="p">)</span>
+    <span class="n">blast_cmd</span> <span class="o">=</span> <span class="s">&quot;makeblastdb -dbtype prot -in </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">target</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">blast_cmd</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s">&quot;../&quot;</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">working_dir</span><span class="p">)</span>
+
+</div>
+<span class="nd">@click.command</span><span class="p">()</span>
+<span class="nd">@click.option</span><span class="p">(</span><span class="s">&#39;--check_deps/--no-check_deps&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s">&#39;Check that non-python dependencies exist&#39;</span><span class="p">)</span>
+<span class="nd">@click.argument</span><span class="p">(</span><span class="s">&quot;genus&quot;</span><span class="p">)</span>
+<span class="nd">@click.argument</span><span class="p">(</span><span class="s">&quot;species&quot;</span><span class="p">)</span>
+<span class="nd">@click.argument</span><span class="p">(</span><span class="s">&#39;out_database_location&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">click</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">exists</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+<span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">check_deps</span><span class="p">,</span> <span class="n">genus</span><span class="p">,</span> <span class="n">species</span><span class="p">,</span> <span class="n">out_database_location</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    GenomeBaser is tool to manage complete (bacterial) genomes from the NCBI.</span>
+
+<span class="sd">    Example usage:</span>
+
+<span class="sd">        $ GenomeBaser.py Klebsiella pneumoniae ~/dbs</span>
+
+<span class="sd">        $ # (wait a few months)...</span>
+
+<span class="sd">        $ GenomeBaser.py Klebsiella pneumoniae ~/dbs</span>
+
+<span class="sd">    By Mitchell Stanton-Cook (m.stantoncook@gmail.com)</span>
+
+<span class="sd">    **More info at:** https://github.com/mscook/GenomeBaser</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">check_deps</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&quot;Checking for 3rd party dependencies&quot;</span>
+        <span class="n">check_for_deps</span><span class="p">()</span>
+    <span class="n">genus</span> <span class="o">=</span> <span class="n">genus</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="o">+</span><span class="n">genus</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="n">gs</span> <span class="o">=</span> <span class="n">genus</span><span class="o">+</span><span class="s">&quot; &quot;</span><span class="o">+</span><span class="n">species</span>
+    <span class="n">loc</span> <span class="o">=</span> <span class="n">fetch_genomes</span><span class="p">(</span><span class="n">gs</span><span class="p">,</span> <span class="n">out_database_location</span><span class="p">)</span>
+    <span class="n">fas</span> <span class="o">=</span> <span class="n">genbank_to_fasta</span><span class="p">(</span><span class="n">loc</span><span class="p">)</span>
+    <span class="n">genbanks</span> <span class="o">=</span> <span class="n">partition_genomes</span><span class="p">(</span><span class="n">loc</span><span class="p">,</span> <span class="n">fas</span><span class="p">)</span>
+    <span class="n">make_prokka</span><span class="p">(</span><span class="n">loc</span><span class="p">,</span> <span class="n">genbanks</span><span class="p">,</span> <span class="n">gs</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+        <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">GenomeBaser 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Mitchell Stanton-Cook.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>
