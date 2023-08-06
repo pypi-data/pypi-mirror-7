@@ -1,0 +1,203 @@
+CHANGES
+*******
+
+0.4.1 (2014-07-08)
+==================
+
+- Compatibility for Python 3. I introduced a meta class in Morepath
+  0.4 and Python 3 did not like this. Now the tests pass again in
+  Python 3.
+
+- remove ``generic.lookup``, unused since Morepath 0.4.
+
+- Increase test coverage back to 100%.
+
+0.4 (2014-07-07)
+================
+
+- **BREAKING CHANGE** Move to class-based application registries. This
+  breaks old code and it needs to be updated. The update is not
+  difficult and amounts to:
+
+  * subclass ``morepath.App`` instead of instantiating it to create a
+    new app. Use subclasses for extension too.
+
+  * To get a WSGI object you can plug into a WSGI server, you need to
+    instantiate the app class first.
+
+  Old way::
+
+     app = morepath.App()
+
+  So, the ``app`` object that you use directives on is an
+  instance. New way::
+
+    class app(morepath.App):
+        pass
+
+  So, now it's a class. The directives look the same as before, so this
+  hasn't changed::
+
+     @app.view(model=Foo)
+     def foo_default(self, request):
+        ...
+
+  To extend an application with another one, you used to have to pass
+  the ``extends`` arguments. Old way::
+
+    sub_app = morepath.App(extends=[core_app])
+
+  This has now turned into subclassing. New way::
+
+    class sub_app(core_app):
+        pass
+
+  There was also a ``variables`` argument to specify an application
+  that can be mounted. Old way::
+
+     app = morepath.App(variables=['foo'])
+
+  This is now a class attribute. New way::
+
+     class app(morepath.App):
+         variables = ['foo']
+
+  The ``name`` argument to help debugging is gone; we can look at the
+  class name now. The ``testing_config`` argument used internally in
+  the Morepath tests has also become a class attribute.
+
+  In the old system, the application object was both configuration
+  point and WSGI object. Old way::
+
+      app = morepath.App()
+
+      # configuration
+      @app.path(...)
+      ...
+
+      # wsgi
+      morepath.run(app)
+
+  In the Morepath 0.4 this has been split. As we've already seen, the
+  application *class* serves. To get a WSGI object, you need to first
+  *instantiate* it. New way::
+
+     class app(morepath.App):
+       pass
+
+     # configuration
+     @app.path(...)
+     ...
+
+     # wsgi
+     morepath.run(app())
+
+  To mount an application manually with variables, we used to need the
+  special ``mount()`` method. Old way::
+
+    mounted_wiki_app = wiki_app.mount(wiki_id=3)
+
+  In the new system, mounting is done during instantiation of the app::
+
+    mounted_wiki_app = wiki_app(wiki_id=3)
+
+  Class names in Python are usually spelled with an upper case. In the
+  Morepath docs the application object has been spelled with a lower
+  case. We've used lower-case class names for application objects even
+  in the updated docs for example code, but feel free to make them
+  upper-case in your own code if you wish.
+
+  Why this change? There are some major benefits to this change:
+
+  * both extending and mounting app now use natural Python mechanisms:
+    subclassing and instantation.
+
+  * it allows us to expose the facility to create new directives to
+    the API. You can create application-specific directives.
+
+- You can define your own directives on your applications using the
+  ``directive`` directive::
+
+    @my_app.directive('my_directive')
+
+  This exposes details of the configuration system which is
+  underdocumented for now; study the ``morepath.directive`` module
+  source code for examples.
+
+- Document how to use more.static to include static resources into
+  your application.
+
+- Add a ``recursive=False`` option to the config.scan method. This
+  allows the non-recursive scanning of a package. Only its
+  ``__init__.py`` will be scanned.
+
+- To support scanning a single module non-recursively we need a
+  feature that hasn't landed in mainline Venusian yet, so depend on
+  Venusifork for now.
+
+- A small optimization in the publishing machinery. Less work is done
+  to update the generic function lookup context during routing.
+
+0.3 (2014-06-23)
+================
+
+- Ability to absorb paths entirely in path directive, as per issue #132.
+
+- Refactor of config engine to make Venusian and immediate config more
+  clear.
+
+- Typo fix in docs (Remco Wendt).
+
+- Get version number in docs from setuptools.
+
+- Fix changelog so that PyPI page generates HTML correctly.
+
+- Fix PDF generation so that the full content is generated.
+
+- Ability to mark a view as internal. It will be available to
+  ``request.view()`` but will give 404 on the web. This is useful for
+  structuring JSON views for reusability where you don't want them to
+  actually show up on the web.
+
+- A ``request.child(something).view()`` that had this view in turn
+  call a ``request.view()`` from the context of the ``something``
+  application would fail -- it would not be able to look up the view
+  as lookups still occurred in the context of the mounting
+  application. This is now fixed. (thanks Ying Zhong for reporting it)
+
+  Along with this fix refactored the request object so it keeps a
+  simple ``mounted`` attribute instead of a stack of ``mounts``; the
+  stack-like nature was not in use anymore as mounts themselves have
+  parents anyway. The new code is simpler.
+
+0.2 (2014-04-24)
+================
+
+- Python 3 support, in particular Python 3.4 (Alec Munro - fudomunro
+  on github).
+
+- Link generation now takes ``SCRIPT_NAME`` into account.
+
+- Morepath 0.1 had a security system, but it was undocumented. Now
+  it's documented (docs now in `Morepath Security`_), and some of its
+  behavior was slightly tweaked:
+
+  * new ``verify_identity`` directive.
+
+  * ``permission`` directive was renamed to ``permission_rule``.
+
+  * default unauthorized error is 403 Forbidden, not 401 Unauthorized.
+
+  * ``morepath.remember`` and ``morepath.forbet`` renamed to
+    ``morepath.remember_identity`` and ``morepath.forget_identity``.
+
+- Installation documentation tweaks. (Auke Willem Oosterhoff)
+
+- ``.gitignore`` tweaks (Auke Willem Oosterhoff)
+
+.. _`Morepath Security`: http://blog.startifact.com/posts/morepath-security.html
+
+0.1 (2014-04-08)
+================
+
+- Initial public release.
