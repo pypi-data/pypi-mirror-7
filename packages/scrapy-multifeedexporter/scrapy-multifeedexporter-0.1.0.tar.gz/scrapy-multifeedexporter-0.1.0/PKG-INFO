@@ -1,0 +1,68 @@
+Metadata-Version: 1.1
+Name: scrapy-multifeedexporter
+Version: 0.1.0
+Summary: Export scraped items of different types to multiple feeds.
+Home-page: http://github.com/gbirke/scrapy-multifeedexporter
+Author: Gabriel Birke
+Author-email: gb@birke-software.de
+License: The MIT License (MIT)
+Description: scrapy-multifeedexporter
+        ========================
+        
+        This `Scrapy <http://scrapy.org/>`__ extension exports scraped items of
+        different types to multiple feeds. By default each item gets its own
+        feed.
+        
+        Installation
+        ------------
+        
+        .. code-block:: bash
+        
+            $ pip install scrapy-multifeedexporter
+        
+        Configuration
+        -------------
+        
+        You'll have to switch the default ``FeedExporter`` with
+        ``MultiFeedExporter`` by adding the following lines to the
+        ``settings.py`` file of your spider:
+        
+        .. code:: python
+        
+            from multifeedexporter import MultiFeedExporter
+        
+            EXTENSIONS = {
+                'scrapy.contrib.feedexport.FeedExporter': None,
+                'multifeedexporter.MultiFeedExporter': 500,
+            }
+        
+            # Automatically configure available item names from your module
+            MULTIFEEDEXPORTER_ITEMS = MultiFeedExporter.get_bot_items(BOT_NAME)
+        
+        Usage
+        -----
+        
+        When calling ``scrapy crawl`` you need to use the ``%(item_name)s``
+        placeholder in the output file/URI name. The following calls to
+        ``scrapy crawl`` demonstrate the placeholder:
+        
+        .. code:: bash
+        
+            $ scrapy crawl -o "spider_name_%(item_name)s.csv" -t csv spider_name
+            $ scrapy crawl -o "ftp://foo:bar@example.com/spider_name_%(item_name)s.csv" -t csv spider_name
+        
+        If you omit the placeholder, all items will be placed in one file.
+        
+        License
+        -------
+        
+        scrapy-multifeedexporter is published under MIT license
+        
+Keywords: scrapy crawl scraping
+Platform: Any
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: No Input/Output (Daemon)
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Framework :: Scrapy
