@@ -1,0 +1,730 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Guide &mdash; Cosmic 0.1.4 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Cosmic 0.1.4 documentation" href="index.html" />
+    <link rel="next" title="Tutorial" href="tutorial.html" />
+    <link rel="prev" title="Overview" href="overview.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tutorial.html" title="Tutorial"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="overview.html" title="Overview"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Cosmic 0.1.4 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="guide">
+<h1>Guide<a class="headerlink" href="#guide" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>Assuming you are running Linux or OS X and are familiar with <a class="reference external" href="http://www.pip-installer.org/en/latest/quickstart.html">pip</a>, installation is as easy as:</p>
+<div class="code bash highlight-python"><div class="highlight"><pre>pip install cosmic
+</pre></div>
+</div>
+<p>If you are not yet familiar with <a class="reference external" href="http://www.virtualenv.org/en/latest/">virtualenv</a>, it is an indespensible tool for
+Python development. It lets you create isolated Python environments for every
+project you are working on. This means that different projects can depend on
+different versions of the same library.</p>
+<p>If you would like to work on the bleeding edge of Cosmic development, you
+can clone the repo using git:</p>
+<div class="code bash highlight-python"><div class="highlight"><pre>git clone https://github.com/cosmic-api/cosmic.py.git cosmic-py
+</pre></div>
+</div>
+<p>Then to install the current version (ideally you want to do this in a
+virtualenv):</p>
+<div class="code bash highlight-python"><div class="highlight"><pre>cd cosmic-py
+python setup.py develop
+</pre></div>
+</div>
+</div>
+<div class="section" id="what-s-in-an-api">
+<h2>What&#8217;s in an API?<a class="headerlink" href="#what-s-in-an-api" title="Permalink to this headline">¶</a></h2>
+<p>A web API is:</p>
+<ul class="simple">
+<li>An interface through which a server can share data and functionality with
+clients over the internet.</li>
+<li>A component of the server architecture that glues the database and business
+logic to HTTP.</li>
+</ul>
+<p>In the context of Cosmic, an API is represented, unsurprisingly, by an
+instance of the <a class="reference internal" href="reference.html#cosmic.api.API" title="cosmic.api.API"><tt class="xref py py-class docutils literal"><span class="pre">API</span></tt></a> class. What is interesting, however,
+is that this object is serializable to JSON. The JSON form of an API is the
+API spec.</p>
+<p>You may find it strange that we say &#8220;serialize an API&#8221; when we could simply
+say &#8220;generate an API spec&#8221;. The reason we say this is to highlight the fact
+that an API is simply a Teleport datatype. The API object on the server and
+the API object on the client are instances of the same class, in fact, they
+are almost identical. The difference is that for every server endpoint, there
+is a hook into the server&#8217;s database or business logic, whereas each client
+endpoint replaces this with an HTTP call.</p>
+<p>Let&#8217;s serialize a trivial API. Note that <tt class="xref py py-meth docutils literal"><span class="pre">to_json()</span></tt> is a standard
+Teleport method:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cosmic.api</span> <span class="kn">import</span> <span class="n">API</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">trivia</span> <span class="o">=</span> <span class="n">API</span><span class="p">(</span><span class="s">&quot;trivia&quot;</span><span class="p">,</span> <span class="n">homepage</span><span class="o">=</span><span class="s">&quot;http://example.com&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">API</span><span class="o">.</span><span class="n">to_json</span><span class="p">(</span><span class="n">trivia</span><span class="p">)</span>
+<span class="go">{</span>
+<span class="go">    u&#39;name&#39;: &#39;trivia&#39;,</span>
+<span class="go">    u&#39;homepage&#39;: &#39;http://example.com&#39;,</span>
+<span class="go">    u&#39;actions&#39;: {u&#39;map&#39;: {}, u&#39;order&#39;: []},</span>
+<span class="go">    u&#39;models&#39;: {u&#39;map&#39;: {}, u&#39;order&#39;: []}</span>
+<span class="go">}</span>
+</pre></div>
+</div>
+<p>Let&#8217;s take a look at what&#8217;s inside.</p>
+<p>First, there is the basic metadata: the API <em>name</em> and <em>homepage</em>. The name of
+the API should be unique. Though this is not yet enforced by Cosmic, we plan on
+indexing Cosmic APIs on our website in which case it will become a requirement.</p>
+<p>Then, the API spec contains descriptions of <em>actions</em> and <em>models</em>. These will
+be explained in detail in the next two sections. Here is the Teleport schema
+for the API type:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="n">schema</span> <span class="o">=</span> <span class="n">Struct</span><span class="p">([</span>
+    <span class="n">required</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">,</span> <span class="n">String</span><span class="p">),</span>
+    <span class="n">optional</span><span class="p">(</span><span class="s">&quot;homepage&quot;</span><span class="p">,</span> <span class="n">String</span><span class="p">),</span>
+    <span class="n">required</span><span class="p">(</span><span class="s">&quot;actions&quot;</span><span class="p">,</span> <span class="n">OrderedMap</span><span class="p">(</span><span class="n">Struct</span><span class="p">([</span>
+        <span class="n">optional</span><span class="p">(</span><span class="s">&quot;accepts&quot;</span><span class="p">,</span> <span class="n">Schema</span><span class="p">),</span>
+        <span class="n">optional</span><span class="p">(</span><span class="s">&quot;returns&quot;</span><span class="p">,</span> <span class="n">Schema</span><span class="p">),</span>
+        <span class="n">optional</span><span class="p">(</span><span class="s">&quot;doc&quot;</span><span class="p">,</span> <span class="n">String</span><span class="p">)</span>
+    <span class="p">]))),</span>
+    <span class="n">required</span><span class="p">(</span><span class="s">&quot;models&quot;</span><span class="p">,</span> <span class="n">OrderedMap</span><span class="p">(</span><span class="n">Struct</span><span class="p">([</span>
+        <span class="n">required</span><span class="p">(</span><span class="s">&quot;properties&quot;</span><span class="p">,</span> <span class="n">OrderedMap</span><span class="p">(</span><span class="n">Struct</span><span class="p">([</span>
+            <span class="n">required</span><span class="p">(</span><span class="s">u&quot;schema&quot;</span><span class="p">,</span> <span class="n">Schema</span><span class="p">),</span>
+            <span class="n">required</span><span class="p">(</span><span class="s">u&quot;required&quot;</span><span class="p">,</span> <span class="n">Boolean</span><span class="p">),</span>
+            <span class="n">optional</span><span class="p">(</span><span class="s">u&quot;doc&quot;</span><span class="p">,</span> <span class="n">String</span><span class="p">)</span>
+        <span class="p">]))),</span>
+        <span class="n">required</span><span class="p">(</span><span class="s">&quot;links&quot;</span><span class="p">,</span> <span class="n">OrderedMap</span><span class="p">(</span><span class="n">Struct</span><span class="p">([</span>
+            <span class="n">required</span><span class="p">(</span><span class="s">u&quot;schema&quot;</span><span class="p">,</span> <span class="n">Schema</span><span class="p">),</span>
+            <span class="n">required</span><span class="p">(</span><span class="s">u&quot;required&quot;</span><span class="p">,</span> <span class="n">Boolean</span><span class="p">),</span>
+            <span class="n">optional</span><span class="p">(</span><span class="s">u&quot;doc&quot;</span><span class="p">,</span> <span class="n">String</span><span class="p">)</span>
+        <span class="p">]))),</span>
+        <span class="n">required</span><span class="p">(</span><span class="s">&quot;query_fields&quot;</span><span class="p">,</span> <span class="n">OrderedMap</span><span class="p">(</span><span class="n">Struct</span><span class="p">([</span>
+            <span class="n">required</span><span class="p">(</span><span class="s">u&quot;schema&quot;</span><span class="p">,</span> <span class="n">Schema</span><span class="p">),</span>
+            <span class="n">required</span><span class="p">(</span><span class="s">u&quot;required&quot;</span><span class="p">,</span> <span class="n">Boolean</span><span class="p">),</span>
+            <span class="n">optional</span><span class="p">(</span><span class="s">u&quot;doc&quot;</span><span class="p">,</span> <span class="n">String</span><span class="p">)</span>
+        <span class="p">]))),</span>
+        <span class="n">required</span><span class="p">(</span><span class="s">&quot;methods&quot;</span><span class="p">,</span> <span class="n">Struct</span><span class="p">([</span>
+            <span class="n">required</span><span class="p">(</span><span class="s">&quot;get_by_id&quot;</span><span class="p">,</span> <span class="n">Boolean</span><span class="p">),</span>
+            <span class="n">required</span><span class="p">(</span><span class="s">&quot;get_list&quot;</span><span class="p">,</span> <span class="n">Boolean</span><span class="p">),</span>
+            <span class="n">required</span><span class="p">(</span><span class="s">&quot;create&quot;</span><span class="p">,</span> <span class="n">Boolean</span><span class="p">),</span>
+            <span class="n">required</span><span class="p">(</span><span class="s">&quot;update&quot;</span><span class="p">,</span> <span class="n">Boolean</span><span class="p">),</span>
+            <span class="n">required</span><span class="p">(</span><span class="s">&quot;delete&quot;</span><span class="p">,</span> <span class="n">Boolean</span><span class="p">),</span>
+        <span class="p">])),</span>
+        <span class="n">required</span><span class="p">(</span><span class="s">&quot;list_metadata&quot;</span><span class="p">,</span> <span class="n">OrderedMap</span><span class="p">(</span><span class="n">Struct</span><span class="p">([</span>
+            <span class="n">required</span><span class="p">(</span><span class="s">u&quot;schema&quot;</span><span class="p">,</span> <span class="n">Schema</span><span class="p">),</span>
+            <span class="n">required</span><span class="p">(</span><span class="s">u&quot;required&quot;</span><span class="p">,</span> <span class="n">Boolean</span><span class="p">),</span>
+            <span class="n">optional</span><span class="p">(</span><span class="s">u&quot;doc&quot;</span><span class="p">,</span> <span class="n">String</span><span class="p">)</span>
+        <span class="p">])))</span>
+    <span class="p">])))</span>
+<span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="client-and-server">
+<h2>Client and Server<a class="headerlink" href="#client-and-server" title="Permalink to this headline">¶</a></h2>
+<p>In Cosmic, the same <a class="reference internal" href="reference.html#cosmic.api.API" title="cosmic.api.API"><tt class="xref py py-class docutils literal"><span class="pre">API</span></tt></a> class is used for the API server
+and the API client. In fact, the server and the client objects behave almost
+identically. After you run your server component, you can build the client in
+a single line of code:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">myapi</span> <span class="o">=</span> <span class="n">API</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;http://localhost:5000/spec.json&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="rpc-via-actions">
+<h2>RPC via Actions<a class="headerlink" href="#rpc-via-actions" title="Permalink to this headline">¶</a></h2>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="reference.html#cosmic.http.ActionEndpoint" title="cosmic.http.ActionEndpoint"><tt class="xref py py-class docutils literal"><span class="pre">ActionEndpoint</span></tt></a> for HTTP spec.</p>
+</div>
+<p>RPC stands for remote procedure call. It allows remote clients to call
+procedures (functions) in your code. These are commonly implemented as POST
+handlers on action-style URLs, such as <tt class="docutils literal"><span class="pre">POST</span> <span class="pre">/register_user</span></tt>. Cosmic goes
+along with this convention, listening to POST requests on <tt class="docutils literal"><span class="pre">/actions/&lt;name&gt;</span></tt>
+URLs.</p>
+<p>So what&#8217;s in an action? Clearly, we need a name in order to generate the URL.
+But apart from the name, Cosmic also expects type definitions for the input
+and output values of the action. These definitions are used for serialization,
+validation and help with generating documentation. Here is the Teleport schema
+that describes an action:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="n">Struct</span><span class="p">([</span>
+    <span class="n">optional</span><span class="p">(</span><span class="s">&quot;accepts&quot;</span><span class="p">,</span> <span class="n">Schema</span><span class="p">),</span>
+    <span class="n">optional</span><span class="p">(</span><span class="s">&quot;returns&quot;</span><span class="p">,</span> <span class="n">Schema</span><span class="p">),</span>
+    <span class="n">optional</span><span class="p">(</span><span class="s">&quot;doc&quot;</span><span class="p">,</span> <span class="n">String</span><span class="p">)</span>
+<span class="p">])</span>
+</pre></div>
+</div>
+<p>Actions are registered with the <tt class="xref py py-meth docutils literal"><span class="pre">action()</span></tt> decorator:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cosmic.types</span> <span class="kn">import</span> <span class="n">Array</span><span class="p">,</span> <span class="n">Integer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@mathy.action</span><span class="p">(</span><span class="n">accepts</span><span class="o">=</span><span class="n">Array</span><span class="p">(</span><span class="n">Integer</span><span class="p">),</span> <span class="n">returns</span><span class="o">=</span><span class="n">Integer</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="n">numbers</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">numbers</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="go">&gt;&gt;&gt;</span>
+</pre></div>
+</div>
+<p>The function used in the action is perfectly usable:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">sum</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="go">6</span>
+</pre></div>
+</div>
+<p>But now there is another way of accessing it:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mathy</span><span class="o">.</span><span class="n">actions</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="go">6</span>
+</pre></div>
+</div>
+<p>And from the client, it is accessed identically:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mathy</span> <span class="o">=</span> <span class="n">API</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;http://localhost:5000/spec.json&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mathy</span><span class="o">.</span><span class="n">actions</span><span class="o">.</span><span class="n">add</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="go">6</span>
+</pre></div>
+</div>
+<p>Now that the action has been registered, it becomes part of the spec:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">API</span><span class="o">.</span><span class="n">to_json</span><span class="p">(</span><span class="n">mathy</span><span class="p">)</span>
+<span class="go">{</span>
+<span class="go">    u&#39;name&#39;: &#39;mathy&#39;,</span>
+<span class="go">    u&#39;homepage&#39;: &#39;http://example.com&#39;,</span>
+<span class="go">    u&#39;actions&#39;: {</span>
+<span class="go">        u&#39;map&#39;: {</span>
+<span class="go">            u&#39;square&#39;: {</span>
+<span class="go">                u&#39;returns&#39;: {&#39;type&#39;: &#39;Integer&#39;},</span>
+<span class="go">                u&#39;accepts&#39;: {&#39;type&#39;: &#39;Integer&#39;}</span>
+<span class="go">            }</span>
+<span class="go">        },</span>
+<span class="go">        u&#39;order&#39;: [u&#39;square&#39;]</span>
+<span class="go">    },</span>
+<span class="go">    u&#39;models&#39;: {u&#39;map&#39;: {}, u&#39;order&#39;: []}</span>
+<span class="go">}</span>
+</pre></div>
+</div>
+<p>If you are not yet familiar with Teleport, you might be wondering what is the
+purpose of the <tt class="docutils literal"><span class="pre">name</span></tt> and <tt class="docutils literal"><span class="pre">order</span></tt> items in the <tt class="docutils literal"><span class="pre">actions</span></tt> object above.
+This is the way Teleport uses JSON to represent an ordered mapping. Both actions
+and models are contained in the Teleport&#8217;s <tt class="xref py py-class docutils literal"><span class="pre">OrderedMap</span></tt> type.</p>
+<p>Both <em>accepts</em> and <em>returns</em> are optional. If no accepts schema is provided,
+the action will take no input data, and if the returns schema is not provided,
+the action will return nothing when it completes.</p>
+<p>Normally, the action function is expected to take a single non-keyword
+argument. If your action needs to take multiple arguments, use the Teleport
+<tt class="xref py py-class docutils literal"><span class="pre">Struct</span></tt> type:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@mathy.action</span><span class="p">(</span><span class="n">accepts</span><span class="o">=</span><span class="n">Struct</span><span class="p">([</span>
+    <span class="n">required</span><span class="p">(</span><span class="s">u&#39;numerator&#39;</span><span class="p">,</span> <span class="n">Integer</span><span class="p">),</span>
+    <span class="n">required</span><span class="p">(</span><span class="s">u&#39;denominator&#39;</span><span class="p">,</span> <span class="n">Integer</span><span class="p">),</span>
+<span class="p">]),</span> <span class="n">returns</span><span class="o">=</span><span class="n">Integer</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">divide</span><span class="p">(</span><span class="n">numerator</span><span class="p">,</span> <span class="n">denominator</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">numerator</span> <span class="o">/</span> <span class="n">denominator</span>
+</pre></div>
+</div>
+<p>This may be called remotely as:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mathy</span> <span class="o">=</span> <span class="n">API</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;http://localhost:5000/spec.json&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mathy</span><span class="o">.</span><span class="n">actions</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">numerator</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">denominator</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="models-as-data-types">
+<h2>Models as Data Types<a class="headerlink" href="#models-as-data-types" title="Permalink to this headline">¶</a></h2>
+<p>Models are data type definitions attached to an API, they use Teleport schemas
+to describe their data.</p>
+<p>Let&#8217;s take a look at the model object:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">cosmic.api</span> <span class="kn">import</span> <span class="n">API</span>
+<span class="kn">from</span> <span class="nn">cosmic.models</span> <span class="kn">import</span> <span class="n">BaseModel</span>
+
+<span class="n">places</span> <span class="o">=</span> <span class="n">API</span><span class="p">(</span><span class="s">&#39;places&#39;</span><span class="p">)</span>
+
+<span class="nd">@places.model</span>
+<span class="k">class</span> <span class="nc">Address</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">properties</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">required</span><span class="p">(</span><span class="s">u&quot;number&quot;</span><span class="p">,</span> <span class="n">Integer</span><span class="p">),</span>
+        <span class="n">required</span><span class="p">(</span><span class="s">u&quot;street&quot;</span><span class="p">,</span> <span class="n">String</span><span class="p">),</span>
+        <span class="n">required</span><span class="p">(</span><span class="s">u&quot;city&quot;</span><span class="p">,</span> <span class="n">String</span><span class="p">)</span>
+    <span class="p">]</span>
+</pre></div>
+</div>
+<p>As you can see, a model class should inherit from
+<a class="reference internal" href="reference.html#cosmic.models.BaseModel" title="cosmic.models.BaseModel"><tt class="xref py py-class docutils literal"><span class="pre">BaseModel</span></tt></a> and in order to register it with an API, you
+must use the <a class="reference internal" href="reference.html#cosmic.api.API.model" title="cosmic.api.API.model"><tt class="xref py py-meth docutils literal"><span class="pre">model()</span></tt></a> decorator on it. Once a model has
+been registered with an API, it becomes accessible as part of the
+<tt class="xref py py-data docutils literal"><span class="pre">models</span></tt> namespace, for example <tt class="docutils literal"><span class="pre">places.models.Address</span></tt>.</p>
+<p>There is a good reason model definitions are in the form of classes.
+In Cosmic, the objects that the model defines are represented by actual
+instances of the model class:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sesame31</span> <span class="o">=</span> <span class="n">Address</span><span class="p">(</span><span class="n">number</span><span class="o">=</span><span class="mi">31</span><span class="p">,</span> <span class="n">street</span><span class="o">=</span><span class="s">&quot;Sesame&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sesame31</span><span class="o">.</span><span class="n">number</span>
+<span class="go">31</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sesame31</span><span class="o">.</span><span class="n">street</span>
+<span class="go">&quot;Sesame&quot;</span>
+</pre></div>
+</div>
+<p>This means that you can easily add methods to your models.</p>
+<p>Furthermore, a model is actually a Teleport type:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Address</span><span class="o">.</span><span class="n">to_json</span><span class="p">(</span><span class="n">sesame31</span><span class="p">)</span>
+<span class="go">{</span>
+<span class="go">    u&quot;number&quot;: 31,</span>
+<span class="go">    u&quot;street&quot;: &quot;Sesame&quot;</span>
+<span class="go">}</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="reference.html#cosmic.models.BaseModel" title="cosmic.models.BaseModel"><tt class="xref py py-class docutils literal"><span class="pre">BaseModel</span></tt></a> inherits from Teleport&#8217;s
+<tt class="xref py py-class docutils literal"><span class="pre">BasicWrapper</span></tt>. If you have existing classes that you want to
+turn into Cosmic models, you can do so quite easily. (See <a class="reference external" href="/docs/teleport/python/latest/index.html#creating-custom-types">Creating Custom
+Types</a> in
+Teleport.)</p>
+<p>Once registered with an API, a model becomes available in the
+<tt class="xref py py-data docutils literal"><span class="pre">models</span></tt> namespace. The beauty of this namespace
+is that it is identical on the client and server. Here is how to create
+an <tt class="xref py py-class docutils literal"><span class="pre">Address</span></tt> on the client:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">places</span> <span class="o">=</span> <span class="n">API</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;http://localhost:5000/spec.json&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elm13</span> <span class="o">=</span> <span class="n">places</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Address</span><span class="p">(</span><span class="n">number</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span> <span class="n">street</span><span class="o">=</span><span class="s">&quot;Elm&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elm13</span><span class="o">.</span><span class="n">number</span>
+<span class="go">13</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="rest-via-models">
+<h2>REST via Models<a class="headerlink" href="#rest-via-models" title="Permalink to this headline">¶</a></h2>
+<p>Models can be used to create REST-ful endpoints. A model roughly corresponds
+to a database table. If you want to give clients access to <em>objects</em> of the
+data type defined by the model, you also need to define a set of CRUD methods
+that Cosmic will turn into HTTP endpoints.</p>
+<p>The <em>links</em> parameter describes relationships between models. A link from one
+model to another is similar to a foreign key in a relational database.</p>
+<p>Links are defined similarly to properties:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">places</span> <span class="o">=</span> <span class="n">API</span><span class="p">(</span><span class="s">&#39;places&#39;</span><span class="p">)</span>
+
+<span class="nd">@places.model</span>
+<span class="k">class</span> <span class="nc">City</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">properties</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">optional</span><span class="p">(</span><span class="s">u&quot;name&quot;</span><span class="p">,</span> <span class="n">String</span><span class="p">)</span>
+    <span class="p">]</span>
+
+<span class="nd">@places.model</span>
+<span class="k">class</span> <span class="nc">Address</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">properties</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">required</span><span class="p">(</span><span class="s">u&quot;number&quot;</span><span class="p">,</span> <span class="n">Integer</span><span class="p">),</span>
+        <span class="n">required</span><span class="p">(</span><span class="s">u&quot;street&quot;</span><span class="p">,</span> <span class="n">String</span><span class="p">),</span>
+    <span class="p">]</span>
+    <span class="n">links</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">required</span><span class="p">(</span><span class="s">u&quot;city&quot;</span><span class="p">,</span> <span class="n">City</span><span class="p">)</span>
+    <span class="p">]</span>
+</pre></div>
+</div>
+<p>And referenced similarly to properties:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">toronto</span> <span class="o">=</span> <span class="n">places</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">City</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;Toronto&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spadina147</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">places</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Address</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">number</span><span class="o">=</span><span class="mi">147</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">street</span><span class="o">=</span><span class="s">&quot;Spadina&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">city</span><span class="o">=</span><span class="n">toronto</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spadina147</span><span class="o">.</span><span class="n">city</span><span class="o">.</span><span class="n">name</span>
+<span class="go">&quot;Toronto&quot;</span>
+</pre></div>
+</div>
+<p>These models are merely data type definitions, they do not have REST endpoints
+because they are not connected to any database. How do you know? You can try
+this:</p>
+<div class="highlight-python"><div class="highlight"><pre>&gt;&gt; spadina147.id is None
+True
+</pre></div>
+</div>
+<p>If apart from defining a data type we also want to provide access to a
+collection of objects of this data type, there are 4 methods that Cosmic
+allows us to override. These methods correspond to 5 HTTP endpoints. Cosmic
+decides whether the endpoints should be created or not based on whether the
+methods have been defined. This behavior can be overridden by setting the
+<tt class="xref py py-data docutils literal"><span class="pre">methods</span></tt> property on the model class.</p>
+<div class="section" id="get-by-id">
+<h3>get_by_id<a class="headerlink" href="#get-by-id" title="Permalink to this headline">¶</a></h3>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="reference.html#cosmic.http.GetByIdEndpoint" title="cosmic.http.GetByIdEndpoint"><tt class="xref py py-class docutils literal"><span class="pre">GetByIdEndpoint</span></tt></a> for HTTP spec.</p>
+</div>
+<p>The simplest method to implement is <tt class="xref py py-meth docutils literal"><span class="pre">get_by_id()</span></tt>. It takes a single
+parameter (an id is always a string) and returns a model class instance
+(or <tt class="docutils literal"><span class="pre">None</span></tt>, if no model is found):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">places</span> <span class="o">=</span> <span class="n">API</span><span class="p">(</span><span class="s">&#39;places&#39;</span><span class="p">)</span>
+
+<span class="nd">@places.model</span>
+<span class="k">class</span> <span class="nc">City</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">methods</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;get_by_id&quot;</span><span class="p">]</span>
+    <span class="n">properties</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">optional</span><span class="p">(</span><span class="s">u&quot;name&quot;</span><span class="p">,</span> <span class="n">String</span><span class="p">)</span>
+    <span class="p">]</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_by_id</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">cities</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cities</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+
+<span class="n">cities</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&quot;0&quot;</span><span class="p">:</span> <span class="n">City</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;Toronto&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s">&quot;0&quot;</span><span class="p">),</span>
+    <span class="s">&quot;1&quot;</span><span class="p">:</span> <span class="n">City</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;San Francisco&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s">&quot;1&quot;</span><span class="p">),</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>As you can see, Cosmic doesn&#8217;t care what kind of database you use, as long as
+the method returns the right value. Now if we want to use this method, we can
+do:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">city</span> <span class="o">=</span> <span class="n">places</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">City</span><span class="o">.</span><span class="n">get_by_id</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">city</span><span class="o">.</span><span class="n">name</span>
+<span class="go">&quot;San Francisco&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">places</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">City</span><span class="o">.</span><span class="n">get_by_id</span><span class="p">(</span><span class="s">&quot;5&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">None</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="save">
+<h3>save<a class="headerlink" href="#save" title="Permalink to this headline">¶</a></h3>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="reference.html#cosmic.http.CreateEndpoint" title="cosmic.http.CreateEndpoint"><tt class="xref py py-class docutils literal"><span class="pre">CreateEndpoint</span></tt></a> and
+<a class="reference internal" href="reference.html#cosmic.http.UpdateEndpoint" title="cosmic.http.UpdateEndpoint"><tt class="xref py py-class docutils literal"><span class="pre">UpdateEndpoint</span></tt></a> for HTTP spec.</p>
+</div>
+<p>The <tt class="xref py py-meth docutils literal"><span class="pre">save()</span></tt> method is actually used for two
+different operations: saving and updating. On the HTTP level they are two
+distinct HTTP endpoints.</p>
+<div class="code highlight-python"><div class="highlight"><pre><span class="nd">@places.model</span>
+<span class="k">class</span> <span class="nc">City</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">methods</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;create&#39;</span><span class="p">,</span> <span class="s">&#39;update&#39;</span><span class="p">]</span>
+    <span class="n">properties</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">optional</span><span class="p">(</span><span class="s">u&quot;name&quot;</span><span class="p">,</span> <span class="n">String</span><span class="p">)</span>
+    <span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="c"># Create new id</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cities</span><span class="p">))</span>
+        <span class="n">cities</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span>
+</pre></div>
+</div>
+<p>When implementing this function on the server side, you should check for the
+model&#8217;s <em>id</em> property. If set, you should update, if not set, you should save,
+creating a new id in the process. On the client side, whether id is set will
+determine which HTTP call to make. If <tt class="xref py py-meth docutils literal"><span class="pre">save()</span></tt> is called on a model with
+no id, then if the call completes successfully, an id will be set:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">city</span> <span class="o">=</span> <span class="n">City</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;Moscow&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">city</span><span class="o">.</span><span class="n">id</span> <span class="ow">is</span> <span class="bp">None</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">city</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">city</span><span class="o">.</span><span class="n">id</span>
+<span class="go">&quot;2&quot;</span>
+</pre></div>
+</div>
+<p>To add extra validation to a model, you can override the
+<tt class="xref py py-meth docutils literal"><span class="pre">validate()</span></tt> method. This method gets called after
+the model schema has been used to deserialize the data and before the
+model object gets instantiated. Here is a <tt class="xref py py-meth docutils literal"><span class="pre">validate()</span></tt> method for
+<tt class="xref py py-class docutils literal"><span class="pre">City</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@classmethod</span>
+<span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">datum</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">datum</span><span class="p">[</span><span class="s">u&quot;name&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">islower</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s">&quot;Name must be capitalized&quot;</span><span class="p">,</span> <span class="n">datum</span><span class="p">[</span><span class="s">&quot;name&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>A <tt class="xref py py-exc docutils literal"><span class="pre">ValidationError</span></tt> will be raised if you try to save an invalid model
+from a remote client:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">places</span> <span class="o">=</span> <span class="n">API</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;http://localhost:5000/spec.json&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">moscow</span> <span class="o">=</span> <span class="n">places</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">City</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;moscow&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">moscow</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="gt">Traceback (most recent call last):</span>
+  File <span class="nb">&quot;&lt;stdin&gt;&quot;</span>, line <span class="m">1</span>, in <span class="n">&lt;module&gt;</span>
+  File <span class="nb">&quot;cosmic/api.py&quot;</span>, line <span class="m">85</span>, in <span class="n">save</span>
+    <span class="n">inst</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">_list_poster</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+  File <span class="nb">&quot;cosmic/http.py&quot;</span>, line <span class="m">287</span>, in <span class="n">__call__</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">client_hook</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+  File <span class="nb">&quot;cosmic/http.py&quot;</span>, line <span class="m">27</span>, in <span class="n">call</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_response</span><span class="p">(</span><span class="n">endpoint</span><span class="p">,</span> <span class="n">res</span><span class="p">)</span>
+  File <span class="nb">&quot;cosmic/http.py&quot;</span>, line <span class="m">33</span>, in <span class="n">parse_response</span>
+    <span class="k">return</span> <span class="n">endpoint</span><span class="o">.</span><span class="n">parse_response</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+  File <span class="nb">&quot;cosmic/http.py&quot;</span>, line <span class="m">596</span>, in <span class="n">parse_response</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">CreateEndpoint</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">parse_response</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+  File <span class="nb">&quot;cosmic/http.py&quot;</span>, line <span class="m">273</span>, in <span class="n">parse_response</span>
+    <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s">&#39;json&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">datum</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;error&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">))</span>
+<span class="gr">teleport.ValidationError</span>: <span class="n">Name must be capitalized: u&#39;moscow&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="delete">
+<h3>delete<a class="headerlink" href="#delete" title="Permalink to this headline">¶</a></h3>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="reference.html#cosmic.http.DeleteEndpoint" title="cosmic.http.DeleteEndpoint"><tt class="xref py py-class docutils literal"><span class="pre">DeleteEndpoint</span></tt></a> for HTTP spec.</p>
+</div>
+<p>The <tt class="xref py py-meth docutils literal"><span class="pre">delete()</span></tt> method, upon deleting the object,
+returns nothing.</p>
+<div class="code highlight-python"><div class="highlight"><pre><span class="nd">@places.model</span>
+<span class="k">class</span> <span class="nc">City</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">methods</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;get_by_id&#39;</span><span class="p">,</span> <span class="s">&#39;delete&#39;</span><span class="p">]</span>
+    <span class="n">properties</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">optional</span><span class="p">(</span><span class="s">u&quot;name&quot;</span><span class="p">,</span> <span class="n">String</span><span class="p">)</span>
+    <span class="p">]</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_by_id</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">cities</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cities</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">del</span> <span class="n">cities</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>After being called, the instance will still be there but it should be
+considered invalid. If you try to fetch the object with the deleted id using
+<tt class="xref py py-meth docutils literal"><span class="pre">get_by_id()</span></tt>, <tt class="docutils literal"><span class="pre">None</span></tt> will be returned.</p>
+<div class="code highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">city</span> <span class="o">=</span> <span class="n">places</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">City</span><span class="o">.</span><span class="n">get_by_id</span><span class="p">(</span><span class="s">&quot;0&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">city</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">places</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">City</span><span class="o">.</span><span class="n">get_by_id</span><span class="p">(</span><span class="s">&quot;0&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">None</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="get-list">
+<span id="id1"></span><h3>get_list<a class="headerlink" href="#get-list" title="Permalink to this headline">¶</a></h3>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="reference.html#cosmic.http.GetListEndpoint" title="cosmic.http.GetListEndpoint"><tt class="xref py py-class docutils literal"><span class="pre">GetListEndpoint</span></tt></a> for HTTP spec.</p>
+</div>
+<p>The <tt class="xref py py-meth docutils literal"><span class="pre">get_list()</span></tt> method takes keyword arguments
+as specified by the <em>query_fields</em> model property. This schema is used to
+serialize them into a URL query string with the help of
+<a class="reference internal" href="reference.html#cosmic.types.URLParams" title="cosmic.types.URLParams"><tt class="xref py py-class docutils literal"><span class="pre">URLParams</span></tt></a>.</p>
+<div class="code highlight-python"><div class="highlight"><pre><span class="nd">@places.model</span>
+<span class="k">class</span> <span class="nc">City</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">methods</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;get_list&#39;</span><span class="p">]</span>
+    <span class="n">properties</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">optional</span><span class="p">(</span><span class="s">u&quot;name&quot;</span><span class="p">,</span> <span class="n">String</span><span class="p">)</span>
+    <span class="p">]</span>
+    <span class="n">query_fields</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">optional</span><span class="p">(</span><span class="s">u&quot;country&quot;</span><span class="p">,</span> <span class="n">String</span><span class="p">)</span>
+    <span class="p">]</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_list</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">country</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">country</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cities</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">country</span> <span class="o">==</span> <span class="s">&quot;Canada&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">cities</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="k">elif</span> <span class="n">country</span> <span class="o">==</span> <span class="s">&quot;USA&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">cities</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+</pre></div>
+</div>
+<p>The return value of this function is a (possibly empty) list of model
+instances:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">l</span> <span class="o">=</span> <span class="n">places</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">City</span><span class="o">.</span><span class="n">get_list</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">l</span> <span class="o">=</span> <span class="n">places</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">City</span><span class="o">.</span><span class="n">get_list</span><span class="p">(</span><span class="n">country</span><span class="o">=</span><span class="s">&quot;Canada&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
+<span class="go">&quot;Toronto&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">places</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">City</span><span class="o">.</span><span class="n">get_list</span><span class="p">(</span><span class="n">country</span><span class="o">=</span><span class="s">&quot;Russia&quot;</span><span class="p">)</span>
+<span class="go">[]</span>
+</pre></div>
+</div>
+<p>You are free to invent your own pagination schemes using custom query fields.</p>
+<p>Often it will be useful to return metadata along with the items, for example,
+the total count if the list is paginated, or a timestamp. You can specify this
+by including the <tt class="xref py py-data docutils literal"><span class="pre">list_metadata</span></tt> attribute.</p>
+<div class="code highlight-python"><div class="highlight"><pre><span class="nd">@places.model</span>
+<span class="k">class</span> <span class="nc">City</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">methods</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;get_list&#39;</span><span class="p">]</span>
+    <span class="n">properties</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">optional</span><span class="p">(</span><span class="s">u&quot;name&quot;</span><span class="p">,</span> <span class="n">String</span><span class="p">)</span>
+    <span class="p">]</span>
+    <span class="n">query_fields</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">optional</span><span class="p">(</span><span class="s">u&quot;country&quot;</span><span class="p">,</span> <span class="n">String</span><span class="p">)</span>
+    <span class="p">]</span>
+    <span class="n">list_metadata</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">required</span><span class="p">(</span><span class="s">u&quot;last_updated&quot;</span><span class="p">,</span> <span class="n">DateTime</span><span class="p">)</span>
+    <span class="p">]</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_list</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">country</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;last_updated&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()}</span>
+        <span class="k">if</span> <span class="n">country</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">cities</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="n">metadata</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">country</span> <span class="o">==</span> <span class="s">&quot;Canada&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">([</span><span class="n">cities</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">metadata</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">country</span> <span class="o">==</span> <span class="s">&quot;USA&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">([</span><span class="n">cities</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">metadata</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">([],</span> <span class="n">metadata</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>As you can see, when <tt class="xref py py-data docutils literal"><span class="pre">list_metadata</span></tt> is specified, the return value
+of <tt class="xref py py-meth docutils literal"><span class="pre">get_list()</span></tt> is a tuple, where the first item is the list, and the
+second is a dict containing the metadata.</p>
+</div>
+</div>
+<div class="section" id="authentication">
+<span id="guide-authentication"></span><h2>Authentication<a class="headerlink" href="#authentication" title="Permalink to this headline">¶</a></h2>
+<p>Currently, Cosmic does not provide a standard authentication mechanism. It
+does provide powerful HTTP hooks which can be used to implement different
+authentication schemes.</p>
+<p>On the server, you can override your API&#8217;s <tt class="xref py py-data docutils literal"><span class="pre">server_hook</span></tt>
+property with an instance of a custom subclass
+<tt class="xref py py-class docutils literal"><span class="pre">ServerHook</span></tt>. On the client, you can override
+<tt class="xref py py-data docutils literal"><span class="pre">client_hook</span></tt> with an instance of a subclass of
+<tt class="xref py py-class docutils literal"><span class="pre">ClientHook</span></tt>. These classes are symmetrically similar,
+each of them provides three methods to override. Let&#8217;s override the
+<tt class="xref py py-meth docutils literal"><span class="pre">view()</span></tt> method of
+<tt class="xref py py-class docutils literal"><span class="pre">ServerHook</span></tt> to enable our API to verify user credentials.</p>
+<div class="code highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">make_response</span>
+<span class="kn">from</span> <span class="nn">cosmic.api</span> <span class="kn">import</span> <span class="n">API</span>
+<span class="kn">from</span> <span class="nn">cosmic.http</span> <span class="kn">import</span> <span class="n">ServerHook</span>
+
+<span class="n">planetarium</span> <span class="o">=</span> <span class="n">API</span><span class="p">(</span><span class="s">&quot;planetarium&quot;</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">CustomServerHook</span><span class="p">(</span><span class="n">ServerHook</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="o">**</span><span class="n">url_args</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">endpoint</span><span class="o">.</span><span class="n">never_authenticate</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;Authorization&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="o">!=</span> <span class="s">&#39;secret&#39;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">make_response</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">,</span> <span class="mi">401</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;WWW-Authenticate&#39;</span><span class="p">:</span> <span class="s">&#39;MyAuth&#39;</span><span class="p">})</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">CustomServerHook</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">endpoint</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="o">**</span><span class="n">url_args</span><span class="p">)</span>
+
+<span class="n">planetarium</span><span class="o">.</span><span class="n">server_hook</span> <span class="o">=</span> <span class="n">CustomServerHook</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>In this example, we check for credentials provided in the <em>Authorization</em>
+header. If they are missing or wrong, we return a 401 response, asking for
+authentication via the <em>WWW-Authenticate</em> header.</p>
+<p>Now let&#8217;s implement a hook on the client to add credentials to every request
+that needs it.</p>
+<div class="code highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">cosmic.api</span> <span class="kn">import</span> <span class="n">API</span>
+<span class="kn">from</span> <span class="nn">cosmic.http</span> <span class="kn">import</span> <span class="n">ClientHook</span>
+
+<span class="n">planetarium</span> <span class="o">=</span> <span class="n">API</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;https://api.planetarium.com/spec.json&#39;</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">CustomClientHook</span><span class="p">(</span><span class="n">ClientHook</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">build_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">request</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">ClientHook</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">build_request</span><span class="p">(</span><span class="n">endpoint</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">request</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s">&quot;Authorization&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;secret&quot;</span>
+        <span class="k">return</span> <span class="n">request</span>
+</pre></div>
+</div>
+<p>This should be enough to get authentication working between client and server.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Guide</a><ul>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#what-s-in-an-api">What&#8217;s in an API?</a></li>
+<li><a class="reference internal" href="#client-and-server">Client and Server</a></li>
+<li><a class="reference internal" href="#rpc-via-actions">RPC via Actions</a></li>
+<li><a class="reference internal" href="#models-as-data-types">Models as Data Types</a></li>
+<li><a class="reference internal" href="#rest-via-models">REST via Models</a><ul>
+<li><a class="reference internal" href="#get-by-id">get_by_id</a></li>
+<li><a class="reference internal" href="#save">save</a></li>
+<li><a class="reference internal" href="#delete">delete</a></li>
+<li><a class="reference internal" href="#get-list">get_list</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#authentication">Authentication</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="overview.html"
+                        title="previous chapter">Overview</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="tutorial.html"
+                        title="next chapter">Tutorial</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/guide.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tutorial.html" title="Tutorial"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="overview.html" title="Overview"
+             >previous</a> |</li>
+        <li><a href="index.html">Cosmic 0.1.4 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, 8313547 Canada Inc..
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
