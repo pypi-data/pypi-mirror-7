@@ -1,0 +1,8 @@
+====================================================================
+feincms-photos - the 42. version of a gallery application for Django
+====================================================================
+
+* feincms-photos on github: https://github.com/matthiask/feincms-photos/
+* Documentation: None yet!
+
+
