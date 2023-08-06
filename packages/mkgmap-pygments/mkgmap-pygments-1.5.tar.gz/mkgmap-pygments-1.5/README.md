@@ -1,0 +1,67 @@
+## A pygments lexer for mkgmap style files 
+
+This package installs a new lexer for pygmentize to syntax highlight
+mkgmap style files. You can then use pygmentize (or the API) with the
+lexer 'mkgmap' to highlight style files.
+
+To install from pypi with pip:
+
+    pip install mkgmap-pygments
+
+You can also install from the source package in the usual
+ways.
+
+    python setup.py install
+
+or with pip:
+
+    pip install .
+
+All these installation methods will install pygmentize if it not already
+installed.
+
+## Usage 
+
+To just display a file to the terminal:
+
+    pygmentize -l mkgmap lines
+
+To create a complete html file:
+
+    pygmentize -l mkgmap -f html -Ofull=true,style=mkgmap -o output.html lines
+
+The example uses the style 'mkgmap' which is a style that is included
+in this package which is designed to distinguish the different
+elements clearly and is the style used in the mkgmap documentation and
+web site.
+You can use any of the other styles that are available in pygmentize
+according to taste. Some styles do
+not distinguish every different syntax context that is required.
+You can use the default style without any problems.
+
+## Notes 
+
+This syntax highlighter is fairly complete and it should help
+find problems in styles that are difficult to see otherwise.
+In particular it might help find problems that are valid syntax but
+not what you actually wanted.
+Of course it is useful for creating documentation too!
+
+There are a number of tricky things about the style syntax. The
+following have been tested and work in at least one case.
+
+* New lines can occur anywhere where a space can appear, so commands can
+be split over many lines.
+* Strings can be plain words consisting of just alphanumeric characters.
+* Strings can be delimited by double or single quotes and can then
+contain any character.
+* Strings being used to compare with tag values do not have any kind
+of variable expansion; the dollar symbol is treated literally.
+* Strings in an action block can contain variable/tag expansions
+introduced by a dollar sign. These are marked differently.
+* Comments can occur anywhere that a space could appear.
+* In an action block, you can have nested apply blocks.
+* In the expression you can have $tag which means get the value
+of the given tag. This is not a string and so is marked differently.
+Likewise the '*' in highway=* is not really a string and so is
+marked differently.
