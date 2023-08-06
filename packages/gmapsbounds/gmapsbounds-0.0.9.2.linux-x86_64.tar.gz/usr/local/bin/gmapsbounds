@@ -1,0 +1,30 @@
+#!/usr/bin/python3
+
+import gmapsbounds
+import os
+import sys
+import subprocess
+import json
+from selenium import webdriver
+import selenium.webdriver.support.ui as ui
+from gmapsbounds import obj
+from gmapsbounds import utils
+
+def main():
+    cities = ['Fresno, CA']
+    if cities:
+        driver = utils.launch_driver()
+        try:
+            for city_name in cities:
+                city = obj.City(driver, city_name)
+                city.download_center_map()
+                city.center, city.zoom = utils.parse_url(city.driver.current_url)
+                city.set_corner_information()
+                city.calculate_coordinates()
+                with open('{}.json'.format(city_name), 'w') as f:
+                	f.write(json.dumps(city.as_dict(), indent=4))
+        finally:
+            driver.close()
+
+if __name__ == '__main__':
+    main()
