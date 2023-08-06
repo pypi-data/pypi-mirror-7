@@ -1,0 +1,124 @@
+Metadata-Version: 1.1
+Name: betfair.py
+Version: 0.1.0
+Summary: Python client for the Betfair API (https://api.developer.betfair.com/)
+Home-page: https://github.com/jmcarp/betfair.py
+Author: Joshua Carp
+Author-email: jm.carp@gmail.com
+License: Copyright 2014 Joshua Carp
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+Description: .. image:: https://badge.fury.io/py/betfair.py.png
+            :target: http://badge.fury.io/py/betfair.py
+        
+        .. image:: https://travis-ci.org/jmcarp/betfair.py.png?branch=master
+            :target: https://travis-ci.org/jmcarp/betfair.py
+        
+        betfair.py is a Python wrapper for the Betfair API
+        
+        Installation
+        ------------
+        
+        ::
+        
+            $ pip install betfair.py
+        
+        Requirements
+        ------------
+        
+        - Python >= 2.7 or >= 3.3
+        
+        Testing
+        -------
+        
+        To run tests ::
+        
+            $ py.test
+        
+        SSL Certificates
+        ----------------
+        
+        For non-interactive login, you must generate a self-signed SSL certificate
+        and upload it to your Betfair account. Betfair.py includes tools for
+        simplifying this process. To create a self-signed certificate, run ::
+        
+            invoke ssl
+        
+        This will generate a file named ``betfair.pem`` in the ``certs`` directory.
+        You can write SSL certificates to another directory by passing the
+        ``--name`` parameter ::
+        
+            invoke ssl --name=path/to/certs/ssl
+        
+        This will generate a file named ``ssl.pem`` in the ``path/to/certs/``
+        directory. Once you have generated the SSL certificate, you can upload the
+        .pem file to Betfair at https://myaccount.betfair.com/account/authentication?showAPI=1.
+        
+        Examples
+        --------
+        
+        Create a Betfair client and log in ::
+        
+            from betfair import Betfair
+            client = Betfair('test', 'certs/betfair.pem')
+            client.login('username', 'password')
+        
+        Refresh session token ::
+        
+            client.keep_alive()
+        
+        Log out ::
+        
+            client.logout()
+        
+        List all tennis markets ::
+        
+            from betfair.models import MarketFilter
+            event_types = client.list_event_types(
+                MarketFilter(text_query='tennis')
+            )
+            print(len(event_types))                 # 1
+            print(event_types[0].event_type.name    # 'Tennis'
+            tennis_event_type = event_types[0]
+            markets = client.list_market_catalogue(
+                MarketFilter(event_type_ids=[tennis_event_type.event_type.id])
+            )
+            markets[0].market_name                  # 'Djokovic Tournament Wins'
+        
+        Author
+        ------
+        
+        Joshua Carp (jmcarp)
+        
+        License
+        -------
+        
+        MIT licensed. See the bundled `LICENSE <https://github.com/jmcarp/betfair.py/blob/master/LICENSE>`_ file for more details
+        
+Platform: UNKNOWN
+Classifier: Development Status :: 2 - Pre-Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Natural Language :: English
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.6
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.3
+Classifier: Programming Language :: Python :: 3.4
