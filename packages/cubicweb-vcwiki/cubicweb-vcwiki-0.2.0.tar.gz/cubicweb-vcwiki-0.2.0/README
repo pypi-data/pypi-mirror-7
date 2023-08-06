@@ -1,0 +1,86 @@
+Documentation
+=============
+
+
+Summary
+-------
+
+This is a version controlled wiki component for the CubicWeb framework.
+
+It uses Mercurial_ as a content storage and can be edited both with your
+favorite editor and the web GUI.
+
+
+Features
+--------
+
+The wiki web GUI usage should be pretty straightforward. It can be used to:
+
+* create a page in the wiki from a yet unknown wiki's sub-page URL
+
+* edit an existing page with an optional commit message
+
+* see a page's history and compare versions
+
+* revert a page to a previous version.
+
+`ReStructured Text`_ (ReST) formatted wikis benefit from CubicWeb's powerful
+ReST directives that make it easy to query the database and display the
+resultset in a view (e.g. `eid`, `rql`, `rql-table`).
+
+Present cube also adds a `wiki` directive, which can be used as in following
+example content::
+
+    This is a **formatted page content** with a link to
+    :wiki:`subdirectory/page`.
+
+    This displays a "subdirectory/page" text in the page, that links to URL
+    <current-page-url>/subdirectory/page, and which path in the Mercurial
+    repository is `<current-page-path>/subdirectory/page.rst`.
+    
+    You can also specify a link text that is different from the page's URL
+    path. The URL path can be specified either from the wiki's root, like
+    :wiki:`/subdirectory/other:this one`, or relatively to the current page, like
+    :wiki:`current_page_sibling:this other one`.
+
+
+Wiki setup
+----------
+
+Currently, the easiest way to setup a new wiki is through the command line::
+
+    cubicweb-ctl new-vcwiki <instance-name> <wiki-name> <repo-path>
+
+This creates a ReST formatted wiki named *wiki-name* from a pre-existing
+Mercurial repository located at *repo-path* on your disk in a pre-existing
+CubicWeb application instance named *instance-name*.
+
+You will need the admin user login and password to use this.
+
+An alternative is to use the web GUI, but it requires a few steps until now:
+
+1. The administrator must create a `Repository` entity and set its `path`
+   attribute to a valid path to a Mercurial repository (which must be created
+   beforehand).
+
+2. The administrator must add write permissions for the `Repository`, via
+   the `localperms` cube (action available at the left of the screen).
+
+3. The administrator must perform a "Refresh repository" action, also available
+   at the left of the screen.
+
+4. Create a `VcWiki` entity and set `rst` as default extension.
+
+5. You should be able to create your wiki homepage through the `wiki homepage`
+   action on the left.
+
+Note that the Wiki pages are available at an URL which has the following
+format::
+
+    <base-url>/wiki/<wiki-name>/<page-name>
+
+
+.. _`ReStructured Text`: http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html
+
+.. _Mercurial: http://mercurial.selenic.com/
+
