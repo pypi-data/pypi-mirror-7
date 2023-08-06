@@ -1,0 +1,3 @@
+py-star consists of a set of interfaces and libraries to allow programming of Asterisk from python. The library currently supports AGI, AMI, and the parsing of Asterisk configuration files. The library also includes debugging facilities for AGI.
+
+
