@@ -1,0 +1,63 @@
+#!/bin/bash
+
+source /etc/profile
+source /service/sbin/setup
+
+if [ $1 == "init" ]; then 
+    /service/sbin/init01.sh
+elif [ $1 == "halt" ]; then 
+    /service/sbin/halt01.sh
+elif [ $1 == "hosts" ]; then 
+    pophosts
+elif [ $1 == "start" ]; then 
+    # Record the services running on this node.
+    echo $2 >> /tmp/hadoop_services.log
+
+    if [ $2 == "namenode" ]; then
+	su ferry -c '/service/packages/hadoop/bin/hdfs --config /service/conf/hadoop namenode -format HADOOP_CLUSTER'
+	su ferry -c '/service/packages/hadoop/sbin/hadoop-daemon.sh --config /service/conf/hadoop --script hdfs start namenode'
+    elif [ $2 == "datanode" ]; then
+	su ferry -c '/service/packages/hadoop/sbin/hadoop-daemon.sh --config /service/conf/hadoop --script hdfs start datanode'
+    elif [ $2 == "yarnmaster" ]; then	
+	su ferry -c '/service/packages/hadoop/sbin/yarn-daemon.sh --config /service/conf/hadoop start resourcemanager'
+	su ferry -c '/service/packages/hadoop/sbin/mr-jobhistory-daemon.sh start historyserver --config /service/conf/hadoop'
+    elif [ $2 == "yarnslave" ]; then	
+	su ferry -c '/service/packages/hadoop/sbin/yarn-daemon.sh --config /service/conf/hadoop start nodemanager'
+    elif [ $2 == "gluster" ]; then 
+	python /service/scripts/mounthelper.py umount
+	python /service/scripts/mounthelper.py mount $3	
+	chown -R ferry:docker /service/data
+    fi
+elif [ $1 == "restart" ]; then 
+    pophosts
+    if [ $2 == "namenode" ]; then
+	su ferry -c '/service/packages/hadoop/sbin/hadoop-daemon.sh --config /service/conf/hadoop --script hdfs start namenode'
+    elif [ $2 == "datanode" ]; then
+	su ferry -c '/service/packages/hadoop/sbin/hadoop-daemon.sh --config /service/conf/hadoop --script hdfs start datanode'
+    elif [ $2 == "yarnmaster" ]; then	
+	su ferry -c '/service/packages/hadoop/sbin/yarn-daemon.sh --config /service/conf/hadoop start resourcemanager'
+	su ferry -c '/service/packages/hadoop/sbin/mr-jobhistory-daemon.sh stop historyserver --config /service/conf/hadoop'
+    elif [ $2 == "yarnslave" ]; then	
+	su ferry -c '/service/packages/hadoop/sbin/yarn-daemon.sh --config /service/conf/hadoop start nodemanager'
+    elif [ $2 == "gluster" ]; then 
+	python /service/scripts/mounthelper.py umount
+	python /service/scripts/mounthelper.py mount $3	
+	chown -R ferry:docker /service/data
+    fi
+elif [ $1 == "stop" ]; then 
+    input=/tmp/hadoop_services.log
+    while read line
+    do
+	if [ "$line" == "namenode" ]; then
+	    su ferry -c '/service/packages/hadoop/sbin/hadoop-daemon.sh --config /service/conf/hadoop --script hdfs stop namenode'
+	elif [ "$line" == "datanode" ]; then
+	    su ferry -c '/service/packages/hadoop/sbin/hadoop-daemon.sh --config /service/conf/hadoop --script hdfs stop datanode'
+	elif [ "$line" == "yarnmaster" ]; then	
+	    su ferry -c '/service/packages/hadoop/sbin/yarn-daemon.sh --config /service/conf/hadoop stop resourcemanager'
+	elif [ "$line" == "yarnslave" ]; then	
+	    su ferry -c '/service/packages/hadoop/sbin/yarn-daemon.sh --config /service/conf/hadoop stop nodemanager'
+	elif [ "$line" == "gluster" ]; then 
+	    python /service/scripts/mounthelper.py umount
+	fi
+    done < "$input"
+fi
