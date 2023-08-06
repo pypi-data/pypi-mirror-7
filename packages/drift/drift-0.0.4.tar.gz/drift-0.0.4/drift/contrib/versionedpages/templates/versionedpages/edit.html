@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block head_css %}
+        {{ block.super }}
+        {% if user.is_staff %}
+        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/content.css"/>
+        {% endif %}
+{% endblock head_css %}
+
+{% block head_js %}
+        {{ block.super }}
+        {% if user.is_staff %}
+        <script type="text/javascript" src="{{ STATIC_URL }}js/csrf.js"></script>
+        {% include 'content/editor_header.html' %}
+        <script type="text/javascript" src="{{ STATIC_URL }}admin/js/urlify.js"></script> {# TODO: refactor in to a shared template which still exposed a hook or customize from the editor #}
+        <script type="text/javascript" src="{{ STATIC_URL }}js/content.js"></script>
+        <script type="text/javascript">
+            content.content.id = '{{ content.instance.id }}';
+            content.version.id = '{{ version.id }}';
+            {% if edit == True %}content.edit = true;{% endif %}
+            $(document).ready(function() {
+                content.upload_photos_url = '{% url 'drift_upload_photos' %}';
+                content.recent_photos_url = '{% url 'drift_recent_photos' %}';
+                content.prepopulated_fields = {{ content.get_perpopulated_fields }};
+                content.initialize();
+            });
+        </script>
+        {% endif %}
+{% endblock head_js %}
+
+{% block contents %}
+            <form method="post">
+                {% csrf_token %}
+                {% include 'versionedpages/versioned_control_panel.html' %}
+
+                <h1>{{ content.form.title }}</h1>
+
+                <div class="well content_settings">
+                    <h2><i class="fa fa-cog"></i> Content Settings</h2>
+                    {% for field in content.form.non_contenteditable_fields %}
+                    {% with field.field as field %}
+                    {% include "_field.html" %}
+                    {% endwith %}
+                    {% endfor %}
+                </div>
+
+                
+                <textarea class="content" name="content">
+                    {{ version.html }}
+                </textarea>
+                <input type="hidden" value="{{ version.id }}" name="version_id">
+            </form>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends 'content/control_panel.html' %}
+
+{% block publish_form %}
+    {% if version == content.instance.published_version %}
+        <span class="btn btn-xs disabled">Published</span>
+    {% else %}
+        <form action="{% url 'publish_versioned_page' content.instance.url %}" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="version_id" value="{{ version.id }}">
+        {% if content.instance.published_version.created > version.created %}
+        <input type="submit" class='btn btn-xs btn-danger' value='Revert'>
+        {% else %}
+        <input type="submit" class='btn btn-xs btn-success' value='Publish'>
+        {% endif %}
+        </form>
+    {% endif %}
+{% endblock publish_form %}
+
+{% block version_footer %}
+    <div>
+        Version <strong>{{ version.id }}</strong>, created <strong>{{ version.created|timesince }} ago</strong>, owned by <strong>{{ content.instance.owner.username }}</strong>
+    </div>
+{% endblock version_footer %}

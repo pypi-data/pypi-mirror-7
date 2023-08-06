@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block head_css %}
+        {{ block.super }}
+        {% if user.is_staff %}
+        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/content.css"/>
+        {% endif %}
+{% endblock head_css %}
+
+{% block head_js %}
+        {{ block.super }}
+
+        {% if user.is_staff %}
+        <script type="text/javascript" src="{{ STATIC_URL }}js/csrf.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}js/content.js"></script>
+        <script type="text/javascript">
+            content.content.id = '{{ content.instance.id }}';
+            content.version.id = '{{ version.id }}';
+            {% if edit == True %}content.edit = true;{% endif %}
+            $(document).ready(function() {
+                content.upload_photos_url = '{% url 'drift_upload_photos' %}';
+                content.recent_photos_url = '{% url 'drift_recent_photos' %}';
+                content.initialize();
+            });
+        </script>
+        {% endif %}
+{% endblock head_js %}
+
+{% block contents %}
+    {% if edit %}
+    <form method="post">
+    {% csrf_token %}
+    {% endif %}
+    {% include 'content/control_panel.html' %}
+
+    <h1>{{ flatpage.title }}</h1>
+    {% if edit %}
+    <textarea class="content" name="content">
+    {{ flatpage.content }}
+    </textarea>
+    </form>
+    {% else %}
+    <div id="show_content" class="content">
+        {{ flatpage.content }}
+    </div>
+    {% endif %}
+
+{% endblock %}

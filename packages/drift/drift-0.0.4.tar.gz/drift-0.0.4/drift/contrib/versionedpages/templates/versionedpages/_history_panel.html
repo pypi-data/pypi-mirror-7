@@ -1,0 +1,42 @@
+<div id="content_history">
+    <a href="#" class="close toggle_content_history">&times;</a>
+    <h2>History</h2>
+    <div class="ch_row">
+    <div class="ch_small">
+        id
+    </div>
+    <div>
+        Editor
+    </div>
+    <div>
+        State
+    </div>
+    <div>
+        Created
+    </div>
+    </div>
+    {% for version in content.instance.get_history %}
+    <div class="ch_row">
+    <div class="ch_small">
+        <a href="{% url 'versioned_page_version' content.instance.url version.id %}">{{ version.id }}</a>
+    </div>
+    <div>
+        {{ version.editor.username }}
+    </div>
+    <div>
+        {% if version.is_saved == False %}
+        <em>Not Saved</em>
+        {% else %}
+            {% if content.instance.published_version == version %}
+            Published
+            {% else %}
+            &nbsp;
+            {% endif %}
+        {% endif %}
+    </div>
+    <div title="{{ version.created }}">
+        {{ version.created|timesince }} ago 
+    </div>
+    </div>
+    {% endfor %}
+</div>
