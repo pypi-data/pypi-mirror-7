@@ -1,0 +1,61 @@
+Metadata-Version: 1.1
+Name: irc-toolkit
+Version: 0.1.0
+Summary: A Python IRC client library
+Home-page: https://github.com/kylef/irctk/
+Author: Kyle Fuller
+Author-email: inbox@kylefuller.co.uk
+License: BSD
+Description: irc-toolkit
+        ===========
+        
+        [![Build Status](http://img.shields.io/travis/kylef/irctk/master.svg?style=flat)](https://travis-ci.org/kylef/irctk)
+        
+        An IRC client toolkit in Python.
+        
+        ## Installation
+        
+        ```bash
+        $ pip install irc-toolkit
+        ```
+        
+        ## Usage
+        
+        ```python
+        import zokket
+        import irctk
+        
+        class PingBot(object):
+            def __init__(self):
+                client = irctk.Client()
+                client.delegate = self
+                client.connect('chat.freenode.net', 6697, secure=True)
+        
+            def irc_registered(self, client):
+                channel = client.add_channel('#test')
+                channel.join()
+        
+            def irc_private_message(self, client, nick, message):
+                if message == 'ping':
+                    nick.send('pong')
+        
+            def irc_channel_message(self, client, nick, channel, message):
+                if message == 'ping':
+                    channel.send('{}: pong'.format(nick))
+        
+        if __name__ == '__main__':
+            bot = PingBot()
+            zokket.DefaultRunloop.run()
+        ```
+        
+        
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3.2
+Classifier: Programming Language :: Python :: 3.3
+Classifier: Topic :: Communications :: Chat
+Classifier: Topic :: Software Development :: Libraries
