@@ -1,0 +1,139 @@
+#!/usr/bin/env python
+
+import sys
+import os
+import argparse
+import logging
+import hockeylib.app as app
+import hockeylib.version as version
+import hockeylib.crash as crash
+
+logging.basicConfig(level=logging.NOTSET)
+
+parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
+description=""\
+"  _   _            _                 _                \n" \
+" | | | | ___   ___| | _____ _   _   / \   _ __  _ __  \n" \
+" | |_| |/ _ \ / __| |/ / _ \ | | | / _ \ | '_ \| '_ \ \n" \
+" |  _  | (_) | (__|   <  __/ |_| |/ ___ \| |_) | |_) |\n" \
+" |_| |_|\___/ \___|_|\_\___|\__, /_/   \_\ .__/| .__/ \n" \
+"                            |___/        |_|   |_|    \n" \
+"        - Python-based command line tool -            \n")
+parsers_com = parser.add_subparsers(dest="com",metavar="")
+parser.add_argument("-t","--token",help="HockeyApp API token",default=None)
+
+parser_help = parsers_com.add_parser("help",help='Display a list of commands for the cli')
+parser_apps = parsers_com.add_parser("apps",help='Display a list of hockey applications')
+
+parser_version = parsers_com.add_parser("versions",help='Display the versions for a hockey application')
+version_group_filter = parser_version.add_mutually_exclusive_group(required=True)
+version_group_filter.add_argument("-t","--title",help="The title of the hockey app")
+version_group_filter.add_argument("-i","--id",help="The id of the hockey app")
+
+parser_crashes = parsers_com.add_parser("crashes",help="Display a list of hockey crash reports")
+crashes_group_filter = parser_crashes.add_mutually_exclusive_group(required=True)
+crashes_group_filter.add_argument("-t","--title",help="The title of the hockey app")
+crashes_group_filter.add_argument("-i","--id",help="The id of the hockey app")
+parser_crashes.add_argument("-v","--version",help="Filter the crashes by version id",default=crash.DEFAULT_LIMIT)
+parser_crashes.add_argument("-l","--limit",help="Limit the number of reports returned",default=crash.DEFAULT_LIMIT)
+parser_crashes.add_argument("-s","--sort",help="How the reports should be sorted",default=crash.SORT_OPTIONS[0],choices=crash.SORT_OPTIONS)
+parser_crashes.add_argument("-o","--order",help="How the reports should be ordered",default=crash.ORDER_OPTIONS[0],choices=crash.ORDER_OPTIONS)
+
+parser_upload = parsers_com.add_parser("upload",help="Upload an application to Hockey App")
+parser_upload.add_argument("-f","--file",help="Specify the build file to upload",required=True)
+
+args = parser.parse_args()
+
+if args.com == "help":
+    parser.print_help()
+else:
+
+    if args.token != None:
+        os.environ["HOCKEY_API_KEY"] = args.token
+
+    if os.environ["HOCKEY_API_KEY"] == None:
+        logging.error("No HockeyApp API was provided. Aborting...")
+        sys.exit(0)
+
+    if args.com == "apps":
+
+        title_width = 20
+        bundle_width = 30
+        id_width = 10
+
+        apps = app.get_all_apps()
+        if apps == None:
+            sys.exit(0)
+
+        print "\nHockey Applications:\n"
+        print "id".ljust(id_width)+"title".ljust(title_width)+"bundle".ljust(bundle_width)
+        print "-"*(title_width+bundle_width+id_width)
+
+        for app in apps:
+            print app.id().ljust(id_width)+ \
+                  app.title().ljust(title_width)+ \
+                  app.bundleID().ljust(bundle_width)
+        print ""
+
+    elif args.com == "upload":
+
+        if not os.path.isfile(args.file):
+            logging.error("File given for upload does not exist. Aborting...")
+            sys.exit(0)
+
+        logging.info("Uploading build file to HockeyApp...")
+        app.upload_app(args.file)
+
+    elif args.com == "versions":
+        app = app.get_app(appid=args.id,title=args.title)
+
+        vers = app.versions()
+        if vers == None:
+            sys.exit(0)
+
+        id_width = 5
+        title_width = 10
+        version_width = 15
+        time_width = 20
+
+        print "\nHockey App Versions for {0}:\n".format(app.title())
+        print "id".ljust(id_width)+"title".ljust(title_width)+"version".ljust(version_width)+"timestamp".ljust(time_width)
+        print "-"*(id_width+title_width+version_width+time_width)
+
+        for ver in vers:
+            print ver.id().ljust(id_width)+ \
+                  ver.title().ljust(title_width)+ \
+                  (ver.versionNo()+" ({0})".format(ver.shortVersion())).ljust(version_width)+ \
+                  ver.timestamp().ljust(time_width)
+        print ""
+
+    elif args.com == "crashes":
+
+        app = app.get_app(appid=args.id,title=args.title)    
+        crashes = app.crashes(versionCode=args.version,limit=args.limit,sort=args.sort,order=args.order)
+
+        id_width = 10
+        count_width = 7
+        time_width = 25
+        file_width = 30
+        class_width = 50
+        method_width = 30
+
+        print "\nCrash Reports For {0}\n".format(app.title())
+        print "id".ljust(id_width)+ \
+              "count".ljust(count_width) + \
+              "last".ljust(time_width)+ \
+              "file".ljust(file_width)+ \
+              "class".ljust(class_width)+ \
+              "method".ljust(method_width)
+        print "-"*(id_width+time_width+file_width+class_width+method_width)
+
+        for crash in crashes:
+
+            print crash.id().ljust(id_width)+ \
+                  crash.crashCount().ljust(count_width)+ \
+                  crash.lastCrash().ljust(time_width)+ \
+                  crash.file().ljust(file_width)+ \
+                  crash.cclass().ljust(class_width)+ \
+                  crash.method().ljust(method_width)
+        print ""
