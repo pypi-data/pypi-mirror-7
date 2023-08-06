@@ -1,0 +1,47 @@
+===========
+CvxFit
+===========
+
+CvxFit is a package which provides classes for fitting convex functions to
+given data. Typical usage looks like this::
+
+    #!/usr/bin/env python
+
+    from cvxfit import CvxFit
+    import scipy as sp
+
+    #Generate data
+    N = 100
+    n = 4
+    
+    def f_actual(x):
+        return sp.sum(x*x)
+
+    X = sp.randn(N, n)
+    Y = sp.array([f_actual(pt) for pt in X]) 
+
+    #Initialize object with 5 affine functions
+    fit_object = CvxFit(X=X, Y=Y, type='pwl', k=5)
+    
+    #Perform fit 
+    fit_object.fit()
+
+    #Compare quality of fit at (1,1,1,1)
+    pt = sp.ones((1, n))
+    print 'Actual value: ' + str(f_actual(pt))
+    print 'Approximate value: ' + str(fit_object.evaluate(pt))
+
+Authors
+=========
+
+This package was written and tested by Mainak Chowdhury, Alon Kipnis and Milind
+Rao.
+
+Acknowledgements 
+================
+
+This package came out of a course project for `EE364b
+<http://www.stanford.edu/class/ee364b/>`_ at Stanford University, Spring
+2013-14, taught by Prof. Stephen Boyd. We would like to thank all members of
+the awesome teaching staff for their useful feedback and constructive
+suggestions.
