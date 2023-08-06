@@ -1,0 +1,62 @@
+#!/usr/bin/env python
+from __future__ import print_function
+
+import argparse
+import sys
+
+from gca.core import Session
+from gca.auth import NetRCAuth
+
+
+def write_json(json_data):
+    data = Session.to_json(json_data)
+    sys.stdout.write(data.encode('utf-8'))
+    return data
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='GCA Client')
+    parser.add_argument('url', type=str)
+    parser.add_argument('-a', '--auth', dest='auth', action='store_true', default=False, help='force authentication')
+    subparsers = parser.add_subparsers(help='commands')
+
+    parser_abs = subparsers.add_parser("abstracts", help='list abstracts')
+    parser_abs.add_argument('conference', type=str, help='for which conference')
+    parser_abs.add_argument('-f', '--full', help='fetch all data', action='store_true', default=False)
+    parser_abs.set_defaults(cmd='abstracts')
+
+    parser_abs = subparsers.add_parser("image", help='get figure images')
+    parser_abs.add_argument('uuid', type=str, nargs='+', help='figure uuid')
+    parser_abs.add_argument('--path', type=str, default=None, help='path to store the figures in')
+    parser_abs.set_defaults(cmd='image')
+
+    parser_abs = subparsers.add_parser("owners", help='get owner of an object')
+    parser_abs.add_argument('-t', '--type', type=str, help='type to fetch [abstract]', default='abstracts', dest='otype')
+    parser_abs.add_argument('uuid', type=str, nargs='+', help='object uuid')
+    parser_abs.set_defaults(cmd='owners')
+
+    parser_abs = subparsers.add_parser("log", help='get state log of an abstract')
+    parser_abs.add_argument('uuid', type=str, help='abstract uuid to fetch log for')
+    parser_abs.set_defaults(cmd='state_log')
+
+    args = parser.parse_args()
+
+    auth = NetRCAuth()
+    session = Session(args.url, auth)
+
+    if args.auth:
+        session.authenticate()
+
+    if args.cmd == 'abstracts':
+        abstracts = session.get_all_abstracts(args.conference, raw=True, full=args.full)
+        write_json(abstracts)
+    elif args.cmd == 'image':
+        paths = [session.get_figure_image(uuid, path=args.path) for uuid in args.uuid]
+        for p in paths:
+            print(p)
+    elif args.cmd == 'owners':
+        import itertools
+        owners = itertools.chain.from_iterable(session.get_owners(uuid, args.otype, raw=True) for uuid in args.uuid)
+        write_json(list(owners))
+    elif args.cmd == 'state_log':
+        log = session.get_state_log(args.uuid, raw=True)
+        write_json(log)

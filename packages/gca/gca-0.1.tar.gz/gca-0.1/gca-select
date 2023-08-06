@@ -1,0 +1,52 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+from __future__ import print_function
+from __future__ import unicode_literals
+
+from gca.core import Abstract
+from gca.util import make_fields
+
+from functools import partial
+
+import argparse
+import codecs
+import sys
+import itertools as it
+
+
+def maybe_group(separator, print_empty, lst):
+    if not separator:
+        return lst
+    if not lst:
+        return [''] if print_empty else lst
+    x = map(unicode, lst)
+    return [separator.join(x)] if any(x) else []
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='GCA Selector - select field values')
+    parser.add_argument('--group-multiple', type=str, dest='g_multiple', default=None)
+    parser.add_argument('--group-fields', type=str, dest='g_fields', default=None)
+    parser.add_argument('file', type=str, default='-')
+    parser.add_argument('fields', type=str, nargs='+', help='fields to select')
+    args = parser.parse_args()
+
+    if args.g_fields and not args.g_multiple:
+        sys.stderr.write("%s: Selecting --group-fields requires --group-multiple\n" % sys.argv[0])
+        sys.exit(-1)
+
+    delimiter = '\n'
+
+    fields = [make_fields(field) for field in args.fields]
+    fd = codecs.open(args.file, 'r', encoding='utf-8') if args.file != '-' else sys.stdin
+    abstracts = Abstract.from_data(fd.read())
+
+    p_mlt = partial(maybe_group, args.g_multiple, True)
+    p_fld = partial(maybe_group, args.g_fields, False)
+
+    do_chain = it.chain.from_iterable
+
+    val = do_chain(p_fld(do_chain(p_mlt(a.select_field(f)) for f in fields)) for a in abstracts)
+    val = filter(lambda a: a is not None, val)
+    data = delimiter.join(map(unicode, val))
+    sys.stdout.write(data.encode('utf-8'))
+    sys.stdout.write(delimiter.encode('utf-8'))
