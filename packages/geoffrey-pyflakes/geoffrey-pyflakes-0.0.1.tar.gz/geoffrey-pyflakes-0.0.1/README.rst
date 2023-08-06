@@ -1,0 +1,30 @@
+============================
+geoffrey-pyflakes
+============================
+
+.. image:: https://badge.fury.io/py/geoffrey-pyflakes.png
+    :target: http://badge.fury.io/py/geoffrey-pyflakes
+    
+.. image:: https://travis-ci.org/GeoffreyCI/geoffrey-pyflakes.png?branch=master
+        :target: https://travis-ci.org/GeoffreyCI/geoffrey-pyflakes
+
+.. image:: https://pypip.in/d/geoffrey-pyflakes/badge.png
+        :target: https://pypi.python.org/pypi/geoffrey-pyflakes
+
+
+pyflakes is a passive checker of Python programs.
+
+Geoffrey wrapper for pyflakes utility: https://github.com/pyflakes/pyflakes.git
+
+* Free software: GPLv3
+* Documentation: http://geoffrey-pyflakes.readthedocs.org.
+
+Configuration
+-------------
+
+To correctly use this plugin you must define the variable *pyflakes_path* in the plugin's section of your project
+
+Features
+--------
+
+* TODO
