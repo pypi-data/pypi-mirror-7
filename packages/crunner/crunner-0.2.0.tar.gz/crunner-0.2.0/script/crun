@@ -1,0 +1,38 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+import time
+
+from crunner.config import ConfigLoader
+from crunner.runner import Runner
+from crunner.event import FileEvent
+from crunner.watcher import FileWatcher
+from crunner.notifier import Notifier
+
+
+def dispatch_notifier_args(args):
+    return args.get('cmd'), args.get('msg_arg'), args.get('img_arg', ''), args.get('add_args', '')
+
+
+def dispatch_tester_args(args):
+    return args.get('cmd'), args.get('args')
+
+
+notifier_args, tester_args, projects = ConfigLoader().load()
+notifier = Notifier(*dispatch_notifier_args(notifier_args))
+runner = Runner(notifier, *dispatch_tester_args(tester_args))
+watchers = []
+for name, settings in projects.items():
+    if settings['active']:
+        event = FileEvent([name, runner, settings['project_path'], settings['test_path']], regexes=['.*.py'])
+        watcher = FileWatcher(settings['project_path'], event)
+        watcher.start()
+        watchers.append(watcher)
+        if tester_args['run_on_start']:
+            event.run_tests()
+
+try:
+    while True:
+        time.sleep(1)
+except KeyboardInterrupt:
+    for each in watchers:
+        each.stop()
