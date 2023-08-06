@@ -1,0 +1,1216 @@
+<?xml version="1.0"?>
+
+<tryton>
+    <data>
+
+        <!-- Tax Groups -->
+        <record model="account.tax.group" id="tax_group_gst">
+            <field name="name">GST/HST on Sales</field>
+            <field name="code">GSTS</field>
+        </record>
+        
+        <record model="account.tax.group" id="tax_group_pst">
+            <field name="name">PST on Regions</field>
+            <field name="code">PSTR</field>
+        </record>
+
+        <!-- Tax Templates -->
+        <record model="account.account.template" id="gst_receivable">
+          <field name="name">GST receivable</field>
+          <field name="code">1150</field>
+          <field name="kind">receivable</field>
+          <field name="type" ref="ca_asset"/>
+          <field name="parent" ref="ca_root"/>
+        </record>
+
+        <record model="account.account.template" id="gst_payable">
+            <field name="name">GST Payable</field>
+            <field name="code">GST</field>
+            <field name="kind">other</field>
+            <field name="type" ref="ca_liability"/>
+            <field name="parent" ref="ca_root"/>
+        </record>
+
+        <!-- Provincial / Harmonized Sales Tax -->
+        <record model="account.account.template" id="ca_prov_sales_tax">
+            <field name="name">Provincial/Harmonized Sales Tax</field>
+            <field name="kind">view</field>
+            <field name="type" ref="ca_liability"/>
+            <field name="parent" ref="ca_root"/>
+        </record>
+
+        <record model="account.account.template" id="hst_bc">
+            <field name="name">Harmonized Sales Tax - British Columbia</field>
+            <field name="code">HST - BC</field>
+            <field name="kind">other</field>
+            <field name="type" ref="ca_liability"/>
+            <field name="parent" ref="ca_prov_sales_tax"/>
+        </record>
+
+        <record model="account.account.template" id="hst_on">
+            <field name="name">Harmonized Sales Tax - Ontario</field>
+            <field name="code">HST - ON</field>
+            <field name="kind">other</field>
+            <field name="type" ref="ca_liability"/>
+            <field name="parent" ref="ca_prov_sales_tax"/>
+        </record>
+
+        <record model="account.account.template" id="hst_nb">
+            <field name="name">Harmonized Sales Tax - New Brunswick</field>
+            <field name="code">HST - NB</field>
+            <field name="kind">other</field>
+            <field name="type" ref="ca_liability"/>
+            <field name="parent" ref="ca_prov_sales_tax"/>
+        </record>
+
+        <record model="account.account.template" id="hst_ns">
+            <field name="name">Harmonized Sales Tax - Nova Scotia</field>
+            <field name="code">HST - NS</field>
+            <field name="kind">other</field>
+            <field name="type" ref="ca_liability"/>
+            <field name="parent" ref="ca_prov_sales_tax"/>
+        </record>
+
+        <record model="account.account.template" id="hst_nl">
+            <field name="name">Harmonized Sales Tax - Newfoundland and Labrador</field>
+            <field name="code">HST - NL</field>
+            <field name="kind">other</field>
+            <field name="type" ref="ca_liability"/>
+            <field name="parent" ref="ca_prov_sales_tax"/>
+        </record>
+
+        <record model="account.account.template" id="qst">
+            <field name="name">Quebec Sales Tax</field>
+            <field name="code">QST</field>
+            <field name="kind">other</field>
+            <field name="type" ref="ca_liability"/>
+            <field name="parent" ref="ca_prov_sales_tax"/>
+        </record>
+
+        <record model="account.account.template" id="pst_mb">
+            <field name="name">Provincial Sales Tax - Manitoba</field>
+            <field name="code">PST – MB</field>
+            <field name="kind">other</field>
+            <field name="type" ref="ca_liability"/>
+            <field name="parent" ref="ca_prov_sales_tax"/>
+        </record>
+
+        <record model="account.account.template" id="pst_sk">
+            <field name="name">Provincial Sales Tax - Saskachewan</field>
+            <field name="code">PST – SK</field>
+            <field name="kind">other</field>
+            <field name="type" ref="ca_liability"/>
+            <field name="parent" ref="ca_prov_sales_tax"/>
+        </record>
+
+        <record model="account.account.template" id="pst_pe">
+            <field name="name">Provincial Sales Tax - Prince Edward Island</field>
+            <field name="code">PST - PE</field>
+            <field name="kind">other</field>
+            <field name="type" ref="ca_liability"/>
+            <field name="parent" ref="ca_prov_sales_tax"/>
+        </record>
+
+        <!-- Taxes -->
+        <record model="account.tax.template" id="tax_gst">
+            <field name="name">GST</field>
+            <field name="description">Goods and Services Tax</field>
+            <field name="sequence">10</field>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="rate" eval="Decimal('0.05')"/>
+            <field name="type">percentage</field>
+            <field name="account" ref="ca_root" />
+            <field name="invoice_account" ref="gst_payable" />
+            <field name="credit_note_account" ref="ca_sales_returns" />
+            <field name="invoice_base_sign" eval="1" />
+            <field name="invoice_tax_sign" eval="1" />
+            <field name="credit_note_base_sign" eval="-1" />
+            <field name="credit_note_tax_sign" eval="-1" />
+        </record>
+
+        <record model="account.tax.template" id="tax_hst_bc">
+            <field name="name">HST - BC</field>
+            <field name="description">Harmonized Sales Tax - British Columbia</field>
+            <field name="sequence">10</field>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="rate" eval="Decimal('0.12')"/>
+            <field name="type">percentage</field>
+            <field name="account" ref="ca_root" />
+            <field name="invoice_account" ref="hst_bc" />
+            <field name="credit_note_account" ref="ca_sales_returns" />
+            <field name="invoice_base_sign" eval="1" />
+            <field name="invoice_tax_sign" eval="1" />
+            <field name="credit_note_base_sign" eval="-1" />
+            <field name="credit_note_tax_sign" eval="-1" />
+        </record>
+
+        <record model="account.tax.template" id="tax_hst_on">
+            <field name="name">HST - ON</field>
+            <field name="description">Harmonized Sales Tax - Ontario</field>
+            <field name="sequence">10</field>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="rate" eval="Decimal('0.13')"/>
+            <field name="type">percentage</field>
+            <field name="account" ref="ca_root" />
+            <field name="invoice_account" ref="hst_on" />
+            <field name="credit_note_account" ref="ca_sales_returns" />
+            <field name="invoice_base_sign" eval="1" />
+            <field name="invoice_tax_sign" eval="1" />
+            <field name="credit_note_base_sign" eval="-1" />
+            <field name="credit_note_tax_sign" eval="-1" />
+        </record>
+
+        <record model="account.tax.template" id="tax_hst_nb">
+            <field name="name">HST - NB</field>
+            <field name="description">Harmonized Sales Tax - New Brunswick</field>
+            <field name="sequence">10</field>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="rate" eval="Decimal('0.13')"/>
+            <field name="type">percentage</field>
+            <field name="account" ref="ca_root" />
+            <field name="invoice_account" ref="hst_nb" />
+            <field name="credit_note_account" ref="ca_sales_returns" />
+            <field name="invoice_base_sign" eval="1" />
+            <field name="invoice_tax_sign" eval="1" />
+            <field name="credit_note_base_sign" eval="-1" />
+            <field name="credit_note_tax_sign" eval="-1" />
+        </record>
+
+        <record model="account.tax.template" id="tax_hst_ns">
+            <field name="name">HST - NS</field>
+            <field name="description">Harmonized Sales Tax - Nova Scotia</field>
+            <field name="sequence">10</field>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="rate" eval="Decimal('0.15')"/>
+            <field name="type">percentage</field>
+            <field name="account" ref="ca_root" />
+            <field name="invoice_account" ref="hst_ns" />
+            <field name="credit_note_account" ref="ca_sales_returns" />
+            <field name="invoice_base_sign" eval="1" />
+            <field name="invoice_tax_sign" eval="1" />
+            <field name="credit_note_base_sign" eval="-1" />
+            <field name="credit_note_tax_sign" eval="-1" />
+        </record>
+
+        <record model="account.tax.template" id="tax_hst_nl">
+            <field name="name">HST - NL</field>
+            <field name="description">Harmonized Sales Tax - Newfoundland and Labrador</field>
+            <field name="sequence">10</field>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="rate" eval="Decimal('0.13')"/>
+            <field name="type">percentage</field>
+            <field name="account" ref="ca_root" />
+            <field name="invoice_account" ref="hst_nl" />
+            <field name="credit_note_account" ref="ca_sales_returns" />
+            <field name="invoice_base_sign" eval="1" />
+            <field name="invoice_tax_sign" eval="1" />
+            <field name="credit_note_base_sign" eval="-1" />
+            <field name="credit_note_tax_sign" eval="-1" />
+        </record>
+
+        <record model="account.tax.template" id="tax_qst">
+            <field name="name">QST</field>
+            <field name="description">Quebec Sales Tax</field>
+            <field name="sequence">20</field>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="rate" eval="Decimal('0.09975')"/>
+            <field name="type">percentage</field>
+            <field name="account" ref="ca_root" />
+            <field name="invoice_account" ref="qst" />
+            <field name="credit_note_account" ref="ca_sales_returns" />
+            <field name="invoice_base_sign" eval="1" />
+            <field name="invoice_tax_sign" eval="1" />
+            <field name="credit_note_base_sign" eval="-1" />
+            <field name="credit_note_tax_sign" eval="-1" />
+        </record>
+
+        <record model="account.tax.template" id="tax_pst_mb">
+            <field name="name">PST - MB</field>
+            <field name="description">Provincial Sales Tax - Manitoba</field>
+            <field name="sequence">20</field>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="rate" eval="Decimal('0.07')"/>
+            <field name="type">percentage</field>
+            <field name="account" ref="ca_root" />
+            <field name="invoice_account" ref="pst_mb" />
+            <field name="credit_note_account" ref="ca_sales_returns" />
+            <field name="invoice_base_sign" eval="1" />
+            <field name="invoice_tax_sign" eval="1" />
+            <field name="credit_note_base_sign" eval="-1" />
+            <field name="credit_note_tax_sign" eval="-1" />
+        </record>
+
+        <record model="account.tax.template" id="tax_pst_sk">
+            <field name="name">PST - SK</field>
+            <field name="description">Provincial Sales Tax - Saskachewan</field>
+            <field name="sequence">20</field>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="rate" eval="Decimal('0.05')"/>
+            <field name="type">percentage</field>
+            <field name="account" ref="ca_root" />
+            <field name="invoice_account" ref="pst_mb" />
+            <field name="credit_note_account" ref="ca_sales_returns" />
+            <field name="invoice_base_sign" eval="1" />
+            <field name="invoice_tax_sign" eval="1" />
+            <field name="credit_note_base_sign" eval="-1" />
+            <field name="credit_note_tax_sign" eval="-1" />
+        </record>
+
+        <record model="account.tax.template" id="tax_pst_pe">
+            <field name="name">PST - PE</field>
+            <field name="description">Provincial Sales Tax - Prince Edward Island</field>
+            <field name="sequence">20</field>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="rate" eval="Decimal('0.105')"/>
+            <field name="type">percentage</field>
+            <field name="account" ref="ca_root" />
+            <field name="invoice_account" ref="pst_pe" />
+            <field name="credit_note_account" ref="ca_sales_returns" />
+            <field name="invoice_base_sign" eval="1" />
+            <field name="invoice_tax_sign" eval="1" />
+            <field name="credit_note_base_sign" eval="-1" />
+            <field name="credit_note_tax_sign" eval="-1" />
+        </record>
+
+        <!-- Tax Rules Alberta -->
+        <record model="account.tax.rule.template" id="tax_rule_ab">
+            <field name="name">Tax Rule - AB</field>
+            <field name="account" ref="ca_root"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_ab_gst">
+            <field name="rule" ref="tax_rule_ab"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_gst"/>
+            <field name="tax" ref="tax_gst"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_ab_hst_bc">
+            <field name="rule" ref="tax_rule_ab"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_bc"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_ab_hst_on">
+            <field name="rule" ref="tax_rule_ab"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_on"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_ab_hst_nb">
+            <field name="rule" ref="tax_rule_ab"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_nb"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_ab_hst_ns">
+            <field name="rule" ref="tax_rule_ab"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_ns"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_ab_hst_nl">
+            <field name="rule" ref="tax_rule_ab"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_nl"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_ab_qst">
+            <field name="rule" ref="tax_rule_ab"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_qst"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_ab_pst_mb">
+            <field name="rule" ref="tax_rule_ab"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_mb"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_ab_pst_sk">
+            <field name="rule" ref="tax_rule_ab"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_sk"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_ab_pst_pe">
+            <field name="rule" ref="tax_rule_ab"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_pe"/>
+        </record>
+
+        <!-- Tax Rules British Columbia -->
+        <record model="account.tax.rule.template" id="tax_rule_bc">
+            <field name="name">Tax Rule - BC</field>
+            <field name="account" ref="ca_root"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_bc_gst">
+            <field name="rule" ref="tax_rule_bc"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_gst"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_bc_hst_bc">
+            <field name="rule" ref="tax_rule_bc"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_bc"/>
+            <field name="tax" ref="tax_hst_bc"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_bc_hst_on">
+            <field name="rule" ref="tax_rule_bc"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_on"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_bc_hst_nb">
+            <field name="rule" ref="tax_rule_bc"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_nb"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_bc_hst_ns">
+            <field name="rule" ref="tax_rule_bc"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_ns"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_bc_hst_nl">
+            <field name="rule" ref="tax_rule_bc"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_nl"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_bc_qst">
+            <field name="rule" ref="tax_rule_bc"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_qst"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_bc_pst_mb">
+            <field name="rule" ref="tax_rule_bc"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_mb"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_bc_pst_sk">
+            <field name="rule" ref="tax_rule_bc"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_sk"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_bc_pst_pe">
+            <field name="rule" ref="tax_rule_bc"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_pe"/>
+        </record>
+
+        <!-- Tax Rules Ontario -->
+        <record model="account.tax.rule.template" id="tax_rule_on">
+            <field name="name">Tax Rule - ON</field>
+            <field name="account" ref="ca_root"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_on_gst">
+            <field name="rule" ref="tax_rule_on"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_gst"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_on_hst_bc">
+            <field name="rule" ref="tax_rule_on"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_bc"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_on_hst_on">
+            <field name="rule" ref="tax_rule_on"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_on"/>
+            <field name="tax" ref="tax_hst_on"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_on_hst_nb">
+            <field name="rule" ref="tax_rule_on"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_nb"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_on_hst_ns">
+            <field name="rule" ref="tax_rule_on"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_ns"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_on_hst_nl">
+            <field name="rule" ref="tax_rule_on"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_nl"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_on_qst">
+            <field name="rule" ref="tax_rule_on"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_qst"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_on_pst_mb">
+            <field name="rule" ref="tax_rule_on"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_mb"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_on_pst_sk">
+            <field name="rule" ref="tax_rule_on"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_sk"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_on_pst_pe">
+            <field name="rule" ref="tax_rule_on"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_pe"/>
+        </record>
+
+        <!-- Tax Rules New Brunswick -->
+        <record model="account.tax.rule.template" id="tax_rule_nb">
+            <field name="name">Tax Rule - NB</field>
+            <field name="account" ref="ca_root"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nb_gst">
+            <field name="rule" ref="tax_rule_nb"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_gst"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nb_hst_bc">
+            <field name="rule" ref="tax_rule_nb"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_bc"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nb_hst_on">
+            <field name="rule" ref="tax_rule_nb"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_on"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nb_hst_nb">
+            <field name="rule" ref="tax_rule_nb"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_nb"/>
+            <field name="tax" ref="tax_hst_nb"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nb_hst_ns">
+            <field name="rule" ref="tax_rule_nb"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_ns"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nb_hst_nl">
+            <field name="rule" ref="tax_rule_nb"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_nl"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nb_qst">
+            <field name="rule" ref="tax_rule_nb"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_qst"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nb_pst_mb">
+            <field name="rule" ref="tax_rule_nb"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_mb"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nb_pst_sk">
+            <field name="rule" ref="tax_rule_nb"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_sk"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nb_pst_pe">
+            <field name="rule" ref="tax_rule_nb"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_pe"/>
+        </record>
+
+        <!-- Tax Rules Nova Scotia -->
+        <record model="account.tax.rule.template" id="tax_rule_ns">
+            <field name="name">Tax Rule - NS</field>
+            <field name="account" ref="ca_root"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_ns_gst">
+            <field name="rule" ref="tax_rule_ns"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_gst"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_ns_hst_bc">
+            <field name="rule" ref="tax_rule_ns"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_bc"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_ns_hst_on">
+            <field name="rule" ref="tax_rule_ns"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_on"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_ns_hst_nb">
+            <field name="rule" ref="tax_rule_ns"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_nb"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_ns_hst_ns">
+            <field name="rule" ref="tax_rule_ns"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_ns"/>
+            <field name="tax" ref="tax_hst_ns"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_ns_hst_nl">
+            <field name="rule" ref="tax_rule_ns"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_nl"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_ns_qst">
+            <field name="rule" ref="tax_rule_ns"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_qst"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_ns_pst_mb">
+            <field name="rule" ref="tax_rule_ns"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_mb"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_ns_pst_sk">
+            <field name="rule" ref="tax_rule_ns"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_sk"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_ns_pst_pe">
+            <field name="rule" ref="tax_rule_ns"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_pe"/>
+        </record>
+
+        <!-- Tax Rules Newfoundland and Labrador -->
+        <record model="account.tax.rule.template" id="tax_rule_nl">
+            <field name="name">Tax Rule - NL</field>
+            <field name="account" ref="ca_root"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nl_gst">
+            <field name="rule" ref="tax_rule_nl"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_gst"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nl_hst_bc">
+            <field name="rule" ref="tax_rule_nl"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_bc"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nl_hst_on">
+            <field name="rule" ref="tax_rule_nl"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_on"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nl_hst_nb">
+            <field name="rule" ref="tax_rule_nl"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_nb"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nl_hst_ns">
+            <field name="rule" ref="tax_rule_nl"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_ns"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nl_hst_nl">
+            <field name="rule" ref="tax_rule_nl"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_nl"/>
+            <field name="tax" ref="tax_hst_nl"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nl_qst">
+            <field name="rule" ref="tax_rule_nl"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_qst"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nl_pst_mb">
+            <field name="rule" ref="tax_rule_nl"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_mb"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nl_pst_sk">
+            <field name="rule" ref="tax_rule_nl"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_sk"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nl_pst_pe">
+            <field name="rule" ref="tax_rule_nl"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_pe"/>
+        </record>
+
+        <!-- Tax Rules Quebec -->
+        <record model="account.tax.rule.template" id="tax_rule_qc">
+            <field name="name">Tax Rule - QC</field>
+            <field name="account" ref="ca_root"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_qc_gst">
+            <field name="rule" ref="tax_rule_qc"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_gst"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_qc_hst_bc">
+            <field name="rule" ref="tax_rule_qc"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_bc"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_qc_hst_on">
+            <field name="rule" ref="tax_rule_qc"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_on"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_qc_hst_nb">
+            <field name="rule" ref="tax_rule_qc"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_nb"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_qc_hst_ns">
+            <field name="rule" ref="tax_rule_qc"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_ns"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_qc_hst_nl">
+            <field name="rule" ref="tax_rule_qc"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_nl"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_qc_qst">
+            <field name="rule" ref="tax_rule_qc"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_qst"/>
+            <field name="tax" ref="tax_qst"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_qc_pst_mb">
+            <field name="rule" ref="tax_rule_qc"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_mb"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_qc_pst_sk">
+            <field name="rule" ref="tax_rule_qc"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_sk"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_qc_pst_pe">
+            <field name="rule" ref="tax_rule_qc"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_pe"/>
+        </record>
+
+        <!-- Tax Rules Manitoba -->
+        <record model="account.tax.rule.template" id="tax_rule_mb">
+            <field name="name">Tax Rule - MB</field>
+            <field name="account" ref="ca_root"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_mb_gst">
+            <field name="rule" ref="tax_rule_mb"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_gst"/>
+            <field name="tax" ref="tax_gst"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_mb_hst_bc">
+            <field name="rule" ref="tax_rule_mb"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_bc"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_mb_hst_on">
+            <field name="rule" ref="tax_rule_mb"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_on"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_mb_hst_nb">
+            <field name="rule" ref="tax_rule_mb"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_nb"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_mb_hst_ns">
+            <field name="rule" ref="tax_rule_mb"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_ns"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_mb_hst_nl">
+            <field name="rule" ref="tax_rule_mb"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_nl"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_mb_qst">
+            <field name="rule" ref="tax_rule_mb"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_qst"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_mb_pst_mb">
+            <field name="rule" ref="tax_rule_mb"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_mb"/>
+            <field name="tax" ref="tax_pst_mb"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_mb_pst_sk">
+            <field name="rule" ref="tax_rule_mb"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_sk"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_mb_pst_pe">
+            <field name="rule" ref="tax_rule_mb"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_pe"/>
+        </record>
+
+        <!-- Tax Rules Saskachewan -->
+        <record model="account.tax.rule.template" id="tax_rule_sk">
+            <field name="name">Tax Rule - SK</field>
+            <field name="account" ref="ca_root"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_sk_gst">
+            <field name="rule" ref="tax_rule_sk"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_gst"/>
+            <field name="tax" ref="tax_gst"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_sk_hst_bc">
+            <field name="rule" ref="tax_rule_sk"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_bc"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_sk_hst_on">
+            <field name="rule" ref="tax_rule_sk"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_on"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_sk_hst_nb">
+            <field name="rule" ref="tax_rule_sk"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_nb"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_sk_hst_ns">
+            <field name="rule" ref="tax_rule_sk"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_ns"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_sk_hst_nl">
+            <field name="rule" ref="tax_rule_sk"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_nl"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_sk_qst">
+            <field name="rule" ref="tax_rule_sk"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_qst"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_sk_pst_mb">
+            <field name="rule" ref="tax_rule_sk"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_mb"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_sk_pst_sk">
+            <field name="rule" ref="tax_rule_sk"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_sk"/>
+            <field name="tax" ref="tax_pst_sk"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_sk_pst_pe">
+            <field name="rule" ref="tax_rule_sk"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_pe"/>
+        </record>
+
+        <!-- Tax Rules Prince Edward Island -->
+        <record model="account.tax.rule.template" id="tax_rule_pe">
+            <field name="name">Tax Rule - PE</field>
+            <field name="account" ref="ca_root"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_pe_gst">
+            <field name="rule" ref="tax_rule_pe"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_gst"/>
+            <field name="tax" ref="tax_gst"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_pe_hst_bc">
+            <field name="rule" ref="tax_rule_pe"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_bc"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_pe_hst_on">
+            <field name="rule" ref="tax_rule_pe"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_on"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_pe_hst_nb">
+            <field name="rule" ref="tax_rule_pe"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_nb"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_pe_hst_ns">
+            <field name="rule" ref="tax_rule_pe"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_ns"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_pe_hst_nl">
+            <field name="rule" ref="tax_rule_pe"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_nl"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_pe_qst">
+            <field name="rule" ref="tax_rule_pe"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_qst"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_pe_pst_mb">
+            <field name="rule" ref="tax_rule_pe"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_mb"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_pe_pst_sk">
+            <field name="rule" ref="tax_rule_pe"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_sk"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_pe_pst_pe">
+            <field name="rule" ref="tax_rule_pe"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_pe"/>
+            <field name="tax" ref="tax_pst_pe"/>
+        </record>
+
+        <!-- Tax Rules Yukon -->
+        <record model="account.tax.rule.template" id="tax_rule_yt">
+            <field name="name">Tax Rule - YT</field>
+            <field name="account" ref="ca_root"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_yt_gst">
+            <field name="rule" ref="tax_rule_yt"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_gst"/>
+            <field name="tax" ref="tax_gst"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_yt_hst_bc">
+            <field name="rule" ref="tax_rule_yt"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_bc"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_yt_hst_on">
+            <field name="rule" ref="tax_rule_yt"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_on"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_yt_hst_nb">
+            <field name="rule" ref="tax_rule_yt"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_nb"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_yt_hst_ns">
+            <field name="rule" ref="tax_rule_yt"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_ns"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_yt_hst_nl">
+            <field name="rule" ref="tax_rule_yt"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_nl"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_yt_qst">
+            <field name="rule" ref="tax_rule_yt"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_qst"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_yt_pst_mb">
+            <field name="rule" ref="tax_rule_yt"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_mb"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_yt_pst_sk">
+            <field name="rule" ref="tax_rule_yt"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_sk"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_yt_pst_pe">
+            <field name="rule" ref="tax_rule_yt"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_pe"/>
+        </record>
+
+        <!-- Tax Rules Northwest Territories -->
+        <record model="account.tax.rule.template" id="tax_rule_nt">
+            <field name="name">Tax Rule - NT</field>
+            <field name="account" ref="ca_root"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nt_gst">
+            <field name="rule" ref="tax_rule_nt"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_gst"/>
+            <field name="tax" ref="tax_gst"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nt_hst_bc">
+            <field name="rule" ref="tax_rule_nt"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_bc"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nt_hst_on">
+            <field name="rule" ref="tax_rule_nt"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_on"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nt_hst_nb">
+            <field name="rule" ref="tax_rule_nt"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_nb"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nt_hst_ns">
+            <field name="rule" ref="tax_rule_nt"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_ns"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nt_hst_nl">
+            <field name="rule" ref="tax_rule_nt"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_nl"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nt_qst">
+            <field name="rule" ref="tax_rule_nt"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_qst"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nt_pst_mb">
+            <field name="rule" ref="tax_rule_nt"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_mb"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nt_pst_sk">
+            <field name="rule" ref="tax_rule_nt"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_sk"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nt_pst_pe">
+            <field name="rule" ref="tax_rule_nt"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_pe"/>
+        </record>
+
+        <!-- Tax Rules Nunavut -->
+        <record model="account.tax.rule.template" id="tax_rule_nu">
+            <field name="name">Tax Rule - NU</field>
+            <field name="account" ref="ca_root"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nu_gst">
+            <field name="rule" ref="tax_rule_nu"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_gst"/>
+            <field name="tax" ref="tax_gst"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nu_hst_bc">
+            <field name="rule" ref="tax_rule_nu"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_bc"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nu_hst_on">
+            <field name="rule" ref="tax_rule_nu"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_on"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nu_hst_nb">
+            <field name="rule" ref="tax_rule_nu"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_nb"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nu_hst_ns">
+            <field name="rule" ref="tax_rule_nu"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_ns"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nu_hst_nl">
+            <field name="rule" ref="tax_rule_nu"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_nl"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nu_qst">
+            <field name="rule" ref="tax_rule_nu"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_qst"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nu_pst_mb">
+            <field name="rule" ref="tax_rule_nu"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_mb"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nu_pst_sk">
+            <field name="rule" ref="tax_rule_nu"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_sk"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_nu_pst_pe">
+            <field name="rule" ref="tax_rule_nu"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_pe"/>
+        </record>
+
+        <!-- Tax Rules Exempt -->
+        <record model="account.tax.rule.template" id="tax_rule_ex">
+            <field name="name">Tax Rule - Exempt</field>
+            <field name="account" ref="ca_root"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_ex_gst">
+            <field name="rule" ref="tax_rule_ex"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_gst"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_ex_hst_bc">
+            <field name="rule" ref="tax_rule_ex"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_bc"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_ex_hst_on">
+            <field name="rule" ref="tax_rule_ex"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_on"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_ex_hst_nb">
+            <field name="rule" ref="tax_rule_ex"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_nb"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_ex_hst_ns">
+            <field name="rule" ref="tax_rule_ex"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_ns"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_ex_hst_nl">
+            <field name="rule" ref="tax_rule_ex"/>
+            <field name="group" ref="tax_group_gst"/>
+            <field name="origin_tax" ref="tax_hst_nl"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_ex_qst">
+            <field name="rule" ref="tax_rule_ex"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_qst"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_ex_pst_mb">
+            <field name="rule" ref="tax_rule_ex"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_mb"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_ex_pst_sk">
+            <field name="rule" ref="tax_rule_ex"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_sk"/>
+        </record>
+
+        <record model="account.tax.rule.line.template" id="tax_rule_line_ex_pst_pe">
+            <field name="rule" ref="tax_rule_ex"/>
+            <field name="group" ref="tax_group_pst"/>
+            <field name="origin_tax" ref="tax_pst_pe"/>
+        </record>
+        
+    </data>
+</tryton>
