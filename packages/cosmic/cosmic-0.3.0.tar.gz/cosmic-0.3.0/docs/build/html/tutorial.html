@@ -1,0 +1,210 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Tutorial &mdash; Cosmic 0.3.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.3.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Cosmic 0.3.0 documentation" href="index.html" />
+    <link rel="next" title="Guide" href="guide.html" />
+    <link rel="prev" title="Overview" href="overview.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="guide.html" title="Guide"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="overview.html" title="Overview"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Cosmic 0.3.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="tutorial">
+<h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="step-1-single-function-api">
+<h2>Step 1: Single-function API<a class="headerlink" href="#step-1-single-function-api" title="Permalink to this headline">¶</a></h2>
+<p>Before we get into the features, let&#8217;s create a blank API to see how an API
+is served and consumed. Here it is:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">cosmic.api</span> <span class="kn">import</span> <span class="n">API</span>
+<span class="kn">from</span> <span class="nn">cosmic.types</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">words</span> <span class="o">=</span> <span class="n">API</span><span class="p">(</span><span class="s">&#39;words&#39;</span><span class="p">)</span>
+
+
+<span class="nd">@words.action</span><span class="p">(</span><span class="n">accepts</span><span class="o">=</span><span class="n">String</span><span class="p">,</span> <span class="n">returns</span><span class="o">=</span><span class="n">String</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">pluralize</span><span class="p">(</span><span class="n">word</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">word</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;y&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">word</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39;ies&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">word</span> <span class="o">+</span> <span class="s">&#39;s&#39;</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">words</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Save this as <tt class="docutils literal"><span class="pre">words.py</span></tt> and run:</p>
+<div class="code bash highlight-python"><div class="highlight"><pre>$ python words.py
+* Running on http://127.0.0.1:5000/
+</pre></div>
+</div>
+<p>Now we can interact with the API:</p>
+<div class="code bash highlight-python"><div class="highlight"><pre>$ curl -i -X POST -H &#39;Content-Type: application/json&#39; -d &#39;&quot;pony&quot;&#39; http://127.0.0.1:5000/actions/pluralize
+HTTP/1.0 200 OK
+Content-Type: application/json
+
+&quot;ponies&quot;
+</pre></div>
+</div>
+<p>Did you notice the type definitions above? They help validate the data:</p>
+<div class="code bash highlight-python"><div class="highlight"><pre>$ curl -i -X POST -H &#39;Content-Type: application/json&#39; -d &#39;1&#39; http://127.0.0.1:5000/actions/pluralize
+HTTP/1.0 400 BAD REQUEST
+Content-Type: application/json
+
+{&quot;error&quot;: &quot;Invalid String: 1&quot;}
+</pre></div>
+</div>
+</div>
+<div class="section" id="step-2-making-a-rest-model">
+<h2>Step 2: Making a REST Model<a class="headerlink" href="#step-2-making-a-rest-model" title="Permalink to this headline">¶</a></h2>
+<p>Here&#8217;s a simple model:</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">cosmic.models</span> <span class="kn">import</span> <span class="n">BaseModel</span>
+<span class="kn">from</span> <span class="nn">cosmic.exceptions</span> <span class="kn">import</span> <span class="n">NotFound</span>
+
+<span class="nd">@words.model</span>
+<span class="k">class</span> <span class="nc">Word</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">methods</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;get_by_id&#39;</span><span class="p">]</span>
+    <span class="n">properties</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">required</span><span class="p">(</span><span class="s">u&quot;letters&quot;</span><span class="p">,</span> <span class="n">String</span><span class="p">)</span>
+    <span class="p">]</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_by_id</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">id</span> <span class="o">==</span> <span class="s">&quot;0&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s">&quot;letters&quot;</span><span class="p">:</span> <span class="s">&quot;hello&quot;</span><span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">NotFound</span>
+</pre></div>
+</div>
+<div class="code bash highlight-python"><div class="highlight"><pre>$ curl -i -H &#39;Content-Type: application/json&#39; http://127.0.0.1:5000/Word/0
+HTTP/1.0 200 OK
+Content-Type: application/json
+
+{&quot;letters&quot;: &quot;hello&quot;, &quot;_links&quot;: {&quot;self&quot;: {&quot;href&quot;: &quot;/Word/0&quot;}}
+</pre></div>
+</div>
+<div class="code bash highlight-python"><div class="highlight"><pre>$ curl -i -H &#39;Content-Type: application/json&#39; http://127.0.0.1:5000/Word/1
+HTTP/1.0 404 NOT FOUND
+</pre></div>
+</div>
+</div>
+<div class="section" id="step-3-authenticating">
+<h2>Step 3: Authenticating<a class="headerlink" href="#step-3-authenticating" title="Permalink to this headline">¶</a></h2>
+<p>By default, all models and actions are accessible to all clients. To restrict
+access you use authentication and authorization. Cosmic doesn&#8217;t currently
+support or recommend a particular method of authentication. However, it allows
+you to implement your own via <tt class="xref py py-data docutils literal"><span class="pre">client_hook</span></tt> and
+<tt class="xref py py-data docutils literal"><span class="pre">Server</span></tt>.</p>
+<p>See <a class="reference internal" href="guide.html#guide-authentication"><em>Authentication</em></a> for an example.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Tutorial</a><ul>
+<li><a class="reference internal" href="#step-1-single-function-api">Step 1: Single-function API</a></li>
+<li><a class="reference internal" href="#step-2-making-a-rest-model">Step 2: Making a REST Model</a></li>
+<li><a class="reference internal" href="#step-3-authenticating">Step 3: Authenticating</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="overview.html"
+                        title="previous chapter">Overview</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="guide.html"
+                        title="next chapter">Guide</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/tutorial.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="guide.html" title="Guide"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="overview.html" title="Overview"
+             >previous</a> |</li>
+        <li><a href="index.html">Cosmic 0.3.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, 8313547 Canada Inc..
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
