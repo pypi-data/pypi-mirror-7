@@ -1,0 +1,145 @@
+/*
+Copyright(c) 2013-2014 Ilya Kreymer. Released under the GNU General Public License.
+
+This file is part of pywb.
+
+    pywb is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    pywb is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with pywb.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+_wb_js = (function() {
+
+
+var labels = {LOADING_MSG: "Loading...",
+              REPLAY_MSG: "This is an <b>archived</b> page from ",
+              LIVE_MSG: "This is a <b>live</b> page loaded on "};
+
+
+function init_banner() {
+    var PLAIN_BANNER_ID = "_wb_plain_banner";
+    var FRAME_BANNER_ID = "_wb_frame_top_banner";
+    var bid;
+
+    if (wbinfo.is_embed) {
+        return;
+    }
+
+    if (window.top != window.self) {
+        return;
+    }
+
+    if (wbinfo.is_frame) {
+        bid = FRAME_BANNER_ID;
+    } else {
+        bid = PLAIN_BANNER_ID;
+    }
+
+    var banner = document.getElementById(bid);
+    
+    if (banner) {
+        return;
+    }
+        
+    banner = document.createElement("wb_div");
+    banner.setAttribute("id", bid);
+    banner.setAttribute("lang", "en");
+
+    var text;
+
+    if (wbinfo.is_frame) {
+        text = labels.LOADING_MSG;
+    } else if (wbinfo.is_live) {
+        text = labels.LIVE_MSG;
+    } else {
+        text = labels.REPLAY_MSG;
+    }
+    
+    text = "<span id='_wb_label'>" + text + "</span>";
+
+    var capture_str = "";
+    if (wbinfo && wbinfo.timestamp) {
+        capture_str = ts_to_date(wbinfo.timestamp, true);
+    }
+
+    text += "<b id='_wb_capture_info'>" + capture_str + "</b>";
+    
+    banner.innerHTML = text;
+
+    document.body.insertBefore(banner, document.body.firstChild);
+}
+
+function ts_to_date(ts, is_gmt)
+{
+    if (ts.length < 14) {
+        return ts;
+    }
+    
+    var datestr = (ts.substring(0, 4) + "-" + 
+                  ts.substring(4, 6) + "-" +
+                  ts.substring(6, 8) + "T" +
+                  ts.substring(8, 10) + ":" +
+                  ts.substring(10, 12) + ":" +
+                  ts.substring(12, 14) + "-00:00");
+    
+    var date = new Date(datestr);
+    if (is_gmt) {
+        return date.toGMTString();
+    } else {
+        return date.toLocaleString();
+    }
+}
+
+function add_event(name, func, object) {
+    if (object.addEventListener) {
+        object.addEventListener(name, func);
+        return true;
+    } else if (object.attachEvent) {
+        object.attachEvent("on" + name, func);
+        return true;
+    } else {
+        return false;
+    }
+}
+
+function remove_event(name, func, object) {
+    if (object.removeEventListener) {
+        object.removeEventListener(name, func);
+        return true;
+    } else if (object.detachEvent) {
+        object.detachEvent("on" + name, func);
+        return true;
+    } else {
+        return false;
+    }
+}
+
+var detect_on_init = function(event) {
+    init_banner();
+
+    remove_event("readystatechange", detect_on_init, document);
+}
+
+add_event("readystatechange", detect_on_init, document);
+
+
+if (wbinfo.is_frame_mp && wbinfo.canon_url &&
+   (window.self == window.top) && (window.self.top == window.top) &&
+   window.location.href != wbinfo.canon_url) {
+    
+    window.location.replace(wbinfo.canon_url);
+}
+
+return {'labels': labels,
+        'ts_to_date': ts_to_date};
+
+})();
