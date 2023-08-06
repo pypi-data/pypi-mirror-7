@@ -1,0 +1,104 @@
+#!/usr/bin/env python
+"""
+Stuff missing from virtualenv relocatable feature: https://github.com/pypa/virtualenv/issues/558.
+
+Apply to **existing** virtualenv like:
+
+.. code:: bash
+
+    $ virtualenv --relocatable /my/venv
+    $ virtualenv-relocate /my/venv
+
+"""
+__version__ = '0.1.0'
+
+import argparse
+import logging
+import os
+import re
+import sys
+
+
+logger = logging.getLogger('virtualenv-relocate')
+
+
+def make_links_relative(ctx, links):
+    for link in links:
+        link = os.path.normpath(link)
+        if not os.path.islink(link):
+            logger.debug('"%s" is not a link', link)
+            continue
+        target = os.readlink(link)
+        if os.path.relpath(target, ctx.venv_dir) == target:
+            continue
+        if not target.startswith(ctx.venv_dir):
+            logger.debug('"%s" not relative to %s', link, ctx.venv_dir)
+            continue
+        relative_target = os.path.relpath(target, os.path.dirname(link))
+        logger.info('"%s" - %s -> %s', link, target, relative_target)
+        os.unlink(link)
+        os.symlink(relative_target, link)
+
+
+
+def patch_bash_activation_script(ctx):
+    pattern = r'^VIRTUAL_ENV=".*?"$'
+    replacement = 'VIRTUAL_ENV="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"'
+    path = os.path.join(ctx.venv_dir, 'bin', 'activate')
+    with open(path, 'rU') as fo:
+        source = fo.readlines()
+        nl = fo.newlines or '\n'
+    if isinstance(nl, tuple):
+        nl = nl[0] 
+    patched = []
+    for i, line in enumerate(source):
+        if re.match(pattern, line.rstrip()):
+            logger.debug('%s:#%s', path, i)
+            line = replacement + nl
+        patched.append(line)
+    if source != patched:
+        logger.info('patching "%s"', path)
+        open(path, 'w+').writelines(patched)
+    else:
+        logger.debug('"%s" already patched', path)
+
+
+class Context(object):
+    
+    def __init__(self, venv_dir, strict=False):
+        self.venv_dir = os.path.abspath(os.path.normpath(venv_dir))
+        self.venv_name = os.path.basename(venv_dir)
+        self.strict = strict
+
+
+def main():
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument('dir', nargs=1, metavar='DEST_DIR')
+    arg_parser.add_argument('-l', '--logging', choices=['d', 'i', 'w'], default='w')
+    arg_parser.add_argument('-s', '--strict', action='store_true', default=False)
+    args = arg_parser.parse_args()
+
+    logging.basicConfig(
+        level={
+            'd': logging.DEBUG,
+            'i': logging.INFO,
+            'w': logging.WARN,
+        }[args.logging],
+        format='%(levelname)s : %(name)s : %(message)s',
+        stream=sys.stderr,
+    )
+
+    ctx = Context(venv_dir=args.dir[0], strict=args.strict)
+    logger.debug('venv_dir=%s, strict=%s', ctx.venv_dir, ctx.strict)
+    os.chdir(ctx.venv_dir)
+
+    patch_bash_activation_script(ctx)
+    make_links_relative(ctx, [
+       './local/bin',
+       './local/include',
+       './local/lib',
+    ])
+
+
+if __name__ == '__main__':
+    main()
