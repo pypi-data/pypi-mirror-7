@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<contentrules>
+ <rule name="new_department" title="New Department" cascading="False"
+    description="Create group and set local role for a new department"
+    enabled="True" event="zope.lifecycleevent.interfaces.IObjectAddedEvent"
+    stop-after="False">
+  <conditions>
+   <condition type="plone.conditions.PortalType">
+    <property name="check_types">
+     <element>Department</element>
+    </property>
+   </condition>
+  </conditions>
+  <actions>
+   <action type="sc.contentrules.group.CreateGroup">
+    <property name="grouptitle">${title}</property>
+    <property name="groupid">${title}</property>
+    <property name="roles">
+     <element>Member</element>
+    </property>
+   </action>
+   <action type="sc.contentrules.localrole.ApplyLocalRole">
+    <property name="roles">
+     <element>Owner</element>
+     <element>Editor</element>
+    </property>
+    <property name="principal">${title}</property>
+   </action>
+  </actions>
+ </rule>
+ <rule name="department_removed" title="Department removed" cascading="False"
+    description="A department was removed. we need to also delete old groups"
+    enabled="True" event="zope.lifecycleevent.interfaces.IObjectRemovedEvent"
+    stop-after="False">
+  <conditions>
+   <condition type="plone.conditions.PortalType">
+    <property name="check_types">
+     <element>Department</element>
+    </property>
+   </condition>
+  </conditions>
+  <actions>
+   <action type="sc.contentrules.group.RemoveGroup">
+    <property name="groupid">${title}</property>
+   </action>
+  </actions>
+ </rule>
+ <assignment name="new_department" bubbles="True" enabled="True" location=""/>
+ <assignment name="department_removed" bubbles="True" enabled="True" location=""/>
+</contentrules>
