@@ -1,0 +1,61 @@
+{% load i18n %}
+
+<form class="mailchimp-subscription-form" action="{% url 'admin:aldryn-mailchimp-subscribe' %}" method="POST">
+	{% csrf_token %}
+	{{ form.as_ul }}
+	<input type="submit" value="{% trans 'Subscribe' %}"/>
+</form>
+
+{% load i18n standard_form sekizai_tags %}
+
+<form class="mailchimp-subscription-form form" action="{% url 'admin:aldryn-mailchimp-subscribe' %}" method="POST" role="form">
+    <!--
+    <ul>
+    {% for error in form.non_field_errors %}
+        <li>{{ error }}</li>
+    {% endfor %}
+    </ul>
+    <ul>
+        {% for field in form %}
+        <li>{{ field.errors|striptags }}</li>
+        {% endfor %}
+    </ul>
+    -->
+    <fieldset>
+	    {% csrf_token %}
+        {% standard_field form.plugin_id %}
+        {% standard_field form.redirect_url %}
+		<ol class="row">
+			<li class="large-8 column">
+				<label>
+				{% standard_widget form.email 'no_required no_required_helper no_help_text no_error_text' custom_class='input-block' placeholder='Email' %}
+				</label>
+			</li>
+			<li class="small-4 column "><label><input type="submit" value="{% trans 'Join' %}" class="btn btn-grey"></label></li>
+		<ol>
+	</fieldset>
+</form>
+
+
+{% addtoblock "js" %}
+<script type="text/javascript">
+jQuery(document).ready(function () {
+	var frm = $('.mailchimp-subscription-form').first();
+    frm.submit(function (ev) {
+        $('.mailchimp-subscription-form input[type="submit"]').prop('disabled', true);
+        $('.mailchimp-subscription-form input#id_email').prop('readonly', true);
+            $.ajax({
+            type: frm.attr('method'),
+            url: frm.attr('action'),
+            data: frm.serialize(),
+            success: function (data) {
+                $('.mailchimp-subscription-form input#id_email').prop('disabled', true);
+                $('.mailchimp-subscription-form input[type="submit"]').val("Thanks!");
+            }
+        });
+
+        ev.preventDefault();
+    });
+});
+</script>
+{% endaddtoblock %}
