@@ -1,0 +1,451 @@
+{% extends "rpt_base.html" %}
+{% load staticfiles %}
+
+{% block extra_css %}
+h3.category_header {
+    display:inline;
+    font-size:1em;
+    padding:0.25em;
+}
+li.category {
+    padding:0.25em 0.5em;
+    border:1px solid #c0c0c0;
+    border-radius:4px;
+}
+li.category + li.category {
+    border-top:none;
+}
+h3 span.toggle {
+    color:#666;
+    font-weight:normal;
+    cursor:pointer;
+}
+ol.column_list {
+    display:none;
+}
+#columns ol,
+#linked_visits ol {
+    list-style-type:none;
+}
+
+ol.category_list {
+    margin:0;
+    padding:0;
+}
+
+ol.column_list {
+    margin:0 2em;
+    padding:0;
+}
+
+ol.column_list li,
+ol.column_list li label {
+    padding:0 0.25em;
+}
+
+.transparent {
+    opacity: 0;
+}
+
+.builder_step {
+    width:800px;
+}
+{% endblock %}
+
+{% block body_js %}
+<script type="text/javascript">
+$( "h3.category_header").hover(
+    function() { 
+        $( this ).find( "span.toggle" ).removeClass('transparent');
+    }, function() {
+        $( this ).find( "span.toggle" ).addClass('transparent');
+    }
+);
+
+$(document).on('click', "h3.category_header span.toggle", function(){
+    var target = $( this ).parent().parent().find(" ol.column_list ");
+    target.slideToggle();
+});
+
+/*
+handle column choice grouping/category interaction from column
+perspective.
+*/
+function resolve_columnchoice_click(el) {
+    var column_list = $( el ).parent().parent(); //ol.column_list
+    var categoryCheckbox = column_list.parent().children("input.columngroup");
+    var siblings = column_list.find("li input.column_choice");
+    var checked_count = 0;
+        siblings.each(function() {
+        if ( $( this ).is(':checked') ) {
+            checked_count = checked_count + 1;
+        }
+    });
+    if (siblings.length == 0) {
+        // nothing to check anyways
+        return false
+    } else if (siblings.length == checked_count) {
+        categoryCheckbox.prop('indeterminate', false);
+        categoryCheckbox.prop('checked', true);
+    } else if (checked_count == 0) {
+        categoryCheckbox.prop('indeterminate', false);
+        categoryCheckbox.prop('checked', false);
+    } else {
+        categoryCheckbox.prop('checked', false);
+        categoryCheckbox.prop('indeterminate', true);
+    }
+}
+/* attach event handler for column choice changes */
+$(document).on('click', "input.column_choice", function() {
+    resolve_columnchoice_click(this);
+});
+
+
+/*
+handle column choice grouping/category interaction from category
+perspective.
+*/
+function resolve_columngroup_click(el) {
+    var members = $( el ).parent().find( "li input.column_choice" );
+    if ( $( el ).is(':checked') ) {
+        // check all those members
+        members.each(function() {
+            $( this ).prop('checked', true);
+        });
+    } else {
+        // uncheck all those members
+        members.each(function() {
+            $( this ).prop('checked', false);
+        });
+    }
+}
+/* attach event handler for column choice changes */
+$(document).on('click', "input.columngroup", function() {
+    resolve_columngroup_click(this);
+});
+
+/* support for advancing to next step */
+$(document).on('click', "input.next_builder_step", function() {
+    // hide all the div#builder_step
+    var all_steps = $(" div.builder_step ");
+    var parent_div = $( this ).parent();
+    var current_step = all_steps.index(parent_div);
+    var next_div = $( all_steps.get(current_step + 1) );
+    parent_div.hide("slide", {direction: "left"}, function() {
+        next_div.show("slide", {direction: "right"});
+    });
+});
+
+
+/* support for regressing to previous step */
+$(document).on('click', "input.previous_builder_step", function() {
+    // hide all the div#builder_step
+    var all_steps = $(" div.builder_step ");
+    var parent_div = $( this ).parent();
+    var current_step = all_steps.index(parent_div);
+    var previous_div = $( all_steps.get(current_step + -1) );
+    parent_div.hide("slide", {direction: "right"}, function() {
+        previous_div.show("slide", {direction: "left"});
+    });
+});
+
+
+
+filterGroupsIncrement = 0
+lookups = []
+
+/* test values */
+/*
+arrFields = [
+    {"label": "Lookup: Diagnoses", "options": [
+        {"value": "myValue", "display": "myDisplay"},
+        {"value": "myOtherValue", "display": "myOtherDisplay"}
+    ]}
+]
+arrOperators = [
+    {"value": "myValue123", "display": "myDisplay4"},
+    {"value": "myOtherValue798", "display": "myOtherDisplay235"}
+]
+*/
+
+
+/* real values */
+arrFields = {{ json_filter_fields|safe }}
+arrOperators = {{ json_filter_operators|safe }}
+
+$(document).on('click', "input.add_filter", function(){
+    var groupNumber = filterGroupsIncrement + 1;
+    var triggeredBy = $( this );
+    var jqList = triggeredBy.parent().children( "ul.filter_list" );
+    add_filter(jqList, groupNumber, arrFields, arrOperators);
+});
+
+filter_form_id = "dataset_form";
+
+$(document).on('submit', '#' + filter_form_id , function(event) {
+    var jqForm = $( '#' + filter_form_id );
+    var jqDiv = $( '#top_level_filtergroup' );
+    var filter_json = filtergroups_to_json(jqDiv);
+    
+    // tuck the prepared JSON into a hidden input
+    var jsonInput = $( "<input/>", {
+        "class": "gathered_json",
+        "name": "filter_json",
+        "type": "hidden",
+        "value": filter_json
+    });
+    
+    // append said input to the form
+    jqForm.append(jsonInput);
+    
+    // this is commented out so that the form submission continues
+    //event.preventDefault();
+});
+
+
+$(document).ready( function() {
+    // seed the filters area with 3 blanks
+    for (var i=0; i<3; i++) {
+        $( "input.add_filter" ).trigger( "click" );
+    }
+    
+    // make category checkbox status match members
+    var checked_columns = $( document ).find( "input.column_choice:checked" );
+    checked_columns.each(function() {
+        resolve_columnchoice_click( this );
+    });
+});
+
+
+function add_filter(jqList, intFilterGroupNumber, arrFields, arrOperators) {
+    /* build select object and append with respective options */
+    var fieldSelect = $( "<select/>", {
+        "class": "filter_field",
+        "name": "filter_field[]"
+    });
+    fieldSelect.append( "<option value='null'>Field</option>" );
+    
+    /* build list of field options */
+    for (var i=0; i<arrFields.length; i++ ){
+        /* these have option groups based on the table they're from */
+        var arrOptions = arrFields[i]['options'];
+        var optGroup = $("<optgroup/>", {
+            "label": arrFields[i]['label']
+        });
+        
+        /*
+        # each option group has members.
+        # collect them as options and push back into the option group
+        */
+        var arrGroupOptions = [];
+        for (var j=0; j<arrOptions.length; j++ ){
+            var fieldValue
+            var fieldDisplay
+            var arrFieldOptions = [];
+            fieldValue = arrOptions[j]['value'];
+            fieldDisplay = arrOptions[j]['display'];
+            arrGroupOptions.push("<option value='" + fieldValue + "'>" + fieldDisplay + "</option>");
+        }
+        optGroup.html(arrGroupOptions.join());
+        fieldSelect.append(optGroup);
+    }
+    
+    var arrOperatorOptions = [];
+    var operatorValue
+    var operatorDisplay
+    
+    /* build list of field options */
+    for (var i=0; i<arrOperators.length; i++ ){
+        operatorValue = arrOperators[i]['value'];
+        operatorDisplay = arrOperators[i]['display'];
+        arrOperatorOptions.push("<option value='" + operatorValue + "'>" + operatorDisplay + "</option>");
+    }
+    
+    
+    /* build select object and append with respective options */
+    var operatorSelect = $( "<select/>", {
+        "class": "filter_operator",
+        "name": "filter_operator[]"
+    });
+    operatorSelect.append( "<option value='null'>Operator</option>" );
+    operatorSelect.append(arrOperatorOptions.join());
+    
+    /* instatiate text field as well */
+    var valuesTextfield = $( "<input/>", {
+        "class": "filter_values",
+        "name": "filter_values[]",
+        "type": "text"
+    });
+    
+    /* create list item and fill with form fields */
+    var filterListItem = $( "<li/>", {
+        "class": "filter"
+    });
+    filterListItem.append(fieldSelect);
+    filterListItem.append(operatorSelect);
+    filterListItem.append(valuesTextfield);
+    
+    jqList.append(filterListItem);
+};
+
+/* 
+Gather all the filters, then get a filter_field, filter_operator, and filter_values from each?
+*/
+function filtergroup_gather(jqDiv) {
+    var filters = jqDiv.children( "ul.filter_list" ).children( "li.filter" );
+    var arrFilterGroup = {};
+    var operatorAny = false;
+    
+    var checkedOpRadio = $(jqDiv).children( " input:radio.filtergroup_op:checked ")
+    if (
+    checkedOpRadio.length &&
+    checkedOpRadio.val() == "any"
+    ){
+        operatorAny = true;
+    }
+    
+    arrFilterGroup["any"] = operatorAny;
+    
+    arrFilterGroup["filters"] = [];
+    for (var i=0; i<filters.length; i++) {
+        var li = $( filters[i] );
+        var arrFilterBits = [
+            li.children( ".filter_field" ).val(),
+            li.children( ".filter_operator" ).val(),
+            li.children( ".filter_values" ).val()
+        ]
+        
+        /* push bits array into filters array if everything is there */
+        if (
+        arrFilterBits[0] != 'null' &&
+        arrFilterBits[1] != 'null' &&
+        arrFilterBits[2] != ''
+        ) {
+            arrFilterGroup["filters"].push({
+                "field": arrFilterBits[0],
+                "operator": arrFilterBits[1],
+                "values": arrFilterBits[2]
+            });
+        }
+    }
+    
+    var subFilterGroups = jqDiv.children( "div.filter_group" );
+    arrFilterGroup["subfiltergroups"] = []
+    for (var i=0; i<subFilterGroups.length; i++ ) {
+        var div = $( subFilterGroups[i] );
+        arrFilterGroup["subfiltergroups"].push(filtergroup_to_json( div ));
+    }
+
+    return { "filtergroup": arrFilterGroup };
+}
+
+
+function filtergroups_to_json(jqDiv) {
+    /* gathers up filtergroups and emits a JSON conversion */
+    var gathered = filtergroup_gather(jqDiv);
+    var jsons = JSON.stringify(gathered);
+    return jsons;
+}
+
+/*
+TODO: Consider putting in discrete value fields (multiple text boxes), with buttons to add more, etc.
+*/
+</script>
+{% endblock %}
+
+{% block content %}
+<!--<p>You are using the <a href="{{ universe.get_absolute_url }}">{{ universe.hr_name }}</a> reporting universe.</p>-->
+
+<form id="dataset_form" method="POST" action="?universe_pk={{ universe.pk }}">{% csrf_token %}
+    <div id="filters" class="builder_step"><h2>Choose Filters</h2>
+        <p>Create filters using the fields, operators, and values options below. Your DataSet will include all available records matching the all your filters.</p>
+        {% with lu_all=universe.lookups.all %}
+            {% if lu_all|length > 0 %}
+                <p>You can filter on Lookup Table fields in order to filter on one-to-many relationships. For example, using the 'DX' field in a diagnoses lookup table will search through DX1, DX2, DX3, etc. The available lookup categories are
+                    {% for lu in lu_all %}
+                        {% with def=lu.via.definition %}
+                            {% if forloop.counter == lu_all|length %}
+                                and {{ def.category }}.
+                            {% else %}
+                                {{ def.category }},
+                            {% endif %}
+                        {% endwith %}
+                    {% endfor %}
+                </p>
+            {% endif %}
+        {% endwith %}
+        <div class="filtergroup top_level_filtergroup" id="top_level_filtergroup">
+            <!--
+                <input type="radio" name="filtergroup_op[]" class="filtergroup_op" value="or" />Match any
+                <br /><input type="radio" name="filtergroup_op[]" class="filtergroup_op" value="all" checked="checked" />Match all
+            -->
+            <ul class="filter_list" id="filter_list-0">
+            </ul>
+            <input type="button" value="More filters" class="add_filter" />
+        </div>
+        <input type="button" value="Next step&rarr;" class="next_builder_step" />
+    </div>
+    {% if available_columns %}
+        <div id="columns" class="builder_step" style="display:none;"><h2>Choose Fields</h2>
+        <p>Specify the fields you would like in your DataSet below. A default set of fields has been pre-selected for you.</p>
+        {% regroup available_columns by get_category_display as column_lst %}
+            <ol class="category_list">
+                {% for get_category_display in column_lst %}
+                <li class="category"><input
+                        type="checkbox"
+                        value="columngroup-{{ forloop.counter0 }}"
+                        id="columngroup-{{ forloop.counter0 }}"
+                        class="columngroup"
+                        {% if c.extract_by_default %} checked {% endif %}
+                        /><h3 class="category_header"><label for="columngroup-{{ forloop.counter0 }}">{{ get_category_display.grouper }}</label><span class="toggle transparent"> click to toggle details</span></h3>
+                        <ol class="column_list columngroup-{{ forloop.counter0 }}">{% for c in get_category_display.list %}
+                            <li><input
+                            type="checkbox"
+                            value="{{ c.pk }}"
+                            id="column-{{ c.pk }}"
+                            name="columns[]"
+                            class="column_choice"
+                            {% if c.extract_by_default %} checked {% endif %}
+                            /><label for="column-{{ c.pk }}">{{ c.filter_display }}</label></li>
+                    {% endfor %}
+                    </ol>
+                {% endfor %}
+                </li>
+            </ol>
+            <input type="button" value="&larr;Previous step" class="previous_builder_step" />
+            <input type="button" value="Next step&rarr;" class="next_builder_step" />
+        </div>
+    {% endif %}
+    <div id="linked_visits" class="builder_step" style="display:none;"><h2>Linked Visit Files</h2>
+        <p>Check either the pre-visit or post-visit boxes below to bundle corresponding linked visit files with your DataSet. These will be separate CSV files with the same columns as your primary DataSet.</p>
+        <p>If you wish to do comparisons between and among linked visits, it is strongly recommended that you include both the VisitLink and DaysToEvent columns in your output.</p>
+        <ol>
+            <li><input
+                type="checkbox"
+                value="1"
+                id="bundle_previsit_file"
+                name="bundle_previsit_file"
+                /><label for="bundle_previsit_file">Pre-Visits</label>
+            <li><input
+                type="checkbox"
+                value="1"
+                id="bundle_postvisit_file"
+                name="bundle_postvisit_file"
+                /><label for="bundle_postvisit_file">Post-Visits</label>
+            </li>
+        </ol>
+        <input type="button" value="&larr;Previous step" class="previous_builder_step" />
+        <input type="button" value="Next step&rarr;" class="next_builder_step" />
+    </div>
+        
+    <div id="christening" class="builder_step right-align-labels" style="display:none;">
+        <h2>Name and Submit</h2>
+        <p>Enter a name and/or description for your DataSet below. These are purely cosmetic, but can be helpful if you request multiple DataSets.</p>
+        <ol>
+            {{ form.as_ul }}
+        </ol>
+        <input type="button" value="&larr;Previous step" class="previous_builder_step" />
+        <input type="submit" value="Submit DataSet Request" />
+    </div>
+</form>
+{% endblock %}
