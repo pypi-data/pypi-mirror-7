@@ -1,0 +1,45 @@
+=========
+ThunderArgs
+=========
+
+Abstract
+--------
+
+Bla-bla-bla bla-bla-bla
+
+
+Installation
+------------
+
+.. code-block:: bash
+
+    sudo pip install thunderargs --pre
+
+
+Usage
+-----
+
+You can use it like this:
+
+.. code-block:: python
+
+    from thunderargs import Arg
+    from thunderargs.endpoint import Endpoint
+
+
+    @Endpoint
+    def max_int(x: Arg(int), y: Arg(int)):
+        return max(x,y)
+
+Or you can use it with flask, like this:
+
+.. code-block:: python
+
+    @app.route('/calc_with_expander/')
+    def calc_with_expander(x:Arg(int), y:Arg(int),
+                           op:Arg(str, default='+', expander=OPERATION)):
+        return str(op(x,y))
+
+Or you can write yourself adapter to any other framework!
+
+Read the example.py, flask-example.py and thunderargs/flask.py
