@@ -1,0 +1,65 @@
+#!/usr/bin/env python
+# encoding: utf-8
+import logging
+import pickle
+import signal
+import smtplib
+import traceback
+import pika
+from optparse import OptionParser
+from postboy import Email
+
+ALIVE = True
+def signal_handler(signum, frame):
+    global ALIVE
+    ALIVE = False
+    log.info('Getting signal: {0}. Program finishing.'.format(signum))
+
+signal.signal(signal.SIGTERM, signal_handler)
+signal.signal(signal.SIGINT, signal_handler)
+
+log = logging.getLogger('postboy.worker')
+
+parser = OptionParser()
+parser.add_option("-H", "--host", dest="host", help="Broker host", metavar="ADDRESS", default='localhost')
+parser.add_option("-p", "--port", dest="port", help="Broker port", metavar="PORT", default=5450, type=int)
+parser.add_option("-t", "--timeout", dest="timeout", help="Getting task timeout", metavar="SECONDS", default=5, type=int)
+parser.add_option("--smtp-host", default='localhost', help='SMTP server', metavar='ADDRESS', dest='smtp_host')
+parser.add_option("--debug", action='store_true', help='A lot of logging messages', default=False)
+parser.add_option("--broker", help='Rabbitmq host', default='localhost', dest="broker", metavar='HOST')
+parser.add_option("--broker-port", help='Rabbitmq port', type=int, default=5672, dest="broker_port", metavar='PORT')
+parser.add_option("--broker-channel", help='Rabbitmq channel', default='postboy', dest="broker_channel", metavar='CHANNEL')
+parser.add_option("--max-retries", help='Maximum number of retries sending messages', dest="retries", default=10, metavar="NUMBER")
+
+
+def setup_logger(options):
+    logformat = u'%(asctime)s [%(filename)s:%(lineno)d] %(levelname)-8s %(message)s'
+    logging.basicConfig(level=logging.DEBUG if options.debug else logging.INFO, format=logformat)
+
+
+def main(options, args):
+    global ALIVE
+    setup_logger(options)
+
+    connection = pika.BlockingConnection(pika.ConnectionParameters(options.broker, options.broker_port))
+    channel = connection.channel()
+    channel.queue_declare(queue=options.broker_channel)
+
+    for method_frame, properties, body in channel.consume(options.broker_channel):
+        email = pickle.loads(body)
+        try:
+            assert isinstance(email, Email)
+            connect = smtplib.SMTP(options.smtp_host)
+            connect.sendmail(email.msg['From'], email.msg['To'], email.msg.as_string())
+            channel.basic_ack(method_frame.delivery_tag)
+        except Exception as e:
+            log.debug(traceback.format_exc())
+            log.error('Task is failed: {0}'.format(repr(e)))
+
+    channel.close()
+    connection.close()
+
+    return 0
+
+if __name__ == '__main__':
+    exit(main(*parser.parse_args()))
