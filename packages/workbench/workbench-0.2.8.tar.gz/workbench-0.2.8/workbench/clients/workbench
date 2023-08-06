@@ -1,0 +1,125 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""Workbench CLI Client"""
+import os
+import pprint
+import hashlib
+import zerorpc
+import tabulate
+import workbench.clients.workbench_client as workbench_client
+
+def try_get_tables(data):
+    ''' Try to determine if this data has table keys '''
+
+    table_list = []
+    if 'tables' in data.keys():
+        for table in data['tables']:
+            if isinstance(data[table], list):
+                table_list.append(table)
+
+    # At this point the list has data in it or is an empty list
+    return table_list
+
+def table_xform(table, force_to_str=False):
+    ''' Transform a table from a list of dicts to dict of lists'''
+    import collections
+
+    new_table = collections.defaultdict(list)
+    for row in table:
+        for key, value in row.items():
+            if force_to_str:
+                new_table[key].append(str(value)[:40])
+            elif isinstance(value, str):
+                new_table[key].append(value[:40])
+            else:
+                new_table[key].append(value)
+    return new_table
+
+def print_table(table):
+    ''' Print the table using tabulate '''
+    try:
+        print tabulate.tabulate(table_xform(table), headers="keys")
+    except TypeError:
+        print tabulate.tabulate(table_xform(table, force_to_str=True), headers="keys")
+
+def run():
+    ''' Running the workbench CLI ''' 
+    
+    # Grab arguments
+    args = workbench_client.grab_server_args()
+
+    # Start up workbench connection
+    workbench = zerorpc.Client(timeout=300, heartbeat=60)
+    workbench.connect('tcp://'+args['server']+':'+args['port'])
+
+    # If no command than assume they want help
+    if not args['commands']:
+        args['commands'] = ['help']
+
+    # Check to see if the command is valid if it's not assume they want a 'work_request'
+    command = args['commands'][0]
+    if command in workbench.list_all_commands():
+        parameters = args['commands'][1:]
+    else:
+        command = 'work_request'
+        parameters = args['commands']
+
+    # Do they want 'store_sample'?
+    if command == 'store_sample':
+        file_path = parameters[0]
+
+        # Do they want everything under a directory?
+        if os.path.isdir(file_path):
+            file_list = [os.path.join(file_path, child) for child in os.listdir(file_path)]
+        else:
+            file_list = [file_path]
+        
+        # Upload the files into workbench
+        for path in file_list:
+            with open(path, 'rb') as my_file:
+                raw_bytes = my_file.read()
+                md5 = hashlib.md5(raw_bytes).hexdigest()
+                if not workbench.has_sample(md5):
+                    print 'Storing Sample...'
+                    md5 = workbench.store_sample(os.path.basename(path), raw_bytes, 'unknown')
+                else:
+                    print 'Sample already in Workbench...'
+                print md5
+
+    # Do they want a batch_work_request?
+    elif command == 'batch_work_request':
+        output = workbench(command, parameters[0], {})
+        for row in output:
+            pprint.pprint(row)
+
+    # Okay must be a 'normal' command so send the command and any optional parameters to workbench
+    else:
+        output = workbench(command, *parameters)
+
+        # Try to do different stuff based on the output
+        if isinstance(output, str):
+            print output
+
+        # Okay for non-string output it will always be keyed by the worker name
+        # which in this case in parameter[0]
+        elif isinstance(output, dict):
+
+            worker_name = parameters[0]
+            output = output[worker_name]
+
+            # If the data contains table keys/information then print as tables
+            # if not we just kinda punt and do a pprint on the data.
+            table_list = try_get_tables(output)
+            if table_list:
+                for table in table_list:
+                    print '\n\n<<<<<< %s >>>>>\n' % table
+                    print_table(output[table])
+            else:
+                pprint.pprint(output)
+        else:
+            print 'Critical: I have no idea what to do with output of type: %s' % type(output)
+
+
+if __name__ == '__main__':
+    run()
