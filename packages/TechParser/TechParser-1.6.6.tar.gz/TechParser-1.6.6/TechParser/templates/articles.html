@@ -1,0 +1,52 @@
+<%inherit file="base.html"/>
+<%block name="title">Articles from some sites</%block>
+<%block name="content">
+	<div id="searchbox">
+		<form method="get" action="/">
+			<input name="q" type="search" placeholder="Search articles" value='${q}' autocomplete="off" />
+			<button type="submit">Search</button>
+		</form>
+		% if q:
+			<br/>
+			<a href="/">Go back</a>
+		% endif
+		<a href="/history">History</a>
+	</div>
+	% for article in articles:
+		<div class="article">
+			<h3>
+				<a class="open-tab" onclick="window.open('/go/${article[0]['link']}'); return false;" href="/go/${article[0]['link']}">
+					<img src="/static/icons/${article[0]['source']}.ico" width="16" />
+				</a>
+				<a data-spoiler='true' class="${article[0]['source']}" onclick="toggleText(this)">
+					${article[0]['title']}
+				</a>
+			</h3>
+			<div class="summary">
+				<p>
+					${article[0]['summary']}
+				</p>
+				<a onclick="window.open('/go/${article[0]['link']}'); return false;" href="/go/${article[0]['link']}">
+					Open article in new tab
+				</a>
+				<p>
+					<a data-pocket-label="pocket" data-pocket-count="horizontal"
+						class="pocket-btn" data-lang="en"
+						data-save-url="${article[0]['link']}"></a>
+				</p>
+			</div>
+		</div>
+	% endfor
+	<div id="pagination">
+		% if page_num > 1:
+			<a href="/${page_num-1}?q=${q}">Previous</a>
+		% endif
+		
+		<a class="current">${ page_num }</a>
+		
+		% if page_num < num_pages:
+			<a href="/${page_num+1}?q=${q}">Next</a>
+		% endif
+	</div>
+	<script type="text/javascript">!function(d,i){if(!d.getElementById(i)){var j=d.createElement("script");j.id=i;j.src="https://widgets.getpocket.com/v1/j/btn.js?v=1";var w=d.getElementById(i);d.body.appendChild(j);}}(document,"pocket-btn-js");</script>
+</%block>
