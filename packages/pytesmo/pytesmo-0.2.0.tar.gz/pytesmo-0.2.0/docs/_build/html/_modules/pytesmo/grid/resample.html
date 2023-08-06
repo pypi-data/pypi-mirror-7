@@ -1,0 +1,272 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pytesmo.grid.resample &mdash; pytesmo 0.2.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="pytesmo 0.2.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">pytesmo 0.2.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pytesmo.grid.resample</h1><div class="highlight"><pre>
+<span class="c"># Copyright (c) 2014,Vienna University of Technology, Department of Geodesy and Geoinformation</span>
+<span class="c"># All rights reserved.</span>
+
+<span class="c"># Redistribution and use in source and binary forms, with or without</span>
+<span class="c"># modification, are permitted provided that the following conditions are met:</span>
+<span class="c">#   * Redistributions of source code must retain the above copyright</span>
+<span class="c">#     notice, this list of conditions and the following disclaimer.</span>
+<span class="c">#    * Redistributions in binary form must reproduce the above copyright</span>
+<span class="c">#      notice, this list of conditions and the following disclaimer in the</span>
+<span class="c">#      documentation and/or other materials provided with the distribution.</span>
+<span class="c">#    * Neither the name of the Vienna University of Technology, Department of Geodesy and Geoinformation nor the</span>
+<span class="c">#      names of its contributors may be used to endorse or promote products</span>
+<span class="c">#      derived from this software without specific prior written permission.</span>
+
+<span class="c"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot; AND</span>
+<span class="c"># ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED</span>
+<span class="c"># WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE</span>
+<span class="c"># DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY,</span>
+<span class="c"># DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY</span>
+<span class="c"># DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES</span>
+<span class="c"># (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;</span>
+<span class="c"># LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND</span>
+<span class="c"># ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT</span>
+<span class="c"># (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS</span>
+<span class="c"># SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Created on Mar 25, 2014</span>
+
+<span class="sd">@author: Christoph Paulik christoph.paulik@geo.tuwien.ac.at</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+
+<span class="kn">import</span> <span class="nn">pyresample</span> <span class="kn">as</span> <span class="nn">pr</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="resample_to_grid"><a class="viewcode-back" href="../../../pytesmo.grid.html#pytesmo.grid.resample.resample_to_grid">[docs]</a><span class="k">def</span> <span class="nf">resample_to_grid</span><span class="p">(</span><span class="n">input_data</span><span class="p">,</span> <span class="n">src_lon</span><span class="p">,</span> <span class="n">src_lat</span><span class="p">,</span> <span class="n">target_lon</span><span class="p">,</span> <span class="n">target_lat</span><span class="p">,</span>
+                      <span class="n">methods</span><span class="o">=</span><span class="s">&#39;nn&#39;</span><span class="p">,</span> <span class="n">weight_funcs</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                      <span class="n">min_neighbours</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">search_rad</span><span class="o">=</span><span class="mi">18000</span><span class="p">,</span> <span class="n">neighbours</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+                      <span class="n">fill_values</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    resamples data from dictionary of numpy arrays using pyresample</span>
+<span class="sd">    to given grid.</span>
+<span class="sd">    Searches for the neighbours and then resamples the data</span>
+<span class="sd">    to the grid given in togrid if at least</span>
+<span class="sd">    min_neighbours neighbours are found</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    input_data : dict of numpy.arrays</span>
+<span class="sd">    src_lon : numpy.array</span>
+<span class="sd">        longitudes of the input data</span>
+<span class="sd">    src_lat : numpy.array</span>
+<span class="sd">        src_latitudes of the input data</span>
+<span class="sd">    target_lon : numpy.array</span>
+<span class="sd">        longitudes of the output data</span>
+<span class="sd">    target_src_lat : numpy.array</span>
+<span class="sd">        src_latitudes of the output data</span>
+<span class="sd">    methods : string or dict, optional</span>
+<span class="sd">        method of spatial averaging. this is given to pyresample</span>
+<span class="sd">        and can be</span>
+<span class="sd">        &#39;nn&#39; : nearest neighbour</span>
+<span class="sd">        &#39;custom&#39; : custom weight function has to be supplied in weight_funcs</span>
+<span class="sd">        see pyresample documentation for more details</span>
+<span class="sd">        can also be a dictionary with a method for each array in input data dict</span>
+<span class="sd">    weight_funcs : function or dict of functions, optional</span>
+<span class="sd">        if method is &#39;custom&#39; a function like func(distance) has to be given</span>
+<span class="sd">        can also be a dictionary with a function for each array in input data dict</span>
+<span class="sd">    min_neighbours: int, optional</span>
+<span class="sd">        if given then only points with at least this number of neighbours will be</span>
+<span class="sd">        resampled</span>
+<span class="sd">        Default : 1</span>
+<span class="sd">    search_rad : float, optional</span>
+<span class="sd">        search radius in meters of neighbour search</span>
+<span class="sd">        Default : 18000</span>
+<span class="sd">    neighbours : int, optional</span>
+<span class="sd">        maximum number of neighbours to look for for each input grid point</span>
+<span class="sd">        Default : 8</span>
+<span class="sd">    fill_values : number or dict, optional</span>
+<span class="sd">        if given the output array will be filled with this value if no valid</span>
+<span class="sd">        resampled value could be computed, if not a masked array will be returned</span>
+<span class="sd">        can also be a dict with a fill value for each variable</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    data : dict of numpy.arrays</span>
+<span class="sd">        resampled data on given grid</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">output_data</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">output_shape</span> <span class="o">=</span> <span class="n">target_lat</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">if</span> <span class="n">target_lon</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">target_lat</span> <span class="o">=</span> <span class="n">target_lat</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+        <span class="n">target_lon</span> <span class="o">=</span> <span class="n">target_lon</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+
+    <span class="n">input_swath</span> <span class="o">=</span> <span class="n">pr</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">SwathDefinition</span><span class="p">(</span><span class="n">src_lon</span><span class="p">,</span> <span class="n">src_lat</span><span class="p">)</span>
+    <span class="n">output_swath</span> <span class="o">=</span> <span class="n">pr</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">SwathDefinition</span><span class="p">(</span><span class="n">target_lon</span><span class="p">,</span> <span class="n">target_lat</span><span class="p">)</span>
+
+    <span class="p">(</span><span class="n">valid_input_index</span><span class="p">,</span>
+     <span class="n">valid_output_index</span><span class="p">,</span>
+     <span class="n">index_array</span><span class="p">,</span>
+     <span class="n">distance_array</span><span class="p">)</span> <span class="o">=</span> <span class="n">pr</span><span class="o">.</span><span class="n">kd_tree</span><span class="o">.</span><span class="n">get_neighbour_info</span><span class="p">(</span><span class="n">input_swath</span><span class="p">,</span> <span class="n">output_swath</span><span class="p">,</span>
+                                                     <span class="n">search_rad</span><span class="p">,</span> <span class="n">neighbours</span><span class="o">=</span><span class="n">neighbours</span><span class="p">)</span>
+
+    <span class="c"># throw away points with less than min_neighbours neighbours</span>
+    <span class="c"># find points with valid neighbours</span>
+    <span class="c"># get number of found neighbours for each grid point/row</span>
+    <span class="k">if</span> <span class="n">neighbours</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">nr_neighbours</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">distance_array</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">neigh_condition</span> <span class="o">=</span> <span class="n">nr_neighbours</span> <span class="o">&gt;=</span> <span class="n">min_neighbours</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">neigh_condition</span><span class="p">)</span>
+        <span class="n">enough_neighbours</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">neigh_condition</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">neighbours</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">nr_neighbours</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">distance_array</span><span class="p">)</span>
+        <span class="n">neigh_condition</span> <span class="o">=</span> <span class="n">nr_neighbours</span> <span class="o">&gt;=</span> <span class="n">min_neighbours</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">neigh_condition</span><span class="p">)</span>
+        <span class="n">enough_neighbours</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">neigh_condition</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">distance_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">distance_array</span><span class="p">,</span> <span class="p">(</span><span class="n">distance_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">index_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">index_array</span><span class="p">,</span> <span class="p">(</span><span class="n">index_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">enough_neighbours</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;No points with at least </span><span class="si">%d</span><span class="s"> neighbours found&quot;</span> <span class="o">%</span> <span class="n">min_neighbours</span><span class="p">)</span>
+
+    <span class="c"># remove neighbourhood info of input grid points that have no neighbours to not have to</span>
+    <span class="c"># resample to whole output grid for small input grid file</span>
+    <span class="n">distance_array</span> <span class="o">=</span> <span class="n">distance_array</span><span class="p">[</span><span class="n">enough_neighbours</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="n">index_array</span> <span class="o">=</span> <span class="n">index_array</span><span class="p">[</span><span class="n">enough_neighbours</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="n">valid_output_index</span> <span class="o">=</span> <span class="n">valid_output_index</span><span class="p">[</span><span class="n">enough_neighbours</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">input_data</span><span class="p">:</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="n">input_data</span><span class="p">[</span><span class="n">param</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">weight_funcs</span><span class="p">)</span> <span class="o">==</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="n">weight_func</span> <span class="o">=</span> <span class="n">weight_funcs</span><span class="p">[</span><span class="n">param</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">weight_func</span> <span class="o">=</span> <span class="n">weight_funcs</span>
+
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">methods</span><span class="p">)</span> <span class="o">==</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="n">methods</span><span class="p">[</span><span class="n">param</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="n">methods</span>
+
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">fill_values</span><span class="p">)</span> <span class="o">==</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="n">fill_value</span> <span class="o">=</span> <span class="n">fill_values</span><span class="p">[</span><span class="n">param</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fill_value</span> <span class="o">=</span> <span class="n">fill_values</span>
+
+        <span class="c"># construct arrays in output grid form</span>
+        <span class="k">if</span> <span class="n">fill_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">output_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">output_swath</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span> <span class="o">+</span> <span class="n">fill_value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">output_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">output_swath</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+            <span class="n">output_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">output_array</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">)</span>
+
+        <span class="n">neigh_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="c"># check if method is nn, if so only use first row of index_array and distance_array</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&#39;nn&#39;</span><span class="p">:</span>
+                <span class="n">neigh_slice</span> <span class="o">=</span> <span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">output_array</span><span class="p">[</span><span class="n">enough_neighbours</span><span class="p">]</span> <span class="o">=</span> <span class="n">pr</span><span class="o">.</span><span class="n">kd_tree</span><span class="o">.</span><span class="n">get_sample_from_neighbour_info</span><span class="p">(</span>
+                                                     <span class="n">method</span><span class="p">,</span>
+                                                     <span class="n">enough_neighbours</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                                                     <span class="n">data</span><span class="p">,</span>
+                                                     <span class="n">valid_input_index</span><span class="p">,</span>
+                                                     <span class="n">valid_output_index</span><span class="p">,</span>
+                                                     <span class="n">index_array</span><span class="p">[</span><span class="n">neigh_slice</span><span class="p">],</span>
+                                                     <span class="n">distance_array</span><span class="p">[</span><span class="n">neigh_slice</span><span class="p">],</span>
+                                                     <span class="n">weight_funcs</span><span class="o">=</span><span class="n">weight_func</span><span class="p">,</span>
+                                                     <span class="n">fill_value</span><span class="o">=</span><span class="n">fill_value</span><span class="p">)</span>
+
+        <span class="n">output_data</span><span class="p">[</span><span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="n">output_array</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">output_shape</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">output_data</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">pytesmo 0.2.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Vienna University of Technology, Department of Geodesy and Geoinformation.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.
+    </div>
+  </body>
+</html>

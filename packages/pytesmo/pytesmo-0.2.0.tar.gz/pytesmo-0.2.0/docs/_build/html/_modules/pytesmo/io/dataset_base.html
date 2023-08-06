@@ -1,0 +1,369 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pytesmo.io.dataset_base &mdash; pytesmo 0.2.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="pytesmo 0.2.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">pytesmo 0.2.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pytesmo.io.dataset_base</h1><div class="highlight"><pre>
+<span class="c"># Copyright (c) 2014,Vienna University of Technology, Department of Geodesy</span>
+<span class="c"># and Geoinformation. All rights reserved.</span>
+
+<span class="c"># Redistribution and use in source and binary forms, with or without</span>
+<span class="c"># modification, are permitted provided that the following conditions are met:</span>
+<span class="c">#   * Redistributions of source code must retain the above copyright</span>
+<span class="c">#     notice, this list of conditions and the following disclaimer.</span>
+<span class="c">#    * Redistributions in binary form must reproduce the above copyright</span>
+<span class="c">#      notice, this list of conditions and the following disclaimer in the</span>
+<span class="c">#      documentation and/or other materials provided with the distribution.</span>
+<span class="c">#    * Neither the name of the Vienna University of Technology, Department of</span>
+<span class="c">#      Geodesy and Geoinformation nor the names of its contributors may be</span>
+<span class="c">#      used to endorse or promote products derived from this software without</span>
+<span class="c">#      specific prior written permission.</span>
+
+<span class="c"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;</span>
+<span class="c"># AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE</span>
+<span class="c"># IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE</span>
+<span class="c"># ARE DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY,</span>
+<span class="c"># DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY</span>
+<span class="c"># DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES</span>
+<span class="c"># (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;</span>
+<span class="c"># LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND</span>
+<span class="c"># ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT</span>
+<span class="c"># (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS</span>
+<span class="c"># SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Created on Mar 19, 2014</span>
+
+<span class="sd">@author: Christoph Paulik christoph.paulik@geo.tuwien.ac.at</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">import</span> <span class="nn">abc</span>
+
+
+<div class="viewcode-block" id="DatasetTSBase"><a class="viewcode-back" href="../../../pytesmo.io.html#pytesmo.io.dataset_base.DatasetTSBase">[docs]</a><span class="k">class</span> <span class="nc">DatasetTSBase</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dateset base class that implements basic functions and also abstract</span>
+<span class="sd">    methods that have to be implemented by child classes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    path : string</span>
+<span class="sd">        Path to dataset.</span>
+<span class="sd">    grid : pytesmo.grid.grids.BasicGrid of CellGrid instance</span>
+<span class="sd">        Grid on which the time series data is stored.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__metaclass__</span> <span class="o">=</span> <span class="n">abc</span><span class="o">.</span><span class="n">ABCMeta</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">grid</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grid</span> <span class="o">=</span> <span class="n">grid</span>
+
+    <span class="k">def</span> <span class="nf">_read_lonlat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reading time series for given longitude and latitude coordinate.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        lon : float</span>
+<span class="sd">            Longitude coordinate.</span>
+<span class="sd">        lat : float</span>
+<span class="sd">            Latitude coordinate.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        data : pandas.DataFrame</span>
+<span class="sd">            pandas.DateFrame with DateTimeIndex.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">gp</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">find_nearest_gpi</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_gp</span><span class="p">(</span><span class="n">gp</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DatasetTSBase.read_ts"><a class="viewcode-back" href="../../../pytesmo.io.html#pytesmo.io.dataset_base.DatasetTSBase.read_ts">[docs]</a>    <span class="k">def</span> <span class="nf">read_ts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Takes either 1 or 2 arguments and calls the correct function</span>
+<span class="sd">        which is either reading the gpi directly or finding</span>
+<span class="sd">        the nearest gpi from given lat,lon coordinates and then reading it</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_gp</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_lonlat</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">data</span>
+</div>
+<div class="viewcode-block" id="DatasetTSBase.iter_ts"><a class="viewcode-back" href="../../../pytesmo.io.html#pytesmo.io.dataset_base.DatasetTSBase.iter_ts">[docs]</a>    <span class="k">def</span> <span class="nf">iter_ts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ll_bbox</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Yield all time series for a grid or for grid points in a given</span>
+<span class="sd">        lon/lat bound box (ll_bbox).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ll_bbox : tuple of floats (latmin, latmax, lonmin, lonmax)</span>
+<span class="sd">            Set to lon/lat bounding box to yield only points in that area.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        data : pandas.DataFrame</span>
+<span class="sd">            pandas.DateFrame with DateTimeIndex</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">ll_bbox</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">gp</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">grid_points</span><span class="p">():</span>
+                <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_gp</span><span class="p">(</span><span class="n">gp</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">latmin</span><span class="p">,</span> <span class="n">latmax</span><span class="p">,</span> <span class="n">lonmin</span><span class="p">,</span> <span class="n">lonmax</span> <span class="o">=</span> <span class="n">ll_bbox</span>
+            <span class="n">gp_ll_bbox</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">get_bbox_grid_points</span><span class="p">(</span><span class="n">latmin</span><span class="p">,</span> <span class="n">latmax</span><span class="p">,</span>
+                                                        <span class="n">lonmin</span><span class="p">,</span> <span class="n">lonmax</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">gp</span> <span class="ow">in</span> <span class="n">gp_ll_bbox</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_gp</span><span class="p">(</span><span class="n">gp</span><span class="p">)</span>
+</div>
+    <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="DatasetTSBase.read_gp"><a class="viewcode-back" href="../../../pytesmo.io.html#pytesmo.io.dataset_base.DatasetTSBase.read_gp">[docs]</a>    <span class="k">def</span> <span class="nf">read_gp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gpi</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reads time series for a given grid point index(gpi)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        gpi : int</span>
+<span class="sd">            grid point index</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        data : pandas.DataFrame</span>
+<span class="sd">            pandas.DateFrame with DateTimeIndex</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span>
+
+</div></div>
+<div class="viewcode-block" id="DatasetImgBase"><a class="viewcode-back" href="../../../pytesmo.io.html#pytesmo.io.dataset_base.DatasetImgBase">[docs]</a><span class="k">class</span> <span class="nc">DatasetImgBase</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dateset base class that implements basic functions and also abstract</span>
+<span class="sd">    methods that have to be implemented by child classes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    path : string</span>
+<span class="sd">        Path to dataset.</span>
+<span class="sd">    grid : pytesmo.grid.grids.BasicGrid of CellGrid instance, optional</span>
+<span class="sd">        Grid on which all the images of the dataset are stored. This is not</span>
+<span class="sd">        relevant for datasets that are stored e.g. in orbit geometry</span>
+<span class="sd">    img_offsets : numpy array of timedeltas, optional</span>
+<span class="sd">        Gives the time offsets in a day that the images of one day have.</span>
+<span class="sd">        e.g.: a model data with 6 hourly data with images at 0, 6, 12 and</span>
+<span class="sd">        18 o&#39;clock would have img_offsets=np.array([timedelta(hours=0),</span>
+<span class="sd">                                                    timedelta(hours=6),</span>
+<span class="sd">                                                    timedelta(hours=12),</span>
+<span class="sd">                                                    timedelta(hours=18)])</span>
+<span class="sd">        Default is set to np.array([timedelta(hours=0)]) for daily images</span>
+<span class="sd">        with timestamp 0</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__metaclass__</span> <span class="o">=</span> <span class="n">abc</span><span class="o">.</span><span class="n">ABCMeta</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">img_offsets</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">0</span><span class="p">)])):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grid</span> <span class="o">=</span> <span class="n">grid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">img_offsets</span> <span class="o">=</span> <span class="n">img_offsets</span>
+
+    <span class="k">def</span> <span class="nf">_get_possible_timestamps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the timestamps as datetime array that are possible for the</span>
+<span class="sd">        given day, if the timestamps are</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        timestamp : datetime.datetime</span>
+<span class="sd">            Specific day.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        timestamps : numpy.ndarray</span>
+<span class="sd">            Datetime array of possible timestamps.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">day</span> <span class="o">=</span> <span class="n">datetime</span><span class="p">(</span><span class="n">timestamp</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">timestamp</span><span class="o">.</span><span class="n">month</span><span class="p">,</span> <span class="n">timestamp</span><span class="o">.</span><span class="n">day</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">day</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">img_offsets</span>
+
+    <span class="nd">@abc.abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_read_spec_img</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Read specific image for given datetime timestamp.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        timestamp : datetime.datetime</span>
+<span class="sd">            exact observation timestamp of the image that should be read</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        data : dict</span>
+<span class="sd">            dictionary of numpy arrays that hold the image data for each</span>
+<span class="sd">            variable of the dataset</span>
+<span class="sd">        metadata : dict</span>
+<span class="sd">            dictionary of numpy arrays that hold the metadata</span>
+<span class="sd">        timestamp : datetime.datetime</span>
+<span class="sd">            exact timestamp of the image</span>
+<span class="sd">        lon : numpy.array or None</span>
+<span class="sd">            array of longitudes, if None self.grid will be assumed</span>
+<span class="sd">        lat : numpy.array or None</span>
+<span class="sd">            array of latitudes, if None self.grid will be assumed</span>
+<span class="sd">        time_var : string or None</span>
+<span class="sd">            variable name of observation times in the data dict, if None all</span>
+<span class="sd">            observations have the same timestamp</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span>
+
+<div class="viewcode-block" id="DatasetImgBase.read_img"><a class="viewcode-back" href="../../../pytesmo.io.html#pytesmo.io.dataset_base.DatasetImgBase.read_img">[docs]</a>    <span class="k">def</span> <span class="nf">read_img</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return an image if a specific datetime is given.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        timestamp : datetime.datetime</span>
+<span class="sd">            Time stamp.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        data : dict</span>
+<span class="sd">            dictionary of numpy arrays that hold the image data for each</span>
+<span class="sd">            variable of the dataset</span>
+<span class="sd">        metadata : dict</span>
+<span class="sd">            dictionary of numpy arrays that hold the metadata</span>
+<span class="sd">        timestamp : datetime.datetime</span>
+<span class="sd">            exact timestamp of the image</span>
+<span class="sd">        lon : numpy.array or None</span>
+<span class="sd">            array of longitudes, if None self.grid will be assumed</span>
+<span class="sd">        lat : numpy.array or None</span>
+<span class="sd">            array of latitudes, if None self.grid will be assumed</span>
+<span class="sd">        time_var : string or None</span>
+<span class="sd">            variable name of observation times in the data dict, if None all</span>
+<span class="sd">            observations have the same timestamp</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">timestamp</span><span class="p">)</span> <span class="o">==</span> <span class="n">datetime</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">timestamp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_possible_timestamps</span><span class="p">(</span><span class="n">timestamp</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_spec_img</span><span class="p">(</span><span class="n">timestamp</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;given timestamp is not a valid image &quot;</span>
+                                 <span class="s">&quot;timestamp for this dataset&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;given timestamp is not a datetime&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="DatasetImgBase.daily_images"><a class="viewcode-back" href="../../../pytesmo.io.html#pytesmo.io.dataset_base.DatasetImgBase.daily_images">[docs]</a>    <span class="k">def</span> <span class="nf">daily_images</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">day</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Yield all images for a day.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        day : datetime.date or datetime.datetime</span>
+<span class="sd">            Specific day.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        data : dict</span>
+<span class="sd">            dictionary of numpy arrays that hold the image data for each</span>
+<span class="sd">            variable of the dataset</span>
+<span class="sd">        metadata : dict</span>
+<span class="sd">            dictionary of numpy arrays that hold the metadata</span>
+<span class="sd">        timestamp : datetime.datetime</span>
+<span class="sd">            exact timestamp of the image</span>
+<span class="sd">        lon : numpy.array or None</span>
+<span class="sd">            array of longitudes, if None self.grid will be assumed</span>
+<span class="sd">        lat : numpy.array or None</span>
+<span class="sd">            array of latitudes, if None self.grid will be assumed</span>
+<span class="sd">        time_var : string or None</span>
+<span class="sd">            variable name of observation times in the data dict, if None all</span>
+<span class="sd">            observations have the same timestamp</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">image_datetime</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_possible_timestamps</span><span class="p">(</span><span class="n">day</span><span class="p">):</span>
+            <span class="n">yield_img</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_spec_img</span><span class="p">(</span><span class="n">image_datetime</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="n">yield_img</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">pytesmo 0.2.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Vienna University of Technology, Department of Geodesy and Geoinformation.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.
+    </div>
+  </body>
+</html>

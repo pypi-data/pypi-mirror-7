@@ -1,0 +1,281 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pytesmo.io.bufr.bufr &mdash; pytesmo 0.2.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="pytesmo 0.2.0 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">pytesmo 0.2.0 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pytesmo.io.bufr.bufr</h1><div class="highlight"><pre>
+<span class="c"># Copyright (c) 2014,Vienna University of Technology, Department of Geodesy and Geoinformation</span>
+<span class="c"># All rights reserved.</span>
+
+<span class="c"># Redistribution and use in source and binary forms, with or without</span>
+<span class="c"># modification, are permitted provided that the following conditions are met:</span>
+<span class="c">#   * Redistributions of source code must retain the above copyright</span>
+<span class="c">#     notice, this list of conditions and the following disclaimer.</span>
+<span class="c">#    * Redistributions in binary form must reproduce the above copyright</span>
+<span class="c">#      notice, this list of conditions and the following disclaimer in the</span>
+<span class="c">#      documentation and/or other materials provided with the distribution.</span>
+<span class="c">#    * Neither the name of the Vienna University of Technology, Department of</span>
+<span class="c">#      Geodesy and Geoinformation nor the names of its contributors may be</span>
+<span class="c">#      used to endorse or promote products derived from this software without</span>
+<span class="c">#      specific prior written permission.</span>
+
+<span class="c"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot; AND</span>
+<span class="c"># ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED</span>
+<span class="c"># WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE</span>
+<span class="c"># DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY,</span>
+<span class="c"># DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY</span>
+<span class="c"># DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES</span>
+<span class="c"># (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;</span>
+<span class="c"># LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND</span>
+<span class="c"># ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT</span>
+<span class="c"># (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS</span>
+<span class="c"># SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Created on May 21, 2014</span>
+
+<span class="sd">@author: Christoph Paulik christoph.paulik@geo.tuwien.ac.at</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">pybufr_ecmwf</span> <span class="kn">import</span> <span class="n">raw_bufr_file</span>
+    <span class="kn">from</span> <span class="nn">pybufr_ecmwf</span> <span class="kn">import</span> <span class="n">ecmwfbufr</span>
+    <span class="kn">from</span> <span class="nn">pybufr_ecmwf</span> <span class="kn">import</span> <span class="n">ecmwfbufr_parameters</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&#39;pybufr-ecmwf can not be imported, H08 and H07 images can not be read.&#39;</span><span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="BUFRReader"><a class="viewcode-back" href="../../../../pytesmo.io.bufr.html#pytesmo.io.bufr.bufr.BUFRReader">[docs]</a><span class="k">class</span> <span class="nc">BUFRReader</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    BUFR reader based on the pybufr-ecmwf package but faster</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename : string</span>
+<span class="sd">        filename of the bufr file</span>
+<span class="sd">    kelem_guess : int, optional</span>
+<span class="sd">        if the elements per variable in as message are known</span>
+<span class="sd">        please specify here.</span>
+<span class="sd">        Otherwise the elements will be found out via trial and error</span>
+<span class="sd">        This works most of the time but is not 100 percent failsafe</span>
+<span class="sd">        Default: 500</span>
+<span class="sd">    max_tries : int, optional</span>
+<span class="sd">        the Reader will try max_tries times to unpack a bufr message.</span>
+<span class="sd">        Some messages can not be read even if the array sizes are ok.</span>
+<span class="sd">        Most of the time these files are corrupt.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">kelem_guess</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">max_tries</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bufr</span> <span class="o">=</span> <span class="n">raw_bufr_file</span><span class="o">.</span><span class="n">RawBUFRFile</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bufr</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&#39;rb&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nr_messages</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bufr</span><span class="o">.</span><span class="n">get_num_bufr_msgs</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_tries</span> <span class="o">=</span> <span class="n">max_tries</span>
+
+        <span class="k">if</span> <span class="s">&#39;BUFR_TABLES&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">ecmwfbufr</span><span class="o">.</span><span class="n">__file__</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s">&quot;BUFR_TABLES&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;ecmwf_bufrtables&#39;</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">)</span>
+            <span class="c"># os.environ[&#39;PRINT_TABLE_NAMES&#39;] = &quot;false&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">size_ksup</span> <span class="o">=</span> <span class="n">ecmwfbufr_parameters</span><span class="o">.</span><span class="n">JSUP</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size_ksec0</span> <span class="o">=</span> <span class="n">ecmwfbufr_parameters</span><span class="o">.</span><span class="n">JSEC0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size_ksec1</span> <span class="o">=</span> <span class="n">ecmwfbufr_parameters</span><span class="o">.</span><span class="n">JSEC1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size_ksec2</span> <span class="o">=</span> <span class="n">ecmwfbufr_parameters</span><span class="o">.</span><span class="n">JSEC2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size_key</span> <span class="o">=</span> <span class="n">ecmwfbufr_parameters</span><span class="o">.</span><span class="n">JKEY</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size_ksec3</span> <span class="o">=</span> <span class="n">ecmwfbufr_parameters</span><span class="o">.</span><span class="n">JSEC3</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size_ksec4</span> <span class="o">=</span> <span class="n">ecmwfbufr_parameters</span><span class="o">.</span><span class="n">JSEC4</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">kelem_guess</span> <span class="o">=</span> <span class="n">kelem_guess</span>
+
+<div class="viewcode-block" id="BUFRReader.messages"><a class="viewcode-back" href="../../../../pytesmo.io.bufr.html#pytesmo.io.bufr.bufr.BUFRReader.messages">[docs]</a>    <span class="k">def</span> <span class="nf">messages</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        IOError:</span>
+<span class="sd">            if a message cannot be unpacked after max_tries tries</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        data : yield results of messages</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nr_messages</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">tries</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="n">ksup</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size_ksup</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+            <span class="n">ksec0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size_ksec0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+            <span class="n">ksec1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size_ksec1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+            <span class="n">ksec2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size_ksec2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size_key</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+            <span class="n">ksec3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size_ksec3</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+            <span class="n">ksec4</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size_ksec4</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+
+            <span class="n">kerr</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bufr</span><span class="o">.</span><span class="n">get_raw_bufr_msg</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+            <span class="n">ecmwfbufr</span><span class="o">.</span><span class="n">bus012</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>  <span class="c"># input</span>
+                              <span class="n">ksup</span><span class="p">,</span>  <span class="c"># output</span>
+                              <span class="n">ksec0</span><span class="p">,</span>  <span class="c"># output</span>
+                              <span class="n">ksec1</span><span class="p">,</span>  <span class="c"># output</span>
+                              <span class="n">ksec2</span><span class="p">,</span>  <span class="c"># output</span>
+                              <span class="n">kerr</span><span class="p">)</span>  <span class="c"># output</span>
+
+            <span class="n">kelem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kelem_guess</span>
+            <span class="n">ksup_first</span> <span class="o">=</span> <span class="n">ksup</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+            <span class="n">kvals</span> <span class="o">=</span> <span class="n">ksup_first</span> <span class="o">*</span> <span class="n">kelem</span>
+            <span class="n">max_kelem</span> <span class="o">=</span> <span class="mi">500000</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">init_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">kvals</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cvals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">kvals</span><span class="p">,</span> <span class="mi">80</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">character</span><span class="p">)</span>
+            <span class="c"># try to expand bufr message with the first guess for</span>
+            <span class="c"># kelem</span>
+            <span class="n">increment_arraysize</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">while</span> <span class="n">increment_arraysize</span><span class="p">:</span>
+                <span class="n">cnames</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">kelem</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s">&#39;|S1&#39;</span><span class="p">)</span>
+                <span class="n">cunits</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">kelem</span><span class="p">,</span> <span class="mi">24</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s">&#39;|S1&#39;</span><span class="p">)</span>
+                <span class="n">ecmwfbufr</span><span class="o">.</span><span class="n">bufrex</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>  <span class="c"># input</span>
+                                 <span class="n">ksup</span><span class="p">,</span>  <span class="c"># output</span>
+                                 <span class="n">ksec0</span><span class="p">,</span>  <span class="c"># output</span>
+                                 <span class="n">ksec1</span><span class="p">,</span>  <span class="c"># output</span>
+                                 <span class="n">ksec2</span><span class="p">,</span>  <span class="c"># output</span>
+                                 <span class="n">ksec3</span><span class="p">,</span>  <span class="c"># output</span>
+                                 <span class="n">ksec4</span><span class="p">,</span>  <span class="c"># output</span>
+                                 <span class="n">cnames</span><span class="p">,</span>  <span class="c"># output</span>
+                                 <span class="n">cunits</span><span class="p">,</span>  <span class="c"># output</span>
+                                 <span class="bp">self</span><span class="o">.</span><span class="n">init_values</span><span class="p">,</span>  <span class="c"># output</span>
+                                 <span class="bp">self</span><span class="o">.</span><span class="n">cvals</span><span class="p">,</span>  <span class="c"># output</span>
+                                 <span class="n">kerr</span><span class="p">)</span>  <span class="c"># output</span>
+                <span class="c"># no error - stop loop</span>
+                <span class="k">if</span> <span class="n">kerr</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">ksec4</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">increment_arraysize</span> <span class="o">=</span> <span class="bp">False</span>
+                <span class="c"># error increase array size and try to unpack again</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">tries</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">if</span> <span class="n">tries</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_tries</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s">&#39;This file seems corrupt&#39;</span><span class="p">)</span>
+                    <span class="n">kelem</span> <span class="o">=</span> <span class="n">kelem</span> <span class="o">*</span> <span class="mi">5</span>
+                    <span class="n">kvals</span> <span class="o">=</span> <span class="n">ksup_first</span> <span class="o">*</span> <span class="n">kelem</span>
+
+                    <span class="k">if</span> <span class="n">kelem</span> <span class="o">&gt;</span> <span class="n">max_kelem</span><span class="p">:</span>
+                        <span class="n">kelem</span> <span class="o">=</span> <span class="n">kvals</span> <span class="o">/</span> <span class="mi">2</span>
+                        <span class="n">max_kelem</span> <span class="o">=</span> <span class="n">kvals</span>
+
+                    <span class="bp">self</span><span class="o">.</span><span class="n">init_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">kvals</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">cvals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">kvals</span><span class="p">,</span> <span class="mi">80</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">character</span><span class="p">)</span>
+
+            <span class="n">decoded_values</span> <span class="o">=</span> <span class="n">ksup</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+            <span class="c"># set kelem_guess to decoded values of last message</span>
+            <span class="c"># only increases reading speed if all messages are the same</span>
+            <span class="c"># not sure if this is the best option</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kelem_guess</span> <span class="o">=</span> <span class="n">decoded_values</span>
+            <span class="n">decoded_msg</span> <span class="o">=</span> <span class="n">ksup</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+            <span class="c"># calculate first dimension of 2D array</span>
+            <span class="n">factor</span> <span class="o">=</span> <span class="n">kvals</span> <span class="o">/</span> <span class="n">kelem</span>
+
+            <span class="c"># reshape and trim the array to the actual size of the data</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_values</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">factor</span><span class="p">,</span> <span class="n">kelem</span><span class="p">))</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="p">[:</span><span class="n">decoded_msg</span><span class="p">,</span> <span class="p">:</span><span class="n">decoded_values</span><span class="p">]</span>
+
+            <span class="k">yield</span> <span class="n">values</span>
+</div>
+    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">trace</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bufr</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">pytesmo 0.2.0 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Vienna University of Technology, Department of Geodesy and Geoinformation.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.
+    </div>
+  </body>
+</html>
