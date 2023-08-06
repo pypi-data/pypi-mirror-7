@@ -1,0 +1,44 @@
+{% extends 'widgets/chartjs/base.html' %}
+
+{% block content %}
+    <canvas id="ChartJS{{ element_pk }}"></canvas>
+{% endblock content %}
+
+{% block javascript %}
+    <script>
+        function initialize{{ element_pk }}(){
+            var canvas = $("#ChartJS{{ element_pk }}");
+            var context = canvas.get(0).getContext('2d');
+            var container = canvas.parent();
+            var chart = null;
+            var original_data = JSON.parse("{{ original_data|escapejs }}");
+
+            {% if javascript_enabled %}
+                {{ javascript_code|safe }}
+            {% else %}
+                var data = original_data;
+            {% endif %}
+
+            $(window).resize(resizeCanvas);
+
+            function resizeCanvas(){
+                canvas.attr('width', $(container).width());
+                canvas.attr('height', $(container).height());
+
+                if (chart) {
+                    chart.destroy();
+                }
+                chart = new Chart(context).Radar(data, {
+                    pointLabelFontColor : "#fff",
+                    pointLabelFontFamily : "'Raleway'",
+                    tooltipFontFamily: "'Raleway', sans-serif",
+                    tooltipTitleFontFamily: "'Raleway', sans-serif",
+                    angleLineColor : "rgba(240, 240, 240, .1)",
+                });
+            }
+            resizeCanvas();
+        }
+
+        initialize{{ element_pk }}();
+    </script>
+{% endblock javascript %}

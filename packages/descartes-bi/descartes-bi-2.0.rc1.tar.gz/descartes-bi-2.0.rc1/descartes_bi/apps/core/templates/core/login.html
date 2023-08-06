@@ -1,0 +1,166 @@
+{% load i18n %}
+{% load static %}
+
+{% load autoadmin_tags %}
+{% load project_tags %}
+
+{% load compress %}
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+        <title>{% project_name %}:: {% trans 'Login' %}</title>
+
+        {% compress css %}
+            <link href="{% static 'core/packages/bootstrap-3.2.0-dist/css/bootstrap.min.css' %}" rel="stylesheet">
+            <link href="{% static 'core/packages/font-awesome-4.1.0/css/font-awesome.min.css' %}" rel="stylesheet">
+            <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+            <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+            <!--[if lt IE 9]>
+              <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+              <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+            <![endif]-->
+
+            <link href="//fonts.googleapis.com/css?family=Raleway:100,200,300,400,500,600,700,800,900" rel="stylesheet" type="text/css">
+
+            <style type="text/css">
+                html {
+                    background: url("{% static 'core/images/backgrounds/minimalistic_violet_purple_blue_artwallpaperhi_com.jpg' %}") no-repeat center center fixed;
+                    -webkit-background-size: cover;
+                    -moz-background-size: cover;
+                    -o-background-size: cover;
+                    background-size: cover;
+                    color: white;
+                    text-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
+                }
+
+                body {
+                    background: rgba(0, 0, 0, 0);
+                    color: white;
+                    text-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
+                    font-family: 'Raleway';
+                }
+
+                .modal-content {
+                    background: rgba(0, 0, 0, 0.1);
+                }
+
+                .form-control {
+                    background: rgba(0, 0, 0, 0);
+                    color: white;
+                }
+
+                .form-control::-moz-placeholder {
+                  color: rgba(255, 255, 255, 0.5);
+                }
+
+                .form-control:-ms-input-placeholder {
+                  color: rgba(255, 255, 255, 0.5);
+                }
+
+                .form-control::-webkit-input-placeholder {
+                  color: rgba(255, 255, 255, 0.5);
+                }
+
+                textarea:focus, input[type="text"]:focus, input[type="password"]:focus, input[type="datetime"]:focus, input[type="datetime-local"]:focus, input[type="date"]:focus, input[type="month"]:focus, input[type="time"]:focus, input[type="week"]:focus, input[type="number"]:focus, input[type="email"]:focus, input[type="url"]:focus, input[type="search"]:focus, input[type="tel"]:focus, input[type="color"]:focus, .uneditable-input:focus {
+                    border-color: rgba(255, 255, 0, 0.8);
+                    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset, 0 0 8px rgba(255, 255, 0, 0.6);
+                    outline: 0 none;
+                }
+
+                .modal-footer { border-top: 0px; }
+
+                .modal-header {
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+                }
+
+                .panel {
+                    background: rgba(0, 0, 0, 0.1);
+                    border: 1px solid rgba(0, 0, 0, 0.2);
+                    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset, 0 0 8px rgba(0, 0, 0, 0.6);
+                }
+
+                .panel-heading {
+                    background-color: rgba(0, 0, 0, 0.1);
+                    color: white;
+                }
+
+                .btn {
+                    background: rgba(0, 0, 0, 0.1);
+                    border: 1px solid rgba(0, 0, 0, 0.1);
+                }
+
+                .btn:hover {
+                    background: rgba(255, 255, 255, 0.1);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                }
+            </style>
+        {% endcompress %}
+    </head>
+
+    <body>
+        {% auto_admin_properties %}
+        {% if auto_admin_properties.account %}
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-6 col-md-offset-3">
+                        <br>
+                        <div class="panel">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">{% trans 'First time login' %}</h3>
+                            </div>
+                            <div class="panel-body">
+                                <div class="content login">
+                                    <p>{% trans 'You have just finished installing <strong>Descartes BI</strong>, congratulations!' %}</p>
+                                    <p>{% trans 'Login using the following credentials:' %}</p>
+                                    <p>{% blocktrans with auto_admin_properties.account as account %}Username: <strong>{{ account }}</strong>{% endblocktrans %}</p>
+                                    <p>{% blocktrans with auto_admin_properties.account.email as email %}Email: <strong>{{ email }}</strong>{% endblocktrans %}</p>
+                                    <p>{% blocktrans with auto_admin_properties.password as password %}Password: <strong>{{ password }}</strong>{% endblocktrans %}</p>
+                                    <p>{% trans 'Be sure to change the password to increase security and to disable this message.' %}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+
+        <div id="loginModal" class="" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h1 class="text-center">{% trans 'Login' %}</h1>
+                    </div>
+                    {{ form.non_field_errors }}
+
+                    <div class="modal-body">
+                        <form class="form col-md-12 center-block" action="#" method="post">{% csrf_token %}
+                            <div class="form-group">
+                                {{ form.username.errors }}
+                                <input type="text" class="form-control input-lg" id="username" name="username" placeholder="{% trans 'Username' %}">
+                            </div>
+                            <div class="form-group">
+                                {{ form.password.errors }}
+                                <input type="password" class="form-control input-lg" id="password" name="password" placeholder="{% trans 'Password' %}">
+                            </div>
+                            <div class="form-group">
+                                <button class="btn btn-primary btn-lg btn-block">{% trans 'Sign In' %}</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="col-md-12">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="{% static 'core/packages/bootstrap-3.2.0-dist/js/bootstrap.min.js' %}"></script>
+    </body>
+</html>

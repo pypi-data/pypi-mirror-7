@@ -1,0 +1,33 @@
+{% load static %}
+
+<script src="{% static 'widgets/packages/raphael-min.js' %}"></script>
+<script src="{% static 'widgets/packages/justgage-master/justgage.js' %}"></script>
+
+<div id="gauge{{ element_pk }}" style="width: 100%; height: 100%;"></div>
+
+<script>
+    function initialize{{ element_pk }}(){
+        var data{{ element_pk }} = JSON.parse("{{ original_data|escapejs }}");
+
+        {% if javascript_enabled %}
+            {{ javascript_code|safe }}
+        {% endif %}
+
+        var gauge{{ element_pk }} = new JustGage({
+            id: "gauge{{ element_pk }}",
+            value: data{{ element_pk }},
+            titleFontColor: 'white',
+            labelFontColor: 'white',
+            valueFontColor: 'white',
+            gaugeColor: 'rgba(0, 0, 0, .3)',
+            levelColors: ['white'],
+            min: {{ minimum }},
+            max: {{ maximum }},
+            title: '{{ title }}',
+            label: '{{ legend }}',
+            relativeGaugeSize: true,
+        });
+    }
+
+    initialize{{ element_pk }}();
+</script>

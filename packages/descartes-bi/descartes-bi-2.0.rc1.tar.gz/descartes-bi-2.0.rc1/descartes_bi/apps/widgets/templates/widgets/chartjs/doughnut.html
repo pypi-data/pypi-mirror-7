@@ -1,0 +1,53 @@
+{% extends 'widgets/chartjs/base.html' %}
+
+{% block content %}
+    <canvas id="ChartJS{{ element_pk }}"></canvas>
+{% endblock content %}
+
+{% block javascript %}
+    <script>
+        function initialize{{ element_pk }}(){
+            var canvas = $("#ChartJS{{ element_pk }}");
+            var context = canvas.get(0).getContext('2d');
+            var container = canvas.parent();
+            var chart = null;
+            var data = JSON.parse("{{ original_data|escapejs }}");
+
+            {% if javascript_enabled %}
+                {{ javascript_code|safe }}
+            {% endif %}
+
+            colorValue = 255;
+
+            $.each(data, function(index, value) {
+                colorValue = colorValue - 10;
+                if (colorValue < 0) {
+                    colorValue = 255;
+                }
+                $.extend(true, data[index], {
+                    color: 'rgba(' + colorValue + ',' + colorValue + ',' + colorValue + ',' + '0.1)',
+                    highlight: 'rgba(' + colorValue + ',' + colorValue + ',' + colorValue + ',' + '.5)',
+                });
+            });
+
+            $(window).resize(resizeCanvas);
+
+            function resizeCanvas(){
+                canvas.attr('width', $(container).width());
+                canvas.attr('height', $(container).height());
+
+                if (chart) {
+                    chart.destroy();
+                }
+                chart = new Chart(context).Doughnut(data, {
+                    tooltipFontFamily: "'Raleway', sans-serif",
+                    tooltipTitleFontFamily: "'Raleway', sans-serif",
+
+                });
+            }
+            resizeCanvas();
+        }
+
+        initialize{{ element_pk }}();
+    </script>
+{% endblock javascript %}
