@@ -1,0 +1,33 @@
+{% extends "rpt_base.html" %}
+{% load staticfiles %}
+
+{% block header %}
+<h1><a href="{{ dataset.get_absolute_url }}">DataSet Details: {{ dataset.hr_name }}</a></h1>
+{% endblock %}
+
+{% block content %}
+{% if dataset %}
+
+    <!-- concise read-only elements -->
+    <ul>
+        {% if dataset.status %}<li>Status: {{ dataset.get_status_display|lower|capfirst }}</li>{% endif %}
+        <li>Reporting Universe: <a href="{{ dataset.universe.get_absolute_url }}">{{ dataset.universe.hr_name }}</a></li>
+        {% if dataset.start %}<li>Started: {{ dataset.start }}</li>{% endif %}
+        {% if dataset.complete %}<li>Completed: {{ dataset.complete }}</li>
+            {%if dataset.archive_path %}<li><a href="{{ dataset.get_download_url }}">Download ZIP archive of this dataset</a></li>{% endif %}
+        {% endif %}
+    </ul>
+
+    <!-- form for updates and whatnot -->
+    <!--<h2>Update DataSet</h2>-->
+    <form action="{{ dataset.get_absolute_url }}" method="POST">
+        <div class="right-align-labels">
+            {% csrf_token %}
+            <ol>
+                {{ form.as_ul }}
+            </ol>
+            <input type="submit" value="Save changes" />
+        </div>
+    </form>
+{% endif %}
+{% endblock %}
