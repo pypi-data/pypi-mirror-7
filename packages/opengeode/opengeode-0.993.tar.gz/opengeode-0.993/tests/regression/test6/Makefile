@@ -1,0 +1,20 @@
+all: test-ada
+
+test-parse:
+	../../../opengeode.py myfunction.pr system_structure.pr --check
+
+test-ada:
+	../../../opengeode.py --toAda myfunction.pr system_structure.pr || exit 1
+	asn1.exe -Ada dataview-uniq.asn -typePrefix asn1Scc -equal
+	gnatmake -c myfunction.adb
+	gcc -c test.c
+	gnatbind -n myfunction.ali
+	gnatlink -o testcase test.o myfunction.ali -lgnat
+	./testcase | diff expected -
+
+coverage:
+	coverage run  -p ../../../opengeode.py myfunction.pr system_structure.pr --toAda
+
+
+clean:
+	rm -rf *.adb *.ads *.pyc runSpark.sh spark.idx *.o *.ali gnat.cfg examiner bin *.wrn *.gpr

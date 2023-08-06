@@ -1,0 +1,167 @@
+---------------------------------------------------
+-- AADL2.0
+-- TASTE
+-- (c)Ellidiss Technologies
+-- 
+---------------------------------------------------
+
+PACKAGE interfaceview::FV::og
+PUBLIC
+
+WITH Taste;
+WITH DataView;
+WITH TASTE_IV_Properties;
+SUBPROGRAM PI_Go
+FEATURES
+  ze_param : IN PARAMETER DataView::My_OctStr {
+    Taste::encoding => NATIVE;
+  };
+PROPERTIES
+  Taste::Associated_Queue_Size => 1;
+END PI_Go;
+
+SUBPROGRAM IMPLEMENTATION PI_Go.others
+END PI_Go.others;
+
+SUBPROGRAM RI_rezult
+FEATURES
+  ze_rezult : IN PARAMETER DataView::My_OctStr {
+    Taste::encoding => NATIVE;
+  };
+END RI_rezult;
+
+SUBPROGRAM IMPLEMENTATION RI_rezult.others
+END RI_rezult.others;
+
+END interfaceview::FV::og;
+
+PACKAGE interfaceview::FV::mygui
+PUBLIC
+
+WITH Taste;
+WITH DataView;
+WITH TASTE_IV_Properties;
+SUBPROGRAM PI_rezult
+FEATURES
+  ze_rezult : IN PARAMETER DataView::My_OctStr {
+    Taste::encoding => NATIVE;
+  };
+PROPERTIES
+  Taste::Associated_Queue_Size => 1;
+END PI_rezult;
+
+SUBPROGRAM IMPLEMENTATION PI_rezult.others
+END PI_rezult.others;
+
+SUBPROGRAM RI_go
+FEATURES
+  ze_param : IN PARAMETER DataView::My_OctStr {
+    Taste::encoding => NATIVE;
+  };
+END RI_go;
+
+SUBPROGRAM IMPLEMENTATION RI_go.others
+END RI_go.others;
+
+END interfaceview::FV::mygui;
+
+PACKAGE interfaceview::IV
+PUBLIC
+
+WITH interfaceview::FV::og;
+WITH interfaceview::FV::mygui;
+WITH interfaceview::FV;
+WITH Taste;
+WITH DataView;
+WITH TASTE_IV_Properties;
+SYSTEM og
+FEATURES
+  PI_Go : PROVIDES SUBPROGRAM ACCESS interfaceview::FV::og::PI_Go.others {
+    Taste::coordinates => "1302 374";
+    Taste::RCMoperationKind => sporadic;
+    Taste::RCMperiod => 0 ms;
+    Taste::Deadline => 0 ms;
+    Taste::InterfaceName => "Go";
+  };
+  RI_rezult : REQUIRES SUBPROGRAM ACCESS interfaceview::FV::mygui::PI_rezult.others {
+    Taste::coordinates => "1302 762";
+    Taste::RCMoperationKind => sporadic;
+    Taste::InterfaceName => "rezult";
+    Taste::labelInheritance => "true";
+  };
+PROPERTIES
+  Source_Language => (SDL);
+END og;
+
+SYSTEM IMPLEMENTATION og.others
+SUBCOMPONENTS
+  Go_impl : SUBPROGRAM interfaceview::FV::og::PI_Go.others {
+    Compute_Execution_Time => 0 ms .. 0 ms;
+  };
+CONNECTIONS
+  OpToPICnx_Go_impl : SUBPROGRAM ACCESS Go_impl -> PI_Go;
+END og.others;
+
+SYSTEM mygui
+FEATURES
+  PI_rezult : PROVIDES SUBPROGRAM ACCESS interfaceview::FV::mygui::PI_rezult.others {
+    Taste::coordinates => "947 762";
+    Taste::RCMoperationKind => sporadic;
+    Taste::RCMperiod => 0 ms;
+    Taste::Deadline => 0 ms;
+    Taste::InterfaceName => "rezult";
+  };
+  RI_go : REQUIRES SUBPROGRAM ACCESS interfaceview::FV::og::PI_Go.others {
+    Taste::coordinates => "947 374";
+    Taste::RCMoperationKind => sporadic;
+    Taste::InterfaceName => "go";
+    Taste::labelInheritance => "true";
+  };
+PROPERTIES
+  Source_Language => (GUI);
+END mygui;
+
+SYSTEM IMPLEMENTATION mygui.others
+SUBCOMPONENTS
+  rezult_impl : SUBPROGRAM interfaceview::FV::mygui::PI_rezult.others {
+    Compute_Execution_Time => 0 ms .. 0 ms;
+  };
+CONNECTIONS
+  OpToPICnx_rezult_impl : SUBPROGRAM ACCESS rezult_impl -> PI_rezult;
+END mygui.others;
+
+SYSTEM interfaceview
+END interfaceview;
+
+SYSTEM IMPLEMENTATION interfaceview.others
+SUBCOMPONENTS
+  og : SYSTEM interfaceview::IV::og.others {
+    Taste::coordinates => "1302 272 2045 899";
+  };
+  mygui : SYSTEM interfaceview::IV::mygui.others {
+    Taste::coordinates => "222 291 947 922";
+  };
+CONNECTIONS
+  og_Go_mygui_go : SUBPROGRAM ACCESS og.PI_Go -> mygui.RI_go {
+    Taste::coordinates => "947 374 1124 374 1124 374 1302 374";
+  };
+  mygui_rezult_og_rezult : SUBPROGRAM ACCESS mygui.PI_rezult -> og.RI_rezult {
+    Taste::coordinates => "1302 762 1124 762 1124 762 947 762";
+  };
+END interfaceview.others;
+
+PROPERTIES
+  Taste::dataView => ("DataView");
+  Taste::dataViewPath => ("DataView.aadl");
+  Taste::coordinates => "0 0 2970 2100";
+  Taste::version => "1.3.13";
+END interfaceview::IV;
+
+PACKAGE interfaceview::FV
+PUBLIC
+
+WITH Taste;
+WITH DataView;
+WITH TASTE_IV_Properties;
+END interfaceview::FV;
+
