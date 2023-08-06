@@ -1,0 +1,83 @@
+#!/usr/bin/python
+import os
+import signal
+import subprocess
+
+from baker import command
+from blackdog import BlackDog, HTTPServer, PluginStage, ServerAlreadyRunningException, ServerNotRunningException
+
+
+@command(shortopts={'port': 'p', 'nodaemon': 'n'})
+def start(port=8140, nodaemon=False):
+    bd = BlackDog.instance
+
+    if not nodaemon:
+        if bd.is_server_running():
+            raise ServerAlreadyRunningException()
+
+        bd.logger.info('Starting server...')
+
+        logfile = open(os.path.expanduser('~/.blackdog/blackdog.log'), 'w')
+        daemon = subprocess.Popen(['nohup', 'blackdog', 'start',
+                                   '--nodaemon',
+                                   '--port', str(port)],
+                                  stdout=logfile, stderr=logfile)
+
+        with open(bd.pidfile, 'w') as f:
+            f.write(str(daemon.pid))
+
+        return
+
+    with HTTPServer(port) as server:
+        bd.logger.info('Starting server...')
+        server.serve_forever()
+
+
+@command
+def stop():
+    bd = BlackDog.instance
+    if not bd.is_server_running():
+        raise ServerNotRunningException()
+    bd.logger.info('Stopping server...')
+    os.kill(bd.get_server_pid(), signal.SIGTERM)
+
+
+@command
+def scan(*args):
+    bd = BlackDog.instance
+    stages = []
+    for stage in args:
+        stages.append(PluginStage.from_string(stage))
+
+    if len(stages) == 0:
+        bd.bukkitdev.scan()
+    else:
+        bd.bukkitdev.scan(stages)
+
+@command
+def get(plugin, version=None):
+    bd = BlackDog.instance
+    bd.bukkitdev.get_plugin(plugin, version)
+
+@command(shortopts={'page': 'p', 'category': 'c', 'stage': 's'})
+def search(search, page=None, category=None, stage=None):
+    bd = BlackDog.instance
+    kwargs = {}
+    if page:
+        kwargs['page'] = page
+    if category:
+        kwargs['category'] = category
+    if stage:
+        kwargs['stage'] = stage
+
+    plugins = bd.bukkitdev.search(search=search, **kwargs)
+    print('{0:32} Stage'.format('Plugin'))
+
+    for plugin in plugins:
+        name = plugin.display_name()
+        if len(plugin.display_name()) > 32:
+            name = plugin.display_name()[0:29]+'...'
+        print('{0:32} {1}'.format(name, plugin.stage().name.capitalize()))
+
+if __name__ == '__main__':
+    BlackDog().main()
