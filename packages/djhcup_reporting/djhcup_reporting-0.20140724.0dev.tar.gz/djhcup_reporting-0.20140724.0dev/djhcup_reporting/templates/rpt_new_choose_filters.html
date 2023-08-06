@@ -1,0 +1,281 @@
+{% extends "rpt_base.html" %}
+{% load staticfiles %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/home/terry/projects/hcup_hachoir/hcup_hachoir_django/djhcup_reporting/js/jqueryui/jquery-ui.min.css" />
+<style type="text/css">
+div.filtergroup {
+    padding: 0.5em 1.0em;
+    border: 1px solid #ccc;
+}
+ul.filter_list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+ul.filter_list li {
+    margin: 0.25em auto;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static "js/jqueryui/external/jquery/jquery.js" %}"></script>
+<script src="{% static "js/jqueryui/jquery-ui.min.js" %}"></script>
+<script type="text/javascript">
+filterGroupsIncrement = 0
+lookups = []
+
+/* test values */
+/*
+arrFields = [
+    {"label": "Lookup: Diagnoses", "options": [
+        {"value": "myValue", "display": "myDisplay"},
+        {"value": "myOtherValue", "display": "myOtherDisplay"}
+    ]}
+]
+arrOperators = [
+    {"value": "myValue123", "display": "myDisplay4"},
+    {"value": "myOtherValue798", "display": "myOtherDisplay235"}
+]
+*/
+
+
+/* real values */
+arrFields = {{ json_fields|safe }}
+arrOperators = {{ json_operators|safe }}
+
+$(document).on('click', "input.add_filter", function(){
+    var groupNumber = filterGroupsIncrement + 1;
+    triggeredBy = $( this );
+    jqList = triggeredBy.parent().children( "ul.filter_list" );
+    add_filter(jqList, groupNumber, arrFields, arrOperators);
+});
+
+
+$(document).on('click', "input.to_json", function(){
+    jqDiv = $( "#top_level_filtergroup" );
+    alert(filtergroups_to_json(jqDiv));
+});
+
+filter_form_id = "filter_form";
+
+$(document).on('submit', '#' + filter_form_id , function(event) {
+    var jqForm = $( '#' + filter_form_id );
+    var jqDiv = jqForm.children( '#top_level_filtergroup' );
+    var filter_json = filtergroups_to_json(jqDiv);
+    
+    // tuck the prepared JSON into a hidden input
+    var jsonInput = $( "<input/>", {
+        "class": "gathered_json",
+        "name": "filter_json",
+        "type": "hidden",
+        "value": filter_json
+    });
+    
+    // append said input to the form
+    jqForm.append(jsonInput);
+    
+    // this is commented out so that the form submission continues
+    // event.preventDefault();
+});
+
+
+$(document).ready( function() {
+    for (var i=0; i<3; i++) {
+        $( "input.add_filter" ).trigger( "click" );
+    }
+});
+
+
+function add_filter(jqList, intFilterGroupNumber, arrFields, arrOperators) {
+    /* build select object and append with respective options */
+    var fieldSelect = $( "<select/>", {
+        "class": "filter_field",
+        "name": "filter_field[]"
+    });
+    fieldSelect.append( "<option value='null'>Field</option>" );
+    
+    /* build list of field options */
+    for (var i=0; i<arrFields.length; i++ ){
+        /* these have option groups based on the table they're from */
+        var arrOptions = arrFields[i]['options'];
+        var optGroup = $("<optgroup/>", {
+            "label": arrFields[i]['label']
+        });
+        
+        /*
+        # each option group has members.
+        # collect them as options and push back into the option group
+        */
+        var arrGroupOptions = [];
+        for (var j=0; j<arrOptions.length; j++ ){
+            var fieldValue
+            var fieldDisplay
+            var arrFieldOptions = [];
+            fieldValue = arrOptions[j]['value'];
+            fieldDisplay = arrOptions[j]['display'];
+            arrGroupOptions.push("<option value='" + fieldValue + "'>" + fieldDisplay + "</option>");
+        }
+        optGroup.html(arrGroupOptions.join());
+        fieldSelect.append(optGroup);
+    }
+    
+    var arrOperatorOptions = [];
+    var operatorValue
+    var operatorDisplay
+    
+    /* build list of field options */
+    for (var i=0; i<arrOperators.length; i++ ){
+        operatorValue = arrOperators[i]['value'];
+        operatorDisplay = arrOperators[i]['display'];
+        arrOperatorOptions.push("<option value='" + operatorValue + "'>" + operatorDisplay + "</option>");
+    }
+    
+    
+    /* build select object and append with respective options */
+    var operatorSelect = $( "<select/>", {
+        "class": "filter_operator",
+        "name": "filter_operator[]"
+    });
+    operatorSelect.append( "<option value='null'>Operator</option>" );
+    operatorSelect.append(arrOperatorOptions.join());
+    
+    /* instatiate text field as well */
+    var valuesTextfield = $( "<input/>", {
+        "class": "filter_values",
+        "name": "filter_values[]",
+        "type": "text"
+    });
+    
+    /* create list item and fill with form fields */
+    var filterListItem = $( "<li/>", {
+        "class": "filter"
+    });
+    filterListItem.append(fieldSelect);
+    filterListItem.append(operatorSelect);
+    filterListItem.append(valuesTextfield);
+    
+    jqList.append(filterListItem);
+};
+
+/* 
+Gather all the filters, then get a filter_field, filter_operator, and filter_values from each?
+*/
+function filtergroup_gather(jqDiv) {
+    var filters = jqDiv.children( "ul.filter_list" ).children( "li.filter" );
+    var arrFilterGroup = {};
+    var operatorAny = false;
+    var checkedOpRadio = $(jqDiv).children( " input:radio.filtergroup_op:checked ")
+    if (
+    checkedOpRadio.length &&
+    checkedOpRadio.val() == "any"
+    ){
+        operatorAny = true;
+    }
+    arrFilterGroup["any"] = operatorAny;
+    
+    arrFilterGroup["filters"] = [];
+    for (var i=0; i<filters.length; i++) {
+        var li = $( filters[i] );
+        var arrFilterBits = [
+            li.children( ".filter_field" ).val(),
+            li.children( ".filter_operator" ).val(),
+            li.children( ".filter_values" ).val()
+        ]
+        
+        /* push bits array into filters array if everything is there */
+        if (
+        arrFilterBits[0] != 'null' &&
+        arrFilterBits[1] != 'null' &&
+        arrFilterBits[2] != ''
+        ) {
+            arrFilterGroup["filters"].push({
+                "field": arrFilterBits[0],
+                "operator": arrFilterBits[1],
+                "values": arrFilterBits[2]
+            });
+        }
+    }
+    
+    var subFilterGroups = jqDiv.children( "div.filter_group" );
+    arrFilterGroup["subfiltergroups"] = []
+    for (var i=0; i<subFilterGroups.length; i++ ) {
+        var div = $( subFilterGroups[i] );
+        arrFilterGroup["subfiltergroups"].push(filtergroup_to_json( div ));
+    }
+
+    return { "filtergroup": arrFilterGroup };
+}
+
+
+function filtergroups_to_json(jqDiv) {
+    /* gathers up filtergroups and emits a JSON conversion */
+    var gathered = filtergroup_gather(jqDiv);
+    var jsons = JSON.stringify(gathered);
+    return jsons;
+}
+
+
+/*
+TODO: Consider putting in discrete value fields (multiple text boxes), with buttons to add more, etc.
+*/
+</script>
+{% endblock %}
+
+{% block content %}
+<div>
+{% with dtbl=universe.data.via %}
+    {% if dtbl %}
+        <h4>Data Table</h4>
+        <ul>
+            {% with def=dtbl.definition %}
+                <li>Definition {{ def.pk }}: {{ def.data_source.abbreviation }} {{ def.category }}</li>
+            {% endwith %}
+            {% with ed=dtbl.edition %}
+                <li>Edition {{ ed.pk }}: {{ ed.name }} ({{ ed.created_at }})</li>
+            {% endwith %}
+            <li>Database Object: {{ dtbl.name }}</li>
+        </ul>
+    {% endif %}
+{% endwith %}
+{% with lu_all=universe.lookups.all  %}
+    {% if lu_all|length > 0 %}
+        <h4>Available Lookup Tables</h4>
+        <ul class="lookup_list">
+            {% for lu in lu_all %}
+            <li>{{ lu.name }}
+                <ul>
+                    {% with def=lu.via.definition %}
+                        <li>Definition {{ def.pk }}: {{ def.data_source.abbreviation }} {{ def.category }}</li>
+                    {% endwith %}
+                    {% with ed=lu.via.edition %}
+                        <li>Edition {{ ed.pk }}: {{ ed.name }} ({{ ed.created_at }})</li>
+                    {% endwith %}
+                    <li>Database Object: {{ lu.via.name }}</li>
+                </ul>
+            </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No lookups in this universe.</p>
+    {% endif %}
+{% endwith %}
+</div>
+
+<ol>
+    <li>Filter on any of the columns represented by Column objects.</li>
+    <li>Add these dynamically, and finally concatenate a JSON string with the contents.</li>
+</ol>
+
+<form id="filter_form" method="POST" action="?universe_pk={{ universe.pk }}">{% csrf_token %}
+<div class="filtergroup top_level_filtergroup" id="top_level_filtergroup">
+    <input type="radio" name="filtergroup_op[]" class="filtergroup_op" value="or" checked="checked" />Match any
+    <br /><input type="radio" name="filtergroup_op[]" class="filtergroup_op" value="all" />Match all
+    <ul class="filter_list" id="filter_list-0">
+    </ul>
+    <input type="button" value="More filters" class="add_filter" />
+</div>
+<input type="submit" value="Continue" />
+</form>
+{% endblock %}
