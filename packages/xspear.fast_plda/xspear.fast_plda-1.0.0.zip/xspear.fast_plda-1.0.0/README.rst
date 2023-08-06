@@ -1,0 +1,59 @@
+Toolchain for fast and scalable PLDA
+====================================
+
+This package contains scripts that run the fast and scalable PLDA that was introduced in [1]. The package uses the framework of Bob `Spear` for handling the protocol, the toolchain and doing the post-processing (whitening and length-normalization). 
+
+If you use this package and/or its results, please you must cite the following publications:
+
+[1] The original Fast PLDA paper published at S+SSPR 2014::
+
+    @inproceedings{Sizov,
+      author = {Sizov, A and Lee, K.A. and Kinnunen, T.},
+      title = {Unifying Probabilistic Linear Discriminant Analysis Variants in Biometric Authentication},
+      booktitle = {Proc. S+SSPR},
+      year = {2014},
+      url = {to appear},
+    }
+
+
+[2] The Spear paper published at ICASSP 2014::
+
+    @inproceedings{spear,
+      author = {Khoury, E. and El Shafey, L. and Marcel, S.},
+      title = {Spear: An open source toolbox for speaker recognition based on {B}ob},
+      booktitle = {IEEE Intl. Conf. on Acoustics, Speech and Signal Processing (ICASSP)},
+      year = {2014},
+      url = {http://publications.idiap.ch/downloads/papers/2014/Khoury_ICASSP_2014.pdf},
+    }
+
+
+Installation
+------------
+
+Just download this package and decompress it locally::
+
+  $ wget http://pypi.python.org/packages/source/x/xspear.fast_plda/xspear.fast_plda-1.0.0.zip
+  $ unzip xspear.fast_plda-1.0.0.zip
+  $ cd xspear.fast_plda-1.0.0.zip
+
+Use buildout to bootstrap and have a working environment ready for
+experiments::
+
+  $ python bootstrap
+  $ ./bin/buildout
+
+This also requires that bob (>= 1.2.0) is installed.
+
+
+Example of use
+--------------
+
+The following command is intended to run the entire experiment for a protocol defined in "protocol.py"::
+
+  $  bin/ivec_whitening_lnorm.py -d protocol.py -t config/fast_plda.py -T PATH/TO/TEMP_DIR -U PATH/TO/RESULTS_DIR 
+  
+For more details and options, please type::
+
+  $ bin/ivec_whitening_lnorm.py --help  
+
+.. _Spear: https://pypi.python.org/pypi/bob.spear/
