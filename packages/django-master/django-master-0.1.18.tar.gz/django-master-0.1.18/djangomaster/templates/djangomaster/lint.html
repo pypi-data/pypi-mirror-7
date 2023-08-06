@@ -1,0 +1,41 @@
+{% extends 'djangomaster/_single_col.html' %}
+{% load url from future %}
+
+{% block page_title %}{{page_title}}{% endblock %}
+
+
+{% block content %}
+
+    {% if not LINT_IS_INSTALLED %}
+        <p>{{ LINT_CMD }} isn't installed.</p>
+    {% elif not settings.BASE_DIR %}
+        <p>settings.BASE_DIR isn't define. Please, <a href="{% url 'djangomaster:home' %}#requirements">add it</a>.</p>
+    {% endif %}
+
+
+    {% if results %}
+        <p>Executing {{ LINT_CMD }}.</p>
+    {% endif %}
+
+    <div class="pure-5-5">
+        {% for result in results %}
+            {% if result.result %}
+                <div>{{ result.filename }} {% if not result.result %}=){% endif %}</div>
+                <div style="margin-left: 10px;">
+                    <small><pre>{{ result.result }}</pre></small>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <h4>Files with no output</h4>
+    <div class="pure-5-5">
+        {% for result in results %}
+            {% if not result.result %}
+                <div>{{ result.filename }}</div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+
+{% endblock %}
