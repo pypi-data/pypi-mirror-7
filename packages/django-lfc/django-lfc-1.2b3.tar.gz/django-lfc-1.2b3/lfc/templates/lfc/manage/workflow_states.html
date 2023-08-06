@@ -1,0 +1,34 @@
+{% load i18n %}
+
+<h2 class="first-heading">{% trans "States" %}</h2>
+
+{% for state in workflow.states.all %}
+    <h3>
+        <a class="delete-link" href="{% url 'lfc_manage_delete_workflow_state' state.id %}">
+            <img class="icon" src="{{ STATIC_URL }}lfc/icons/cancel.png" />
+        </a>
+        <a class="ajax-link" href="{% url 'lfc_manage_state' state.id %}">
+            {% trans state.name %}
+
+        </a>
+    </h3>
+    <div style="padding: 0 0 10px 0">
+        {% for transition in state.transitions.all %}
+            <div style="padding: 0 0 1px 20px">
+                <a class="ajax-link" href="{% url 'lfc_manage_transition' transition.id %}">
+                    {% trans transition.name %}
+                </a>
+            </div>
+        {% endfor %}
+    </div>
+{% endfor %}
+
+<h2 class="middle-heading">{% trans "Add state" %}</h2>
+
+<form action="{% url 'lfc_manage_add_workflow_state' workflow.id %}"
+      method="POST">
+    {% csrf_token %}
+    <input name="name" type="text" />
+    <input class="ajax-submit"
+           type="submit" value='{% trans "Add state" %}'/>
+</form>
