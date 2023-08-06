@@ -1,0 +1,18 @@
+#!/bin/bash -ex
+# Run bash with -e exit on first error
+
+rawbam=$1
+finalbam=$2
+mapthresh=$3 ## we prefer 1
+qc=$4
+bamwithoutchrm=$5
+finalprefix=$6
+qc2=$7
+
+samtools view -F 1804 -q ${mapthresh} -u ${rawbam} | samtools sort -m 5000000000 - ${finalprefix}
+samtools flagstat ${finalbam} > ${qc}
+samtools stats ${finalbam} > ${qc2}
+
+## utilize UCSC utility for filtering chrM sequences and sponge sequences
+edwBamFilter -sponge -chrom=chrM ${finalbam} ${bamwithoutchrm}  ## qc based on bam without chrm
+

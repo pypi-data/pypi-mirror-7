@@ -1,0 +1,28 @@
+#!/bin/bash -ex
+# Run bash with -e exit on first error, -x add +command stream to sterr.
+# Remove -x for cleaner usage message
+
+threads=$1
+index=$2
+input=$3
+rawbam=$4
+qc=$5
+prefix=$6
+qc2=$7
+
+if [ ! -s ${rawbam} ]
+then
+
+bwa aln -q 5 -l 32 -k 2 -t $threads $index $input > ${prefix}.sai
+bwa samse $index ${prefix}.sai ${input} | samtools view -Shu - | samtools sort -m 5000000000 - ${prefix}
+samtools flagstat ${rawbam} >${qc}
+#samtools stats ${rawbam} > ${qc2}
+
+## long read support ?
+# bwa mem -t6 long read.1.fq read.2.fq \
+#     | samtools view -@6 -Sub - \
+#     | tee >(samtools flagstat - > stats.out) > aln.bam
+
+rm ${prefix}.sai
+
+fi

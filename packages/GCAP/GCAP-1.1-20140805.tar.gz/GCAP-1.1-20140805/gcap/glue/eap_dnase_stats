@@ -1,0 +1,41 @@
+#!/bin/bash -ex
+# Run bash with -e exit on first error, -x add +command stream to sterr.
+#
+# This script calculates numbers related to how alignments on opposite strands relate
+# to peaks.  The arguments are:
+#  $1 - a bam file to analyse
+#  $2 - target genome
+#  $3 - read size
+#  $4 - where to put edwBamStats output
+#  $5 - where to put phantom peak line of statistical output
+#  $6 - where to put spot type output
+
+# Check command line and provide usage and version information
+if [ $# -lt 6 ];
+then echo "usage v1: eap_dnase_stats in.bam spp_exec bamStats.ra sppStats.ra pe pbc"
+exit -1; fi
+
+bamwithoutchrm=$1
+run_spp=$2
+bamstat=$3
+spp=$4
+pe=$5
+pbc=$6
+
+## sampling and evaluate bam
+Nread=15000000
+
+if [ ! -s ${bamwithoutchrm}_${Nread}.bam ]
+then
+    edwBamStats -sampleBamSize=${Nread} -u4mSize=${Nread} -sampleBam=${bamwithoutchrm}_${Nread}.bam ${bamwithoutchrm} ${bamstat}
+fi
+
+if [ ! -s ${spp} ]
+then
+    Rscript ${run_spp} -x=-500:-1 -s=-500:5:1500 -out=${spp} -rf -c=${bamwithoutchrm}_${Nread}.bam
+fi
+
+if [ ! -s ${pbc} ]
+then
+    dac_pbc $pe ${bamwithoutchrm}_${Nread}.bam > ${pbc}
+fi
