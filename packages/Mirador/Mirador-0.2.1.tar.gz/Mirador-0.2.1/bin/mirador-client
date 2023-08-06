@@ -1,0 +1,121 @@
+#!/usr/bin/env python
+# mirador command line interface
+# @author nickjacob (nick@mirador.im)
+#####
+from optparse import OptionParser
+from mirador import MiradorClient, MiradorException
+import fileinput
+import sys
+
+# there has to be a special place in hell
+# for me for putting bootstrap here...
+TPL_HEADER = """
+<!DOCTYPE html>
+<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+<div class='container'>
+    <table class='table table-striped' id='results-table'>
+        <thead>
+            <tr>
+                <th class='result-id'>ID</th>
+                <th class='result-safe'>Safe</th>
+                <th class='result-value'>Value</th>
+                <th class='result-image' width=300>Image</th>
+            </tr>
+        </thead>
+        <tbody>
+"""
+
+TPL_FOOTER = """
+        </tbody>
+    </table>
+</div>
+"""
+
+
+def parse_line(line):
+    parts = line.strip().split()
+
+    if len(parts) != 2:
+        raise MiradorException(
+            "invalid line in file: {}".format(line)
+        )
+
+    return parts
+
+
+def process_line(mc, line):
+
+    id, url = parse_line(line)
+    results = mc.classify_urls({id: url})
+
+    if not results or not len(results):
+        raise MiradorException(
+            "no result for {}!".format(line)
+        )
+
+    # if this fails, then something fucked up :o
+    res = results[id]
+    return result_tpl(res, url)
+
+
+def result_tpl(res, url):
+    # tables r so old school...but u if r gna sort it..
+    d = dict(**res.__dict__)
+    d['url'] = url
+    d['safe_class'] = 'danger' if not res.safe else 'success'
+
+    return """
+<tr class='result-row' id='{id}'>
+    <td class='result-id'>{id}</td>
+    <td class='result-safe {safe_class}'>{safe}</td>
+    <td class='result-value'>{value}</td>
+    <td class='result-image'>
+        <img src='{url}' width=300/>
+    </td>
+</tr>
+    """.format(**d)
+
+if __name__ == "__main__":
+    import logging
+    logging.basicConfig(level=logging.WARN)
+
+    parser = OptionParser(
+        usage="""
+given a file of id[tab]url, run through mirador API,
+print HTML to stdout (redirect it?)
+
+`mirador-client -k your_api_key input.urls > output.html`
+        """
+    )
+
+    parser.add_option(
+        '-k', '--api-key', dest='api_key',
+        help='your mirador.im API key')
+
+    (options, args) = parser.parse_args()
+    mc = MiradorClient(options.api_key)
+
+    if not options.api_key:
+        sys.exit('api key is reqired, -k or --api-key')
+
+    print TPL_HEADER
+
+    sys.stderr.write("[%s] processing.." % (" " * 60))
+    sys.stderr.flush()
+    sys.stderr.write("\b" * (61))
+
+    for idx, line in enumerate(fileinput.input(args)):
+
+        try:
+            print process_line(mc, line)
+        except Exception as e:
+            sys.exit(
+                "unexpected error: {} on line {}".format(e, line)
+            )
+
+        if not idx % 2:
+            sys.stderr.write('-')
+            sys.stderr.flush()
+
+    sys.stderr.write("\n")
+    print TPL_FOOTER
