@@ -1,0 +1,80 @@
+#!/usr/bin/env python
+import csv, sys, json
+from collections import OrderedDict
+
+from pluplusch import pluplusch
+from pluplusch.main import get
+
+PERSONKEYS = [
+    "id",
+    "displayName",
+    "emailUnsubscribed",
+    "privacyControl",
+    "profileLastModified",
+    "roleName",
+    "screenName",
+]
+
+def flatten(original_data):
+    out = [
+        ('id', original_data['id']),
+        ('name', original_data['name']),
+        ('attribution', original_data.get('attribution', None)),
+        ('averageRating', original_data['averageRating']),
+        ('category', original_data.get('category', None)),
+        ('createdAt', original_data.get('createdAt', None)),
+        ('description', original_data.get('description', None)),
+        ('displayType', original_data.get('displayType', None)),
+        ('downloadCount', original_data['downloadCount']),
+        ('numberOfComments', original_data['numberOfComments']),
+        ('oid', original_data['oid']),
+        ('publicationAppendEnabled', original_data['publicationAppendEnabled']),
+        ('publicationDate', original_data.get('publicationDate', None)),
+        ('publicationStage', original_data['publicationStage']),
+        ('publicationGroup', original_data.get('publicationGroup', None)),
+    #   ('rowClass', original_data['rowClass']),
+        ("rowsUpdatedBy", original_data.get('rowsUpdatedBy', None)), # parent dataset
+        ("rowsUpdatedAt", original_data.get('rowsUpdatedAt', None)), # parent dataset
+#       ('signed', original_data['signed']),
+        ('tableId', original_data['tableId']),
+        ('totalTimesRated', original_data['totalTimesRated']),
+        ('viewCount', original_data['viewCount']),
+        ('viewLastModified', original_data.get('viewLastModified', None)),
+        ('viewType', original_data['viewType']),
+    ]
+
+    if len(original_data['columns']) == 0:
+        out.append(('nrow', 0))
+    elif "cachedContents" in original_data['columns'][0]:
+        out.append(('nrow',
+            original_data['columns'][0]["cachedContents"]["non_null"] + \
+            original_data['columns'][0]["cachedContents"]["null"]))
+    else:
+        out.append(('nrow', None))
+    out.append(('ncol', len(original_data['columns'])))
+
+    for person in ['owner', 'tableAuthor']:
+        for key in PERSONKEYS:
+            out.append(('%s.%s' % (person, key), original_data[person].get(key, None)))
+        out.append(('%s.nrights' % person, len(original_data[person].get('rights', []))))
+
+    for countable in sorted(['flags', 'metadata', 'tags', 'displayFormat', 'rights']):
+        out.append(('n' + countable, len(original_data.get(countable, []))))
+
+    return OrderedDict(out)
+
+def main():
+    baseurl = 'https://data.austintexas.gov'
+    for search_result in pluplusch(catalogs = [baseurl], standardize = False):
+        response = get('%s/api/views/%s' % (baseurl, search_result['id']))
+        view = json.loads(response.text)
+        flat = flatten(view)
+        try:
+            writer
+        except NameError:
+            writer = csv.DictWriter(sys.stdout, fieldnames = flat.keys())
+            writer.writeheader()
+        writer.writerow(flat)
+
+if __name__ == '__main__':
+    main()
