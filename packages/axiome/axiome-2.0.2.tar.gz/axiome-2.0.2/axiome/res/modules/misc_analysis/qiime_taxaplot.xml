@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<axiome>
+	<plugin name="qiime_taxaplot" type="misc_analysis">
+		<!-- Define what the plugin needs -->
+		<!-- This is used to create the UI -->
+		<input>
+			<text label="Mapping Category" name="mapping_category"/>
+		</input>
+		<!-- Define what the plugin is going to do -->
+		<!-- Special variables available to "source" types: previous_output_file, current_output_file -->
+		<process>
+			<input name="otu_table.biom"/>
+			<input name="metadata_mapping.txt"/>
+			<output name="taxa_summary_plots/bar_charts.html" report_label="Taxonomy Plot Bar Chart${v}" report_variable=" Grouped By ${mapping_category}"/>
+			<output name="taxa_summary_plots/area_charts.html" report_label="Taxonomy Plot Area Chart${v}" report_variable=" Grouped By ${mapping_category}"/>
+			<command label="Summarize Taxonomy through Plots" cmd="summarize_taxa_through_plots.py -f -i ${i} -o ${v} -m ${i} ${v}" input="otu_table.biom,metadata_mapping.txt" variable="${PWD},-c ${mapping_category}"/>
+		</process>
+		<!-- Version check command for involved programs -->
+		<info>
+			<command label="QIIME Version" cmd="print_qiime_config.py | grep 'QIIME.*version'"/>
+			<help text="Creates a taxonomy plot using QIIME's summarize_taxa_through_plots.py script"/>
+			<input name="mapping_category" text="Category in mapping file to group the samples for taxonomy plot. Must be an exact match to mapping file."/>
+		</info>
+	</plugin>
+</axiome>
