@@ -1,0 +1,174 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from base64 import urlsafe_b64encode
+from qiniu.auth import digest
+from hashlib import sha1
+from logging import handlers
+import logging
+import ConfigParser
+import hmac
+import httplib
+import urllib
+import qiniu.rsf
+import qiniu.conf
+import os,sys,re
+import datetime
+import linecache
+
+'''
+name: Qiniu Pfops
+version: V0.2
+author: Augmentum OPS team
+author_email: ops@jinyuntian.com
+description: Qiniu bucket image persistent operations
+'''
+
+def config_file():
+    for loc in os.curdir, os.path.expanduser("~"), "/etc/qiniu":
+        f = os.path.join(loc,"qiniufops.cfg")
+        if os.path.isfile(f):
+            return f
+
+config = ConfigParser.ConfigParser()
+configfile = config_file()
+config.read(configfile)
+
+BUCKET = config.get('qiniu','bucket')
+qiniu.conf.ACCESS_KEY = config.get('qiniu','accesskey')
+qiniu.conf.SECRET_KEY = config.get('qiniu','secretkey')
+FOPS = config.items('fops')
+NOTIFY_URL = ''
+
+TIMEFILE = '/var/log/qiniutimestamp.log'
+HOST = 'api.qiniu.com'
+HOST_PORT = 80
+HOST_PATH = '/pfop/'
+
+def log_file():
+    logfile = '/var/log/qiniufops.log'
+    format = logging.Formatter("%(levelname)s - %(asctime)s - %(message)s")
+    logging.basicConfig(level = logging.INFO) 
+    logger = logging.getLogger('root')
+    handler1 = logging.handlers.RotatingFileHandler(logfile, maxBytes = '1024*1024', backupCount = 3)
+    handler2 = logging.StreamHandler(sys.stdout)
+    handler1.setFormatter(format)
+    handler2.setFormatter(format)
+    logger.addHandler(handler1)
+    return logger
+
+def check_config(logger):
+    if len(BUCKET) == 0 or len(qiniu.conf.ACCESS_KEY) == 0 or len(qiniu.conf.SECRET_KEY) == 0:
+        msg = 'Please set bucket and access_key and secret_key.'
+        logger.error(msg)
+        exit(0)
+    if len(FOPS) == 0:
+        msg = 'Please set persistent operations style in config file.'
+        logger.error(msg)
+        exit(0)
+
+def filter_image(bucket_list):
+    image_item = []
+    mime = ['image/png','image/jpeg','image/bmp','image/gif']
+    for item in bucket_list:
+        # mime_image = re.findall('image\D*',item['mimeType'])
+        if item['mimeType'] in mime:
+            image_item.append(item)
+    return image_item
+
+def read_timestamp(timefile,logger):
+    if os.path.exists(timefile):
+        f = linecache.getlines(timefile)
+        if len(f) == 0:
+            msg = 'Qiniu timestamp is an empty file.'
+            logger.info(msg)
+        else:
+            return f[-1].rstrip('\n'),
+    else:
+        msg = 'Qiniu timestamp file does not exist.'
+        logger.info(msg)
+
+def changed_list(image_list):
+    key = []
+    for image in image_list:
+        imageName = re.match('.+\.\w+\!\w+',image['key'])
+        if imageName is not None:
+            a = imageName.group()
+            key.append(a)
+    return key
+
+def prefix_time(timestamp,image_list,key_list):
+    plan_key = []
+    if timestamp is None:
+        for i in image_list:
+            if not i['key'] in key_list:
+                plan_key.append(i['key'])
+        return plan_key
+    else:
+        timestamp = timestamp[0]
+        timestampb = datetime.datetime.strptime(timestamp,'%Y-%m-%d %H:%M:%S.%f')
+        for i in image_list:
+            pt = str(i['putTime'])[:10]
+            pt = int(pt)
+            putTime = datetime.datetime.fromtimestamp(pt)
+            if putTime > timestampb:
+                if not i['key'] in key_list:
+                    plan_key.append(i['key'])
+        return plan_key
+
+def qiniu_pfops(plan_key,logger):
+    for f in FOPS:
+        for key in plan_key:
+            s = '%s:%s%s' %(BUCKET,key,f[0])
+            pfops = f[1] + '|saveas/' + urlsafe_b64encode(s)
+            body = {"bucket":BUCKET,"key":key,"fops":pfops,"notifyURL":NOTIFY_URL}
+            params = urllib.urlencode(body)
+            signingStr = '%s\n%s' %(HOST_PATH,params)
+            sign = hmac.new(qiniu.conf.SECRET_KEY,signingStr,sha1)
+            encodedSign = urlsafe_b64encode(sign.digest())
+            accesstoken = 'QBox ' + qiniu.conf.ACCESS_KEY + ':' + encodedSign
+            headers = {"Content-Type": "application/x-www-form-urlencoded", "Authorization": accesstoken}
+            try:
+                http_client = httplib.HTTPConnection(HOST, HOST_PORT)
+                http_client.request(method="POST", url=HOST_PATH, body=params, headers=headers)
+                response = http_client.getresponse()
+                if response.status != 200:
+                    status = ("response code %d" % response.status)
+                    msg = ("response code %s" % response.read())
+                    logger.error(status)
+                    logger.error(msg)
+                    exit(0)
+            except Exception, e:
+                logger.error(e)
+
+def write_timestamp(time):
+    with open(TIMEFILE,'a') as f:
+        f.write(time)
+
+if __name__ == '__main__':
+    time = str(datetime.datetime.now())+'\n'
+    log = log_file()
+    check_config(log)
+
+    ret, err = qiniu.rsf.Client().list_prefix(BUCKET, prefix=None, limit=1000)
+    if err is not None:
+        log.error('error: %s ' % err)
+    bucketList = ret['items']
+    imageList = filter_image(bucketList)
+    tStamp = read_timestamp(TIMEFILE,log)
+    keyList = changed_list(imageList)
+    planKey = prefix_time(tStamp,imageList,keyList)
+    qiniu_pfops(planKey,log)
+
+    while err is None:
+        ret2, err = qiniu.rsf.Client().list_prefix(BUCKET, prefix=None, limit=1000,marker=ret['marker'])
+        if err is not None:
+            log.error('error: %s ' % err)
+        bucketList = ret['items']
+        imageList = filter_image(bucketList)
+        tStamp = read_timestamp(TIMEFILE,log)
+        keyList = changed_list(imageList)
+        planKey = prefix_time(tStamp,imageList,keyList)
+        qiniu_pfops(planKey,log)
+        ret = ret2
+    write_timestamp(time)
