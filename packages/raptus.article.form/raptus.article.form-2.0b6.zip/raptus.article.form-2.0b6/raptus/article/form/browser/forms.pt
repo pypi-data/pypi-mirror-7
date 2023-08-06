@@ -1,0 +1,41 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:metal="http://xml.zope.org/namespaces/metal"
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+      tal:omit-tag="">
+  <tal:form repeat="item view/forms">
+    <div class="form component" id="form-wrapper"
+    	 tal:define="formfolder python:item['form'].context;">
+      <metal:manage use-macro="context/raptus_article_macros/macros/manage" />
+      
+	  <h1 tal:content="formfolder/Title"
+	  	  tal:condition="python: not formfolder.getField('hideTitle').get(formfolder)"
+	  	  class="documentFirstHeading" id="form-title">
+          Title or id
+      </h1>
+      
+      <p class="documentDescription" id="form-description"
+           tal:content="formfolder/Description"
+           tal:condition="formfolder/Description">
+            Description
+      </p>
+      
+      <tal:if tal:condition="formfolder/getFormPrologue | nothing">
+      	<div id="form-prologue">
+	      <p tal:replace="structure formfolder/getFormPrologue"/>	      
+	    </div>
+      </tal:if>
+      
+      <div id="form-fields" tal:condition="item/form | nothing">
+      	<form tal:replace="structure item/form"/>
+      </div>
+     
+      <tal:if tal:condition="formfolder/getFormEpilogue | nothing">
+      	<div id="form-epilogue">
+          <p tal:replace="structure formfolder/getFormEpilogue"/>
+        </div>
+      </tal:if>
+        
+    </div>
+  </tal:form>
+</html>
