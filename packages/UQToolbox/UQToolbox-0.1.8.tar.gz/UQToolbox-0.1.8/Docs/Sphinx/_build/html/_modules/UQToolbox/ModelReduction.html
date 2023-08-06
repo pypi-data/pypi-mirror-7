@@ -1,0 +1,371 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>UQToolbox.ModelReduction &mdash; DABI_UQToolbox 1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="DABI_UQToolbox 1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">DABI_UQToolbox 1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for UQToolbox.ModelReduction</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+
+<span class="c">#</span>
+<span class="c"># This file is part of UQToolbox.</span>
+<span class="c">#</span>
+<span class="c"># UQToolbox is free software: you can redistribute it and/or modify</span>
+<span class="c"># it under the terms of the LGNU Lesser General Public License as published by</span>
+<span class="c"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c"># (at your option) any later version.</span>
+<span class="c">#</span>
+<span class="c"># UQToolbox is distributed in the hope that it will be useful,</span>
+<span class="c"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c"># LGNU Lesser General Public License for more details.</span>
+<span class="c">#</span>
+<span class="c"># You should have received a copy of the LGNU Lesser General Public License</span>
+<span class="c"># along with UQToolbox.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c">#</span>
+<span class="c"># DTU UQ Library</span>
+<span class="c"># Copyright (C) 2014 The Technical University of Denmark</span>
+<span class="c"># Scientific Computing Section</span>
+<span class="c"># Department of Applied Mathematics and Computer Science</span>
+<span class="c">#</span>
+<span class="c"># Author: Daniele Bigoni</span>
+<span class="c">#</span>
+
+
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">marshal</span><span class="o">,</span> <span class="nn">types</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">linalg</span> <span class="k">as</span> <span class="n">npla</span>
+
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">linalg</span> <span class="k">as</span> <span class="n">scla</span>
+
+<span class="kn">from</span> <span class="nn">SpectralToolbox</span> <span class="kn">import</span> <span class="n">Spectral1D</span>
+<span class="kn">from</span> <span class="nn">SpectralToolbox</span> <span class="kn">import</span> <span class="n">SpectralND</span>
+
+<div class="viewcode-block" id="GaussianField"><a class="viewcode-back" href="../../index.html#UQToolbox.ModelReduction.GaussianField">[docs]</a><span class="k">class</span> <span class="nc">GaussianField</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Provided a Covariance function and discretization points, it generates the Gaussian fields.</span>
+
+<span class="sd">    :param function C: Covariance function C(x1,x2)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">C</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="bp">None</span>
+    
+    <span class="n">serialize_list</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;x&#39;</span><span class="p">,</span><span class="s">&#39;L&#39;</span><span class="p">]</span>
+    <span class="n">marshall_list</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;C&#39;</span><span class="p">]</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">C</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">C</span> <span class="o">=</span> <span class="n">C</span>
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">dd</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span> <span class="p">[</span> <span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">tag</span> <span class="p">))</span> <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">serialize_list</span> <span class="p">]</span> <span class="p">)</span>
+        <span class="n">dd</span><span class="p">[</span><span class="s">&#39;C_code&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">marshal</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">C</span><span class="o">.</span><span class="n">func_code</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">dd</span>
+        
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">tag</span> <span class="o">==</span> <span class="s">&#39;C_code&#39;</span><span class="p">:</span>
+                <span class="n">code</span> <span class="o">=</span>  <span class="n">marshal</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span> <span class="n">state</span><span class="p">[</span><span class="n">tag</span><span class="p">]</span> <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">C</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">FunctionType</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="nb">globals</span><span class="p">(),</span> <span class="s">&quot;C&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tag</span><span class="p">,</span> <span class="n">state</span><span class="p">[</span><span class="n">tag</span><span class="p">])</span>
+
+<div class="viewcode-block" id="GaussianField.fit"><a class="viewcode-back" href="../../index.html#UQToolbox.ModelReduction.GaussianField.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Given some discretization points, it finds the Cholesky factorization to be used for the</span>
+<span class="sd">        simulation of the random field</span>
+<span class="sd">        </span>
+<span class="sd">        :param np.ndarray x: array containing the discretization points</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="n">X1</span><span class="p">,</span><span class="n">X2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">L</span> <span class="o">=</span> <span class="n">npla</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">C</span><span class="p">(</span><span class="n">X1</span><span class="p">,</span><span class="n">X2</span><span class="p">)</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nvars</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="GaussianField.transform"><a class="viewcode-back" href="../../index.html#UQToolbox.ModelReduction.GaussianField.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xi</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates random fields from the input variables (Normally distributed)</span>
+<span class="sd">        </span>
+<span class="sd">        :param np.ndarray xi: 1 or 2 dimensional array containing the generating variables. If 2-dimensional, each row should contain a different sample.</span>
+<span class="sd">        </span>
+<span class="sd">        :returns: the realizations of the random field</span>
+<span class="sd">        :rtype: np.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">xi</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">xi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">xi</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">L</span><span class="p">,</span> <span class="n">xi</span><span class="o">.</span><span class="n">T</span> <span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        
+</div></div>
+<div class="viewcode-block" id="KLExpansion"><a class="viewcode-back" href="../../index.html#UQToolbox.ModelReduction.KLExpansion">[docs]</a><span class="k">class</span> <span class="nc">KLExpansion</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    KLExpansion: Computes the 1D KL expansion of the covariance matrix C, using the Legendre-Gauss-Loabatto rule for the solution to the generalized eigenvalue problem A * u = lmb * M * u.</span>
+<span class="sd">    The KLExpansion of d-dimensional random fields is obtained by tensor product.</span>
+
+<span class="sd">    :param function C: Covariance function C(x1,x2)</span>
+<span class="sd">    :param int d: dimension of the tensorized field</span>
+<span class="sd">    :param list spans: list of tuples containing the spans spans of the coordinates of the domain of C(x1,x2)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">C</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">spans</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">targetVar</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">totVar</span> <span class="o">=</span> <span class="bp">None</span>
+    
+    <span class="n">x</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">eigvals</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">eigvecs</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">nvars</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">tensor_valI</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">order_valI</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="n">serialize_list</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;N&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">,</span><span class="s">&#39;targetVar&#39;</span><span class="p">,</span><span class="s">&#39;totVar&#39;</span><span class="p">,</span><span class="s">&#39;x&#39;</span><span class="p">,</span><span class="s">&#39;w&#39;</span><span class="p">,</span><span class="s">&#39;eigvals&#39;</span><span class="p">,</span><span class="s">&#39;eigvecs&#39;</span><span class="p">,</span><span class="s">&#39;nvars&#39;</span><span class="p">,</span><span class="s">&#39;tensor_valI&#39;</span><span class="p">,</span><span class="s">&#39;order_valI&#39;</span><span class="p">,</span><span class="s">&#39;spans&#39;</span><span class="p">]</span>
+    <span class="n">marshall_list</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;C&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">C</span><span class="p">,</span><span class="n">d</span><span class="p">,</span><span class="n">spans</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">C</span> <span class="o">=</span> <span class="n">C</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">=</span> <span class="n">d</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spans</span> <span class="o">=</span> <span class="n">spans</span>
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">dd</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span> <span class="p">[</span> <span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">tag</span> <span class="p">))</span> <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">serialize_list</span> <span class="p">]</span> <span class="p">)</span>
+        <span class="n">dd</span><span class="p">[</span><span class="s">&#39;C_code&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">marshal</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">C</span><span class="o">.</span><span class="n">func_code</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">dd</span>
+        
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">tag</span> <span class="o">==</span> <span class="s">&#39;C_code&#39;</span><span class="p">:</span>
+                <span class="n">code</span> <span class="o">=</span>  <span class="n">marshal</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span> <span class="n">state</span><span class="p">[</span><span class="n">tag</span><span class="p">]</span> <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">C</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">FunctionType</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="nb">globals</span><span class="p">(),</span> <span class="s">&quot;C&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tag</span><span class="p">,</span> <span class="n">state</span><span class="p">[</span><span class="n">tag</span><span class="p">])</span>
+    
+<div class="viewcode-block" id="KLExpansion.scale"><a class="viewcode-back" href="../../index.html#UQToolbox.ModelReduction.KLExpansion.scale">[docs]</a>    <span class="k">def</span> <span class="nf">scale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Scales values x in [-1,1] to ``self.spans[i]``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">((</span><span class="n">x</span><span class="o">+</span><span class="mf">1.</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">spans</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spans</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">spans</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+    </div>
+<div class="viewcode-block" id="KLExpansion.invscale"><a class="viewcode-back" href="../../index.html#UQToolbox.ModelReduction.KLExpansion.invscale">[docs]</a>    <span class="k">def</span> <span class="nf">invscale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Scales values x in ``self.spans[i]`` to [-1,1].</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">spans</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spans</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">spans</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="mf">2.</span> <span class="o">-</span> <span class="mf">1.</span>
+</div>
+<div class="viewcode-block" id="KLExpansion.fit"><a class="viewcode-back" href="../../index.html#UQToolbox.ModelReduction.KLExpansion.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">N</span><span class="p">,</span><span class="n">targetVar</span><span class="o">=.</span><span class="mi">95</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets up the KL-expansion eigenvalues and eigenvectors for the required tolerance.</span>
+
+<span class="sd">        :param list N: list of number of discretization points per dimension</span>
+<span class="sd">        :param float targetVar: total variance to be represented by the output KL-expansion</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="n">N</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">targetVar</span> <span class="o">=</span> <span class="n">targetVar</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">eigvals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eigvecs</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">):</span>
+            <span class="c"># Lagrange polynomials....</span>
+            <span class="n">poly</span> <span class="o">=</span> <span class="n">Spectral1D</span><span class="o">.</span><span class="n">Poly1D</span><span class="p">(</span><span class="n">Spectral1D</span><span class="o">.</span><span class="n">JACOBI</span><span class="p">,[</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">])</span>
+            <span class="p">(</span><span class="n">xI</span><span class="p">,</span><span class="n">wI</span><span class="p">)</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">GaussLobattoQuadrature</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">[</span><span class="n">d</span><span class="p">])</span>
+            <span class="n">wI</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">wI</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xI</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">wI</span><span class="p">)</span>
+
+            <span class="n">xSc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">d</span><span class="p">,</span><span class="n">xI</span><span class="p">)</span>
+            <span class="n">X1</span><span class="p">,</span><span class="n">X2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">xSc</span><span class="p">,</span><span class="n">xSc</span><span class="p">)</span>
+
+            <span class="n">M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">wI</span><span class="p">)</span>
+            <span class="n">K</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">C</span><span class="p">(</span><span class="n">X1</span><span class="p">,</span><span class="n">X2</span><span class="p">),</span><span class="n">M</span> <span class="p">)</span> <span class="p">)</span>
+
+            <span class="sd">&#39;&#39;&#39; Solve generalized eigenvalue problem &#39;&#39;&#39;</span>
+            <span class="p">(</span><span class="n">valI</span><span class="p">,</span><span class="n">vecI</span><span class="p">)</span> <span class="o">=</span> <span class="n">scla</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">K</span><span class="p">,</span><span class="n">M</span><span class="p">)</span>
+            <span class="c"># Normalize vectors and transfer normalization constant to eigenvalues</span>
+            <span class="n">nrm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span> <span class="n">wI</span><span class="p">,</span> <span class="n">vecI</span><span class="o">.</span><span class="n">T</span> <span class="p">)</span> <span class="p">,</span> <span class="n">vecI</span> <span class="p">))</span>
+            <span class="n">vecI</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span> <span class="mf">1.</span><span class="o">/</span><span class="n">nrm</span> <span class="p">,</span> <span class="n">vecI</span> <span class="p">)</span>
+            <span class="n">valI</span> <span class="o">*=</span> <span class="n">nrm</span>
+            <span class="c"># Sort in ascending order</span>
+            <span class="n">order</span> <span class="o">=</span> <span class="n">valI</span><span class="o">.</span><span class="n">argsort</span><span class="p">()[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">valI</span> <span class="o">=</span> <span class="n">valI</span><span class="p">[</span><span class="n">order</span><span class="p">]</span>
+            <span class="n">vecI</span> <span class="o">=</span> <span class="n">vecI</span><span class="p">[:,</span><span class="n">order</span><span class="p">]</span>
+            <span class="c"># Truncate to N</span>
+            <span class="n">valI</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">valI</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">[</span><span class="n">d</span><span class="p">]])</span>
+            <span class="n">vecI</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">vecI</span><span class="p">[:,:</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">[</span><span class="n">d</span><span class="p">]])</span>
+
+            <span class="n">TOTVAR</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span> <span class="n">valI</span> <span class="p">)</span>
+            <span class="k">if</span> <span class="n">TOTVAR</span> <span class="o">&gt;</span> <span class="mf">1.</span> <span class="o">+</span> <span class="mf">1e-10</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;UQToolbox.ModelReduction.KLExpansion: The total variance expressed by the KL-expansion exceed 1. TOTVAR = </span><span class="si">%f</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">TOTVAR</span> <span class="p">,</span><span class="ne">RuntimeWarning</span><span class="p">)</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">eigvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">valI</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">eigvecs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vecI</span><span class="p">)</span>
+
+        <span class="n">tensor_valI</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">eigvals</span> <span class="p">))</span>
+        <span class="n">order_valI</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unravel_index</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">tensor_valI</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="bp">None</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">],(</span><span class="n">tensor_valI</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tensor_valI</span> <span class="o">=</span> <span class="n">tensor_valI</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">order_valI</span> <span class="o">=</span> <span class="n">order_valI</span>
+
+        <span class="sd">&#39;&#39;&#39; Compute variance represented by the successive modes &#39;&#39;&#39;</span>
+        <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">totVar</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="k">while</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">totVar</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">targetVar</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">j</span> <span class="o">&lt;</span> <span class="n">order_valI</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="mf">1.</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">):</span>
+                <span class="n">tmp</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigvals</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">order_valI</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]]</span> <span class="o">*</span> \
+                    <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span> <span class="n">wI</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigvecs</span><span class="p">[</span><span class="n">i</span><span class="p">][:,</span><span class="n">order_valI</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]],</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigvecs</span><span class="p">[</span><span class="n">i</span><span class="p">][:,</span><span class="n">order_valI</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">totVar</span> <span class="o">+=</span> <span class="n">tmp</span>
+            <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">totVar</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">targetVar</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;UQToolbox.ModelReduction.KLExpansion: length of the expansion not sufficient to resolve the target variance:</span><span class="se">\n</span><span class="s"> KL-expansion: Target Variance      = </span><span class="si">%f</span><span class="s"> </span><span class="se">\n</span><span class="s"> KL-expansion: Represented Variance = </span><span class="si">%f</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">targetVar</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">totVar</span><span class="p">),</span> <span class="ne">RuntimeWarning</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">nvars</span> <span class="o">=</span> <span class="n">j</span>        
+    </div>
+<div class="viewcode-block" id="KLExpansion.transform"><a class="viewcode-back" href="../../index.html#UQToolbox.ModelReduction.KLExpansion.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">xs</span><span class="p">,</span><span class="n">xi</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :params list xs: list of d coordinates for each direction</span>
+<span class="sd">        :params list xi: list of 1 dimensional arrays of ``self.nvars`` values xi</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">xs</span><span class="p">])</span>
+        <span class="c"># Scale the values to the interval [-1,1]</span>
+        <span class="n">xs</span> <span class="o">=</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">invscale</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span> <span class="p">]</span>
+
+        <span class="n">NR</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">xi</span><span class="p">]</span> <span class="o">!=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">nvars</span><span class="p">]</span><span class="o">*</span><span class="n">NR</span> <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s">&quot;UQToolbox.ModelReduction.KLExpansion: the number of coefficients is not consistent with the length of the expansion.&quot;</span><span class="p">)</span>
+
+        <span class="c"># Extrapolate values of eigenvalues at points x</span>
+        <span class="n">eigvecs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">j</span><span class="p">])</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">xs</span><span class="p">[</span><span class="n">j</span><span class="p">])</span> <span class="ow">and</span> <span class="n">npla</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">xs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="p">)</span> <span class="o">&lt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">spacing</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">eigvecs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigvecs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">eigvecs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">Spectral1D</span><span class="o">.</span><span class="n">LagrangeInterpolate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigvecs</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">xs</span><span class="p">[</span><span class="n">j</span><span class="p">])</span> <span class="p">)</span>
+        
+        <span class="c"># Compute the KL-expansion for xi at the self.x points (Pascal&#39;s triangle)</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="p">[</span> <span class="mf">0.</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">NR</span><span class="p">)</span> <span class="p">]</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nvars</span><span class="p">):</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">):</span>
+                <span class="n">tmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigvals</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">order_valI</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]])</span> <span class="o">*</span> <span class="n">eigvecs</span><span class="p">[</span><span class="n">i</span><span class="p">][:,</span><span class="bp">self</span><span class="o">.</span><span class="n">order_valI</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]]</span> <span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">NR</span><span class="p">):</span>
+                <span class="n">u</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">tmp</span> <span class="o">*</span> <span class="n">xi</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span>
+        
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">NR</span><span class="p">):</span> <span class="n">u</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">u</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">u</span>
+</div></div>
+<div class="viewcode-block" id="KLExpansion1D"><a class="viewcode-back" href="../../index.html#UQToolbox.ModelReduction.KLExpansion1D">[docs]</a><span class="k">def</span> <span class="nf">KLExpansion1D</span><span class="p">(</span><span class="n">C</span><span class="p">,</span><span class="n">N</span><span class="p">,</span><span class="n">span</span><span class="p">,</span><span class="n">targetVar</span><span class="o">=</span><span class="mf">0.95</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :note: Deprecated. Use the class ``KLExpansion`` instead</span>
+
+<span class="sd">    KLExpansion: Computes the 1D KL expansion of the covariance matrix C, using the</span>
+<span class="sd">       Legendre-Gauss-Loabatto rule for the solution to the generalized eigenvalue </span>
+<span class="sd">       problem A * u = lmb * M * u</span>
+
+<span class="sd">    :param function C: Covariance function C(x1,x2)</span>
+<span class="sd">    :param int N: number of discretization points    </span>
+<span class="sd">    :param tuple span: span of the domain of C(x1,x2)</span>
+<span class="sd">    :param float targetVar: total variance to be represented by the output KL-expansion    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;UQToolbox.ModelReduction.KLExpansion1D: This function is deprecated. Use the UQToolbox.ModelReduction.KLExpansion class instead.&quot;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">)</span>
+    
+    <span class="n">KLE</span> <span class="o">=</span> <span class="n">KLExpansion</span><span class="p">(</span><span class="n">C</span><span class="p">,</span><span class="mi">1</span><span class="p">,[</span><span class="n">span</span><span class="p">])</span>
+    <span class="n">KLE</span><span class="o">.</span><span class="n">fit</span><span class="p">([</span><span class="n">N</span><span class="p">],</span><span class="n">targetVar</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">KLE</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">KLE</span><span class="o">.</span><span class="n">eigvals</span><span class="p">,</span> <span class="n">KLE</span><span class="o">.</span><span class="n">eigvecs</span><span class="p">,</span> <span class="n">KLE</span><span class="o">.</span><span class="n">totVar</span><span class="p">,</span> <span class="n">KLE</span><span class="o">.</span><span class="n">nvars</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">DABI_UQToolbox 1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Daniele Bigoni (dabi@imm.dtu.dk).
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
