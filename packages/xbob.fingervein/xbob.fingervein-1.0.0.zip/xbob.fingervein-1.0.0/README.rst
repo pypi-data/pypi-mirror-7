@@ -1,0 +1,129 @@
+Fingervein Recogition based on Bob
+==================================
+
+Welcome to the Finger vein Recognition Library based on Bob.
+This library is designed to perform a fair comparison of finger vein recognition algorithms.
+It contains scripts to execute various kinds of finger vein recognition experiments on a variety of finger vein image databases, and running the help is as easy as going to the command line and typing::
+
+  $ bin/fingerveinverify.py --help
+
+
+About
+-----
+
+This library is developed at the `Biometrics group <http://www.idiap.ch/~marcel/professional/Research_Team.html>`_ at the `Idiap Research Institute <http://www.idiap.ch>`_.
+The FingerVeinRecLib is designed to run finger vein recognition experiments in a comparable and reproducible manner.
+
+.. note::
+  When you are working at Idiap_, you might get a version of the FingerVeinRecLib, where all paths are set up such that you can directly start running experiments.
+  Outside Idiap_, you need to set up the paths to point to your databases, please check `Read Further <http://pythonhosted.org/facereclib/>`_ on how to do that.
+
+Databases
+.........
+
+To achieve this goal, interfaces to many publicly available facial image databases are contained, and default evaluation protocols are defined, e.g.:
+
+- UTFVP - University of Twente Finger Vein Database [http://website]
+	Interface availalbe xbob.db.utfvp [http://gitlab.idiap.ch/matthias.vanoni/xbob.db.utfvp]
+- VERA Finger vein Database [http://www.idiap.ch/dataset]
+	Interface availalbe xbob.db.vera [http://gitlab.idiap.ch/matthias.vanoni/xbob.db.vera]
+
+
+Algorithms
+..........
+
+Together with that, a broad variety of traditional and state-of-the-art finger vein recognition algorithms such as:
+
+- Maximum Curvature [MNM+05]_
+- Repeated Line Tracking [MNM+04]_
+- Wide Line Detector [HDLTL+10]_
+
+is provided.
+Furthermore, tools to evaluate the results can easily be used to create scientific plots, and interfaces to run experiments using parallel processes or an SGE grid are provided.
+
+Extensions
+..........
+
+On top of these already pre-coded algorithms, the FingerVeinRecLib provides an easy Python interface for implementing new image preprocessors, feature types, finger vein recognition algorithms or database interfaces, which directly integrate into the fingervein recognition experiment.
+Hence, after a short period of coding, researchers can compare their new invention directly with already existing algorithms in a fair manner.
+
+References
+..........
+
+.. [MNM+05]  *N. Miura, A. Nagasaka, and T. Miyatake*. **Extraction of Finger-Vein Pattern Using Maximum Curvature Points in Image Profiles**. Proceedings on IAPR conference on machine vision applications, 9, pp. 347--350, 2005. 
+
+.. [MNM+04]  *N. Miura, A. Nagasaka, and T. Miyatake*. **Feature extraction of finger vein patterns based on repeated line tracking and its application to personal identification**. Machine Vision and Applications, Vol. 15, Num. 4, pp. 194--203, 2004.
+
+.. [HDLTL+10]  *B. Huang, Y. Dai, R. Li, D. Tang and W. Li*. **Finger-vein authentication based on wide line detector and pattern normalization**. Proceedings of the 20th International Conference on Pattern Recognition (ICPR), 2010.
+
+
+Installation
+------------
+
+To download the FingerVeinRecLib, please go to http://pypi.python.org/pypi/xbob.fingervein, click on the **download** button and extract the .zip file to a folder of your choice.
+
+The FingerVeinRecLib is a satellite package of the free signal processing and machine learning library Bob_, and some of its algorithms rely on the `CSU Face Recognition Resources <http://www.cs.colostate.edu/facerec>`_.
+These two dependencies have to be downloaded manually, as explained in the following.
+
+Bob
+...
+
+You will need a copy of Bob in version 1.2.0 or newer to run the algorithms.
+Please download Bob_ from its webpage.
+
+FaceRecLib
+..........
+
+You will need a copy of FaceRecLib in version 1.2.3 or newer to run the algorithms.
+Please download FaceRecLib_ from its webpage.
+
+Remember update the ``buildout.cfg`` file with the path of your data and package dependencies.
+
+After downloading, you should go to the console and write::
+
+  $ python bootstrap.py
+  $ bin/buildout
+
+
+
+This will download all required packages and install them locally.
+If you don't want all the database packages to be downloaded, please remove the xbob.db.[database] lines from the ``eggs`` section of the file **buildout.cfg** in the main directory before calling the three commands above.
+
+Test your installation
+......................
+
+To verify that your installation worked as expected, you might want to run our test utilities::
+
+  $ bin/nosetests
+
+Usually, all tests should pass, if you use Bob_ in version 1.2.1.
+With other versions of Bob_, you might find some failing tests.
+
+
+Cite our paper
+--------------
+
+If you use the FingerVeinRecLib in any of your experiments, please cite the following paper::
+
+  @inproceedings{Tome_IEEEBIOSIG2014,
+         author = {Tome, Pedro and Vanoni, Matthias and Marcel, S{\'{e}}bastien},
+       keywords = {Biometrics, Finger vein, Spoofing Attacks},
+          month = sep,
+          title = {On the Vulnerability of Finger Vein Recognition to Spoofing},
+      booktitle = {IEEE International Conference of the Biometrics Special Interest Group (BIOSIG)},
+         series = {},
+         volume = {},
+           year = {2014},
+          pages = {},
+       location = {Darmstadt, Germay},
+            url = {http://publications.idiap.ch/index.php/publications/show/2910}
+  }
+
+
+.. _bob: http://www.idiap.ch/software/bob
+.. _idiap: http://www.idiap.ch
+.. _bioidiap at github: http://www.github.com/bioidiap
+.. _facereclib: http://pypi.python.org/pypi/facereclib
+.. _gitlab: http://gitlab.idiap.ch/pedro.tome/xbob.fingervein
+.. _fingerveinreclib: http://pypi.python.org/pypi/fingerveinreclib
+.. _virtualbox: http://www.virtualbox.org
