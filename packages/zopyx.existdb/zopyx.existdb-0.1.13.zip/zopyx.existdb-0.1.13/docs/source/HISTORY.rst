@@ -1,0 +1,60 @@
+Changelog
+=========
+
+0.1.13 (2014-09-07)
+-------------------
+- support for removing collections TTW
+
+0.1.12 (2014-09-05)
+-------------------
+- support for creating new collections TTW
+
+0.1.11 (2014-08-21)
+-------------------
+- action "Clear log" added 
+
+0.1.10 (2014-08-05)
+-------------------
+- log() got a new 'details' parameter for adding extensive logging information
+
+0.1.9 (2014-08-01)
+------------------
+- human readable timestamps
+
+0.1.8 (2014-07-31)
+------------------
+- minor visual changes
+
+0.1.7 (2014-07-29)
+------------------
+- rewritten code exist-db browser code (dealing the correct
+  way with paths, filenames etc.)
+
+0.1.6 (2014-07-29)
+------------------
+- fixed improper view prefix in directory browser
+
+0.1.5 (2014-07-13)
+------------------
+- minor fixes and cleanup
+
+0.1.4 (2014-07-12)
+------------------
+- made webservice query API aware of all output formats (xml, html, json) 
+  
+- timezone handling: using environment variable TZ for converting eXist-db UTC
+  timestamps to the TZ timezone (or UTC as default) for display purposes with
+  Plone
+
+0.1.3 (2014-07-07)
+------------------
+- added webservice API interface
+- various bug fixes
+
+0.1.2 (2014-06-30)
+------------------
+- various bug fixes
+
+0.1.0 (2014-06-20)
+------------------
+- initial release
