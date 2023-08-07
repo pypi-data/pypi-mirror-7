@@ -1,0 +1,193 @@
+[![Build Status](https://api.travis-ci.org/kolypto/py-good.png?branch=master)](https://travis-ci.org/kolypto/py-good)
+
+
+{% macro argspec(args) -%}
+{% for a in args %}{% if a.doc %}* `{{ a.name }}`: {{ a.doc }}{% endif %}
+{% endfor %}
+{%- endmacro %}
+
+
+{% macro fdoc(func) -%}
+```python
+{{ func.qsignature|wordwrap(60)|indent(1+func.qualname|length) }}
+```
+
+{{ func.doc }}
+
+{%if func.args %}Arguments:{{ '\n\n' }}{{ argspec(func.args) }}{% endif %}
+{%if func.ret %}Returns: `{{ func.ret.type }}` {{ func.ret.doc }}{% endif %}
+
+{%if func.exc %}Throws:{{ '\n\n' }}{% for e in func.exc %}* `{{ e.name }}`: {{ e.doc|indent(4) }}{{ '\n' }}{% endfor %}{% endif %}
+{%- endmacro %}
+
+Good
+====
+
+{{ good.doc }}
+
+
+Table of Contents
+=================
+
+* <a href="#voluptuous-drop-in-replacement">Voluptuous Drop-In Replacement</a>
+* <a href="#schema">Schema</a>
+    * <a href="#callables">Callables</a>
+    * <a href="#priorities">Priorities</a>
+    * <a href="#creating-a-schema">Creating a Schema</a>
+    * <a href="#validating">Validating</a>
+* <a href="#errors">Errors</a>
+    * <a href="#invalid">Invalid</a>
+        * <a href="#invalidenrich">Invalid.enrich()</a>
+    * <a href="#multipleinvalid">MultipleInvalid</a>
+* <a href="#markers">Markers</a>
+    * <a href="#required">Required</a>
+    * <a href="#optional">Optional</a>
+    * <a href="#remove">Remove</a>
+    * <a href="#reject">Reject</a>
+    * <a href="#allow">Allow</a>
+    * <a href="#extra">Extra</a>
+    * <a href="#entire">Entire</a>
+* <a href="#validation-tools">Validation Tools</a>
+    * <a href="#helpers">Helpers</a>
+        * <a href="#object">Object</a>
+        * <a href="#msg">Msg</a>
+        * <a href="#test">Test</a>
+        * <a href="#message">message</a>
+        * <a href="#name">name</a>
+        * <a href="#truth">truth</a>
+    * <a href="#predicates">Predicates</a>
+        * <a href="#maybe">Maybe</a>
+        * <a href="#any">Any</a>
+        * <a href="#all">All</a>
+        * <a href="#neither">Neither</a>
+        * <a href="#inclusive">Inclusive</a>
+        * <a href="#exclusive">Exclusive</a>
+    * <a href="#types">Types</a>
+        * <a href="#type">Type</a>
+        * <a href="#coerce">Coerce</a>
+    * <a href="#values">Values</a>
+        * <a href="#in">In</a>
+        * <a href="#length">Length</a>
+        * <a href="#default">Default</a>
+        * <a href="#fallback">Fallback</a>
+        * <a href="#map">Map</a>
+    * <a href="#boolean">Boolean</a>
+        * <a href="#check">Check</a>
+        * <a href="#truthy">Truthy</a>
+        * <a href="#falsy">Falsy</a>
+        * <a href="#boolean-1">Boolean</a>
+    * <a href="#numbers">Numbers</a>
+        * <a href="#range">Range</a>
+        * <a href="#clamp">Clamp</a>
+    * <a href="#strings">Strings</a>
+        * <a href="#lower">Lower</a>
+        * <a href="#upper">Upper</a>
+        * <a href="#capitalize">Capitalize</a>
+        * <a href="#title">Title</a>
+        * <a href="#match">Match</a>
+        * <a href="#replace">Replace</a>
+        * <a href="#url">Url</a>
+        * <a href="#email">Email</a>
+    * <a href="#dates">Dates</a>
+        * <a href="#datetime">DateTime</a>
+        * <a href="#date">Date</a>
+        * <a href="#time">Time</a>
+    * <a href="#files">Files</a>
+        * <a href="#isfile">IsFile</a>
+        * <a href="#isdir">IsDir</a>
+        * <a href="#pathexists">PathExists</a>
+
+
+Voluptuous Drop-In Replacement
+==============================
+
+{{ voluptuous.doc }}
+
+Schema
+======
+
+{{ Schema.cls.clsdoc }}
+
+Creating a Schema
+-----------------
+{{ fdoc(Schema.cls) }}
+
+Validating
+----------
+
+{{ fdoc(Schema.attrs.__call__) }}
+
+Errors
+======
+
+{{ errors.doc }}
+
+## {{ Invalid.cls.name }}
+{{ fdoc(Invalid.cls) }}
+
+### `{{ Invalid.attrs.enrich.qualname }}()`
+{{ fdoc(Invalid.attrs.enrich) }}
+
+## {{ MultipleInvalid.cls.name }}
+{{ fdoc(MultipleInvalid.cls) }}
+
+
+
+
+
+
+{% macro libdoc(lib, level=3) -%}
+{{ lib.module.doc }}
+
+{% for m in lib.members %}
+{{ '#'*level }} `{{ m.qualname }}`
+{{ fdoc(m) }}
+{% endfor %}
+{%- endmacro %}
+
+Markers
+=======
+{{ libdoc(markers, 2) }}
+
+Validation Tools
+================
+
+All validators listed here inherit from `ValidatorBase` which defines the standard interface.
+Currently it makes no difference whether it's just a callable, a class, or a subclass of `ValidatorBase`,
+but in the future it may gain special features.
+
+Helpers
+-------
+{{ libdoc(helpers) }}
+
+Predicates
+----------
+{{ libdoc(predicates) }}
+
+Types
+-----
+{{ libdoc(types) }}
+
+Values
+------
+{{ libdoc(values) }}
+
+Boolean
+-------
+{{ libdoc(boolean) }}
+
+Numbers
+-------
+{{ libdoc(numbers) }}
+
+Strings
+-------
+{{ libdoc(strings) }}
+
+Dates
+-----
+{{ libdoc(dates) }}
+
+Files
+-----
+{{ libdoc(files) }}
