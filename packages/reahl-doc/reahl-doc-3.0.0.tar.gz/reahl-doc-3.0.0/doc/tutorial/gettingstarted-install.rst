@@ -1,0 +1,149 @@
+.. Copyright 2014 Reahl Software Services (Pty) Ltd. All rights reserved.
+ 
+Reahl installation
+==================
+
+.. toctree::
+   :hidden:
+
+   install-ubuntu
+   install-mac
+   install-win
+
+
+We recommend installing Reahl within a sandboxed Python environment
+provided by `virtualenv <http://pypi.python.org/pypi/virtualenv>`_.
+Doing this means that your main Python installation is left in the
+state it currently is, and that you do not need permissions of
+restricted users to install all the extra Python packages when
+developing.
+
+.. _prep_install:
+
+Prepare your platform for Python development
+--------------------------------------------
+
+Before you can install Reahl itself, you need to install several
+pieces of software on your platform (including Python and several
+Python development tools like virtualenv). This differs from platform
+to platform -- please follow the instructions for your platform:
+
+- :doc:`Ubuntu (or other Debian-based Linux distributions) <install-ubuntu>`
+- :doc:`Mac OS/X <install-mac>`
+- :doc:`Windows <install-win>`
+
+.. _install-reahl-itself:
+
+Create a virtualenv and install Reahl inside it
+-----------------------------------------------
+
+If you followed the instructions above, virtualenv should have been
+installed with the packages listed above. You need to now create a
+virtual environment using virtualenv.
+
+On Linux or Mac, do:
+
+.. code-block:: bash
+
+   virtualenv ./reahl_env
+
+.. note:: 
+
+   If you have more than one version of Python installed, also pass the `-p` argument
+   to virtualenv, specifying the path to the Python interpreter you want this
+   virtualenv for.
+
+On Windows, do (in a command shell):
+
+.. code-block:: bash
+
+   virtualenv reahl_env
+   
+This creates a new directory `reahl_env` with an isolated Python
+environment inside it.
+
+In order to work inside that isolated environment, you need to execute
+the following on the command line:
+
+On Linux or Mac:
+
+.. code-block:: bash
+
+   source ./reahl_env/bin/activate
+
+On Windows:
+
+.. code-block:: bash
+
+   reahl_env\Scripts\activate.bat
+
+After activating your new environment, the prompt of the command line
+changes to reflect the environment that is currently active.
+
+With your `virtualenv` activated, Reahl can be installed into it by
+issuing:
+
+On Linux or Mac:
+
+.. code-block:: bash
+
+   pip reahl[declarative,sqlite,dev,doc]  
+
+On Windows:
+
+   easy_install reahl[declarative,sqlite,dev,doc]  
+
+.. note::
+
+   Wherever we use pip for installing things, on Windows you should
+   use easy_install instead... pip cannot install binary packages, and many of
+   Reahl's dependencies are distributed in binary form for Windows.
+
+   You can still use pip on Windows to uninstall things, see what's 
+   installed, etc.
+
+This may run a while, as it installs all of the projects Reahl depends
+on as well. Some of these dependencies are installed and built from
+source, hence, this process needs :ref:`your platform to be prepared
+properly for Python development <prep_install>` before you attempt to
+install Reahl.
+
+Choose what to install
+----------------------
+
+Reahl is composed of a number of different components that you
+can mix and match depending on your requirements. For example, 
+you probably do not want the development tools in a production
+environment, so they are packaged in a component you can omit.
+
+In order to specify which sets of components you want installed,
+you use keywords in square brackets behind `reahl` in the command
+to easy_install as shown above. Here is a list of keywords you can 
+include, and what they install:
+
+ declarative
+   The declarative implementation of the web framework
+
+ dev
+   The development tools
+
+ doc
+   Documentation and examples
+
+ sqlite
+   Support for sqlite databases
+
+ postgresql
+   Support for postgresql databases 
+ 
+ elixir
+   Support for the older Elixir-based implementation of
+   the web framework (uses some components from the 2.1 
+   series, and only runs on Python 2.7)
+
+.. note::
+
+   You cannot install `doc` and `elixir` together, as the reahl-doc 
+   component depends on the new, declarative implementations.
+
+
