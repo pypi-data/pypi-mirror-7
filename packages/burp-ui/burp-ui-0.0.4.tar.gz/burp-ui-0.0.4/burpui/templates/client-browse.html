@@ -1,0 +1,95 @@
+{% extends "layout.html" %}
+{% block body %}
+        {% include "notifications.html" %}
+        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+          {% include "small_topbar.html" %}
+          <ul class="breadcrumb" style="margin-bottom: 5px;">                      
+            <li><a href="{{ url_for('home') }}">Home</a></li>                      
+            <li><a href="{{ url_for('client', name=cname) }}">{{ cname }} overview</a></li>
+            <li class="active">Backup n°{{ nbackup|mypad }} overview</li>                
+          </ul>                                                                    
+          <br />
+          <h1 class="page-header">Backup n°{{ nbackup|mypad }} of {{ cname }}</h1>
+          <div class="row">
+            <form class="form-inline" role="form" action="#" onsubmit="return false;">
+              <div class="form-group">
+                <div class="input-group">
+                  <input type="text" class="form-control" placeholder="filter..." name="search-tree" autocomplete="off">
+                  <div class="input-group-btn">
+                    <button class="btn btn-default dropdown-toggle" data-toggle="dropdown" type="button">
+                      <span class="glyphicon glyphicon-cog"></span> options 
+                      <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu pull-right" role="menu">
+                      <li><a href="#"><div class="checkbox"><label><input type="checkbox" id="hideMode">&nbsp;Hide unmatched nodes <span class="glyphicon glyphicon-eye-close"></span></label></div></a></li>
+                      <li><a href="#"><div class="checkbox"><label><input type="checkbox" id="leavesOnly">&nbsp;Leaves only <span class="glyphicon glyphicon-leaf"></span></label></div></a></li>
+                      <li><a href="#"><div class="checkbox"><label><input type="checkbox" id="regex">&nbsp;Use regex <span class="glyphicon glyphicon-filter"></span></label></div></a></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <span id="btnResetSearch" class="btn btn-default">×</span>
+              <span class="help-block" id="matches"></span>
+            </form>
+          </div>
+          <br />
+          <div class="table-responsive row">
+            <table id="tree" class="table">
+              <thead>
+                <tr>
+                  <th></th><th>mode</th><th>UID</th><th>GID</th><th>Size</th><th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          </div>
+          <br />
+          <div class="row">
+            <form id="form-restore" class="form-inline" method="POST" role="form" action="{{ url_for("restore", name=cname, backup=nbackup) }}">
+              <input type="hidden" name="list">
+              <div id="restore-form" style="display:none;">
+                <button type="submit" class="btn btn-info">Download selected files</button>
+              </div>
+            </form>
+          </div>
+        </div>
+        <div id="restore-modal" class="modal fade">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Processing request</h4>
+              </div>
+              <div class="modal-body">
+                Please wait while restoration is processing...
+                <br />
+                <div class="progress progress-striped active">
+                  <div class="progress-bar progress-bar-info" style="width: 100%"></div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="error-modal" class="modal fade">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Restoration error</h4>
+              </div>
+              <div class="modal-body">
+                <div class="alert alert-danger">
+                  An error occurred while processing the restoration.
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+{% endblock %}
